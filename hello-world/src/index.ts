@@ -1,33 +1,30 @@
 import express, { Express, Request, Response } from 'express';
-import {FunctionContext, operon, Operon, OperonFunction, OperonWorkflow, registerFunction, registerWorkflow, WorkflowContext} from 'operon';
+import { FunctionContext, WorkflowContext, operon, registerFunction, registerWorkflow } from 'operon';
 
-const app: Express = express();
-const port = 3000;
-
-const helloFunction: OperonFunction<[string], string> = (functionCtxt: FunctionContext, name: string) => {
+// Register an Operon function
+const helloFunction = registerFunction((functionCtxt: FunctionContext, name: string) => {
     console.log("hello from function: " + name);
     return "function succeeded!";
-};
+});
 
-const registeredHelloFunction = registerFunction(helloFunction);
-
-const helloWorkflow: OperonWorkflow<[string], string> = (workflowCtxt: WorkflowContext, name: string) => {
+// Register an Operon workflow
+const helloWorkflow = registerWorkflow((workflowCtxt: WorkflowContext, name: string) => {
     console.log("hello from workflow: " + name);
-    const funcResult: string = registeredHelloFunction(workflowCtxt, name);
+    const funcResult: string = helloFunction(workflowCtxt, name);
     console.log("workflow got function output: " + funcResult);
     return "workflow succeeded!";
-};
+});
 
-const registeredHelloWorkflow = registerWorkflow(helloWorkflow);
-
-// Body parsing Middleware
+// Invoke the workflow from an Express HTTP handler
+const app: Express = express();
+const port = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/:name', (req: Request, res: Response) => {
     operon.helloWorld();
     const { name } = req.params;
-    const workflowResult: string = registeredHelloWorkflow(operon, name);
+    const workflowResult: string = helloWorkflow(operon, name);
     console.log("handler got workflow output: " + workflowResult);
     res.send('Operon says hello to: ' + name);
 });
