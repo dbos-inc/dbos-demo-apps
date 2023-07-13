@@ -1,5 +1,5 @@
 import express, { Express, Request, Response } from 'express';
-import { FunctionContext, WorkflowContext, operon, registerFunction, registerWorkflow } from 'operon';
+import { FunctionContext, WorkflowContext, Operon, registerFunction, registerWorkflow } from 'operon';
 
 // Register an Operon function
 const helloFunction = registerFunction((functionCtxt: FunctionContext, name: string) => {
@@ -20,6 +20,7 @@ const app: Express = express();
 const port = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const operon: Operon = new Operon();
 
 app.get('/:name', (req: Request, res: Response) => {
     operon.helloWorld();
