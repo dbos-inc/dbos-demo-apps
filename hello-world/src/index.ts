@@ -26,7 +26,7 @@ async function startServer() {
     user: username,
     password: password,
   });
-  operon.pool.query("CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);");
+  await operon.pool.query("CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);");
 
   // Invoke the workflow from an Express HTTP handler
   const app: Express = express();
