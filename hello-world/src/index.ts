@@ -26,6 +26,7 @@ async function startServer() {
     user: username,
     password: password,
   });
+  operon.initializeOperonTables();
   await operon.pool.query("CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);");
 
   // Invoke the workflow from an Express HTTP handler
@@ -35,7 +36,7 @@ async function startServer() {
   app.use(express.urlencoded({ extended: true }));
   app.get('/:name', async (req: Request, res: Response) => {
     const { name } = req.params;
-    const greeting: string = await helloWorkflow(operon, name);
+    const greeting: string = await helloWorkflow(operon, {}, name);
     res.send(greeting);
   });
   app.listen(port, () => {
