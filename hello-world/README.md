@@ -26,4 +26,4 @@ It should print the output:
 [server]: Server is running at http://localhost:3000
 ```
 
-Now you can open your browser and type `http://localhost:3000/name` and see the output!
+Now you can open your browser and type `http://localhost:3000/greeting/{name}` and see the output!
