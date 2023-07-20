@@ -1,18 +1,18 @@
 import express, { Express, Request, Response } from 'express';
-import { FunctionContext, WorkflowContext, Operon, registerFunction, registerWorkflow } from 'operon';
+import { TransactionContext, WorkflowContext, Operon, } from 'operon';
 import * as readline from 'node:readline/promises';
 
-// Register an Operon function
-const helloFunction = registerFunction(async (functionCtxt: FunctionContext, name: string) => {
+// Declare an Operon function
+const helloFunction = async (txnCtxt: TransactionContext, name: string) => {
   const greeting = `Hello, ${name}!`
-  const { rows } = await functionCtxt.client.query("INSERT INTO OperonHello(greeting) VALUES ($1) RETURNING greeting_id", [greeting])
+  const { rows } = await txnCtxt.client.query("INSERT INTO OperonHello(greeting) VALUES ($1) RETURNING greeting_id", [greeting])
   return `Greeting ${rows[0].greeting_id}: ${greeting}`;
-});
+};
 
-// Register an Operon workflow
-const helloWorkflow = registerWorkflow(async (workflowCtxt: WorkflowContext, name: string) => {
-  return await helloFunction(workflowCtxt, name);
-});
+// Declare an Operon workflow
+const helloWorkflow = async (workflowCtxt: WorkflowContext, name: string) => {
+  return await workflowCtxt.transaction(helloFunction, name);
+};
 
 async function startServer() {
   // Initialize Postgres and Operon.
@@ -34,9 +34,9 @@ async function startServer() {
   const port = 3000;
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.get('/:name', async (req: Request, res: Response) => {
+  app.get('/greeting/:name', async (req: Request, res: Response) => {
     const { name } = req.params;
-    const greeting: string = await helloWorkflow(operon, {}, name);
+    const greeting: string = await operon.workflow(helloWorkflow, {}, name);
     res.send(greeting);
   });
   app.listen(port, () => {
