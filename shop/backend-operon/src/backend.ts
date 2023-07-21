@@ -82,6 +82,21 @@ app.post('/api/add_to_cart', asyncHandler(async (req: Request, res: Response) =>
     res.status(200).send('Success');
 }));
 
+async function getCart(ctxt: TransactionContext, username: string) {
+    const { rows } = await ctxt.client.query(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
+    const productDetails = await Promise.all(rows.map(async (row) => ({
+        ...await getProduct(ctxt, row.product_id),
+        inventory: row.quantity,
+    })));
+    return productDetails;
+}
+
+app.post('/api/get_cart', asyncHandler(async (req: Request, res: Response) => {
+    const { username } = req.body;
+    const productDetails = await operon.transaction(getCart, {}, username);
+    res.send(productDetails);
+}));
+
 async function startServer() {
     await operon.initializeOperonTables();
     app.listen(port, () => {
