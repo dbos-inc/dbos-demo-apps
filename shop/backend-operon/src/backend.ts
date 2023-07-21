@@ -41,12 +41,8 @@ async function getProducts(ctxt: TransactionContext) {
     return formattedRows;
 }
 
-async function getProductsWorkflow (ctxt: WorkflowContext) {
-    return await ctxt.transaction(getProducts);
-}
-
 app.get('/api/products', asyncHandler(async (req: Request, res: Response) => {
-    const products = await operon.workflow(getProductsWorkflow, {});
+    const products = await operon.transaction(getProducts, {});
     res.send(products);
 }));
 
@@ -62,18 +58,13 @@ async function getProduct(ctxt: TransactionContext, id: number) {
     return product;
 }
 
-async function getProductWorkflow (ctxt: WorkflowContext, id: number) {
-    return await ctxt.transaction(getProduct, id);
-}
-
-
 app.get('/api/products/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!Number.isInteger(Number(id))) {
         res.status(400).send('Invalid product ID');
         return;
     }
-    const product = await operon.workflow(getProductWorkflow, {}, Number(id));
+    const product = await operon.transaction(getProduct, {}, Number(id));
     if (product == null) {
         res.status(500).send('Error');
     } else {
