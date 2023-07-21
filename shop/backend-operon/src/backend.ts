@@ -1,11 +1,12 @@
 import express, { Request, Response, NextFunction } from "express";
-import { TransactionContext, WorkflowContext, Operon } from 'operon';
+import { TransactionContext, WorkflowContext, Operon, CommunicatorContext } from 'operon';
 import cors from 'cors';
 import Stripe from 'stripe';
+import { v1 as uuidv1 } from 'uuid';
 
 const port: number = 8082;
 const stripe = new Stripe(process.env.STRIPE_API_KEY || 'error_no_stripe_key', {
-    apiVersion: '2022-11-15',
+  apiVersion: '2022-11-15',
 });
 const endpointSecret: string = process.env.STRIPE_WEBHOOK_SECRET || 'error_no_webhook_secret';
 
@@ -13,15 +14,15 @@ const endpointSecret: string = process.env.STRIPE_WEBHOOK_SECRET || 'error_no_we
 const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) => 
   (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
-};
+  };
 
 // Create an Operon.
 const operon: Operon = new Operon({
-    user: 'shop',
-    host: process.env.POSTGRES_HOST || 'localhost',
-    database: 'shop',
-    password: 'shop',
-    port: 5432,
+  user: 'shop',
+  host: process.env.POSTGRES_HOST || 'localhost',
+  database: 'shop',
+  password: 'shop',
+  port: 5432,
 });
 
 // Create a new express application instance
@@ -32,77 +33,170 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 async function getProducts(ctxt: TransactionContext) {
-    const { rows } = await ctxt.client.query('SELECT product_id, product, description, image_name, price FROM products');
-    const formattedRows = rows.map((row) => ({
-        ...row,
-        display_price: (row.price / 100).toFixed(2),
-    }));
+  const { rows } = await ctxt.client.query('SELECT product_id, product, description, image_name, price FROM products');
+  const formattedRows = rows.map((row) => ({
+    ...row,
+    display_price: (row.price / 100).toFixed(2),
+  }));
 
-    return formattedRows;
+  return formattedRows;
 }
 
 app.get('/api/products', asyncHandler(async (req: Request, res: Response) => {
-    const products = await operon.transaction(getProducts, {});
-    res.send(products);
+  const products = await operon.transaction(getProducts, {});
+  res.send(products);
 }));
 
 async function getProduct(ctxt: TransactionContext, id: number) {
-    const { rows } = await ctxt.client.query(`SELECT product_id, product, description, image_name, price FROM products WHERE product_id = $1`, [id]);
-    if (rows.length === 0) {
-        return null;
-    }
-    const product = {
-        ...rows[0],
-        display_price: (rows[0].price / 100).toFixed(2),
-    };
-    return product;
+  const { rows } = await ctxt.client.query(`SELECT product_id, product, description, image_name, price FROM products WHERE product_id = $1`, [id]);
+  if (rows.length === 0) {
+    return null;
+  }
+  const product = {
+    ...rows[0],
+    display_price: (rows[0].price / 100).toFixed(2),
+  };
+  return product;
 }
 
 app.get('/api/products/:id', asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    if (!Number.isInteger(Number(id))) {
-        res.status(400).send('Invalid product ID');
-        return;
-    }
-    const product = await operon.transaction(getProduct, {}, Number(id));
-    if (product == null) {
-        res.status(500).send('Error');
-    } else {
-        res.send(product);
-    }
+  const { id } = req.params;
+  if (!Number.isInteger(Number(id))) {
+    res.status(400).send('Invalid product ID');
+    return;
+  }
+  const product = await operon.transaction(getProduct, {}, Number(id));
+  if (product == null) {
+    res.status(500).send('Error');
+  } else {
+    res.send(product);
+  }
 }));
 
 async function addToCart(ctxt: TransactionContext, username: string, product_id: string) {
-    await ctxt.client.query(`INSERT INTO cart VALUES($1, $2, 1) ON CONFLICT (username, product_id) DO UPDATE SET quantity = cart.quantity + 1`, [username, product_id]);
+  await ctxt.client.query(`INSERT INTO cart VALUES($1, $2, 1) ON CONFLICT (username, product_id) DO UPDATE SET quantity = cart.quantity + 1`, [username, product_id]);
 }
 
 app.post('/api/add_to_cart', asyncHandler(async (req: Request, res: Response) => {
-    const {username, product_id} = req.body;
-    await operon.transaction(addToCart, {}, username, product_id);
-    res.status(200).send('Success');
+  const {username, product_id} = req.body;
+  await operon.transaction(addToCart, {}, username, product_id);
+  res.status(200).send('Success');
 }));
 
 async function getCart(ctxt: TransactionContext, username: string) {
-    const { rows } = await ctxt.client.query(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
-    const productDetails = await Promise.all(rows.map(async (row) => ({
-        ...await getProduct(ctxt, row.product_id),
-        inventory: row.quantity,
-    })));
-    return productDetails;
+  const { rows } = await ctxt.client.query(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
+  const productDetails = await Promise.all(rows.map(async (row) => ({
+    ...await getProduct(ctxt, row.product_id),
+    inventory: row.quantity,
+  })));
+  return productDetails;
 }
 
 app.post('/api/get_cart', asyncHandler(async (req: Request, res: Response) => {
-    const { username } = req.body;
-    const productDetails = await operon.transaction(getCart, {}, username);
-    res.send(productDetails);
+  const { username } = req.body;
+  const productDetails = await operon.transaction(getCart, {}, username);
+  res.send(productDetails);
 }));
 
-async function startServer() {
-    await operon.initializeOperonTables();
-    app.listen(port, () => {
-      console.log(`[server]: Server is running at http://localhost:${port}`);
-    });
-  
+async function subtractInventory(ctxt: TransactionContext, products: any[]): Promise<boolean> {
+  let hasEnoughInventory = true;
+  for (const product of products) {
+    const { rows } = await ctxt.client.query(`SELECT inventory FROM products WHERE product_id = $1`, [product.product_id]);
+    const currentInventory = rows[0]?.inventory;
+
+    if (currentInventory < product.inventory) {
+      hasEnoughInventory = false;
+      break;
+    }
   }
+  if (hasEnoughInventory) {
+    // If all products have enough inventory, subtract the inventory from the products in the database
+    for (const product of products) {
+      await ctxt.client.query(`UPDATE products SET inventory = inventory - $1 WHERE product_id = $2`, [product.inventory, product.product_id]);
+    }
+  }
+  return hasEnoughInventory;
+}
+
+async function undoSubtractInventory(ctxt: TransactionContext, products: any[]) {
+  for (const product of products) {
+    await ctxt.client.query(`UPDATE products SET inventory = inventory + $1 WHERE product_id = $2`, [product.inventory, product.product_id]);
+  }
+}
+
+async function createOrder(ctxt: TransactionContext, username: string, productDetails: any[]) {
+  const { rows } = await ctxt.client.query(`INSERT INTO orders(username, order_status, last_update_time) VALUES ($1, $2, $3) RETURNING order_id`, 
+    [username, 0, 0]);
+  const orderID : number = rows[0].order_id;
+  for (const product of productDetails) {
+    await ctxt.client.query(`INSERT INTO order_items(order_id, product_id, price, quantity) VALUES($1, $2, $3, $4)`, 
+      [orderID, product.product_id, product.price, product.inventory]);
+  }
+  return orderID;
+}
+
+async function createStripeSession(ctxt: CommunicatorContext, orderID: number, productDetails: any[], origin: string) {
+  const lineItems: any[] = productDetails.map((item) => ({
+    quantity: item.inventory,
+    price_data: {
+      currency: "usd",
+      unit_amount: item.price,
+      product_data: {
+        name: item.product,
+      }
+    }
+  }));
+  const session: Stripe.Response<Stripe.Checkout.Session> = await stripe.checkout.sessions.create({
+    line_items: lineItems,
+    mode: 'payment',
+    client_reference_id: String(orderID),
+    success_url: `${origin}/checkout/success`,
+    cancel_url: `${origin}/checkout/cancel`,
+  });
+  return session;
+}
+
+async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string, uuid: string) {
+  const productDetails: any[] = await ctxt.transaction(getCart, username);
+  const orderID: number = await ctxt.transaction(createOrder, username, productDetails);
+  const valid: boolean = await ctxt.transaction(subtractInventory, productDetails);
+  if (!valid) {
+    ctxt.send(uuid, null);
+    return;
+  }
+  const stripeSession = await ctxt.external(createStripeSession, {}, orderID, productDetails, origin);
+  if (stripeSession === null || stripeSession.url === null) {
+    await ctxt.transaction(undoSubtractInventory, productDetails);
+    ctxt.send(uuid, null);
+    return;
+  }
+  ctxt.send(uuid, stripeSession.url);
+}
+
+app.post('/api/checkout_session', asyncHandler(async (req: Request, res: Response) => {
+  const username = req.query.username;
+  const origin = req.headers.origin;
+  if (typeof username !== 'string' || typeof origin !== 'string'){
+    res.status(400).send("Invalid request");
+    return;
+  }
+  const uuid: string = uuidv1();
+  operon.workflow(paymentWorkflow, {}, username, origin, uuid);
+  const url = await operon.recv<string | null>({}, uuid, 10);
+  if (url === null) {
+    res.redirect(303, `${origin}/checkout/cancel`);
+  } else {
+    res.redirect(303, url)
+  }
+}));
+
+
+async function startServer() {
+  await operon.initializeOperonTables();
+  app.listen(port, () => {
+    console.log(`[server]: Server is running at http://localhost:${port}`);
+  });
   
-  startServer();
+}
+  
+startServer();
