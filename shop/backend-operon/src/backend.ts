@@ -72,6 +72,16 @@ app.get('/api/products/:id', asyncHandler(async (req: Request, res: Response) =>
     }
 }));
 
+async function addToCart(ctxt: TransactionContext, username: string, product_id: string) {
+    await ctxt.client.query(`INSERT INTO cart VALUES($1, $2, 1) ON CONFLICT (username, product_id) DO UPDATE SET quantity = cart.quantity + 1`, [username, product_id]);
+}
+
+app.post('/api/add_to_cart', asyncHandler(async (req: Request, res: Response) => {
+    const {username, product_id} = req.body;
+    await operon.transaction(addToCart, {}, username, product_id);
+    res.status(200).send('Success');
+}));
+
 async function startServer() {
     await operon.initializeOperonTables();
     app.listen(port, () => {
