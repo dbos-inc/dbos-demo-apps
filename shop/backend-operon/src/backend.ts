@@ -39,23 +39,23 @@ app.post('/stripe_webhook', express.raw({type: 'application/json'}), asyncHandle
   const sigHeader = req.headers['stripe-signature'];
   const payload: string = (req.body as Buffer).toString();
   if (typeof sigHeader !== 'string') {
-      res.status(500).send();
-      return;
+    res.status(500).send();
+    return;
   }
   let event;
   try {
-      event = stripe.webhooks.constructEvent(payload, sigHeader, endpointSecret);
+    event = stripe.webhooks.constructEvent(payload, sigHeader, endpointSecret);
   } catch (err) {
-      console.log(err);
-      res.status(400).send(`Webhook Error: ${err}`);
-      return;
+    console.log(err);
+    res.status(400).send(`Webhook Error`);
+    return;
   }
   if (event.type === 'checkout.session.completed') {
-      const session = await stripe.checkout.sessions.retrieve((event.data.object as Stripe.Response<Stripe.Checkout.Session>).id);
-      if (session.client_reference_id !== null) {
-        const orderID: string = session.client_reference_id;
-        await operon.send({}, "stripe_payments" + orderID, "checkout.session.completed");
-      }
+    const session = await stripe.checkout.sessions.retrieve((event.data.object as Stripe.Response<Stripe.Checkout.Session>).id);
+    if (session.client_reference_id !== null) {
+      const orderID: string = session.client_reference_id;
+      await operon.send({}, "stripe_payments" + orderID, "checkout.session.completed");
+    }
   }
   res.status(200).send();
   return;
@@ -179,6 +179,10 @@ async function clearCart(ctxt: TransactionContext, orderID: number) {
   await ctxt.client.query(`DELETE FROM cart WHERE username=$1`, [username]);
 }
 
+async function errorOrder(ctxt: TransactionContext, orderID: number) {
+  await ctxt.client.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.CANCELLED, orderID]);
+}
+
 async function createStripeSession(ctxt: CommunicatorContext, orderID: number, productDetails: any[], origin: string) {
   const lineItems: any[] = productDetails.map((item) => ({
     quantity: item.inventory,
@@ -200,27 +204,51 @@ async function createStripeSession(ctxt: CommunicatorContext, orderID: number, p
   return session;
 }
 
+async function retrieveStripeSession(ctxt: CommunicatorContext, sessionID: string) {
+  const session = await stripe.checkout.sessions.retrieve(sessionID);
+  try {
+    await stripe.checkout.sessions.expire(sessionID); // Ensure nothing changes in the session.
+  } catch(err) {
+    // Session was already expired.
+  }
+  return session;
+}
+
 async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string, uuid: string) {
   const productDetails: any[] = await ctxt.transaction(getCart, username);
   const orderID: number = await ctxt.transaction(createOrder, username, productDetails);
   const valid: boolean = await ctxt.transaction(subtractInventory, productDetails);
   if (!valid) {
-    ctxt.send(uuid, null);
+    await ctxt.send(uuid, null);
     return;
   }
   const stripeSession = await ctxt.external(createStripeSession, {}, orderID, productDetails, origin);
   if (stripeSession === null || stripeSession.url === null) {
     await ctxt.transaction(undoSubtractInventory, productDetails);
-    ctxt.send(uuid, null);
+    await ctxt.send(uuid, null);
     return;
   }
-  ctxt.send(uuid, stripeSession.url);
+  await ctxt.send(uuid, stripeSession.url);
   const notification = await ctxt.recv<string | null>("stripe_payments" + orderID.toString(), 60);
   if (notification !== null) {
-    ctxt.transaction(fulfillOrder, orderID);
-    ctxt.transaction(clearCart, orderID);
+    await ctxt.transaction(fulfillOrder, orderID);
+    await ctxt.transaction(clearCart, orderID);
   } else {
-    // Handle failure.
+    const updatedSession = await ctxt.external(retrieveStripeSession, {}, stripeSession.id);
+    if (updatedSession === null) {
+      console.error(`Recovering order #${orderID} failed: Stripe unreachable`);
+      return;
+    }
+    const paymentStatus: string = updatedSession.payment_status;
+    if (paymentStatus == 'paid') {
+      await ctxt.transaction(fulfillOrder, orderID);
+      await ctxt.transaction(clearCart, orderID);
+    } else if (paymentStatus == 'unpaid') {
+      await ctxt.transaction(undoSubtractInventory, productDetails);
+      await ctxt.transaction(errorOrder, orderID);
+    } else {
+      console.error(`Unrecognized payment status: ${paymentStatus}`);
+    }
   }
 }
 
@@ -232,7 +260,7 @@ app.post('/api/checkout_session', asyncHandler(async (req: Request, res: Respons
     return;
   }
   const uuid: string = uuidv1();
-  operon.workflow(paymentWorkflow, {}, username, origin, uuid);
+  void operon.workflow(paymentWorkflow, {}, username, origin, uuid);
   const url = await operon.recv<string | null>({}, uuid, 10);
   if (url === null) {
     res.redirect(303, `${origin}/checkout/cancel`);
@@ -250,4 +278,4 @@ async function startServer() {
   
 }
   
-startServer();
+void startServer();
