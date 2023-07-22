@@ -24,8 +24,18 @@ export const BankSchema = {
 }
 
 export interface AccountInfo {
-  accountId?: bigint;
+  accountId?: number; // TODO: we need a better BigInt support. Now just use Number.
   ownerName?: string;
   type?: string;
-  balance?: bigint;
+  balance?: number;
+}
+
+export interface TransactionHistory {
+  txnId?: number;
+  fromAccountId?: number;
+  fromLocation?: string;
+  toAccountId?: number;
+  toLocation?: string;
+  amount?: number;
+  timestamp?: Date;
 }

@@ -1,19 +1,13 @@
-import { WorkflowContext, TransactionContext } from "operon";
-import { serializeJson } from "../helpers";
+import { TransactionContext } from "operon";
 import { AccountInfo } from "../sql/schema";
 
-const listAccountsFunc = async (txnCtxt: TransactionContext, name: string) => {
+export const listAccountsFunc = async (txnCtxt: TransactionContext, name: string) => {
   const { rows } = await txnCtxt.client.query<AccountInfo>(`SELECT "accountId", "ownerName", "type", "balance" FROM "AccountInfo" WHERE "ownerName" = $1 ORDER BY "accountId" ASC;`, [name]);
   console.log(rows);
   return rows;
 };
 
-export const listAccounts = async (workflowCtxt: WorkflowContext, name: string) => {
-  const funcResult: AccountInfo[] = await workflowCtxt.transaction(listAccountsFunc, name);
-  return funcResult;
-};
-
-const createAccountFunc = async (txnCtxt: TransactionContext, data: AccountInfo) => {
+export const createAccountFunc = async (txnCtxt: TransactionContext, data: AccountInfo) => {
   const { rows } = await txnCtxt.client.query<AccountInfo>(`INSERT INTO "AccountInfo" ("ownerName","type","balance") VALUES ($1,$2,$3) RETURNING "accountId";`, [data.ownerName, data.type, data.balance]);
   if (rows.length === 0) {
     console.error("Failed to create account!");
@@ -21,14 +15,3 @@ const createAccountFunc = async (txnCtxt: TransactionContext, data: AccountInfo)
   }
   return rows[0];
 };
-
-export const createAccount =async (workflowCtxt: WorkflowContext, input: AccountInfo) => {
-  console.log(input);
-  const createResult = await workflowCtxt.transaction(createAccountFunc, {
-    ownerName: input.ownerName,
-    type: input.type,
-    balance: input.balance
-  });
-  console.log(createResult);
-  return "success";
-}

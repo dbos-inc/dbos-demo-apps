@@ -1,12 +1,17 @@
 import Router from "@koa/router";
 import axios from "axios";
-import { bankname, operon, bankport } from "./main";
-import { createAccount, listAccounts } from "./workflows/accountinfo.workflows";
-import { AccountInfo } from "src/sql/schema";
+import { bankname, operon } from "./main";
+import { createAccountFunc, listAccountsFunc } from "./workflows/accountinfo.workflows";
+import { AccountInfo, TransactionHistory } from "src/sql/schema";
+import { depositWorkflow, listTxnForAccountFunc } from "./workflows/txnhistory.workflows";
 
 export const router = new Router();
 
-const REMOTEDB_PREFIX : string = "remoteDB-";
+export interface RouterResponse {
+  body: string | AccountInfo[] | TransactionHistory[],
+  status: number,
+  message: string
+}
 
 router.get("/api/greeting", async(ctx, next) => {
   ctx.body = {msg: `Hello from DBOS Operon ${bankname}!`};
@@ -17,7 +22,7 @@ router.get("/api/greeting", async(ctx, next) => {
 router.get("/api/list_accounts/:ownerName", async(ctx, next) => {
   const name: string = ctx.params.ownerName;
   try {
-      ctx.body = await operon.workflow(listAccounts, {}, name);
+      ctx.body = await operon.transaction(listAccountsFunc, {}, name);
       ctx.status = 200;
   } catch (err) {
       console.error(err);
@@ -40,7 +45,11 @@ router.post("/api/create_account", async(ctx, next) => {
       return;
   }
   try {
-      ctx.body = await operon.workflow(createAccount, {}, data);
+      ctx.body = await operon.transaction(createAccountFunc, {}, {
+        ownerName: data.ownerName,
+        type: data.type,
+        balance: data.balance
+      });
       ctx.status = 201;
   } catch (err) {
       console.log(err);
@@ -48,4 +57,67 @@ router.post("/api/create_account", async(ctx, next) => {
       ctx.status = 500;
   }
   await next();
+});
+
+// Get transaction history
+router.get("/api/transaction_history/:accountId",async (ctx, next) => {
+  const acctId = ctx.params.accountId;
+  try {
+      ctx.body = await operon.transaction(listTxnForAccountFunc, {}, acctId);
+      ctx.status = 200;
+  } catch (err) {
+      console.error(err);
+      ctx.body = "Error! cannot list transactions for account: " + acctId;
+      ctx.status = 500;
+  }
+  await next();
+});
+
+
+// Deposit.
+router.post("/api/deposit", async(ctx, next) => {
+  const data = <TransactionHistory>ctx.request.body;
+  // TODO: implement auth.
+  // const token = ctx.request.header["authorization"];
+  // console.log("Retrieved token: " + token); // Should have Bearer prefix.
+  if (data.fromLocation === undefined) {
+    console.error("fromLocation must not be empty!");
+    ctx.status = 500;
+    ctx.message = "fromLocation must not be empty!";
+    await next();
+    return;
+  }
+
+  if (data.amount === undefined || data.amount <= 0) {
+    console.error("Invalid amount! " + data.amount);
+    ctx.status = 500;
+    ctx.message = "Invalid amount!";
+    await next();
+    return;
+  }
+
+
+  // Must to local.
+  data.toLocation = 'local';
+
+  // Let it be -1 for cash.
+  if (data.fromAccountId === null) {
+    data.fromAccountId = -1;
+  }
+  
+  // Invoke the workflow.
+  let retResponse: RouterResponse;
+  try {
+    retResponse = await operon.workflow(depositWorkflow, {}, data);
+    ctx.status = retResponse.status;
+    ctx.body = retResponse.body;
+    ctx.message = retResponse.message;
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.message = "Failed to deposit!" + err;
+  }
+
+  await next();
+  return;
 });
