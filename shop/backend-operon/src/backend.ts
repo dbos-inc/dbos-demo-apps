@@ -10,6 +10,12 @@ const stripe = new Stripe(process.env.STRIPE_API_KEY || 'error_no_stripe_key', {
 });
 const endpointSecret: string = process.env.STRIPE_WEBHOOK_SECRET || 'error_no_webhook_secret';
 
+const OrderStatus = {
+  PENDING: 0,
+  FULFILLED: 1,
+  CANCELLED: -1,
+};
+
 // Wrapper for async express handlers.
 const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) => 
   (req: Request, res: Response, next: NextFunction) => {
@@ -27,6 +33,34 @@ const operon: Operon = new Operon({
 
 // Create a new express application instance
 const app: express.Application = express();
+
+// Before the middleware because it uses custom middleware.
+app.post('/stripe_webhook', express.raw({type: 'application/json'}), asyncHandler(async (req: Request, res: Response) => {
+  const sigHeader = req.headers['stripe-signature'];
+  const payload: string = (req.body as Buffer).toString();
+  if (typeof sigHeader !== 'string') {
+      res.status(500).send();
+      return;
+  }
+  let event;
+  try {
+      event = stripe.webhooks.constructEvent(payload, sigHeader, endpointSecret);
+  } catch (err) {
+      console.log(err);
+      res.status(400).send(`Webhook Error: ${err}`);
+      return;
+  }
+  if (event.type === 'checkout.session.completed') {
+      const session = await stripe.checkout.sessions.retrieve((event.data.object as Stripe.Response<Stripe.Checkout.Session>).id);
+      if (session.client_reference_id !== null) {
+        const orderID: string = session.client_reference_id;
+        await operon.send({}, "stripe_payments" + orderID, "checkout.session.completed");
+      }
+  }
+  res.status(200).send();
+  return;
+}));
+
 // Apply body-parsing middleware.
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -126,13 +160,23 @@ async function undoSubtractInventory(ctxt: TransactionContext, products: any[]) 
 
 async function createOrder(ctxt: TransactionContext, username: string, productDetails: any[]) {
   const { rows } = await ctxt.client.query(`INSERT INTO orders(username, order_status, last_update_time) VALUES ($1, $2, $3) RETURNING order_id`, 
-    [username, 0, 0]);
+    [username, OrderStatus.PENDING, 0]);
   const orderID : number = rows[0].order_id;
   for (const product of productDetails) {
     await ctxt.client.query(`INSERT INTO order_items(order_id, product_id, price, quantity) VALUES($1, $2, $3, $4)`, 
       [orderID, product.product_id, product.price, product.inventory]);
   }
   return orderID;
+}
+
+async function fulfillOrder(ctxt: TransactionContext, orderID: number) {
+  await ctxt.client.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.FULFILLED, orderID]);
+}
+
+async function clearCart(ctxt: TransactionContext, orderID: number) {
+  const { rows } = await ctxt.client.query(`SELECT username FROM orders WHERE order_id=$1`, [orderID]);
+  const username: string = rows[0].username;
+  await ctxt.client.query(`DELETE FROM cart WHERE username=$1`, [username]);
 }
 
 async function createStripeSession(ctxt: CommunicatorContext, orderID: number, productDetails: any[], origin: string) {
@@ -171,6 +215,13 @@ async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: 
     return;
   }
   ctxt.send(uuid, stripeSession.url);
+  const notification = await ctxt.recv<string | null>("stripe_payments" + orderID.toString(), 60);
+  if (notification !== null) {
+    ctxt.transaction(fulfillOrder, orderID);
+    ctxt.transaction(clearCart, orderID);
+  } else {
+    // Handle failure.
+  }
 }
 
 app.post('/api/checkout_session', asyncHandler(async (req: Request, res: Response) => {
@@ -192,7 +243,7 @@ app.post('/api/checkout_session', asyncHandler(async (req: Request, res: Respons
 
 
 async function startServer() {
-  await operon.initializeOperonTables();
+  await operon.resetOperonTables();
   app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
