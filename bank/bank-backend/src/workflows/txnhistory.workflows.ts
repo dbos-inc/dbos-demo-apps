@@ -31,8 +31,11 @@ const deleteTxnHistoryFunc = async (txnCtxt: TransactionContext, txnId: number |
 };
 
 const updateAccountBalanceFunc = async (txnCtxt: TransactionContext, acctId: string | number, balance: number | string) => {
-  await txnCtxt.client.query<AccountInfo>(`UPDATE "AccountInfo" SET "balance" = $2 WHERE "accountId" = $1`, [acctId, balance]);
-  // TODO: better error handling.
+  const { rows } = await txnCtxt.client.query<AccountInfo>(`UPDATE "AccountInfo" SET "balance" = $2 WHERE "accountId" = $1 RETURNING "accountId"`, [acctId, balance]);
+  if (rows.length === 0) {
+    return null;
+  }
+  return rows[0].accountId;
 };
 
 const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: number | string, data: TransactionHistory, deposit: boolean, undoTxn: string | number | null = null) => {
@@ -56,7 +59,13 @@ const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: nu
       return null;
     }
   }
-  await updateAccountBalanceFunc(txnCtxt, acctId, newBalance);
+
+  const resId = await updateAccountBalanceFunc(txnCtxt, acctId, newBalance);
+  if (!resId || String(resId) !== String(acctId)) {
+    console.error("Failed to update account balance!");
+    await txnCtxt.rollback();
+    return null;
+  }
 
   // Insert transaction history.
   // For some undo transactions, we need to remove that history from the table.
@@ -64,7 +73,6 @@ const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: nu
   if (!undoTxn) {
     txnId = await insertTxnHistoryFunc(txnCtxt, data);
   } else {
-    // TODO: delete inserted transaction.
     txnId = await deleteTxnHistoryFunc(txnCtxt, undoTxn);
   }
   
@@ -121,13 +129,19 @@ export const internalTransferFunc = async (txnCtxt: TransactionContext, data: Tr
   }
 
   // Update accounts and record the transaction.
-  // TODO: pg returns bigint as string. So we need to convert it first. Need better support for BigInt.
-  await updateAccountBalanceFunc(txnCtxt, data.fromAccountId, Number(fromAccount.balance) - Number(data.amount));
-  await updateAccountBalanceFunc(txnCtxt, data.toAccountId, Number(toAccount.balance) + Number(data.amount));
-  await insertTxnHistoryFunc(txnCtxt, data);
+  const updateRes = await updateAccountBalanceFunc(txnCtxt, data.fromAccountId, Number(fromAccount.balance) - Number(data.amount));
+  const updateRes2 = await updateAccountBalanceFunc(txnCtxt, data.toAccountId, Number(toAccount.balance) + Number(data.amount));
+  const insertRes = await insertTxnHistoryFunc(txnCtxt, data);
 
-  retResponse.body = "Internal transfer succeeded!";
-  retResponse.status = 200;
+  // Check for errors.
+  if (!updateRes || !updateRes2 || insertRes) {
+    console.error("Failed to perform internal transfer!");
+    retResponse.message = "Failed to perform internal transfer!";
+    retResponse.status = 500;
+  } else {
+    retResponse.body = "Internal transfer succeeded!";
+    retResponse.status = 200;
+  }
 
   return retResponse;
 };
