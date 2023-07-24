@@ -98,7 +98,7 @@ router.post("/api/deposit", async(ctx, next) => {
 
   // Let it be -1 for cash.
   if (!data.fromAccountId) {
-    data.fromAccountId = -1;
+    data.fromAccountId = "-1";
   }
   
   // Invoke the workflow.
@@ -145,7 +145,7 @@ router.post("/api/withdraw", async(ctx, next) => {
 
   // Let it be -1 for cash.
   if (!data.toAccountId) {
-    data.toAccountId = -1;
+    data.toAccountId = "-1";
   }
   
   // Invoke the workflow.

@@ -7,7 +7,7 @@ import axios from "axios";
 
 const REMOTEDB_PREFIX : string = "remoteDB-";
 
-export const listTxnForAccountFunc = async (txnCtxt: TransactionContext, acctId: string | number) => {
+export const listTxnForAccountFunc = async (txnCtxt: TransactionContext, acctId: string) => {
   const { rows } = await txnCtxt.client.query<TransactionHistory>(`SELECT "txnId", "fromAccountId", "fromLocation", "toAccountId", "toLocation", "amount", "timestamp" FROM "TransactionHistory" WHERE (("fromAccountId" = $1 AND "fromLocation" = 'local') OR ("toAccountId" = $2 AND "toLocation" = 'local')) ORDER BY "timestamp" DESC;`, [acctId, acctId]);
   return rows;
 };
@@ -21,7 +21,7 @@ const insertTxnHistoryFunc = async (txnCtxt: TransactionContext, data: Transacti
   return rows[0].txnId;
 };
 
-const deleteTxnHistoryFunc = async (txnCtxt: TransactionContext, txnId: number | string) => {
+const deleteTxnHistoryFunc = async (txnCtxt: TransactionContext, txnId: string) => {
   const { rows } = await txnCtxt.client.query<TransactionHistory>(`DELETE FROM "TransactionHistory" WHERE "txnId" = $1 RETURNING "txnId"`,
     [txnId]);
   if (rows.length === 0) {
@@ -30,7 +30,7 @@ const deleteTxnHistoryFunc = async (txnCtxt: TransactionContext, txnId: number |
   return rows[0].txnId;
 };
 
-const updateAccountBalanceFunc = async (txnCtxt: TransactionContext, acctId: string | number, balance: number | string) => {
+const updateAccountBalanceFunc = async (txnCtxt: TransactionContext, acctId: string, balance: string) => {
   const { rows } = await txnCtxt.client.query<AccountInfo>(`UPDATE "AccountInfo" SET "balance" = $2 WHERE "accountId" = $1 RETURNING "accountId"`, [acctId, balance]);
   if (rows.length === 0) {
     return null;
@@ -38,7 +38,7 @@ const updateAccountBalanceFunc = async (txnCtxt: TransactionContext, acctId: str
   return rows[0].accountId;
 };
 
-const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: number | string, data: TransactionHistory, deposit: boolean, undoTxn: string | number | null = null) => {
+const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: string, data: TransactionHistory, deposit: boolean, undoTxn: string | null = null) => {
   // First, make sure the account exists, and read the latest balance.
   const acct = await findAccountFunc(txnCtxt, acctId);
   if (acct === null) {
@@ -48,19 +48,19 @@ const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: nu
   }
 
   // Update account balance.
-  let newBalance: number;
+  let newBalance: bigint;
   if (deposit) {
-    newBalance = Number(acct.balance) + Number(data.amount);
+    newBalance = BigInt(acct.balance) + BigInt(data.amount);
   } else {
-    newBalance = Number(acct.balance) - Number(data.amount);
-    if (newBalance < 0.0) {
+    newBalance = BigInt(acct.balance) - BigInt(data.amount);
+    if (newBalance < 0n) {
       console.error("Not enough balance!");
       await txnCtxt.rollback();
       return null;
     }
   }
 
-  const resId = await updateAccountBalanceFunc(txnCtxt, acctId, newBalance);
+  const resId = await updateAccountBalanceFunc(txnCtxt, acctId, newBalance.toString());
   if (!resId || String(resId) !== String(acctId)) {
     console.error("Failed to update account balance!");
     await txnCtxt.rollback();
@@ -110,7 +110,7 @@ export const internalTransferFunc = async (txnCtxt: TransactionContext, data: Tr
     return retResponse;
   }
 
-  if (fromAccount.balance < data.amount) {
+  if (BigInt(fromAccount.balance) < BigInt(data.amount)) {
     console.error("Not enough balance!");
     await txnCtxt.rollback();
     retResponse.status = 500;
@@ -129,12 +129,12 @@ export const internalTransferFunc = async (txnCtxt: TransactionContext, data: Tr
   }
 
   // Update accounts and record the transaction.
-  const updateRes = await updateAccountBalanceFunc(txnCtxt, data.fromAccountId, Number(fromAccount.balance) - Number(data.amount));
-  const updateRes2 = await updateAccountBalanceFunc(txnCtxt, data.toAccountId, Number(toAccount.balance) + Number(data.amount));
+  const updateRes = await updateAccountBalanceFunc(txnCtxt, data.fromAccountId, (BigInt(fromAccount.balance) - BigInt(data.amount)).toString());
+  const updateRes2 = await updateAccountBalanceFunc(txnCtxt, data.toAccountId, (BigInt(toAccount.balance) + BigInt(data.amount)).toString());
   const insertRes = await insertTxnHistoryFunc(txnCtxt, data);
 
   // Check for errors.
-  if (!updateRes || !updateRes2 || insertRes) {
+  if (!updateRes || !updateRes2 || !insertRes) {
     console.error("Failed to perform internal transfer!");
     retResponse.message = "Failed to perform internal transfer!";
     retResponse.status = 500;

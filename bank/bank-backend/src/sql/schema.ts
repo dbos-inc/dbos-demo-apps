@@ -23,18 +23,19 @@ export const BankSchema = {
     );`
 }
 
+// TODO: we need a better BigInt support. Now just use String whenever the column is BigInt
 export interface AccountInfo {
-  accountId?: number; // TODO: we need a better BigInt support. Now just use Number.
+  accountId?: string;
   ownerName: string;
   type: string;
-  balance: number;
+  balance: string; 
 }
 
 export interface TransactionHistory {
-  txnId?: number | string;
-  fromAccountId: number;
+  txnId?: string;
+  fromAccountId: string;
   fromLocation: string;
-  toAccountId: number;
+  toAccountId: string;
   toLocation: string;
   amount: number;
   timestamp?: Date;
