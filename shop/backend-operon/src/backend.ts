@@ -16,6 +16,15 @@ const OrderStatus = {
   CANCELLED: -1,
 };
 
+interface Product {
+  product_id: number,
+  product: string,
+  description: string,
+  image_name: string,
+  price: number,
+  inventory: number,
+}
+
 // Wrapper for async express handlers.
 const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) => 
   (req: Request, res: Response, next: NextFunction) => {
@@ -67,7 +76,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 async function getProducts(ctxt: TransactionContext) {
-  const { rows } = await ctxt.client.query('SELECT product_id, product, description, image_name, price FROM products');
+  const { rows } = await ctxt.client.query<Product>('SELECT product_id, product, description, image_name, price FROM products');
   const formattedRows = rows.map((row) => ({
     ...row,
     display_price: (row.price / 100).toFixed(2),
@@ -82,7 +91,7 @@ app.get('/api/products', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 async function getProduct(ctxt: TransactionContext, id: number) {
-  const { rows } = await ctxt.client.query(`SELECT product_id, product, description, image_name, price FROM products WHERE product_id = $1`, [id]);
+  const { rows } = await ctxt.client.query<Product>(`SELECT product_id, product, description, image_name, price FROM products WHERE product_id = $1`, [id]);
   if (rows.length === 0) {
     return null;
   }
@@ -120,7 +129,7 @@ app.post('/api/add_to_cart', asyncHandler(async (req: Request, res: Response) =>
 async function getCart(ctxt: TransactionContext, username: string) {
   const { rows } = await ctxt.client.query(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
   const productDetails = await Promise.all(rows.map(async (row) => ({
-    ...await getProduct(ctxt, row.product_id),
+    ...(await getProduct(ctxt, row.product_id))!,
     inventory: row.quantity,
   })));
   return productDetails;
@@ -132,10 +141,10 @@ app.post('/api/get_cart', asyncHandler(async (req: Request, res: Response) => {
   res.send(productDetails);
 }));
 
-async function subtractInventory(ctxt: TransactionContext, products: any[]): Promise<boolean> {
+async function subtractInventory(ctxt: TransactionContext, products: Product[]): Promise<boolean> {
   let hasEnoughInventory = true;
   for (const product of products) {
-    const { rows } = await ctxt.client.query(`SELECT inventory FROM products WHERE product_id = $1`, [product.product_id]);
+    const { rows } = await ctxt.client.query<Product>(`SELECT inventory FROM products WHERE product_id = $1`, [product.product_id]);
     const currentInventory = rows[0]?.inventory;
 
     if (currentInventory < product.inventory) {
@@ -152,13 +161,13 @@ async function subtractInventory(ctxt: TransactionContext, products: any[]): Pro
   return hasEnoughInventory;
 }
 
-async function undoSubtractInventory(ctxt: TransactionContext, products: any[]) {
+async function undoSubtractInventory(ctxt: TransactionContext, products: Product[]) {
   for (const product of products) {
     await ctxt.client.query(`UPDATE products SET inventory = inventory + $1 WHERE product_id = $2`, [product.inventory, product.product_id]);
   }
 }
 
-async function createOrder(ctxt: TransactionContext, username: string, productDetails: any[]) {
+async function createOrder(ctxt: TransactionContext, username: string, productDetails: Product[]) {
   const { rows } = await ctxt.client.query(`INSERT INTO orders(username, order_status, last_update_time) VALUES ($1, $2, $3) RETURNING order_id`, 
     [username, OrderStatus.PENDING, 0]);
   const orderID : number = rows[0].order_id;
@@ -183,8 +192,8 @@ async function errorOrder(ctxt: TransactionContext, orderID: number) {
   await ctxt.client.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.CANCELLED, orderID]);
 }
 
-async function createStripeSession(ctxt: CommunicatorContext, orderID: number, productDetails: any[], origin: string) {
-  const lineItems: any[] = productDetails.map((item) => ({
+async function createStripeSession(ctxt: CommunicatorContext, orderID: number, productDetails: Product[], origin: string) {
+  const lineItems = productDetails.map((item) => ({
     quantity: item.inventory,
     price_data: {
       currency: "usd",
@@ -215,7 +224,7 @@ async function retrieveStripeSession(ctxt: CommunicatorContext, sessionID: strin
 }
 
 async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string, uuid: string) {
-  const productDetails: any[] = await ctxt.transaction(getCart, username);
+  const productDetails: Product[] = await ctxt.transaction(getCart, username);
   const orderID: number = await ctxt.transaction(createOrder, username, productDetails);
   const valid: boolean = await ctxt.transaction(subtractInventory, productDetails);
   if (!valid) {
