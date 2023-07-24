@@ -35,11 +35,9 @@ router.get("/api/list_accounts/:ownerName", async(ctx, next) => {
 // Create account.
 router.post("/api/create_account", async(ctx, next) => {
   const data = <AccountInfo>ctx.request.body;
-  if ((data.balance === undefined) ||
-      (data.ownerName === undefined) ||
-      (data.type === undefined)) {
+  if (!data.balance || !data.ownerName || !data.balance) {
       ctx.body = "Invalid input: " + JSON.stringify(data);
-      ctx.status = 403;
+      ctx.status = 500;
       ctx.message = "invalid input!";
       await next();
       return;
@@ -80,7 +78,7 @@ router.post("/api/deposit", async(ctx, next) => {
   // TODO: implement auth.
   // const token = ctx.request.header["authorization"];
   // console.log("Retrieved token: " + token); // Should have Bearer prefix.
-  if (data.fromLocation === undefined) {
+  if (!data.fromLocation) {
     console.error("fromLocation must not be empty!");
     ctx.status = 500;
     ctx.message = "fromLocation must not be empty!";
@@ -88,7 +86,7 @@ router.post("/api/deposit", async(ctx, next) => {
     return;
   }
 
-  if (data.amount === undefined || data.amount <= 0) {
+  if (!data.amount || data.amount <= 0) {
     console.error("Invalid amount! " + data.amount);
     ctx.status = 500;
     ctx.message = "Invalid amount!";
@@ -96,12 +94,11 @@ router.post("/api/deposit", async(ctx, next) => {
     return;
   }
 
-
   // Must to local.
   data.toLocation = 'local';
 
   // Let it be -1 for cash.
-  if (data.fromAccountId === null) {
+  if (!data.fromAccountId) {
     data.fromAccountId = -1;
   }
   
@@ -128,7 +125,7 @@ router.post("/api/withdraw", async(ctx, next) => {
   // TODO: implement auth.
   // const token = ctx.request.header["authorization"];
   // console.log("Retrieved token: " + token); // Should have Bearer prefix.
-  if (data.toLocation === undefined) {
+  if (!data.toLocation) {
     console.error("toLocation must not be empty!");
     ctx.status = 500;
     ctx.message = "toLocation must not be empty!";
@@ -136,7 +133,7 @@ router.post("/api/withdraw", async(ctx, next) => {
     return;
   }
 
-  if (data.amount === undefined || data.amount <= 0) {
+  if (!data.amount || data.amount <= 0) {
     console.error("Invalid amount! " + data.amount);
     ctx.status = 500;
     ctx.message = "Invalid amount!";
@@ -148,7 +145,7 @@ router.post("/api/withdraw", async(ctx, next) => {
   data.fromLocation = 'local';
 
   // Let it be -1 for cash.
-  if (data.toAccountId === null) {
+  if (!data.toAccountId) {
     data.toAccountId = -1;
   }
   
