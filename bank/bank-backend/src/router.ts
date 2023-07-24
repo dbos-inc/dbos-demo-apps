@@ -3,7 +3,7 @@ import axios from "axios";
 import { bankname, operon } from "./main";
 import { createAccountFunc, listAccountsFunc } from "./workflows/accountinfo.workflows";
 import { AccountInfo, TransactionHistory } from "src/sql/schema";
-import { depositWorkflow, listTxnForAccountFunc, withdrawWorkflow } from "./workflows/txnhistory.workflows";
+import { depositWorkflow, listTxnForAccountFunc, withdrawWorkflow, internalTransferFunc } from "./workflows/txnhistory.workflows";
 
 export const router = new Router();
 
@@ -144,7 +144,6 @@ router.post("/api/withdraw", async(ctx, next) => {
     return;
   }
 
-
   // Must from local.
   data.fromLocation = 'local';
 
@@ -164,6 +163,51 @@ router.post("/api/withdraw", async(ctx, next) => {
     console.error(err);
     ctx.status = 500;
     ctx.message = "Failed to withdraw!" + err;
+  }
+
+  await next();
+  return;
+});
+
+// Internal transfer
+router.post("/api/transfer", async(ctx, next) => {
+  const data = <TransactionHistory>ctx.request.body;
+
+  // Check the transaction is within the local database.
+  if (((data.fromLocation !== undefined) && (data.fromLocation !== 'local'))
+    || ((data.toLocation !== undefined) && (data.toLocation !== 'local'))) {
+    console.error("Must be a local transaction! Instead: " + data.fromLocation + " -> " + data.toLocation);
+    ctx.status = 500;
+    ctx.message = "Must be a local transaction!";
+    await next();
+    return;
+  }
+
+  // Check valid input.
+  if (!data.toLocation || !data.toAccountId || !data.amount || !data.fromAccountId || !data.fromLocation) {
+    ctx.status = 500;
+    ctx.message = "Invalid input!";
+    await next();
+    return;
+  }
+
+  if (data.amount <= 0.0) {
+    ctx.status = 500;
+    ctx.message = "Invalid amount!";
+    await next();
+    return;
+  }
+
+  // Invoke the transaction.
+  try {
+    const retResponse: RouterResponse = await operon.transaction(internalTransferFunc, {}, data);
+    ctx.status = retResponse.status;
+    ctx.body = retResponse.body;
+    ctx.message = retResponse.message;
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.message = "Failed to transfer!" + err;
   }
 
   await next();

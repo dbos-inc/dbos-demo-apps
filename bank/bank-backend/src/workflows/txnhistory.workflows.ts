@@ -26,7 +26,7 @@ const insertTxnHistoryFunc = async (txnCtxt: TransactionContext, data: Transacti
   // TODO: better error handling.
 };
 
-const updateAccountBalanceFunc = async (txnCtxt: TransactionContext, acctId: string | number, balance: number) => {
+const updateAccountBalanceFunc = async (txnCtxt: TransactionContext, acctId: string | number, balance: number | string) => {
   await txnCtxt.client.query<AccountInfo>(`UPDATE "AccountInfo" SET "balance" = $2 WHERE "accountId" = $1`, [acctId, balance]);
   // TODO: better error handling.
 };
@@ -58,6 +58,53 @@ const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: nu
   await insertTxnHistoryFunc(txnCtxt, data);
   
   return true;
+};
+
+export const internalTransferFunc = async (txnCtxt: TransactionContext, data: TransactionHistory): Promise<RouterResponse> => {
+  let retResponse: RouterResponse = {
+    body: "",
+    status: 200,
+    message: ""
+  };
+
+  // Check if the fromAccount has enough balance.
+  const fromAccount: AccountInfo | null = await findAccountFunc(txnCtxt, data.fromAccountId);
+  if (fromAccount === null) {
+    console.error("Cannot find account!");
+    await txnCtxt.rollback();
+    retResponse.status = 500;
+    retResponse.message = "Cannot find fromAccount!";
+    return retResponse;
+  }
+
+  if (fromAccount.balance < data.amount) {
+    console.error("Not enough balance!");
+    await txnCtxt.rollback();
+    retResponse.status = 500;
+    retResponse.message = "Not enough balance!";
+    return retResponse;
+  }
+
+  // ToAccount must exist.
+  const toAccount: AccountInfo | null = await findAccountFunc(txnCtxt, data.toAccountId);
+  if (toAccount === null) {
+    console.error("Cannot find account!");
+    await txnCtxt.rollback();
+    retResponse.status = 500;
+    retResponse.message = "Cannot find toAccount!";
+    return retResponse;
+  }
+
+  // Update accounts and record the transaction.
+  // TODO: pg returns bigint as string. So we need to convert it first. Need better support for BigInt.
+  await updateAccountBalanceFunc(txnCtxt, data.fromAccountId, Number(fromAccount.balance) - Number(data.amount));
+  await updateAccountBalanceFunc(txnCtxt, data.toAccountId, Number(toAccount.balance) + Number(data.amount));
+  await insertTxnHistoryFunc(txnCtxt, data);
+
+  retResponse.body = "Internal transfer succeeded!";
+  retResponse.status = 200;
+
+  return retResponse;
 };
 
 export const depositWorkflow = async (ctxt: WorkflowContext, data: TransactionHistory) => {
