@@ -3,7 +3,6 @@ import { AccountInfo } from "../sql/schema";
 
 export const listAccountsFunc = async (txnCtxt: TransactionContext, name: string) => {
   const { rows } = await txnCtxt.client.query<AccountInfo>(`SELECT "accountId", "ownerName", "type", "balance" FROM "AccountInfo" WHERE "ownerName" = $1 ORDER BY "accountId" ASC;`, [name]);
-  console.log(rows);
   return rows;
 };
 

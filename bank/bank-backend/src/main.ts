@@ -33,7 +33,7 @@ async function startServer() {
     user: username,
     password: password
   });
-  operon.resetOperonTables();
+  await operon.resetOperonTables();
 
   // Create bank tables.
   await operon.pool.query(BankSchema.accountInfoTable);
@@ -53,4 +53,4 @@ async function startServer() {
   });
 }
 
-startServer();
+void startServer();

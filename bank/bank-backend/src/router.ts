@@ -1,5 +1,4 @@
 import Router from "@koa/router";
-import axios from "axios";
 import { bankname, operon } from "./main";
 import { createAccountFunc, listAccountsFunc } from "./workflows/accountinfo.workflows";
 import { AccountInfo, TransactionHistory } from "src/sql/schema";
@@ -22,12 +21,12 @@ router.get("/api/greeting", async(ctx, next) => {
 router.get("/api/list_accounts/:ownerName", async(ctx, next) => {
   const name: string = ctx.params.ownerName;
   try {
-      ctx.body = await operon.transaction(listAccountsFunc, {}, name);
-      ctx.status = 200;
+    ctx.body = await operon.transaction(listAccountsFunc, {}, name);
+    ctx.status = 200;
   } catch (err) {
-      console.error(err);
-      ctx.body = "Error! cannot list accounts for: " + name;
-      ctx.status = 500;
+    console.error(err);
+    ctx.body = "Error! cannot list accounts for: " + name;
+    ctx.status = 500;
   }
   await next();
 });
@@ -36,23 +35,23 @@ router.get("/api/list_accounts/:ownerName", async(ctx, next) => {
 router.post("/api/create_account", async(ctx, next) => {
   const data = <AccountInfo>ctx.request.body;
   if (!data.balance || !data.ownerName || !data.balance) {
-      ctx.body = "Invalid input: " + JSON.stringify(data);
-      ctx.status = 500;
-      ctx.message = "invalid input!";
-      await next();
-      return;
+    ctx.body = "Invalid input: " + JSON.stringify(data);
+    ctx.status = 500;
+    ctx.message = "invalid input!";
+    await next();
+    return;
   }
   try {
-      ctx.body = await operon.transaction(createAccountFunc, {}, {
-        ownerName: data.ownerName,
-        type: data.type,
-        balance: data.balance
-      });
-      ctx.status = 201;
+    ctx.body = await operon.transaction(createAccountFunc, {}, {
+      ownerName: data.ownerName,
+      type: data.type,
+      balance: data.balance
+    });
+    ctx.status = 201;
   } catch (err) {
-      console.log(err);
-      ctx.body = "Error! cannot create the account!";
-      ctx.status = 500;
+    console.error(err);
+    ctx.body = "Error! cannot create the account!";
+    ctx.status = 500;
   }
   await next();
 });
@@ -61,12 +60,12 @@ router.post("/api/create_account", async(ctx, next) => {
 router.get("/api/transaction_history/:accountId",async (ctx, next) => {
   const acctId = ctx.params.accountId;
   try {
-      ctx.body = await operon.transaction(listTxnForAccountFunc, {}, acctId);
-      ctx.status = 200;
+    ctx.body = await operon.transaction(listTxnForAccountFunc, {}, acctId);
+    ctx.status = 200;
   } catch (err) {
-      console.error(err);
-      ctx.body = "Error! cannot list transactions for account: " + acctId;
-      ctx.status = 500;
+    console.error(err);
+    ctx.body = "Error! cannot list transactions for account: " + acctId;
+    ctx.status = 500;
   }
   await next();
 });
@@ -112,7 +111,7 @@ router.post("/api/deposit", async(ctx, next) => {
   } catch (err) {
     console.error(err);
     ctx.status = 500;
-    ctx.message = "Failed to deposit!" + err;
+    ctx.message = "Failed to deposit!";
   }
 
   await next();
@@ -159,7 +158,7 @@ router.post("/api/withdraw", async(ctx, next) => {
   } catch (err) {
     console.error(err);
     ctx.status = 500;
-    ctx.message = "Failed to withdraw!" + err;
+    ctx.message = "Failed to withdraw!";
   }
 
   await next();
@@ -204,7 +203,7 @@ router.post("/api/transfer", async(ctx, next) => {
   } catch (err) {
     console.error(err);
     ctx.status = 500;
-    ctx.message = "Failed to transfer!" + err;
+    ctx.message = "Failed to transfer!";
   }
 
   await next();

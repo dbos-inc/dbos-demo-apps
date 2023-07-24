@@ -14,7 +14,7 @@ export const listTxnForAccountFunc = async (txnCtxt: TransactionContext, acctId:
 
 const insertTxnHistoryFunc = async (txnCtxt: TransactionContext, data: TransactionHistory) => {
   const { rows } = await txnCtxt.client.query<TransactionHistory>(`INSERT INTO "TransactionHistory" ("fromAccountId","fromLocation","toAccountId","toLocation","amount") VALUES ($1,$2,$3,$4,$5) RETURNING "txnId"`,
-  [data.fromAccountId, data.fromLocation, data.toAccountId, data.toLocation, data.amount]);
+    [data.fromAccountId, data.fromLocation, data.toAccountId, data.toLocation, data.amount]);
   if (rows.length === 0) {
     return null;
   }
@@ -23,7 +23,7 @@ const insertTxnHistoryFunc = async (txnCtxt: TransactionContext, data: Transacti
 
 const deleteTxnHistoryFunc = async (txnCtxt: TransactionContext, txnId: number | string) => {
   const { rows } = await txnCtxt.client.query<TransactionHistory>(`DELETE FROM "TransactionHistory" WHERE "txnId" = $1 RETURNING "txnId"`,
-  [txnId]);
+    [txnId]);
   if (rows.length === 0) {
     return null;
   }
@@ -86,7 +86,7 @@ const remoteTransferComm = async (commCtxt: CommunicatorContext, remoteUrl: stri
 };
 
 export const internalTransferFunc = async (txnCtxt: TransactionContext, data: TransactionHistory): Promise<RouterResponse> => {
-  let retResponse: RouterResponse = {
+  const retResponse: RouterResponse = {
     body: "",
     status: 200,
     message: ""
@@ -133,7 +133,7 @@ export const internalTransferFunc = async (txnCtxt: TransactionContext, data: Tr
 };
 
 export const depositWorkflow = async (ctxt: WorkflowContext, data: TransactionHistory) => {
-  let retResponse: RouterResponse = {
+  const retResponse: RouterResponse = {
     body: "",
     status: 200,
     message: "Deposit succeeded!"
@@ -149,36 +149,36 @@ export const depositWorkflow = async (ctxt: WorkflowContext, data: TransactionHi
 
   // Then, Contact remote DB to withdraw.
   if (data.fromLocation && !(data.fromLocation === 'cash') && !data.fromLocation.startsWith(REMOTEDB_PREFIX)) {
-      console.log("Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
-      const remoteUrl = data.fromLocation + "/api/withdraw";
-      const thReq : TransactionHistory = {
-          fromAccountId: data.fromAccountId,
-          toAccountId: data.toAccountId,
-          amount: data.amount,
-          fromLocation: 'local',
-          toLocation: REMOTEDB_PREFIX + bankname + ":" + bankport
-      };
+    console.log("Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
+    const remoteUrl = data.fromLocation + "/api/withdraw";
+    const thReq : TransactionHistory = {
+      fromAccountId: data.fromAccountId,
+      toAccountId: data.toAccountId,
+      amount: data.amount,
+      fromLocation: 'local',
+      toLocation: REMOTEDB_PREFIX + bankname + ":" + bankport
+    };
 
-      const remoteRes: boolean | null = await ctxt.external(remoteTransferComm, {}, remoteUrl, thReq);
-      if (!remoteRes) {
-        retResponse.status = 500;
-        retResponse.message = "Failed to withdraw from remote bank.";
-        // Undo transaction is a withdrawal.
-        const undoRes = await ctxt.transaction(updateAcctTransactionFunc, data.toAccountId, data, false, result);
-        if (!undoRes || (undoRes !== result)) {
-          console.error('Mismatch: Original txnId: %d, undo txnId: %d', result, undoRes);
-          retResponse.message = "Serious error! Failed to recover from inconsistence state.";
-        }
+    const remoteRes: boolean | null = await ctxt.external(remoteTransferComm, {}, remoteUrl, thReq);
+    if (!remoteRes) {
+      retResponse.status = 500;
+      retResponse.message = "Failed to withdraw from remote bank.";
+      // Undo transaction is a withdrawal.
+      const undoRes = await ctxt.transaction(updateAcctTransactionFunc, data.toAccountId, data, false, result);
+      if (!undoRes || (undoRes !== result)) {
+        console.error('Mismatch: Original txnId: %d, undo txnId: %d', result, undoRes);
+        retResponse.message = "Serious error! Failed to recover from inconsistence state.";
       }
+    }
   } else {
-      console.log("Deposit from: " + data.fromLocation);
+    console.log("Deposit from: " + data.fromLocation);
   }
 
   return retResponse;
 };
 
 export const withdrawWorkflow = async (ctxt: WorkflowContext, data: TransactionHistory) => {
-  let retResponse: RouterResponse = {
+  const retResponse: RouterResponse = {
     body: "",
     status: 200,
     message: "Withdraw succeeded!"
@@ -194,28 +194,28 @@ export const withdrawWorkflow = async (ctxt: WorkflowContext, data: TransactionH
 
   // Then, contact remote DB to deposit.
   if (data.toLocation && !(data.toLocation === 'cash') && !data.toLocation.startsWith(REMOTEDB_PREFIX)) {
-      console.log("Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
-      const remoteUrl = data.toLocation + "/api/deposit";
-      const thReq : TransactionHistory = {
-          fromAccountId: data.fromAccountId,
-          toAccountId: data.toAccountId,
-          amount: data.amount,
-          toLocation: 'local',
-          fromLocation: REMOTEDB_PREFIX + bankname + ":" + bankport
-      };
-      const remoteRes: boolean | null = await ctxt.external(remoteTransferComm, {}, remoteUrl, thReq);
-      if (!remoteRes) {
-        retResponse.status = 500;
-        retResponse.message = "Failed to deposit to remote bank.";
-        // Undo transaction is a deposit.
-        const undoRes = await ctxt.transaction(updateAcctTransactionFunc, data.fromAccountId, data, true, result);
-        if (!undoRes || (undoRes !== result)) {
-          console.error('Mismatch: Original txnId: %d, undo txnId: %d', result, undoRes);
-          retResponse.message = "Serious error! Failed to recover from inconsistence state.";
-        }
+    console.log("Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
+    const remoteUrl = data.toLocation + "/api/deposit";
+    const thReq : TransactionHistory = {
+      fromAccountId: data.fromAccountId,
+      toAccountId: data.toAccountId,
+      amount: data.amount,
+      toLocation: 'local',
+      fromLocation: REMOTEDB_PREFIX + bankname + ":" + bankport
+    };
+    const remoteRes: boolean | null = await ctxt.external(remoteTransferComm, {}, remoteUrl, thReq);
+    if (!remoteRes) {
+      retResponse.status = 500;
+      retResponse.message = "Failed to deposit to remote bank.";
+      // Undo transaction is a deposit.
+      const undoRes = await ctxt.transaction(updateAcctTransactionFunc, data.fromAccountId, data, true, result);
+      if (!undoRes || (undoRes !== result)) {
+        console.error('Mismatch: Original txnId: %d, undo txnId: %d', result, undoRes);
+        retResponse.message = "Serious error! Failed to recover from inconsistence state.";
       }
+    }
   } else {
-      console.log("Deposit to: " + data.fromLocation);
+    console.log("Deposit to: " + data.fromLocation);
   }
 
   return retResponse;
