@@ -3,7 +3,7 @@ import axios from "axios";
 import { bankname, operon } from "./main";
 import { createAccountFunc, listAccountsFunc } from "./workflows/accountinfo.workflows";
 import { AccountInfo, TransactionHistory } from "src/sql/schema";
-import { depositWorkflow, listTxnForAccountFunc } from "./workflows/txnhistory.workflows";
+import { depositWorkflow, listTxnForAccountFunc, withdrawWorkflow } from "./workflows/txnhistory.workflows";
 
 export const router = new Router();
 
@@ -116,6 +116,54 @@ router.post("/api/deposit", async(ctx, next) => {
     console.error(err);
     ctx.status = 500;
     ctx.message = "Failed to deposit!" + err;
+  }
+
+  await next();
+  return;
+});
+
+// Withdraw.
+router.post("/api/withdraw", async(ctx, next) => {
+  const data = <TransactionHistory>ctx.request.body;
+  // TODO: implement auth.
+  // const token = ctx.request.header["authorization"];
+  // console.log("Retrieved token: " + token); // Should have Bearer prefix.
+  if (data.toLocation === undefined) {
+    console.error("toLocation must not be empty!");
+    ctx.status = 500;
+    ctx.message = "toLocation must not be empty!";
+    await next();
+    return;
+  }
+
+  if (data.amount === undefined || data.amount <= 0) {
+    console.error("Invalid amount! " + data.amount);
+    ctx.status = 500;
+    ctx.message = "Invalid amount!";
+    await next();
+    return;
+  }
+
+
+  // Must from local.
+  data.fromLocation = 'local';
+
+  // Let it be -1 for cash.
+  if (data.toAccountId === null) {
+    data.toAccountId = -1;
+  }
+  
+  // Invoke the workflow.
+  let retResponse: RouterResponse;
+  try {
+    retResponse = await operon.workflow(withdrawWorkflow, {}, data);
+    ctx.status = retResponse.status;
+    ctx.body = retResponse.body;
+    ctx.message = retResponse.message;
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.message = "Failed to withdraw!" + err;
   }
 
   await next();
