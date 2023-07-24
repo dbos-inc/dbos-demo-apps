@@ -31,7 +31,7 @@ export interface AccountInfo {
 }
 
 export interface TransactionHistory {
-  txnId?: number;
+  txnId?: number | string;
   fromAccountId: number;
   fromLocation: string;
   toAccountId: number;

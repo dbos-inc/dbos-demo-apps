@@ -17,6 +17,9 @@ export const createAccountFunc = async (txnCtxt: TransactionContext, data: Accou
 };
 
 export const findAccountFunc = async (txnCtxt: TransactionContext, acctId: string | number) => {
+  if (!acctId) {
+    return null;
+  }
   const { rows } = await txnCtxt.client.query<AccountInfo>(`SELECT "accountId", "ownerName", "type", "balance" FROM "AccountInfo" WHERE "accountId" = $1`, [acctId]);
   if (rows.length === 0) {
     return null;
