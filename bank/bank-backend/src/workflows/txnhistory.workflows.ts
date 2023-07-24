@@ -2,6 +2,7 @@ import { WorkflowContext, TransactionContext } from "operon";
 import { AccountInfo, TransactionHistory } from "../sql/schema";
 import { RouterResponse } from "../router";
 import { bankname, bankport } from "../main";
+import { findAccountFunc } from "./accountinfo.workflows";
 
 const REMOTEDB_PREFIX : string = "remoteDB-";
 
@@ -9,15 +10,6 @@ export const listTxnForAccountFunc = async (txnCtxt: TransactionContext, acctId:
   const { rows } = await txnCtxt.client.query<TransactionHistory>(`SELECT "txnId", "fromAccountId", "fromLocation", "toAccountId", "toLocation", "amount", "timestamp" FROM "TransactionHistory" WHERE (("fromAccountId" = $1 AND "fromLocation" = 'local') OR ("toAccountId" = $2 AND "toLocation" = 'local')) ORDER BY "timestamp" DESC;`, [acctId, acctId]);
   console.log(rows);
   return rows;
-};
-
-
-const findAccountFunc = async (txnCtxt: TransactionContext, acctId: string | number) => {
-  const { rows } = await txnCtxt.client.query<AccountInfo>(`SELECT "accountId", "ownerName", "type", "balance" FROM "AccountInfo" WHERE "accountId" = $1`, [acctId]);
-  if (rows.length === 0) {
-    return null;
-  }
-  return rows[0];
 };
 
 const insertTxnHistoryFunc = async (txnCtxt: TransactionContext, data: TransactionHistory) => {
@@ -154,7 +146,6 @@ export const depositWorkflow = async (ctxt: WorkflowContext, data: TransactionHi
 
   return retResponse;
 };
-
 
 export const withdrawWorkflow = async (ctxt: WorkflowContext, data: TransactionHistory) => {
   let retResponse: RouterResponse = {
