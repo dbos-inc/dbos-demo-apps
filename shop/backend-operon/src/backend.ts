@@ -141,6 +141,16 @@ app.post('/api/get_cart', asyncHandler(async (req: Request, res: Response) => {
   res.send(productDetails);
 }));
 
+async function clearCart(ctxt: TransactionContext, username: string) {
+  await ctxt.client.query(`DELETE FROM cart WHERE username=$1`, [username]);
+}
+
+app.post('/api/clear_cart', asyncHandler(async (req: Request, res: Response) => {
+  const { username } = req.body;
+  const productDetails = await operon.transaction(clearCart, {}, username);
+  res.send(productDetails);
+}));
+
 async function subtractInventory(ctxt: TransactionContext, products: Product[]): Promise<boolean> {
   let hasEnoughInventory = true;
   for (const product of products) {
@@ -180,12 +190,6 @@ async function createOrder(ctxt: TransactionContext, username: string, productDe
 
 async function fulfillOrder(ctxt: TransactionContext, orderID: number) {
   await ctxt.client.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.FULFILLED, orderID]);
-}
-
-async function clearCart(ctxt: TransactionContext, orderID: number) {
-  const { rows } = await ctxt.client.query(`SELECT username FROM orders WHERE order_id=$1`, [orderID]);
-  const username: string = rows[0].username;
-  await ctxt.client.query(`DELETE FROM cart WHERE username=$1`, [username]);
 }
 
 async function errorOrder(ctxt: TransactionContext, orderID: number) {
@@ -245,7 +249,7 @@ async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: 
   const notification = await ctxt.recv<string | null>("stripe_payments" + orderID.toString(), 60);
   if (notification !== null) {
     await ctxt.transaction(fulfillOrder, orderID);
-    await ctxt.transaction(clearCart, orderID);
+    await ctxt.transaction(clearCart, username);
   } else {
     const updatedSession = await ctxt.external(retrieveStripeSession, {}, stripeSession.id);
     if (updatedSession === null) {
@@ -255,7 +259,7 @@ async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: 
     const paymentStatus: string = updatedSession.payment_status;
     if (paymentStatus == 'paid') {
       await ctxt.transaction(fulfillOrder, orderID);
-      await ctxt.transaction(clearCart, orderID);
+      await ctxt.transaction(clearCart, username);
     } else if (paymentStatus == 'unpaid') {
       await ctxt.transaction(undoSubtractInventory, productDetails);
       await ctxt.transaction(errorOrder, orderID);
