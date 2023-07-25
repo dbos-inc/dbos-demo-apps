@@ -225,6 +225,10 @@ async function retrieveStripeSession(ctxt: CommunicatorContext, sessionID: strin
 
 async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string, uuid: string) {
   const productDetails: Product[] = await ctxt.transaction(getCart, username);
+  if (productDetails.length === 0) {
+    await ctxt.send(uuid, null);
+    return;
+  }
   const orderID: number = await ctxt.transaction(createOrder, username, productDetails);
   const valid: boolean = await ctxt.transaction(subtractInventory, productDetails);
   if (!valid) {
