@@ -19,6 +19,8 @@ async function startServer() {
   const operon: Operon = new Operon();
   await operon.init();
   await operon.pool.query("CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);");
+  operon.registerTransaction(helloFunction);
+  operon.registerWorkflow(helloWorkflow);
 
   // Invoke the workflow from an Express HTTP handler
   const app: Express = express();
