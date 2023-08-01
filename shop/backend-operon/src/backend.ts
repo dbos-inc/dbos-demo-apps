@@ -78,7 +78,7 @@ async function getProducts(ctxt: TransactionContext) {
 
   return formattedRows;
 }
-operon.registerTransaction(getProducts, {readOnly: true});
+operon.registerTransaction(getProducts, {});
 
 app.get('/api/products', asyncHandler(async (req: Request, res: Response) => {
   const products = await operon.transaction(getProducts, {});
