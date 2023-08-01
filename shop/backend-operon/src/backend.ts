@@ -78,7 +78,7 @@ async function getProducts(ctxt: TransactionContext) {
 
   return formattedRows;
 }
-operon.registerTransaction(getProducts);
+operon.registerTransaction(getProducts, {readOnly: true});
 
 app.get('/api/products', asyncHandler(async (req: Request, res: Response) => {
   const products = await operon.transaction(getProducts, {});
@@ -295,7 +295,6 @@ app.post('/api/checkout_session', asyncHandler(async (req: Request, res: Respons
 
 
 async function startServer() {
-  await operon.resetOperonTables();
   app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
