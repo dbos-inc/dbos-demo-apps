@@ -6,15 +6,41 @@ import * as readline from "node:readline/promises";
 import { Operon } from "operon";
 import { router } from "./router";
 import { BankSchema } from "./sql/schema";
+import { createAccountFunc, listAccountsFunc } from "./workflows/accountinfo.workflows";
+import {
+  depositWorkflow,
+  listTxnForAccountFunc,
+  withdrawWorkflow,
+  internalTransferFunc
+} from "./workflows/txnhistory.workflows";
 
 export let bankname: string;
 export let bankport: string;
 export let operon: Operon;
 
 async function startServer() {
+const rl = readline.createInterface(process.stdin, process.stdout);
+  // Prompt user for bank initialization information
+  bankname = await rl.question('Enter bank name: ');
+  bankport = await rl.question('Enter bank port: ');
+  rl.close();
+
+  bankname = bankname ? bankname : "localbank";
+  bankport = bankport ? bankport : "8081";
+
   // Initialize Operon.
   operon = new Operon();
   await operon.init();
+
+
+  // Register transactions and workflows
+  operon.registerTransaction(createAccountFunc);
+  operon.registerTransaction(listAccountsFunc);
+  operon.registerTransaction(internalTransferFunc);
+  operon.registerTransaction(listTxnForAccountFunc);
+
+  operon.registerWorkflow(withdrawWorkflow);
+  operon.registerWorkflow(depositWorkflow);
 
   // Create bank tables.
   await operon.pool.query(BankSchema.accountInfoTable);
