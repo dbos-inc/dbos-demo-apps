@@ -6,34 +6,43 @@ import * as readline from "node:readline/promises";
 import { Operon } from "operon";
 import { router } from "./router";
 import { BankSchema } from "./sql/schema";
+import { createAccountFunc, listAccountsFunc } from "./workflows/accountinfo.workflows";
+import {
+  depositWorkflow,
+  listTxnForAccountFunc,
+  withdrawWorkflow,
+  internalTransferFunc,
+  updateAcctTransactionFunc
+} from "./workflows/txnhistory.workflows";
 
 export let bankname: string;
 export let bankport: string;
 export let operon: Operon;
 
 async function startServer() {
-  // Initialize Postgres and Operon.
+  // Prompt user for bank initialization information
   const rl = readline.createInterface(process.stdin, process.stdout);
-  let database = await rl.question('Enter postgres database: ');
-  let username = await rl.question('Enter postgres username: ');
-  let password = await rl.question('Enter postgres password: ');
   bankname = await rl.question('Enter bank name: ');
   bankport = await rl.question('Enter bank port: ');
   rl.close();
 
-  // Default values.
-  database = database ? database : "postgres";
-  username = username ? username : "postgres";
-  password = password ? password : "dbos";
   bankname = bankname ? bankname : "localbank";
   bankport = bankport ? bankport : "8081";
 
-  operon = new Operon({
-    database: database,
-    user: username,
-    password: password
-  });
-  await operon.resetOperonTables();
+  // Initialize Operon.
+  operon = new Operon();
+  await operon.init();
+
+
+  // Register transactions and workflows
+  operon.registerTransaction(createAccountFunc);
+  operon.registerTransaction(listAccountsFunc);
+  operon.registerTransaction(internalTransferFunc);
+  operon.registerTransaction(listTxnForAccountFunc);
+  operon.registerTransaction(updateAcctTransactionFunc);
+
+  operon.registerWorkflow(withdrawWorkflow);
+  operon.registerWorkflow(depositWorkflow);
 
   // Create bank tables.
   await operon.pool.query(BankSchema.accountInfoTable);
@@ -45,7 +54,7 @@ async function startServer() {
   app.use(logger());
   app.use(bodyParser());
   app.use(cors());
-  
+
   app.use(router.routes()).use(router.allowedMethods());
 
   app.listen(bankport, () => {

@@ -38,7 +38,7 @@ const updateAccountBalanceFunc = async (txnCtxt: TransactionContext, acctId: str
   return rows[0].accountId;
 };
 
-const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: string, data: TransactionHistory, deposit: boolean, undoTxn: string | null = null) => {
+export const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: string, data: TransactionHistory, deposit: boolean, undoTxn: string | null = null) => {
   // First, make sure the account exists, and read the latest balance.
   const acct = await findAccountFunc(txnCtxt, acctId);
   if (acct === null) {
@@ -173,7 +173,7 @@ export const depositWorkflow = async (ctxt: WorkflowContext, data: TransactionHi
       toLocation: REMOTEDB_PREFIX + bankname + ":" + bankport
     };
 
-    const remoteRes: boolean | null = await ctxt.external(remoteTransferComm, {}, remoteUrl, thReq);
+    const remoteRes: boolean | null = await ctxt.external(remoteTransferComm, remoteUrl, thReq);
     if (!remoteRes) {
       retResponse.status = 500;
       retResponse.message = "Failed to withdraw from remote bank.";
@@ -217,7 +217,7 @@ export const withdrawWorkflow = async (ctxt: WorkflowContext, data: TransactionH
       toLocation: 'local',
       fromLocation: REMOTEDB_PREFIX + bankname + ":" + bankport
     };
-    const remoteRes: boolean | null = await ctxt.external(remoteTransferComm, {}, remoteUrl, thReq);
+    const remoteRes: boolean | null = await ctxt.external(remoteTransferComm, remoteUrl, thReq);
     if (!remoteRes) {
       retResponse.status = 500;
       retResponse.message = "Failed to deposit to remote bank.";

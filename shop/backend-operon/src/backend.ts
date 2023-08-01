@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import { TransactionContext, WorkflowContext, Operon, CommunicatorContext } from 'operon';
+import { TransactionContext, WorkflowContext, Operon, OperonConfig, CommunicatorContext } from 'operon';
 import cors from 'cors';
 import Stripe from 'stripe';
 import { v1 as uuidv1 } from 'uuid';
@@ -295,10 +295,11 @@ app.post('/api/checkout_session', asyncHandler(async (req: Request, res: Respons
 
 
 async function startServer() {
+  await operon.init();
   app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
-  
+
 }
-  
+
 void startServer();
