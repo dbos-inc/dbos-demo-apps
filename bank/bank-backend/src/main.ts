@@ -11,7 +11,8 @@ import {
   depositWorkflow,
   listTxnForAccountFunc,
   withdrawWorkflow,
-  internalTransferFunc
+  internalTransferFunc,
+  updateAcctTransactionFunc
 } from "./workflows/txnhistory.workflows";
 
 export let bankname: string;
@@ -38,6 +39,7 @@ async function startServer() {
   operon.registerTransaction(listAccountsFunc);
   operon.registerTransaction(internalTransferFunc);
   operon.registerTransaction(listTxnForAccountFunc);
+  operon.registerTransaction(updateAcctTransactionFunc);
 
   operon.registerWorkflow(withdrawWorkflow);
   operon.registerWorkflow(depositWorkflow);

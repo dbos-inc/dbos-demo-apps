@@ -34,8 +34,8 @@ router.get("/api/list_accounts/:ownerName", async(ctx, next) => {
 // Create account.
 router.post("/api/create_account", async(ctx, next) => {
   const data = <AccountInfo>ctx.request.body;
-  if (!data.balance || !data.ownerName || !data.balance) {
-    ctx.body = "Invalid input: " + JSON.stringify(data);
+  if ((data.balance === undefined) || !data.ownerName) {
+    console.log("Invalid input: " + JSON.stringify(data));
     ctx.status = 500;
     ctx.message = "invalid input!";
     await next();
