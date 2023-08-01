@@ -19,8 +19,8 @@ export let bankport: string;
 export let operon: Operon;
 
 async function startServer() {
-const rl = readline.createInterface(process.stdin, process.stdout);
   // Prompt user for bank initialization information
+  const rl = readline.createInterface(process.stdin, process.stdout);
   bankname = await rl.question('Enter bank name: ');
   bankport = await rl.question('Enter bank port: ');
   rl.close();
