@@ -16,17 +16,8 @@ const helloWorkflow = async (workflowCtxt: WorkflowContext, name: string) => {
 
 async function startServer() {
   // Initialize Postgres and Operon.
-  const rl = readline.createInterface(process.stdin, process.stdout);
-  const database = await rl.question('Enter postgres database: ');
-  const username = await rl.question('Enter postgres username: ');
-  const password = await rl.question('Enter postgres password: ');
-  rl.close();
-  const operon: Operon = new Operon({
-    database: database,
-    user: username,
-    password: password,
-  });
-  operon.initializeOperonTables();
+  const operon: Operon = new Operon();
+  await operon.init();
   await operon.pool.query("CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);");
 
   // Invoke the workflow from an Express HTTP handler
@@ -42,7 +33,6 @@ async function startServer() {
   app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
-
 }
 
 startServer();
