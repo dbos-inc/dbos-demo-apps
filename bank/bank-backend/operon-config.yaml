@@ -1,6 +1,7 @@
 database:
   hostname: 'localhost'
   port: 5432
-  username: 'postgres'
-  password: 'postgres'
+  username: 'bank'
   connectionTimeoutMillis: 3000
+  user_database: 'bank'
+  system_database: 'operon_bank_systemdb'

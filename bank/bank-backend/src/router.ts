@@ -104,7 +104,7 @@ router.post("/api/deposit", async(ctx, next) => {
   // Invoke the workflow.
   let retResponse: RouterResponse;
   try {
-    retResponse = await operon.workflow(depositWorkflow, {}, data);
+    retResponse = await operon.workflow(depositWorkflow, {}, data).getResult();
     ctx.status = retResponse.status;
     ctx.body = retResponse.body;
     ctx.message = retResponse.message;
@@ -151,7 +151,7 @@ router.post("/api/withdraw", async(ctx, next) => {
   // Invoke the workflow.
   let retResponse: RouterResponse;
   try {
-    retResponse = await operon.workflow(withdrawWorkflow, {}, data);
+    retResponse = await operon.workflow(withdrawWorkflow, {}, data).getResult();
     ctx.status = retResponse.status;
     ctx.body = retResponse.body;
     ctx.message = retResponse.message;
