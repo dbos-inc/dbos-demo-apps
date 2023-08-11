@@ -61,8 +61,8 @@ app.post('/stripe_webhook', express.raw({type: 'application/json'}), asyncHandle
   if (event.type === 'checkout.session.completed') {
     const session = await stripe.checkout.sessions.retrieve((event.data.object as Stripe.Response<Stripe.Checkout.Session>).id);
     if (session.client_reference_id !== null) {
-      const orderID: string = session.client_reference_id;
-      await operon.send({}, event_topic, orderID, "checkout.session.completed");
+      const uuid: string = session.client_reference_id;
+      await operon.send({}, event_topic, uuid, "checkout.session.completed");
     }
   }
   res.status(200).send();
@@ -205,7 +205,7 @@ async function errorOrder(ctxt: TransactionContext, orderID: number) {
 }
 operon.registerTransaction(errorOrder);
 
-async function createStripeSession(ctxt: CommunicatorContext, orderID: number, productDetails: Product[], origin: string) {
+async function createStripeSession(ctxt: CommunicatorContext, uuid: string, productDetails: Product[], origin: string) {
   const lineItems = productDetails.map((item) => ({
     quantity: item.inventory,
     price_data: {
@@ -219,7 +219,7 @@ async function createStripeSession(ctxt: CommunicatorContext, orderID: number, p
   const session: Stripe.Response<Stripe.Checkout.Session> = await stripe.checkout.sessions.create({
     line_items: lineItems,
     mode: 'payment',
-    client_reference_id: String(orderID),
+    client_reference_id: uuid,
     success_url: `${origin}/checkout/success`,
     cancel_url: `${origin}/checkout/cancel`,
   });
@@ -238,7 +238,8 @@ async function retrieveStripeSession(ctxt: CommunicatorContext, sessionID: strin
 }
 operon.registerCommunicator(retrieveStripeSession);
 
-async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string, uuid: string) {
+async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string) {
+  const uuid: string = ctxt.workflowUUID;
   const productDetails: Product[] = await ctxt.transaction(getCart, username);
   if (productDetails.length === 0) {
     await ctxt.send(checkout_topic, uuid, null);
@@ -250,14 +251,14 @@ async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: 
     await ctxt.send(checkout_topic, uuid, null);
     return;
   }
-  const stripeSession = await ctxt.external(createStripeSession, orderID, productDetails, origin);
+  const stripeSession = await ctxt.external(createStripeSession, uuid, productDetails, origin);
   if (stripeSession === null || stripeSession.url === null) {
     await ctxt.transaction(undoSubtractInventory, productDetails);
     await ctxt.send(checkout_topic, uuid, null);
     return;
   }
   await ctxt.send(checkout_topic, uuid, stripeSession.url);
-  const notification = await ctxt.recv<string | null>(event_topic, orderID.toString(), 60);
+  const notification = await ctxt.recv<string | null>(event_topic, uuid, 60);
   if (notification !== null) {
     await ctxt.transaction(fulfillOrder, orderID);
     await ctxt.transaction(clearCart, username);
@@ -289,7 +290,7 @@ app.post('/api/checkout_session', asyncHandler(async (req: Request, res: Respons
     return;
   }
   const uuid: string = uuidv1();
-  void operon.workflow(paymentWorkflow, {}, username, origin, uuid);
+  void operon.workflow(paymentWorkflow, {workflowUUID: uuid}, username, origin);
   const url = await operon.recv<string | null>({}, checkout_topic, uuid, 10);
   if (url === null) {
     res.redirect(303, `${origin}/checkout/cancel`);
