@@ -33,6 +33,11 @@ const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => P
 
 // Create an Operon.
 const operon: Operon = new Operon();
+operon.useNodePostgres();
+const checkout_topic = "stripe_checkout";
+operon.registerTopic(checkout_topic);
+const event_topic = "stripe_event";
+operon.registerTopic(event_topic);
 
 // Create a new express application instance
 const app: express.Application = express();
@@ -57,7 +62,7 @@ app.post('/stripe_webhook', express.raw({type: 'application/json'}), asyncHandle
     const session = await stripe.checkout.sessions.retrieve((event.data.object as Stripe.Response<Stripe.Checkout.Session>).id);
     if (session.client_reference_id !== null) {
       const orderID: string = session.client_reference_id;
-      await operon.send({}, "stripe_payments" + orderID, "checkout.session.completed");
+      await operon.send({}, event_topic, orderID, "checkout.session.completed");
     }
   }
   res.status(200).send();
@@ -70,7 +75,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 async function getProducts(ctxt: TransactionContext) {
-  const { rows } = await ctxt.client.query<Product>('SELECT product_id, product, description, image_name, price FROM products');
+  const { rows } = await ctxt.pgClient.query<Product>('SELECT product_id, product, description, image_name, price FROM products');
   const formattedRows = rows.map((row) => ({
     ...row,
     display_price: (row.price / 100).toFixed(2),
@@ -86,7 +91,7 @@ app.get('/api/products', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 async function getProduct(ctxt: TransactionContext, id: number) {
-  const { rows } = await ctxt.client.query<Product>(`SELECT product_id, product, description, image_name, price FROM products WHERE product_id = $1`, [id]);
+  const { rows } = await ctxt.pgClient.query<Product>(`SELECT product_id, product, description, image_name, price FROM products WHERE product_id = $1`, [id]);
   if (rows.length === 0) {
     return null;
   }
@@ -113,7 +118,7 @@ app.get('/api/products/:id', asyncHandler(async (req: Request, res: Response) =>
 }));
 
 async function addToCart(ctxt: TransactionContext, username: string, product_id: string) {
-  await ctxt.client.query(`INSERT INTO cart VALUES($1, $2, 1) ON CONFLICT (username, product_id) DO UPDATE SET quantity = cart.quantity + 1`, [username, product_id]);
+  await ctxt.pgClient.query(`INSERT INTO cart VALUES($1, $2, 1) ON CONFLICT (username, product_id) DO UPDATE SET quantity = cart.quantity + 1`, [username, product_id]);
 }
 operon.registerTransaction(addToCart);
 
@@ -124,7 +129,7 @@ app.post('/api/add_to_cart', asyncHandler(async (req: Request, res: Response) =>
 }));
 
 async function getCart(ctxt: TransactionContext, username: string) {
-  const { rows } = await ctxt.client.query(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
+  const { rows } = await ctxt.pgClient.query(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
   const productDetails = await Promise.all(rows.map(async (row) => ({
     ...(await getProduct(ctxt, row.product_id))!,
     inventory: row.quantity,
@@ -140,7 +145,7 @@ app.post('/api/get_cart', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 async function clearCart(ctxt: TransactionContext, username: string) {
-  await ctxt.client.query(`DELETE FROM cart WHERE username=$1`, [username]);
+  await ctxt.pgClient.query(`DELETE FROM cart WHERE username=$1`, [username]);
 }
 operon.registerTransaction(clearCart);
 
@@ -153,7 +158,7 @@ app.post('/api/clear_cart', asyncHandler(async (req: Request, res: Response) => 
 async function subtractInventory(ctxt: TransactionContext, products: Product[]): Promise<boolean> {
   let hasEnoughInventory = true;
   for (const product of products) {
-    const { rows } = await ctxt.client.query<Product>(`SELECT inventory FROM products WHERE product_id = $1`, [product.product_id]);
+    const { rows } = await ctxt.pgClient.query<Product>(`SELECT inventory FROM products WHERE product_id = $1`, [product.product_id]);
     const currentInventory = rows[0]?.inventory;
 
     if (currentInventory < product.inventory) {
@@ -164,7 +169,7 @@ async function subtractInventory(ctxt: TransactionContext, products: Product[]):
   if (hasEnoughInventory) {
     // If all products have enough inventory, subtract the inventory from the products in the database
     for (const product of products) {
-      await ctxt.client.query(`UPDATE products SET inventory = inventory - $1 WHERE product_id = $2`, [product.inventory, product.product_id]);
+      await ctxt.pgClient.query(`UPDATE products SET inventory = inventory - $1 WHERE product_id = $2`, [product.inventory, product.product_id]);
     }
   }
   return hasEnoughInventory;
@@ -173,17 +178,17 @@ operon.registerTransaction(subtractInventory);
 
 async function undoSubtractInventory(ctxt: TransactionContext, products: Product[]) {
   for (const product of products) {
-    await ctxt.client.query(`UPDATE products SET inventory = inventory + $1 WHERE product_id = $2`, [product.inventory, product.product_id]);
+    await ctxt.pgClient.query(`UPDATE products SET inventory = inventory + $1 WHERE product_id = $2`, [product.inventory, product.product_id]);
   }
 }
 operon.registerTransaction(undoSubtractInventory);
 
 async function createOrder(ctxt: TransactionContext, username: string, productDetails: Product[]) {
-  const { rows } = await ctxt.client.query(`INSERT INTO orders(username, order_status, last_update_time) VALUES ($1, $2, $3) RETURNING order_id`, 
+  const { rows } = await ctxt.pgClient.query(`INSERT INTO orders(username, order_status, last_update_time) VALUES ($1, $2, $3) RETURNING order_id`, 
     [username, OrderStatus.PENDING, 0]);
   const orderID : number = rows[0].order_id;
   for (const product of productDetails) {
-    await ctxt.client.query(`INSERT INTO order_items(order_id, product_id, price, quantity) VALUES($1, $2, $3, $4)`, 
+    await ctxt.pgClient.query(`INSERT INTO order_items(order_id, product_id, price, quantity) VALUES($1, $2, $3, $4)`, 
       [orderID, product.product_id, product.price, product.inventory]);
   }
   return orderID;
@@ -191,12 +196,12 @@ async function createOrder(ctxt: TransactionContext, username: string, productDe
 operon.registerTransaction(createOrder);
 
 async function fulfillOrder(ctxt: TransactionContext, orderID: number) {
-  await ctxt.client.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.FULFILLED, orderID]);
+  await ctxt.pgClient.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.FULFILLED, orderID]);
 }
 operon.registerTransaction(fulfillOrder);
 
 async function errorOrder(ctxt: TransactionContext, orderID: number) {
-  await ctxt.client.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.CANCELLED, orderID]);
+  await ctxt.pgClient.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.CANCELLED, orderID]);
 }
 operon.registerTransaction(errorOrder);
 
@@ -236,23 +241,23 @@ operon.registerCommunicator(retrieveStripeSession);
 async function paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string, uuid: string) {
   const productDetails: Product[] = await ctxt.transaction(getCart, username);
   if (productDetails.length === 0) {
-    await ctxt.send(uuid, null);
+    await ctxt.send(checkout_topic, uuid, null);
     return;
   }
   const orderID: number = await ctxt.transaction(createOrder, username, productDetails);
   const valid: boolean = await ctxt.transaction(subtractInventory, productDetails);
   if (!valid) {
-    await ctxt.send(uuid, null);
+    await ctxt.send(checkout_topic, uuid, null);
     return;
   }
   const stripeSession = await ctxt.external(createStripeSession, orderID, productDetails, origin);
   if (stripeSession === null || stripeSession.url === null) {
     await ctxt.transaction(undoSubtractInventory, productDetails);
-    await ctxt.send(uuid, null);
+    await ctxt.send(checkout_topic, uuid, null);
     return;
   }
-  await ctxt.send(uuid, stripeSession.url);
-  const notification = await ctxt.recv<string | null>("stripe_payments" + orderID.toString(), 60);
+  await ctxt.send(checkout_topic, uuid, stripeSession.url);
+  const notification = await ctxt.recv<string | null>(event_topic, orderID.toString(), 60);
   if (notification !== null) {
     await ctxt.transaction(fulfillOrder, orderID);
     await ctxt.transaction(clearCart, username);
@@ -285,7 +290,7 @@ app.post('/api/checkout_session', asyncHandler(async (req: Request, res: Respons
   }
   const uuid: string = uuidv1();
   void operon.workflow(paymentWorkflow, {}, username, origin, uuid);
-  const url = await operon.recv<string | null>({}, uuid, 10);
+  const url = await operon.recv<string | null>({}, checkout_topic, uuid, 10);
   if (url === null) {
     res.redirect(303, `${origin}/checkout/cancel`);
   } else {
