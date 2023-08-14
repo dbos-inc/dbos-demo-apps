@@ -16,8 +16,8 @@ import {
 } from "./workflows/txnhistory.workflows";
 import { PrismaClient } from "@prisma/client";
 
-// A hack for bigint to/from JSON.
-require("json-bigint-patch");
+// A hack for bigint serializing to/from JSON.
+import "json-bigint-patch";
 
 export let bankname: string;
 export let bankport: string;
