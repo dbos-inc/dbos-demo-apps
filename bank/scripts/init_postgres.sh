@@ -28,4 +28,4 @@ export PGPASSWORD="${BANK_DB_PASSWORD}"
 psql -U ${BANK_DB_NAME} -h ${POSTGRES_HOST} -d postgres -p ${POSTGRES_PORT} -c "DROP DATABASE IF EXISTS ${BANK_DB_NAME};"
 psql -U ${BANK_DB_NAME} -h ${POSTGRES_HOST} -d postgres -p ${POSTGRES_PORT} -c "CREATE DATABASE ${BANK_DB_NAME} OWNER ${BANK_DB_NAME};"
 
-echo "Database user and DB created."⏎
+echo "Database user and DB created."
