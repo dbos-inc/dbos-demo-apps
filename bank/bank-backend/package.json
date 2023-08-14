@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "types": "dist/main.d.js",
   "scripts": {
-    "build": "tsc",
+    "build": "npx prisma generate && tsc",
     "start": "node .",
     "test": "jest",
     "lint-fix": "eslint --ext .ts --fix .",

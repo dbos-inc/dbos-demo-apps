@@ -3,7 +3,24 @@
 This is a simple bank application that uses [Operon](https://github.com/dbos-inc/operon) as the backend framework.
 It requires node version 18.
 
-You need to use `npm link` to install the Operon package.
+To compile and run the bank backend, enter teh `bank-backend/` directory and install necessary dependencies:
+```shell
+cd bank-backend/
+npm install
+```
+
+Then, you need to use `npm link` to install the Operon package:
 ```shell
 npm link <operon repo path>
+```
+
+If you just created the database, you can configure your database path in the `.env` file and create tables using Prisma:
+```shell
+npx prisma migrate dev --name init
+```
+
+Finally, compile and run the backend:
+```shell
+npm run build
+npm start
 ```
