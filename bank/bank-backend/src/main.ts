@@ -5,7 +5,6 @@ import cors from "@koa/cors";
 import * as readline from "node:readline/promises";
 import { Operon } from "operon";
 import { router } from "./router";
-import { BankSchema } from "./sql/schema";
 import { createAccountFunc, listAccountsFunc } from "./workflows/accountinfo.workflows";
 import {
   depositWorkflow,
@@ -15,12 +14,18 @@ import {
   updateAcctTransactionFunc,
   remoteTransferComm
 } from "./workflows/txnhistory.workflows";
+import { PrismaClient } from "@prisma/client";
+
+// A hack for bigint to/from JSON.
+require("json-bigint-patch");
 
 export let bankname: string;
 export let bankport: string;
 export let operon: Operon;
 
 async function startServer() {
+  // Initialize a Prisma client.
+  const prisma = new PrismaClient();
   // Prompt user for bank initialization information
   const rl = readline.createInterface(process.stdin, process.stdout);
   bankname = await rl.question('Enter bank name: ');
@@ -32,7 +37,7 @@ async function startServer() {
 
   // Initialize Operon.
   operon = new Operon();
-  operon.useNodePostgres();
+  operon.usePrisma(prisma);
   await operon.init();
 
   // Register transactions and workflows
@@ -45,10 +50,6 @@ async function startServer() {
 
   operon.registerWorkflow(withdrawWorkflow);
   operon.registerWorkflow(depositWorkflow);
-
-  // Create bank tables.
-  await operon.userDatabase.query(BankSchema.accountInfoTable);
-  await operon.userDatabase.query(BankSchema.transactionHistoryTable);
 
   // Start Koa server.
   const app = new Koa();

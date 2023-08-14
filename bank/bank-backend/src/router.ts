@@ -1,7 +1,7 @@
 import Router from "@koa/router";
 import { bankname, operon } from "./main";
 import { createAccountFunc, listAccountsFunc } from "./workflows/accountinfo.workflows";
-import { AccountInfo, TransactionHistory } from "src/sql/schema";
+import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { depositWorkflow, listTxnForAccountFunc, withdrawWorkflow, internalTransferFunc } from "./workflows/txnhistory.workflows";
 
 export const router = new Router();
@@ -10,6 +10,29 @@ export interface RouterResponse {
   body: string | AccountInfo[] | TransactionHistory[],
   status: number,
   message: string
+}
+
+// Helper functions to convert to the correct data types.
+// Especially convert the bigint.
+function convertTransactionHistory(data: TransactionHistory): TransactionHistory {
+  return {
+    txnId: BigInt(data.txnId ?? -1n),
+    fromAccountId: BigInt(data.fromAccountId ?? -1n),
+    fromLocation: data.fromLocation ?? undefined,
+    toAccountId: BigInt(data.toAccountId ?? -1n),
+    toLocation: data.toLocation ?? undefined,
+    amount: data.amount ?? undefined,
+    timestamp: data.timestamp ?? undefined
+  }
+}
+
+function convertAccountInfo(data: AccountInfo): AccountInfo {
+  return {
+    accountId: BigInt(data.accountId ?? -1n),
+    balance: BigInt(data.balance ?? -1n),
+    type: data.type ?? undefined,
+    ownerName: data.ownerName ?? undefined
+  }
 }
 
 router.get("/api/greeting", async(ctx, next) => {
@@ -34,7 +57,7 @@ router.get("/api/list_accounts/:ownerName", async(ctx, next) => {
 
 // Create account.
 router.post("/api/create_account", async(ctx, next) => {
-  const data = <AccountInfo>ctx.request.body;
+  const data = convertAccountInfo(ctx.request.body as AccountInfo);
   if ((data.balance === undefined) || !data.ownerName) {
     console.log("Invalid input: " + JSON.stringify(data));
     ctx.status = 500;
@@ -43,11 +66,7 @@ router.post("/api/create_account", async(ctx, next) => {
     return;
   }
   try {
-    ctx.body = await operon.transaction(createAccountFunc, {}, {
-      ownerName: data.ownerName,
-      type: data.type,
-      balance: data.balance
-    });
+    ctx.body = await operon.transaction(createAccountFunc, {}, data);
     ctx.status = 201;
   } catch (err) {
     console.error(err);
@@ -60,7 +79,7 @@ router.post("/api/create_account", async(ctx, next) => {
 
 // Get transaction history
 router.get("/api/transaction_history/:accountId",async (ctx, next) => {
-  const acctId = ctx.params.accountId;
+  const acctId = BigInt(ctx.params.accountId);
   try {
     ctx.body = await operon.transaction(listTxnForAccountFunc, {}, acctId);
     ctx.status = 200;
@@ -76,7 +95,7 @@ router.get("/api/transaction_history/:accountId",async (ctx, next) => {
 
 // Deposit.
 router.post("/api/deposit", async(ctx, next) => {
-  const data = <TransactionHistory>ctx.request.body;
+  const data = convertTransactionHistory(ctx.request.body as TransactionHistory);
   // TODO: implement auth.
   // const token = ctx.request.header["authorization"];
   // console.log("Retrieved token: " + token); // Should have Bearer prefix.
@@ -101,7 +120,7 @@ router.post("/api/deposit", async(ctx, next) => {
 
   // Let it be -1 for cash.
   if (!data.fromAccountId) {
-    data.fromAccountId = "-1";
+    data.fromAccountId = -1n;
   }
   
   // Invoke the workflow.
@@ -124,7 +143,7 @@ router.post("/api/deposit", async(ctx, next) => {
 
 // Withdraw.
 router.post("/api/withdraw", async(ctx, next) => {
-  const data = <TransactionHistory>ctx.request.body;
+  const data = convertTransactionHistory(ctx.request.body as TransactionHistory);
   // TODO: implement auth.
   // const token = ctx.request.header["authorization"];
   // console.log("Retrieved token: " + token); // Should have Bearer prefix.
@@ -149,7 +168,7 @@ router.post("/api/withdraw", async(ctx, next) => {
 
   // Let it be -1 for cash.
   if (!data.toAccountId) {
-    data.toAccountId = "-1";
+    data.toAccountId = -1n;
   }
   
   // Invoke the workflow.
@@ -172,8 +191,7 @@ router.post("/api/withdraw", async(ctx, next) => {
 
 // Internal transfer
 router.post("/api/transfer", async(ctx, next) => {
-  const data = <TransactionHistory>ctx.request.body;
-
+  const data = convertTransactionHistory(ctx.request.body as TransactionHistory);
   // Check the transaction is within the local database.
   if (((data.fromLocation !== undefined) && (data.fromLocation !== 'local'))
     || ((data.toLocation !== undefined) && (data.toLocation !== 'local'))) {
