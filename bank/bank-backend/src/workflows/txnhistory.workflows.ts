@@ -74,9 +74,9 @@ export const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acc
   // Update account balance.
   let newBalance: bigint;
   if (deposit) {
-    newBalance = BigInt(acct.balance) + BigInt(data.amount);
+    newBalance = acct.balance + BigInt(data.amount);
   } else {
-    newBalance = BigInt(acct.balance) - BigInt(data.amount);
+    newBalance = acct.balance - BigInt(data.amount);
     if (newBalance < 0n) {
       console.error("Not enough balance!");
       throw new Error("Not enough balance!");
@@ -129,7 +129,7 @@ export const internalTransferFunc = async (txnCtxt: TransactionContext, data: Tr
     throw new Error("Cannot find account!");
   }
 
-  if (BigInt(fromAccount.balance) < BigInt(data.amount)) {
+  if (fromAccount.balance < BigInt(data.amount)) {
     console.error("Not enough balance!");
     throw new Error("Not enough balance!");
   }
@@ -142,8 +142,8 @@ export const internalTransferFunc = async (txnCtxt: TransactionContext, data: Tr
   }
 
   // Update accounts and record the transaction.
-  const updateRes = await updateAccountBalanceFunc(txnCtxt, data.fromAccountId, (BigInt(fromAccount.balance) - BigInt(data.amount)));
-  const updateRes2 = await updateAccountBalanceFunc(txnCtxt, data.toAccountId, (BigInt(toAccount.balance) + BigInt(data.amount)));
+  const updateRes = await updateAccountBalanceFunc(txnCtxt, data.fromAccountId, (fromAccount.balance - BigInt(data.amount)));
+  const updateRes2 = await updateAccountBalanceFunc(txnCtxt, data.toAccountId, (toAccount.balance + BigInt(data.amount)));
   const insertRes = await insertTxnHistoryFunc(txnCtxt, data);
 
   // Check for errors.
