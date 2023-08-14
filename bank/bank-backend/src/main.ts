@@ -76,13 +76,13 @@ async function startServer() {
   app.use(jwt({
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     secret: koaJwtSecret({
-      jwksUri: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/auth/realms/dbos/protocol/openid-connect/certs`,
+      jwksUri: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos/protocol/openid-connect/certs`,
       cache: true,
       cacheMaxEntries: 5,
       cacheMaxAge: 600000
     }),
     // audience: 'urn:api/',
-    issuer: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/auth/realms/dbos`
+    issuer: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`
   }));
 
   app.use(router.routes()).use(router.allowedMethods());

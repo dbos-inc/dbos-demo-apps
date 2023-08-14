@@ -3,6 +3,21 @@
 This is a simple bank application that uses [Operon](https://github.com/dbos-inc/operon) as the backend framework.
 It requires node version 18.
 
+### Initialize Postgres database
+You'll need to start a Postgres server, either through Docker, running locally, or using RDS.
+Then, you can set up the database using:
+```shell
+./scripts/init_postgres.sh
+```
+
+### Start a Keycloak authentication server
+We use Keycloak to perform authentication and we provide a script to automatically start it in a docker container.
+You can simply run:
+```shell
+./scripts/start_keycloak.sh
+```
+
+### Start the backend
 To compile and run the bank backend, enter the `bank-backend/` directory and install dependencies:
 ```shell
 cd bank-backend/
