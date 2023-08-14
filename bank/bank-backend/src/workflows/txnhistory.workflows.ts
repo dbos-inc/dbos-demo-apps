@@ -1,5 +1,5 @@
 import { WorkflowContext, TransactionContext, CommunicatorContext } from "operon";
-import { AccountInfo, TransactionHistory } from "@prisma/client";
+import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { RouterResponse } from "../router";
 import { bankname, bankport } from "../main";
 import { findAccountFunc } from "./accountinfo.workflows";
@@ -8,33 +8,59 @@ import axios from "axios";
 const REMOTEDB_PREFIX : string = "remoteDB-";
 
 export const listTxnForAccountFunc = async (txnCtxt: TransactionContext, acctId: bigint) => {
-  return txnCtxt.prismaClient.$queryRawUnsafe<TransactionHistory>(`SELECT "txnId", "fromAccountId", "fromLocation", "toAccountId", "toLocation", "amount", "timestamp" FROM "TransactionHistory" WHERE (("fromAccountId" = $1 AND "fromLocation" = 'local') OR ("toAccountId" = $2 AND "toLocation" = 'local')) ORDER BY "timestamp" DESC;`, acctId, acctId);
+  const p = txnCtxt.prismaClient as PrismaClient;
+  return p.transactionHistory.findMany({
+    where: {
+      OR: [
+        {
+          fromAccountId:  acctId,
+          fromLocation: { equals: 'local'}
+        },
+        {
+          toAccountId: acctId,
+          toLocation: { equals: 'local'}
+        }
+      ]
+    },
+    orderBy: {
+      timestamp: 'desc'
+    }
+  });
 };
 
 const insertTxnHistoryFunc = async (txnCtxt: TransactionContext, data: TransactionHistory) => {
-  const rows = await txnCtxt.prismaClient.$queryRawUnsafe<TransactionHistory>(`INSERT INTO "TransactionHistory" ("fromAccountId","fromLocation","toAccountId","toLocation","amount") VALUES ($1,$2,$3,$4,$5) RETURNING "txnId"`,
-    data.fromAccountId, data.fromLocation, data.toAccountId, data.toLocation, data.amount);
-  if (rows.length === 0) {
-    return null;
-  }
-  return rows[0].txnId;
+  const p = txnCtxt.prismaClient as PrismaClient;
+  return p.transactionHistory.create({
+    data: {  // Escape txnId and timestamp fields.
+      fromAccountId: data.fromAccountId,
+      fromLocation: data.fromLocation,
+      toAccountId: data.toAccountId,
+      toLocation: data.toLocation,
+      amount: data.amount
+    },
+    select: {txnId: true}
+  }).then((value) => { return value.txnId; });
 };
 
 const deleteTxnHistoryFunc = async (txnCtxt: TransactionContext, txnId: bigint) => {
-  const rows = await txnCtxt.prismaClient.$queryRawUnsafe<TransactionHistory>(`DELETE FROM "TransactionHistory" WHERE "txnId" = $1 RETURNING "txnId"`,
-    txnId);
-  if (rows.length === 0) {
-    return null;
-  }
-  return rows[0].txnId;
+  const p = txnCtxt.prismaClient as PrismaClient;
+  return p.transactionHistory.delete({
+    where: {
+      txnId: txnId
+    },
+    select: { txnId: true }
+  }).then((value) => { return value.txnId; });
 };
 
 const updateAccountBalanceFunc = async (txnCtxt: TransactionContext, acctId: bigint, balance: bigint) => {
-  const rows = await txnCtxt.prismaClient.$queryRawUnsafe<AccountInfo>(`UPDATE "AccountInfo" SET "balance" = $2 WHERE "accountId" = $1 RETURNING "accountId"`, acctId, balance);
-  if (rows.length === 0) {
-    return null;
-  }
-  return rows[0].accountId;
+  const p = txnCtxt.prismaClient as PrismaClient;
+  return p.accountInfo.update({
+    where: { accountId: acctId},
+    data: {
+      balance: balance
+    },
+    select: { accountId: true}
+  }).then((value) => { return value.accountId; })
 };
 
 export const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: bigint, data: TransactionHistory, deposit: boolean, undoTxn: bigint | null = null) => {
@@ -97,8 +123,7 @@ export const internalTransferFunc = async (txnCtxt: TransactionContext, data: Tr
   };
 
   // Check if the fromAccount has enough balance.
-  console.log(data);
-  const fromAccount: AccountInfo | null = await findAccountFunc(txnCtxt, BigInt(data.fromAccountId));
+  const fromAccount: AccountInfo | null = await findAccountFunc(txnCtxt, data.fromAccountId);
   if (fromAccount === null) {
     console.error("Cannot find account!");
     throw new Error("Cannot find account!");

@@ -1,26 +1,34 @@
 import { TransactionContext } from "operon";
-import { AccountInfo } from "@prisma/client";
+import { AccountInfo, PrismaClient } from "@prisma/client";
 
-export const listAccountsFunc = async (txnCtxt: TransactionContext, name: string) => {
-  return txnCtxt.prismaClient.$queryRawUnsafe<AccountInfo>(`SELECT "accountId", "ownerName", "type", "balance" FROM "AccountInfo" WHERE "ownerName" = $1 ORDER BY "accountId" ASC;`, name);
+export const listAccountsFunc = async (txnCtxt: TransactionContext, name: string): Promise<AccountInfo[]> => {
+  const p = txnCtxt.prismaClient as PrismaClient;
+  return p.accountInfo.findMany({
+    where: {
+      ownerName: {
+        equals: name
+      }
+    },
+    orderBy: {
+      accountId: 'asc'
+    }
+  });
 };
 
 export const createAccountFunc = async (txnCtxt: TransactionContext, data: AccountInfo) => {
-  const rows = await txnCtxt.prismaClient.$queryRawUnsafe<AccountInfo>(`INSERT INTO "AccountInfo" ("ownerName","type","balance") VALUES ($1,$2,$3) RETURNING "accountId";`, data.ownerName, data.type, data.balance);
-  if (rows.length === 0) {
-    console.error("Failed to create account!");
-    throw Error("Failed to create account!");
-  }
-  return rows[0];
+  const p = txnCtxt.prismaClient as PrismaClient;
+  return p.accountInfo.create({ data: {
+    ownerName: data.ownerName,
+    type: data.type,
+    balance: data.balance
+  }});
 };
 
 export const findAccountFunc = async (txnCtxt: TransactionContext, acctId: bigint) => {
-  if (!acctId) {
-    return null;
-  }
-  const rows = await txnCtxt.prismaClient.$queryRawUnsafe<AccountInfo>(`SELECT "accountId", "ownerName", "type", "balance" FROM "AccountInfo" WHERE "accountId" = $1`, acctId);
-  if (rows.length === 0) {
-    return null;
-  }
-  return rows[0];
+  const p = txnCtxt.prismaClient as PrismaClient;
+  return p.accountInfo.findUnique({
+    where: {
+      accountId: acctId,
+    }
+  });
 };
