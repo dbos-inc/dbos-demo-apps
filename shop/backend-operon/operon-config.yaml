@@ -2,5 +2,5 @@ database:
   hostname: 'localhost'
   port: 5432
   username: 'postgres'
-  database: 'shop'
+  user_database: 'shop'
   connectionTimeoutMillis: 3000
