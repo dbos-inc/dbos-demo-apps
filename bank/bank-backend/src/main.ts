@@ -12,7 +12,8 @@ import {
   listTxnForAccountFunc,
   withdrawWorkflow,
   internalTransferFunc,
-  updateAcctTransactionFunc
+  updateAcctTransactionFunc,
+  remoteTransferComm
 } from "./workflows/txnhistory.workflows";
 
 export let bankname: string;
@@ -31,8 +32,8 @@ async function startServer() {
 
   // Initialize Operon.
   operon = new Operon();
+  operon.useNodePostgres();
   await operon.init();
-
 
   // Register transactions and workflows
   operon.registerTransaction(createAccountFunc);
@@ -40,13 +41,14 @@ async function startServer() {
   operon.registerTransaction(internalTransferFunc);
   operon.registerTransaction(listTxnForAccountFunc);
   operon.registerTransaction(updateAcctTransactionFunc);
+  operon.registerCommunicator(remoteTransferComm);
 
   operon.registerWorkflow(withdrawWorkflow);
   operon.registerWorkflow(depositWorkflow);
 
   // Create bank tables.
-  await operon.pool.query(BankSchema.accountInfoTable);
-  await operon.pool.query(BankSchema.transactionHistoryTable);
+  await operon.userDatabase.query(BankSchema.accountInfoTable);
+  await operon.userDatabase.query(BankSchema.transactionHistoryTable);
 
   // Start Koa server.
   const app = new Koa();

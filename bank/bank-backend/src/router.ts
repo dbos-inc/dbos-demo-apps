@@ -25,7 +25,8 @@ router.get("/api/list_accounts/:ownerName", async(ctx, next) => {
     ctx.status = 200;
   } catch (err) {
     console.error(err);
-    ctx.body = "Error! cannot list accounts for: " + name;
+    const error = err as Error;
+    ctx.body = error.message ?? "Error! cannot list accounts for: " + name;
     ctx.status = 500;
   }
   await next();
@@ -50,7 +51,8 @@ router.post("/api/create_account", async(ctx, next) => {
     ctx.status = 201;
   } catch (err) {
     console.error(err);
-    ctx.body = "Error! cannot create the account!";
+    const error = err as Error;
+    ctx.body = error.message ?? "Error! cannot create the account!";
     ctx.status = 500;
   }
   await next();
@@ -64,7 +66,8 @@ router.get("/api/transaction_history/:accountId",async (ctx, next) => {
     ctx.status = 200;
   } catch (err) {
     console.error(err);
-    ctx.body = "Error! cannot list transactions for account: " + acctId;
+    const error = err as Error;
+    ctx.body = error.message ?? "Error! cannot list transactions for account: " + acctId;
     ctx.status = 500;
   }
   await next();
@@ -104,14 +107,15 @@ router.post("/api/deposit", async(ctx, next) => {
   // Invoke the workflow.
   let retResponse: RouterResponse;
   try {
-    retResponse = await operon.workflow(depositWorkflow, {}, data);
+    retResponse = await operon.workflow(depositWorkflow, {}, data).getResult();
     ctx.status = retResponse.status;
     ctx.body = retResponse.body;
     ctx.message = retResponse.message;
   } catch (err) {
     console.error(err);
     ctx.status = 500;
-    ctx.message = "Failed to deposit!";
+    const error = err as Error;
+    ctx.message = error.message ?? "Failed to deposit!";
   }
 
   await next();
@@ -151,14 +155,15 @@ router.post("/api/withdraw", async(ctx, next) => {
   // Invoke the workflow.
   let retResponse: RouterResponse;
   try {
-    retResponse = await operon.workflow(withdrawWorkflow, {}, data);
+    retResponse = await operon.workflow(withdrawWorkflow, {}, data).getResult();
     ctx.status = retResponse.status;
     ctx.body = retResponse.body;
     ctx.message = retResponse.message;
   } catch (err) {
     console.error(err);
     ctx.status = 500;
-    ctx.message = "Failed to withdraw!";
+    const error = err as Error;
+    ctx.message = error.message ?? "Failed to withdraw!";
   }
 
   await next();
@@ -203,7 +208,8 @@ router.post("/api/transfer", async(ctx, next) => {
   } catch (err) {
     console.error(err);
     ctx.status = 500;
-    ctx.message = "Failed to transfer!";
+    const error = err as Error;
+    ctx.message = error.message ?? "Failed to transfer!";
   }
 
   await next();
