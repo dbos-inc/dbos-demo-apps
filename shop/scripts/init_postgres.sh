@@ -81,8 +81,8 @@ CREATE TABLE products_idempotency (
 "
 
 psql -U shop -h $POSTGRES_HOST -d shop -c "
-INSERT INTO products VALUES (DEFAULT, 'Pen', 'This is a great pen.', 'pen.jpg', 9999, 100);
+INSERT INTO products VALUES (DEFAULT, 'Pen', 'This is a great pen.', 'pen.jpg', 9999, 100000);
 "
 psql -U shop -h $POSTGRES_HOST -d shop -c "
-INSERT INTO products VALUES (DEFAULT,  'Pencil', 'This is a great pencil.', 'pencil.jpg', 8999, 100);
+INSERT INTO products VALUES (DEFAULT,  'Pencil', 'This is a great pencil.', 'pencil.jpg', 8999, 100000);
 "
