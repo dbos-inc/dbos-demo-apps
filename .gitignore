@@ -1,5 +1,6 @@
 # Logs
 **/.DS_Store
+**/prisma/migrations/*
 
 logs
 *.log
