@@ -21,11 +21,14 @@
     "@prisma/client": "^5.1.1",
     "axios": "^1.4.0",
     "json-bigint-patch": "^0.0.8",
+    "jwks-rsa": "^3.0.1",
     "koa": "^2.14.2",
+    "koa-jwt": "^4.0.4",
     "koa-logger": "^3.2.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.3",
+    "@types/koa": "^2.13.8",
     "@types/koa__cors": "^4.0.0",
     "@types/koa__router": "^12.0.0",
     "@types/koa-logger": "^3.1.2",
