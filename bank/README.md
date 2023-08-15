@@ -4,7 +4,11 @@ This is a simple bank application that uses [Operon](https://github.com/dbos-inc
 It requires node version 18.
 
 ### Initialize Postgres database
-You'll need to start a Postgres server, either through Docker, running locally, or using RDS.
+You'll need to start a Postgres server, either through Docker, running locally, or using RDS. We provide a script to start a Postgres docker:
+```shell
+./scripts/start_postgres_docker.sh
+```
+
 Then, you can set up the database using:
 ```shell
 ./scripts/init_postgres.sh
@@ -14,7 +18,7 @@ Then, you can set up the database using:
 We use Keycloak to perform authentication and we provide a script to automatically start it in a docker container.
 You can simply run:
 ```shell
-./scripts/start_keycloak.sh
+./scripts/start_keycloak_docker.sh
 ```
 
 ### Start the backend
