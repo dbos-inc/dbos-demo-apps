@@ -44,3 +44,18 @@ Finally, compile and run the backend:
 npm run build
 npm start
 ```
+It will listen at http://localhost:8081 
+
+### Start the frontend
+We build a bank frontend using Angular. To start the frontend, enter the `bank-frontend` directory and insatll dependencies:
+```shell
+cd bank-frontend/
+npm install
+```
+
+Then, you can compile and serve the frontend.
+```shell
+npm start
+```
+
+Now, you should be able to view the bank website in your browser: http://localhost:8089/
