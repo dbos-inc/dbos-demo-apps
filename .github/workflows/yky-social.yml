@@ -44,7 +44,7 @@ jobs:
           npm ci --no-audit --ignore-scripts
       - name: Create new PG DB and User
         run: |
-          cd yk-social
+          cd yky-social
           scripts/init_pgdb.sh
         env:
           # The postgres superuser password we set above
