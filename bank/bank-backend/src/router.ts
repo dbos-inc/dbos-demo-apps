@@ -40,6 +40,11 @@ router.get("/api/greeting", async(ctx, next) => {
   await next();
 });
 
+router.get("/api/admin_greeting", async(ctx, next) => {
+  ctx.body = {msg: `Hello admin, from DBOS Operon ${bankname}!`};
+  await next();
+});
+
 // List accounts.
 router.get("/api/list_accounts/:ownerName", async(ctx, next) => {
   const name: string = ctx.params.ownerName;
