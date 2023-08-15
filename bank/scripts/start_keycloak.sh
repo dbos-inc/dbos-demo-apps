@@ -11,7 +11,7 @@ if [[ -z "${BANK_DB_PASSWORD}" ]]; then
 fi
 
 if [[ -z "${POSTGRES_HOST}" ]]; then
-  export POSTGRES_HOST="localhost"
+  export POSTGRES_HOST="host.docker.internal"
 fi
 
 if [[ -z "${POSTGRES_PORT}" ]]; then
@@ -21,8 +21,8 @@ fi
 docker pull quay.io/keycloak/keycloak:latest
 
 # This script will start a Keycloak server in a docker container with some pre-configured users in the DBOS realm.
-docker run --name keycloak -p 8083:8080 -e KEYCLOAK_ADMIN=dbos-admin -e KEYCLOAK_ADMIN_PASSWORD=dbos-pass \
+docker run -p 8083:8080 --name keycloak -e KEYCLOAK_ADMIN=dbos-admin -e KEYCLOAK_ADMIN_PASSWORD=dbos-pass \
+  -e KC_DB=postgres -e KC_DB_DATABASE=${BANK_DB_NAME} -e KC_DB_SCHEMA=keycloak \
+  -e KC_DB_URL_DATABASE=${BANK_DB_NAME} -e KC_DB_PASSWORD=${BANK_DB_PASSWORD} -e KC_DB_URL_HOST=${POSTGRES_HOST} -e KC_DB_URL_PORT=${POSTGRES_PORT} -e KC_DB_USERNAME=${BANK_DB_NAME} \
   -v ${SCRIPT_DIR}/dbos-realm.json:/opt/keycloak/data/import/realm.json \
-  -e DB_VENDOR=postgres -e DB_DATABASE=${BANK_DB_NAME} -e DB_SCHEMA=keycloak \
-  -e DB_USER=${BANK_DB_NAME} -e DB_PASSWORD=${BANK_DB_PASSWORD} -e DB_ADDR=${POSTGRES_HOST}:${POSTGRES_PORT} \
   quay.io/keycloak/keycloak:latest start-dev --import-realm

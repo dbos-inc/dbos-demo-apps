@@ -19,6 +19,7 @@ if [[ -z "${POSTGRES_PORT}" ]]; then
 fi
 
 export PGPASSWORD="${POSTGRES_PASSWORD}"
+
 # Create a new user and the database with the same name.
 psql -U postgres -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -c "CREATE USER ${BANK_DB_NAME} WITH PASSWORD '${BANK_DB_PASSWORD}';"
 psql -U postgres -h $POSTGRES_HOST -p ${POSTGRES_PORT} -c "ALTER USER ${BANK_DB_NAME} CREATEDB;"
@@ -29,3 +30,6 @@ psql -U ${BANK_DB_NAME} -h ${POSTGRES_HOST} -d postgres -p ${POSTGRES_PORT} -c "
 psql -U ${BANK_DB_NAME} -h ${POSTGRES_HOST} -d postgres -p ${POSTGRES_PORT} -c "CREATE DATABASE ${BANK_DB_NAME} OWNER ${BANK_DB_NAME};"
 
 echo "Database user and DB created."
+
+# Create Keycloak schema
+psql -U ${BANK_DB_NAME} -h ${POSTGRES_HOST} -d ${BANK_DB_NAME} -p ${POSTGRES_PORT} -c "CREATE SCHEMA IF NOT EXISTS keycloak;"
