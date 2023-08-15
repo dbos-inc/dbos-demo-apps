@@ -17,6 +17,7 @@ import {
   remoteTransferComm
 } from "./workflows/txnhistory.workflows";
 import { PrismaClient } from "@prisma/client";
+import { get, has } from 'lodash';
 
 // A hack for bigint serializing to/from JSON.
 import "json-bigint-patch";
@@ -84,6 +85,59 @@ async function startServer() {
     // audience: 'urn:api/',
     issuer: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`
   }));
+
+  const authorizedRolesRoutes = {
+    'appUser': [
+      '/api/greeting',
+      '/api/create_account',
+      '/api/deposit',
+      '/api/withdraw',
+      '/api/transfer',
+    ],
+    'appAdmin': [
+      '/api/admin_greeting',
+    ]
+  };
+
+  // Authorization MW
+  app.use(async (ctx, next) => {
+    // First, retrieve the claimed roles from the token
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const token = ctx.state.user;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    if (!has(token, 'realm_access.roles')) {
+      ctx.status = 401;
+      ctx.body = 'User has no claimed role';
+      console.log('User has no claimed role');
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const roleClaims = get(token, 'realm_access.roles');
+
+    // Hardcode a priority logic: appAdmin > appUser > public
+    let authorizedRoutes: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    if (roleClaims.includes('appAdmin')) {
+      authorizedRoutes = authorizedRoutes.concat(authorizedRolesRoutes['appAdmin']);
+      authorizedRoutes = authorizedRoutes.concat(authorizedRolesRoutes['appUser']);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    } else if (roleClaims.includes('appUser')) {
+      authorizedRoutes = authorizedRoutes.concat(authorizedRolesRoutes['appUser']);
+    }
+
+    // Now check that the target path is authorized
+    const targetPath: string = ctx.request.path;
+    if (!targetPath.includes("list_accounts") && !targetPath.includes("transaction_history") && !authorizedRoutes.includes(targetPath)) {
+      ctx.status = 401;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      ctx.body = `User ${token.preferred_username} is not authorized to access ${targetPath}`;
+      console.log(token);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      console.log(`User ${token.preferred_username} is not authorized to access ${targetPath}`);
+      return;
+    }
+    return next();
+  });
 
   app.use(router.routes()).use(router.allowedMethods());
 
