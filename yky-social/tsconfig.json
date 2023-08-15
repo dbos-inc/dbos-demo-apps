@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es6",  // Specify ECMAScript target version
+    "module": "commonjs", // Specify module code generation
+    "outDir": "./dist",  // The output directory for the compiled JavaScript
+    "rootDir": "./src",  // The root directory of the input TypeScript files
+    "strict": true, // Enable all strict type-checking options
+    "moduleResolution": "node", // Use Node.js-style module resolution
+    "esModuleInterop": true, // Allows usage of default imports for modules without default export
+    "resolveJsonModule": true, // Include modules imported with '.json' extension
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file
+    "lib": ["es6"], // List of library files to be included in the compilation
+    "experimentalDecorators": true, // Enables experimental support for ES7 decorators, which is used by TypeORM and many other libraries
+    "emitDecoratorMetadata": true // Emits metadata for decorators
+  },
+  "include": ["src/**/*.ts"], // Files to be included in compilation
+  "exclude": ["node_modules"] // Files to be excluded from compilation
+}
+
