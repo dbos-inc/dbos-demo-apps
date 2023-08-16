@@ -45,7 +45,6 @@ import {Request, Response} from 'koa';
 import Router from "@koa/router";
 import logger from "koa-logger";
 import { bodyParser } from "@koa/bodyparser";
-import cors from "@koa/cors";
 
 import { DataSource } from "typeorm";
 
@@ -57,7 +56,7 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { GetApi } from "operon";
+//import { GetApi } from "operon";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -106,6 +105,7 @@ function handleException(e: unknown, res : Response): void {
   }
 }
 
+/*
 class YKY
 {
   @GetApi('/')
@@ -114,6 +114,7 @@ class YKY
     // TODO is it supposed to be like Koa?
   }
 }
+*/
 
 // Start Koa server.
 export const kapp = new Koa();
@@ -125,7 +126,7 @@ const router = new Router();
 
 // Home route
 router.get("/", async (ctx, next) => {
-    ctx.send("Welcome to YKY (Yakky not Yucky)!");
+    ctx.message = "Welcome to YKY (Yakky not Yucky)!";
     await next();
 });
 
@@ -144,7 +145,7 @@ router.post("/register", async (ctx, next) => {
       const user = await Operations.createUser(userDataSource,
         req.body.firstName, req.body.lastName, req.body.username, req.body.password);
 
-      res.status = 200
+      res.status = 200;
       res.body = { message: 'User created.', id:user.id };
     }
     catch(e)
@@ -170,7 +171,7 @@ router.post("/login", async (ctx, next) => {
   const res = ctx.response;
 
   try {
-    const user = await Operations.logInUser(userDataSource, req.body.username, req.body.password)
+    const user = await Operations.logInUser(userDataSource, req.body.username, req.body.password);
     res.status = 200;
     res.body = {message: 'Successful login.', id:user.id};
   }

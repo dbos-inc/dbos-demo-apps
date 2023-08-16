@@ -9,7 +9,7 @@ import { TimelineRecv, TimelineSend, SendType, RecvType } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from './entity/UserProfile';
 
-import { PostApi, SkipLogging, Traced } from 'operon';
+import { SkipLogging, Traced } from 'operon';
 
 export interface ResponseError extends Error {
     status?: number;
