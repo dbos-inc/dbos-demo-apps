@@ -40,8 +40,12 @@ private async get(req: Request, res: Response, next: NextFunction) {
  */
 
 import "reflect-metadata";
-import express, { Request, Response } from 'express';
-import bodyParser from 'body-parser';
+import Koa from 'koa';
+import {Request, Response} from 'koa';
+import Router from "@koa/router";
+import logger from "koa-logger";
+import { bodyParser } from "@koa/bodyparser";
+import cors from "@koa/cors";
 
 import { DataSource } from "typeorm";
 
@@ -53,6 +57,7 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
+import { GetApi } from "operon";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -80,9 +85,6 @@ export const userDataSource = new DataSource({
   ],
 });
 
-export const app = express();
-app.use(bodyParser.json());
-
 function checkUserId(req : Request, _res : Response) : string {
   const {userid} = req.query;
   if (!userid?.toString()) {
@@ -95,16 +97,36 @@ function checkUserId(req : Request, _res : Response) : string {
 function handleException(e: unknown, res : Response): void {
   console.log(e);
   if (e instanceof Error) {
-    res.status((e as ResponseError)?.status || 400).json({message: e.message});
+    res.status = ((e as ResponseError)?.status || 400);
+    res.body = {message: e.message};
   }
   else {
-    res.status(400).json({message: "Unknown error occurred."});
+    res.status = 400;
+    res.body = {message: "Unknown error occurred."};
   }
 }
 
+class YKY
+{
+  @GetApi('/')
+  static async hello(opctx: unknown, req: Request, res: Response) {
+    res.body = "Welcome to YKY (Yakky not Yucky)!";
+    // TODO is it supposed to be like Koa?
+  }
+}
+
+// Start Koa server.
+export const kapp = new Koa();
+kapp.use(logger());
+kapp.use(bodyParser());
+//kapp.use(cors());
+
+const router = new Router();
+
 // Home route
-app.get("/", (req, res) => {
-    res.send("Welcome to YKY (Yakky not Yucky)!");
+router.get("/", async (ctx, next) => {
+    ctx.send("Welcome to YKY (Yakky not Yucky)!");
+    await next();
 });
 
 // OK, so the thought here is a browser might call this
@@ -113,17 +135,24 @@ app.get("/", (req, res) => {
 //  protect itself, but it will raise an error.  Should we just
 //  say hey, it's fine, if it all matches?
 // Can this be generalized?
-app.post("/register", (req, res, _next) => {
+router.post("/register", async (ctx, next) => {
+    const req = ctx.request;
+    const res = ctx.response;
     console.log("Register: "+req.body.username+"-"+req.body.password);
-    Operations.createUser(userDataSource,
-           req.body.firstName, req.body.lastName, req.body.username, req.body.password)
-    .then((user) => {
-      res.status(200).json({ message: 'User created.', id:user.id });
-    })
-    .catch((e) =>
+
+    try {
+      const user = await Operations.createUser(userDataSource,
+        req.body.firstName, req.body.lastName, req.body.username, req.body.password);
+
+      res.status = 200
+      res.body = { message: 'User created.', id:user.id };
+    }
+    catch(e)
     {
       handleException(e, res);
-    });
+    }
+
+    await next();
 });
 
 /*
@@ -136,125 +165,250 @@ app.get("/users", async (req, res) => {
 });
 */
 
-app.post("/login", (req, res, _next) => {
-    Operations.logInUser(userDataSource, req.body.username, req.body.password)
-    .then((user) =>
-    {
-      res.status(200).json({message: 'Successful login.', id:user.id});
-    })
-    .catch((e) => {
-      handleException(e, res);
-    });
+router.post("/login", async (ctx, next) => {
+  const req = ctx.request;
+  const res = ctx.response;
+
+  try {
+    const user = await Operations.logInUser(userDataSource, req.body.username, req.body.password)
+    res.status = 200;
+    res.body = {message: 'Successful login.', id:user.id};
+  }
+  catch(e) {
+    handleException(e, res);
+  }
+  await next();
 });
 
-app.get("/finduser", (req, res, _next) => {
-  const userid = checkUserId(req, res);
+router.get("/finduser", async (ctx, next) => {
+  const req = ctx.request;
+  const res = ctx.response;
 
-  const {findUserName} = req.query;
-  if (!findUserName?.toString()) {
-    throw errorWithStatus("Parameter missing.", 400);
-  }
+  try {
+    const userid = checkUserId(req, res);
 
-  Operations.findUser(userDataSource, userid, findUserName.toString(), false, false)
-  .then(([user, _prof, _gsrc, _gdst]) => {
+    const {findUserName} = req.query;
+    if (!findUserName?.toString()) {
+      throw errorWithStatus("Parameter missing.", 400);
+    }
+
+    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, userid, findUserName.toString(), false, false);
+
     if (!user) {
-      res.status(200).json({message: "No user by that name."});
+      res.status = 200;
+      res.body = {message: "No user by that name."};
     }
     else {
-      res.status(200).json({message:"User Found.", uid : user.id, name : user.user_name});
+      res.status = 200;
+      res.body = {message:"User Found.", uid : user.id, name : user.user_name};
     }
-  })
-  .catch( (e) => {
+  }
+  catch(e) {
     handleException(e, res);
-  });
-});
-
-app.get("/post/:id", (req, res, _next) => {
-  //console.log("Get post "+req.params.id);
-  const userid = checkUserId(req, res);
-
-  // TODO Validate user permissions
-
-  Operations.getPost(userDataSource, userid.toString(), req.params.id)
-  .then((post) => {
-    if (post) {
-      res.status(200).json({message: 'Retrieved.', post:post});
-    } else {
-      res.status(404).json({message: 'No such post.'});
-    }
-  })
-  .catch((e) => {
-    handleException(e, res);
-  });
-});
-
-app.post("/follow", (req, res, _next) => {
-  const userid = checkUserId(req, res);
-
-  Operations.getGraphStatus(userDataSource, userid, req.body.follwUid)
-  .then((curStatus) => { return Operations.setGraphStatus(userDataSource, userid, req.body.followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW); })
-  .then(() => {
-    // TODO: That UID wasn't validated - maybe the DB should validate it
-    res.status(200).json({message: "Followed."});
-  })
-  .catch((e) => {
-    handleException(e, res);
-  });
-});
-
-app.post("/composepost", (req, res, _next) => {
-  const userid = checkUserId(req, res);
-  if (!req.body.postText) {
-    res.status(400).send({message: "Post text is required"});
-    return;
   }
 
-  Operations.makePost(userDataSource, userid, req.body.postText)
-  .then(() => {
-    res.status(200).json({message: "Posted."});
-  })
-  .catch((e) => {
-    handleException(e, res);
-  });
+  await next();
 });
 
-app.get("/recvtimeline", (req, res, _next) => {
-  const userid = checkUserId(req, res);
+router.get("/post/:id", async (ctx, next) => {
+  const req = ctx.request;
+  const res = ctx.response;
 
-  // TODO: User id and modes
+  //console.log("Get post "+req.params.id);
+  try
+  {
+    const userid = checkUserId(req, res);
 
-  Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true)
-  .then( (rtl) => {
+    // TODO Validate user permissions
+
+    const post = await Operations.getPost(userDataSource, userid.toString(), ctx.params.id);
+    if (post) {
+      res.status = 200;
+      res.body = {message: 'Retrieved.', post:post};
+    } else {
+      res.status = 404;
+      res.body = {message: 'No such post.'};
+    }
+  }
+  catch(e) {
+    handleException(e, res);
+  }
+
+  await next();
+});
+
+router.post("/follow", async (ctx, next) => {
+  const req = ctx.request;
+  const res = ctx.response;
+
+  try
+  {
+    const userid = checkUserId(req, res);
+
+    const curStatus = await Operations.getGraphStatus(userDataSource, userid, req.body.follwUid);
+    await Operations.setGraphStatus(userDataSource, userid, req.body.followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+    // TODO: That UID wasn't validated - maybe the DB should validate it
+    res.status = (200);
+    res.body = {message: "Followed."};
+  }
+  catch(e) {
+    handleException(e, res);
+  }
+
+  await next();
+});
+
+router.post("/composepost", async (ctx, next) => {
+  const req = ctx.request;
+  const res = ctx.response;
+  
+  try
+  {
+    const userid = checkUserId(req, res);
+    if (!req.body.postText) {
+      res.status = (400);
+      res.body = {message: "Post text is required"};
+      return;
+    }
+
+    await Operations.makePost(userDataSource, userid, req.body.postText);
+    res.status = (200);
+    res.body = {message: "Posted."};
+  }
+  catch(e) {
+    handleException(e, res);
+  }
+
+  await next();
+});
+
+router.get("/recvtimeline", async (ctx, next) => {
+  const req = ctx.request;
+  const res = ctx.response;
+
+  try
+  {
+    const userid = checkUserId(req, res);
+
+    // TODO: User id and modes
+
+    const rtl = await Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true);
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
          postText: tle.post?.text, postMentions: tle.post?.mentions};
     });
-    return tl;
-  })
-  .then((tl) => {
-    res.status(200).json({message: "Read.", timeline:tl});
-  })
-  .catch((e) => {
+    
+    res.status = (200);
+    res.body = {message: "Read.", timeline:tl};
+  }
+  catch(e) {
     handleException(e, res);
-  });
+  }
+
+  await next();
 });
 
-app.get("/sendtimeline", (req, res, _next) => {
-  // TODO: User id and modes
-  const userid = checkUserId(req, res);
+router.get("/sendtimeline", async (ctx, next) => {
+  const req = ctx.request;
+  const res = ctx.response;
 
-  Operations.readSendTimeline(userDataSource, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true)
-  .then((rtl) => {
+  try
+  {
+    // TODO: User id and modes
+    const userid = checkUserId(req, res);
+
+    const rtl = await Operations.readSendTimeline(userDataSource, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id,  fromUserId:tle.user_id, sendDate: tle.send_date, sendType:tle.send_type,
          postText: tle.post?.text, postMentions: tle.post?.mentions};
     });
-    return tl;
-  })
-  .then((tl) => {
-    res.status(200).json({message: "Read.", timeline: tl});
-  })
-  .catch((e) => {
+
+    res.status = (200);
+    res.body = ({message: "Read.", timeline: tl});
+  }
+  catch(e) {
     handleException(e, res);
-  });
+  }
+
+  await next();
 });
+
+/*
+  // Custom 401 handling if you don't want to expose koa-jwt errors to users
+  app.use(function(ctx, next){
+    return next().catch((err) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (401 === err.status) {
+        ctx.status = 401;
+        ctx.body = 'Protected resource, use Authorization header to get access\n';
+      } else {
+        throw err;
+      }
+    });
+  });
+
+  app.use(jwt({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    secret: koaJwtSecret({
+      jwksUri: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos/protocol/openid-connect/certs`,
+      cache: true,
+      cacheMaxEntries: 5,
+      cacheMaxAge: 600000
+    }),
+    // audience: 'urn:api/',
+    issuer: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`
+  }));
+
+  const authorizedRolesRoutes = {
+    'appUser': [
+      '/',
+    ],
+    'appAdmin': [
+      '/api/admin_greeting',
+    ]
+  };
+
+  // Authorization MW
+  app.use(async (ctx, next) => {
+    // First, retrieve the claimed roles from the token
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const token = ctx.state.user;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    if (!has(token, 'realm_access.roles')) {
+      ctx.status = 401;
+      ctx.body = 'User has no claimed role';
+      console.log('User has no claimed role');
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const roleClaims = get(token, 'realm_access.roles');
+
+    // Hardcode a priority logic: appAdmin > appUser > public
+    let authorizedRoutes: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    if (roleClaims.includes('appAdmin')) {
+      authorizedRoutes = authorizedRoutes.concat(authorizedRolesRoutes['appAdmin']);
+      authorizedRoutes = authorizedRoutes.concat(authorizedRolesRoutes['appUser']);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    } else if (roleClaims.includes('appUser')) {
+      authorizedRoutes = authorizedRoutes.concat(authorizedRolesRoutes['appUser']);
+    }
+
+    // Now check that the target path is authorized
+    const targetPath: string = ctx.request.path;
+    if (!targetPath.includes("list_accounts") && !targetPath.includes("transaction_history") && !authorizedRoutes.includes(targetPath)) {
+      ctx.status = 401;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      ctx.body = `User ${token.preferred_username} is not authorized to access ${targetPath}`;
+      console.log(token);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      console.log(`User ${token.preferred_username} is not authorized to access ${targetPath}`);
+      return;
+    }
+    return next();
+  });
+
+}
+*/
+
+kapp.use(router.routes()).use(router.allowedMethods());

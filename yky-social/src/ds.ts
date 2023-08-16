@@ -1,12 +1,12 @@
 import "reflect-metadata";
 
-import { app } from './app';
+import { kapp } from './app';
 import { userDataSource } from "./app";
 
 userDataSource.initialize()
     .then(() => {
         console.log("User Data Source has been initialized!");
-        app.listen(3000, () => {
+        kapp.listen(3000, () => {
             console.log("Server started on port 3000");
         });
     })

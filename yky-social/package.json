@@ -21,8 +21,6 @@
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.2",
-    "express": "^4.18.2",
     "koa": "^2.14.2",
     "koa-jwt": "^4.0.4",
     "koa-logger": "^3.2.1",

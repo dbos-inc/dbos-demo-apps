@@ -9,6 +9,8 @@ import { TimelineRecv, TimelineSend, SendType, RecvType } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from './entity/UserProfile';
 
+import { PostApi, SkipLogging, Traced } from 'operon';
+
 export interface ResponseError extends Error {
     status?: number;
 }
@@ -35,7 +37,8 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
 export class Operations
 {
 
-static async createUser(userDS:DataSource, first:string, last:string, uname:string, pass:string) :
+@Traced
+static async createUser(@SkipLogging userDS:DataSource, first:string, last:string, uname:string, pass:string) :
    Promise<UserLogin>
 {
     if (!first || !last || !uname || !pass) {

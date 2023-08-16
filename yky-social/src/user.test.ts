@@ -3,7 +3,7 @@
 
 import {describe, expect} from '@jest/globals';
 import request from 'supertest';
-import { app } from './app';
+import { kapp } from './app';
 import { userDataSource } from './app';
 
 beforeAll(async () => {
@@ -17,7 +17,7 @@ afterAll(async () => {
 
 describe('POST /register new user wo/ password', () => {
   it('should fail to create a new user with no password', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
       .post('/register')
       .send({ firstName: 'Jane', lastName: 'Deer', username: "jdeer" });
     expect(response.statusCode).toBe(400);
@@ -27,7 +27,7 @@ describe('POST /register new user wo/ password', () => {
 
 describe('POST /register new user', () => {
   it('should create a new user and return 200 status code', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
       .post('/register')
       .send({ firstName: 'Jane', lastName: 'Deer', username: "jdeer", password: "yyy" });
     expect(response.statusCode).toBe(200);
@@ -37,7 +37,7 @@ describe('POST /register new user', () => {
 
 describe('POST /register new user that already exists', () => {
   it('should fail because user exists and return 400 status code', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
       .post('/register')
       .send({ firstName: 'Jane', lastName: 'Deer', username: "jdeer", password: "wowowow" });
     expect(response.statusCode).toBe(400);
@@ -47,7 +47,7 @@ describe('POST /register new user that already exists', () => {
 
 describe('POST /register second new user', () => {
   it('should create a new user and return 200 status code', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
       .post('/register')
       .send({ firstName: 'Jim', lastName: 'Smith', username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
@@ -57,7 +57,7 @@ describe('POST /register second new user', () => {
 
 describe('POST /login no such user', () => {
   it('should return 400 for wrong user', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
       .post('/login')
       .send({ username: "apalmer", password: "jjj" });
     expect(response.statusCode).toBe(401);
@@ -67,7 +67,7 @@ describe('POST /login no such user', () => {
 
 describe('POST /login wrong password', () => {
   it('should return 400 for wrong password', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
       .post('/login')
       .send({ username: "jsmith", password: "jjjj" });
     expect(response.statusCode).toBe(401);
@@ -77,7 +77,7 @@ describe('POST /login wrong password', () => {
 
 describe('POST /login success', () => {
   it('should return 200 for booyah', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
       .post('/login')
       .send({ username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
@@ -88,26 +88,26 @@ describe('POST /login success', () => {
 // A more interesting test - part 1 follow someone
 describe('Go find a friend, follow', () => {
   it('should log us in', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
     .post('/login')
     .send({ username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
 
-    const nofindres = await request(app)
+    const nofindres = await request(kapp.callback())
     .get('/finduser')
     .query({userid:response.body.id})
     .query({findUserName: "dollythesheep" });
     expect(nofindres.statusCode).toBe(200);
     expect(nofindres.body.message).toBe("No user by that name.");
 
-    const findres = await request(app)
+    const findres = await request(kapp.callback())
     .get('/finduser')
     .query({userid:response.body.id})
     .query({findUserName: "jdeer" });
     expect(findres.statusCode).toBe(200);
     expect(findres.body.message).toBe("User Found.");
 
-    const followres = await request(app)
+    const followres = await request(kapp.callback())
     .post('/follow')
     .query({userid:response.body.id})
     .send({ followUid: findres.body.uid });
@@ -115,7 +115,7 @@ describe('Go find a friend, follow', () => {
     expect(followres.body.message).toBe("Followed.");
 
     // See empty timeline
-    const readtimeline = await request(app)
+    const readtimeline = await request(kapp.callback())
     .get('/recvtimeline')
     .query({userid:response.body.id});
     expect(readtimeline.statusCode).toBe(200);
@@ -126,19 +126,19 @@ describe('Go find a friend, follow', () => {
 // Part 2 - Other makes a post - check send timeline
 describe('Go do a post', () => {
   it('should log us in and make a post; check if sent', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
     .post('/login')
     .send({ username: "jdeer", password: "yyy" });
     expect(response.statusCode).toBe(200);
 
     // See empty timeline
-    const sendtimeline = await request(app)
+    const sendtimeline = await request(kapp.callback())
     .get('/sendtimeline')
     .query({userid:response.body.id});
     expect(sendtimeline.statusCode).toBe(200);
     expect(sendtimeline.body.timeline).toHaveLength(0);
 
-    const nofindres = await request(app)
+    const nofindres = await request(kapp.callback())
     .post('/composepost')
     .query({userid:response.body.id})
     .send({postText: "Venison for sale..." });
@@ -146,7 +146,7 @@ describe('Go do a post', () => {
     expect(nofindres.body.message).toBe("Posted.");
 
     // See post in timeline
-    const readtimeline = await request(app)
+    const readtimeline = await request(kapp.callback())
     .get('/sendtimeline')
     .query({userid:response.body.id});
     expect(readtimeline.statusCode).toBe(200);
@@ -157,13 +157,13 @@ describe('Go do a post', () => {
 // Part 3 - Receive followed post
 describe('Go read posts', () => {
   it('should log us in and read posts', async () => {
-    const response = await request(app)
+    const response = await request(kapp.callback())
     .post('/login')
     .send({ username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
 
     // See one post
-    const readtimeline = await request(app)
+    const readtimeline = await request(kapp.callback())
     .get('/recvtimeline')
     .query({userid:response.body.id});
     expect(readtimeline.statusCode).toBe(200);
