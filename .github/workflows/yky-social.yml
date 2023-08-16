@@ -64,7 +64,7 @@ jobs:
       - name: Build Test yky-social
         working-directory: ./operon-demo-apps/yky-social
         run: |
-          npm link ../../operon
+          npm ci --no-audit --link ../../operon
           npm run build
           npm run lint
           npm test
