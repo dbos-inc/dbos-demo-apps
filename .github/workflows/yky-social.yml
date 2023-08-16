@@ -43,7 +43,7 @@ jobs:
         with:
           repository: dbos-inc/operon
           token: ${{ secrets.GH_PAT }} # Created a repo secret named GH_PAT, with the value of a personal access token that has access to private repos.
-          ref: chuck/apireg_decorators
+          # ref: chuck/apireg_decorators
           path: operon
       - name: Set up node 
         uses: actions/setup-node@v3
@@ -54,6 +54,7 @@ jobs:
         run: |
           cd ./operon-demo-apps/yky-social
           npm ci --no-audit --ignore-scripts
+          npm link ../../operon --save
       # - name: Create new PG DB and User
       #   run: |
       #     cd ./operon-demo-apps/yky-social
@@ -62,9 +63,8 @@ jobs:
       #     # The postgres superuser password we set above
       #     PGPASSWORD: dbos
       - name: Build Test yky-social
+        working-directory: ./operon-demo-apps/yky-social
         run: |
-          cd ./operon-demo-apps/yky-social
-          npm link ../../operon --save
           npm run build
           npm run lint
           npm test
