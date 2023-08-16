@@ -39,6 +39,7 @@ jobs:
         with:
           repository: dbos-inc/operon
           #token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
+          token: ${{ github.token }}
           ref: chuck/apireg_decorators
           path: operon
       - name: Set up node 
