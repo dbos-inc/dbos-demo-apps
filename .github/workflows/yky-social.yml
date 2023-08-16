@@ -54,7 +54,7 @@ jobs:
         run: |
           cd ./operon-demo-apps/yky-social
           npm ci --no-audit --ignore-scripts
-          npm link ../../operon --save
+          mv ../../operon node_modules/
       # - name: Create new PG DB and User
       #   run: |
       #     cd ./operon-demo-apps/yky-social
