@@ -4,9 +4,9 @@ on:
     paths:
       - 'yky-social/**'
   pull_request:
-    branches: [ "main" ]
     paths:
       - 'yky-social/**'
+      - '.github/**'
   workflow_dispatch:
 
 jobs:
