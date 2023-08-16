@@ -83,7 +83,7 @@ async function getProducts(ctxt: TransactionContext) {
 
   return formattedRows;
 }
-operon.registerTransaction(getProducts, {});
+operon.registerTransaction(getProducts, {readOnly: true});
 
 app.get('/api/products', asyncHandler(async (req: Request, res: Response) => {
   const products = await operon.transaction(getProducts, {});
@@ -101,7 +101,7 @@ async function getProduct(ctxt: TransactionContext, id: number) {
   };
   return product;
 }
-operon.registerTransaction(getProduct);
+operon.registerTransaction(getProduct, {readOnly: true});
 
 app.get('/api/products/:id', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -136,7 +136,7 @@ async function getCart(ctxt: TransactionContext, username: string) {
   })));
   return productDetails;
 }
-operon.registerTransaction(getCart);
+operon.registerTransaction(getCart, {readOnly: true});
 
 app.post('/api/get_cart', asyncHandler(async (req: Request, res: Response) => {
   const { username } = req.body;
