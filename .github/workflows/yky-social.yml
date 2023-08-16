@@ -62,8 +62,8 @@ jobs:
       #     # The postgres superuser password we set above
       #     PGPASSWORD: dbos
       - name: Build Test yky-social
-        working-directory: ./operon-demo-apps/yky-social
         run: |
+          cd ./operon-demo-apps/yky-social
           npm link ../../operon --save
           npm run build
           npm run lint
