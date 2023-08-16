@@ -37,7 +37,7 @@ jobs:
         with:
           path: operon-demo-apps
       - name: Checkout operon
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           repository: dbos-inc/operon
           #token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
