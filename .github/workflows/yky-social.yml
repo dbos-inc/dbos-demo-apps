@@ -15,23 +15,23 @@ jobs:
     permissions:
       contents: read
 
-    # Service container for Postgres
-    services:
-      # Label used to access the service container.
-      postgres:
-        image: postgres
-        env:
-          # Specify the password for Postgres superuser.
-          POSTGRES_PASSWORD: dbos
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          # Maps tcp port 5432 on service container to the host
-          - 5432:5432
+    # # Service container for Postgres
+    # services:
+    #   # Label used to access the service container.
+    #   postgres:
+    #     image: postgres
+    #     env:
+    #       # Specify the password for Postgres superuser.
+    #       POSTGRES_PASSWORD: dbos
+    #     # Set health checks to wait until postgres has started
+    #     options: >-
+    #       --health-cmd pg_isready
+    #       --health-interval 10s
+    #       --health-timeout 5s
+    #       --health-retries 5
+    #     ports:
+    #       # Maps tcp port 5432 on service container to the host
+    #       - 5432:5432
 
     steps:
       - name: Checkout demo app
@@ -54,17 +54,17 @@ jobs:
         run: |
           cd ./operon-demo-apps/yky-social
           npm ci --no-audit --ignore-scripts
-      - name: Create new PG DB and User
-        run: |
-          cd ./operon-demo-apps/yky-social
-          scripts/init_pgdb.sh
-        env:
-          # The postgres superuser password we set above
-          PGPASSWORD: dbos
+      # - name: Create new PG DB and User
+      #   run: |
+      #     cd ./operon-demo-apps/yky-social
+      #     scripts/init_pgdb.sh
+      #   env:
+      #     # The postgres superuser password we set above
+      #     PGPASSWORD: dbos
       - name: Build Test yky-social
         working-directory: ./operon-demo-apps/yky-social
         run: |
-          npm ci --no-audit --link ../../operon
+          npm link ../../operon --save
           npm run build
           npm run lint
           npm test
