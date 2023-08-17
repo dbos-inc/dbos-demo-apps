@@ -56,8 +56,7 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { GetApi, forEachMethod } from "operon";
-import { APITypes } from "operon/dist/src/decorators";
+import { GetApi, APITypes, OperonTransaction, TransactionConfig, TransactionContext, forEachMethod } from "operon";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -120,6 +119,32 @@ class YKY
     return next();
     // TODO is it supposed to be like Koa?
   }
+
+  @OperonTransaction({readOnly: true}) // '/recvtimeline'
+  static async receiveTimeline(ctx: TransactionContext) 
+  {
+    const req = (ctx.request as Koa.Request);
+    const res = (ctx.response as Koa.Response);
+  
+    try
+    {
+      const userid = checkUserId(req, res);
+  
+      // TODO: User id and modes
+  
+      const rtl = await Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true);
+      const tl = rtl.map((tle) => {
+        return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
+           postText: tle.post?.text, postMentions: tle.post?.mentions};
+      });
+      
+      res.status = (200);
+      res.body = {message: "Read.", timeline:tl};
+    }
+    catch(e) {
+      handleException(e, res);
+    }
+  }
 }
 
 // Start Koa server.
@@ -130,7 +155,7 @@ kapp.use(bodyParser());
 
 const router = new Router();
 
-// For now, do it ourselves
+// For now, do it ourselves, but it could be part of the framework...
 forEachMethod((m) => {
   const cur = 0;
   if (m.apiURL) {
@@ -147,7 +172,6 @@ forEachMethod((m) => {
   }
 });
 
-// Home route
 // Do we have need to do a special Koa route?
 router.get("/koa", async (ctx, next) => {
   return YKY.helloctx(ctx, next);
