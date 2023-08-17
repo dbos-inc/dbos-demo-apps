@@ -56,7 +56,8 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { GetApi } from "operon";
+import { GetApi, forEachMethod } from "operon";
+import { APITypes } from "operon/dist/src/decorators";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -108,11 +109,11 @@ function handleException(e: unknown, res : Response): void {
 class YKY
 {
   @GetApi('/')
-  static async hello(_opctx: unknown, req: Request, res: Response) {
+  static async hello(_req: Request, res: Response) {
     res.body = {message: "Welcome to YKY (Yakky not Yucky)!"};
     // TODO is it supposed to be like Koa?
   }
-  static async helloctx(_opctx: unknown, ctx:Context, next: Next) {
+  static async helloctx(ctx:Context, next: Next) {
     ctx.body = {message: "Welcome to YKY (Yakky not Yucky)!"};
     return next();
     // TODO is it supposed to be like Koa?
@@ -127,14 +128,27 @@ kapp.use(bodyParser());
 
 const router = new Router();
 
-// Home route
-router.get("/", async (ctx, next) => {
-    const rv = await YKY.hello(undefined, ctx.request, ctx.response);
-    await next();
-    return rv;
+// For now, do it ourselves
+forEachMethod((m) => {
+  let cur = 0;
+  if (m.apiURL) {
+    if (m.apiType === APITypes.GET) {
+      if (m.args.length < cur+2) {
+        throw Error("Not enough arguments to have request/response web call arguments");
+      }
+      router.get(m.apiURL, async(ctx, next) => {
+        const rv = await m.invoke(undefined, [ctx.request, ctx.response]);
+        await next();
+        return rv;
+      });
+    }
+  }
 });
+
+// Home route
+// Do we have need to do a special Koa route?
 router.get("/koa", async (ctx, next) => {
-  return YKY.helloctx(undefined, ctx, next);
+  return YKY.helloctx(ctx, next);
 });
 
 // OK, so the thought here is a browser might call this
