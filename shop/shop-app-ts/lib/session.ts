@@ -4,8 +4,8 @@ import { unsealData } from "iron-session";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 export const sessionOptions: IronSessionOptions = {
-  cookieName: process.env.SESSION_COOKIE_NAME as string,
-  password: process.env.SESSION_COOKIE_PASSWORD as string,
+  cookieName: process.env.SESSION_COOKIE_NAME as string || "dbos-cookie",
+  password: process.env.SESSION_COOKIE_PASSWORD as string || "dbos-secure-password-is-very-long-and-secure",
   // secure: true should be used in production (HTTPS) but can't be used in development (HTTP)
   cookieOptions: {
       secure: false,
@@ -19,7 +19,6 @@ declare module "iron-session" {
   }
 }
 
-
 /**
  * Can be called in page/layout server component.
  * @param cookies ReadonlyRequestCookies
@@ -28,13 +27,13 @@ declare module "iron-session" {
 export async function getRequestCookie(
   cookies: ReadonlyRequestCookies
 ): Promise<String | null> {
-  const cookieName = process.env.SESSION_COOKIE_NAME as string;
+  const cookieName = process.env.SESSION_COOKIE_NAME as string || "dbos-cookie";
   const found = cookies.get(cookieName);
 
   if (!found) return null;
 
   const { user } = await unsealData(found.value, {
-    password: process.env.SESSION_COOKIE_PASSWORD as string,
+    password: process.env.SESSION_COOKIE_PASSWORD as string || "dbos-secure-password-is-very-long-and-secure",
   });
 
   return user as unknown as String;

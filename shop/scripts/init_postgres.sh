@@ -12,15 +12,21 @@ fi
 psql -U postgres -h $POSTGRES_HOST -c "CREATE USER shop WITH PASSWORD 'shop';"
 psql -U postgres -h $POSTGRES_HOST -c "ALTER USER shop CREATEDB;"
 
-# Drop the DB if it already exists, then create it again
+# Save the current value of PGPASSWORD to a variable
+OLD_PGPASSWORD="$PGPASSWORD"
+
 export PGPASSWORD='shop'
 psql -U shop -h $POSTGRES_HOST -d postgres -c "DROP DATABASE IF EXISTS shop;"
 psql -U shop -h $POSTGRES_HOST -d postgres -c "CREATE DATABASE shop;"
+
+export PGPASSWORD="$OLD_PGPASSWORD"
+psql -U postgres -h $POSTGRES_HOST -d shop -c "GRANT CREATE, USAGE ON SCHEMA public TO shop;"
 
 ################################################################
 # Create tables for shop_app.
 ################################################################
 
+export PGPASSWORD='shop'
 psql -U shop -h $POSTGRES_HOST -d shop -c "
 CREATE TABLE cart (
     username VARCHAR(255) NOT NULL,
@@ -81,8 +87,8 @@ CREATE TABLE products_idempotency (
 "
 
 psql -U shop -h $POSTGRES_HOST -d shop -c "
-INSERT INTO products VALUES (DEFAULT, 'Pen', 'This is a great pen.', 'pen.jpg', 9999, 100);
+INSERT INTO products VALUES (DEFAULT, 'Pen', 'This is a great pen.', 'pen.jpg', 9999, 100000);
 "
 psql -U shop -h $POSTGRES_HOST -d shop -c "
-INSERT INTO products VALUES (DEFAULT,  'Pencil', 'This is a great pencil.', 'pencil.jpg', 8999, 100);
+INSERT INTO products VALUES (DEFAULT,  'Pencil', 'This is a great pencil.', 'pencil.jpg', 8999, 100000);
 "
