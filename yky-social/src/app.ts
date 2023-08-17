@@ -41,7 +41,7 @@ private async get(req: Request, res: Response, next: NextFunction) {
 
 import "reflect-metadata";
 import Koa from 'koa';
-import {Request, Response} from 'koa';
+import {Request, Response, Context, Next} from 'koa';
 import Router from "@koa/router";
 import logger from "koa-logger";
 import { bodyParser } from "@koa/bodyparser";
@@ -56,7 +56,7 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
-//import { GetApi } from "operon";
+import { GetApi } from "operon";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -105,16 +105,19 @@ function handleException(e: unknown, res : Response): void {
   }
 }
 
-/*
 class YKY
 {
   @GetApi('/')
-  static async hello(opctx: unknown, req: Request, res: Response) {
+  static async hello(_opctx: unknown, req: Request, res: Response) {
     res.body = "Welcome to YKY (Yakky not Yucky)!";
     // TODO is it supposed to be like Koa?
   }
+  static async helloctx(_opctx: unknown, ctx:Context, next: Next) {
+    ctx.body = "Welcome to YKY (Yakky not Yucky)!";
+    return next();
+    // TODO is it supposed to be like Koa?
+  }
 }
-*/
 
 // Start Koa server.
 export const kapp = new Koa();
@@ -126,8 +129,12 @@ const router = new Router();
 
 // Home route
 router.get("/", async (ctx, next) => {
-    ctx.message = "Welcome to YKY (Yakky not Yucky)!";
+    const rv = await YKY.hello(undefined, ctx.request, ctx.response);
     await next();
+    return rv;
+});
+router.get("/koa", async (ctx, next) => {
+  return YKY.helloctx(undefined, ctx, next);
 });
 
 // OK, so the thought here is a browser might call this
