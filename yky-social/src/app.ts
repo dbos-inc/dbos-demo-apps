@@ -56,7 +56,7 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { GetApi, APITypes, OperonTransaction, TransactionConfig, TransactionContext, forEachMethod } from "operon";
+import { GetApi, APITypes, OperonTransaction, TransactionContext, forEachMethod } from "operon";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
