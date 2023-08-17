@@ -109,11 +109,11 @@ class YKY
 {
   @GetApi('/')
   static async hello(_opctx: unknown, req: Request, res: Response) {
-    res.body = "Welcome to YKY (Yakky not Yucky)!";
+    res.body = {message: "Welcome to YKY (Yakky not Yucky)!"};
     // TODO is it supposed to be like Koa?
   }
   static async helloctx(_opctx: unknown, ctx:Context, next: Next) {
-    ctx.body = "Welcome to YKY (Yakky not Yucky)!";
+    ctx.body = {message: "Welcome to YKY (Yakky not Yucky)!"};
     return next();
     // TODO is it supposed to be like Koa?
   }

@@ -15,6 +15,24 @@ afterAll(async () => {
   await userDataSource.destroy();
 });
 
+describe('GET (request-like)', () => {
+  it('should get', async () => {
+    const response = await request(kapp.callback())
+      .get('/');
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe("Welcome to YKY (Yakky not Yucky)!");
+  });
+});
+
+describe('GET (koa-like)', () => {
+  it('should fail to create a new user with no password', async () => {
+    const response = await request(kapp.callback())
+      .get('/koa');
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe("Welcome to YKY (Yakky not Yucky)!");
+  });
+});
+
 describe('POST /register new user wo/ password', () => {
   it('should fail to create a new user with no password', async () => {
     const response = await request(kapp.callback())
