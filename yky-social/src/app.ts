@@ -108,10 +108,12 @@ function handleException(e: unknown, res : Response): void {
 
 class YKY
 {
+  // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi('/')
   static async hello(_req: Request, res: Response) {
     res.body = {message: "Welcome to YKY (Yakky not Yucky)!"};
     // TODO is it supposed to be like Koa?
+    return;
   }
   static async helloctx(ctx:Context, next: Next) {
     ctx.body = {message: "Welcome to YKY (Yakky not Yucky)!"};
@@ -130,7 +132,7 @@ const router = new Router();
 
 // For now, do it ourselves
 forEachMethod((m) => {
-  let cur = 0;
+  const cur = 0;
   if (m.apiURL) {
     if (m.apiType === APITypes.GET) {
       if (m.args.length < cur+2) {
