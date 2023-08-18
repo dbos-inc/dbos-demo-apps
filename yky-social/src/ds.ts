@@ -6,7 +6,7 @@ import { operon } from "./app";
 
 userDataSource.initialize()
   .then(() => {
-    operon.init();
+    return operon.init();
   })
   .then(() => {
     console.log("User Data Source has been initialized!");
