@@ -57,6 +57,7 @@ import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
 import { GetApi, APITypes, OperonTransaction, TransactionContext, forEachMethod } from "operon";
+import { OperonContext } from "operon/dist/src/context";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -109,7 +110,9 @@ class YKY
 {
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi('/')
-  static async hello(_req: Request, res: Response) {
+  static async hello(ctx: OperonContext) {
+    const res = (ctx.response as Koa.Response);
+
     res.body = {message: "Welcome to YKY (Yakky not Yucky)!"};
     // TODO is it supposed to be like Koa?
     return;
@@ -120,7 +123,8 @@ class YKY
     // TODO is it supposed to be like Koa?
   }
 
-  @OperonTransaction({readOnly: true}) // '/recvtimeline'
+  @OperonTransaction({readOnly: true})
+  @GetApi('/recvtimeline')
   static async receiveTimeline(ctx: TransactionContext) 
   {
     const req = (ctx.request as Koa.Request);
@@ -160,11 +164,11 @@ forEachMethod((m) => {
   const cur = 0;
   if (m.apiURL) {
     if (m.apiType === APITypes.GET) {
-      if (m.args.length < cur+2) {
-        throw Error("Not enough arguments to have request/response web call arguments");
-      }
       router.get(m.apiURL, async(ctx, next) => {
-        const rv = await m.invoke(undefined, [ctx.request, ctx.response]);
+        const c: OperonContext = new OperonContext();
+        c.request = ctx.request;
+        c.response = ctx.response;
+        const rv = await m.invoke(undefined, [c]);
         await next();
         return rv;
       });
@@ -322,32 +326,6 @@ router.post("/composepost", async (ctx, next) => {
     await Operations.makePost(userDataSource, userid, req.body.postText);
     res.status = (200);
     res.body = {message: "Posted."};
-  }
-  catch(e) {
-    handleException(e, res);
-  }
-
-  await next();
-});
-
-router.get("/recvtimeline", async (ctx, next) => {
-  const req = ctx.request;
-  const res = ctx.response;
-
-  try
-  {
-    const userid = checkUserId(req, res);
-
-    // TODO: User id and modes
-
-    const rtl = await Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true);
-    const tl = rtl.map((tle) => {
-      return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
-         postText: tle.post?.text, postMentions: tle.post?.mentions};
-    });
-    
-    res.status = (200);
-    res.body = {message: "Read.", timeline:tl};
   }
   catch(e) {
     handleException(e, res);
