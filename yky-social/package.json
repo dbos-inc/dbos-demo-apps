@@ -8,9 +8,9 @@
     "build": "tsc",
     "dev": "ts-node src/ds.ts",
     "reg": "ts-node-dev src/ds.ts",
-    "lint": "eslint --ext .ts .",
-    "lint-fix": "eslint --fix --ext .ts .",
+    "lint": "eslint --fix --ext .ts .",
     "tsc": "tsc",
+    "clean": "rm -rf dist",
     "start": "node dist/ds.js"
   },
   "keywords": [],
