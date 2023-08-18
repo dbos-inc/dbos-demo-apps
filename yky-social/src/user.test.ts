@@ -5,12 +5,16 @@ import {describe, expect} from '@jest/globals';
 import request from 'supertest';
 import { kapp } from './app';
 import { userDataSource } from './app';
+import { operon } from './app';
 
 beforeAll(async () => {
   await userDataSource.initialize();
+  operon.useNodePostgres();
+  await operon.init();
 });
 
 afterAll(async () => {
+  await operon.destroy();
   await userDataSource.dropDatabase();
   await userDataSource.destroy();
 });

@@ -56,8 +56,7 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { GetApi, APITypes, OperonTransaction, TransactionContext, forEachMethod } from "operon";
-import { OperonContext } from "operon/dist/src/context";
+import { Operon, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod } from "operon";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -135,7 +134,7 @@ class YKY
       const userid = checkUserId(req, res);
   
       // TODO: User id and modes
-  
+
       const rtl = await Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true);
       const tl = rtl.map((tle) => {
         return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
@@ -151,8 +150,23 @@ class YKY
   }
 }
 
-// Start Koa server.
+// Initialize Operon.
+export const operon = new Operon({
+  poolConfig: {
+    user: process.env.POSTGRES_USERNAME,
+    database: process.env.POSTGRES_DBNAME,
+    password: process.env.POSTGRES_PASSWORD,
+    port: Number(process.env.POSTGRES_PORT),
+    host: process.env.POSTGRES_HOST,
+  },
+  telemetryExporters: undefined,
+  system_database: 'opsys',
+  observability_database: undefined
+});
+
 export const kapp = new Koa();
+
+// Start Koa server.
 kapp.use(logger());
 kapp.use(bodyParser());
 //kapp.use(cors());
