@@ -161,7 +161,6 @@ const router = new Router();
 
 // For now, do it ourselves, but it could be part of the framework...
 forEachMethod((m) => {
-  const cur = 0;
   if (m.apiURL) {
     if (m.apiType === APITypes.GET) {
       router.get(m.apiURL, async(ctx, next) => {
