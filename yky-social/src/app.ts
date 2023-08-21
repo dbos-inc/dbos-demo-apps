@@ -58,6 +58,8 @@ import { UserProfile } from "./entity/UserProfile";
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
 import { Operon, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod } from "operon";
 
+import { OperonTransactionFunction } from "operon";
+
 export const userDataSource = new DataSource({
   "type": "postgres",
   "host": process.env.POSTGRES_HOST,
@@ -175,13 +177,23 @@ const router = new Router();
 
 // For now, do it ourselves, but it could be part of the framework...
 forEachMethod((m) => {
+  if (m.txnConfig) {
+    operon.registerTransaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, m.txnConfig);
+  }
   if (m.apiURL) {
     if (m.apiType === APITypes.GET) {
       router.get(m.apiURL, async(ctx, next) => {
         const c: OperonContext = new OperonContext();
         c.request = ctx.request;
         c.response = ctx.response;
-        const rv = await m.invoke(undefined, [c]);
+        let rv;
+        if (m.txnConfig) {
+          // Wait, does it just need the name?!
+          rv = await operon.transaction(m.origFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c } );
+        }
+        else {
+          rv = await m.invoke(undefined, [c]);
+        }
         await next();
         return rv;
       });
