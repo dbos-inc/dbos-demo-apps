@@ -189,7 +189,7 @@ forEachMethod((m) => {
         let rv;
         if (m.txnConfig) {
           // Wait, does it just need the name?!
-          rv = await operon.transaction(m.origFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c } );
+          rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c } );
         }
         else {
           rv = await m.invoke(undefined, [c]);
