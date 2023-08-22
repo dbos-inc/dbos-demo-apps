@@ -59,6 +59,7 @@ import { Operations, ResponseError, errorWithStatus } from "./Operations";
 import { Operon, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod } from "operon";
 
 import { OperonTransactionFunction } from "operon";
+import { ArgSources } from "operon/dist/src/decorators";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -179,14 +180,13 @@ class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/finduser')
-  static async findUser(ctx: TransactionContext) {
+  static async findUser(ctx: TransactionContext, findUserName: string) {
     const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
   
     try {
       const userid = checkUserId(req, res);
   
-      const {findUserName} = req.query;
       if (!findUserName?.toString()) {
         throw errorWithStatus("Parameter missing.", 400);
       }
@@ -242,13 +242,29 @@ forEachMethod((m) => {
         const c: OperonContext = new OperonContext();
         c.request = ctx.request;
         c.response = ctx.response;
+
+        // Get the arguments
+        let args: unknown[] = [];
+        m.args.forEach((marg, idx) => {
+          if (idx == 0) {
+            return; // The context
+          }
+          if (marg.argSource === ArgSources.DEFAULT || marg.argSource === ArgSources.QUERY) {
+            // Validating the arg occurs later...
+            args.push(ctx.request.query[marg.name]);
+          }
+          else if (marg.argSource === ArgSources.URL) {
+            // TODO!
+          }
+        });
+
         let rv;
         if (m.txnConfig) {
           // Wait, does it just need the name?!
-          rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c } );
+          rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
         }
         else {
-          rv = await m.invoke(undefined, [c]);
+          rv = await m.invoke(undefined, [c, ...args]);
         }
         await next();
         return rv;
