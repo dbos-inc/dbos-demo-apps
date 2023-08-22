@@ -150,6 +150,62 @@ class YKY
       handleException(e, res);
     }
   }
+
+  @OperonTransaction({readOnly: true})
+  @GetApi('/sendtimeline')
+  static async sendTimeline(ctx: TransactionContext)
+  {
+    const req = (ctx.request as Koa.Request);
+    const res = (ctx.response as Koa.Response);
+  
+    try
+    {
+      // TODO: User id and modes
+      const userid = checkUserId(req, res);
+  
+      const rtl = await Operations.readSendTimeline(userDataSource, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
+      const tl = rtl.map((tle) => {
+        return {postId: tle.post_id,  fromUserId:tle.user_id, sendDate: tle.send_date, sendType:tle.send_type,
+           postText: tle.post?.text, postMentions: tle.post?.mentions};
+      });
+  
+      res.status = (200);
+      res.body = ({message: "Read.", timeline: tl});
+    }
+    catch(e) {
+      handleException(e, res);
+    }
+  }
+
+  @OperonTransaction({readOnly: true})
+  @GetApi('/finduser')
+  static async findUser(ctx: TransactionContext) {
+    const req = (ctx.request as Koa.Request);
+    const res = (ctx.response as Koa.Response);
+  
+    try {
+      const userid = checkUserId(req, res);
+  
+      const {findUserName} = req.query;
+      if (!findUserName?.toString()) {
+        throw errorWithStatus("Parameter missing.", 400);
+      }
+  
+      const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, userid, findUserName.toString(), false, false);
+  
+      if (!user) {
+        res.status = 200;
+        res.body = {message: "No user by that name."};
+      }
+      else {
+        res.status = 200;
+        res.body = {message:"User Found.", uid : user.id, name : user.user_name};
+      }
+    }
+    catch(e) {
+      handleException(e, res);
+    }
+  }  
 }
 
 // Initialize Operon.
@@ -232,16 +288,6 @@ router.post("/register", async (ctx, next) => {
     await next();
 });
 
-/*
-// Retrieve all users
-// TODO: respect block lists, etc
-app.get("/users", async (req, res) => {
-    const userRepository = userDataSource.getRepository(UserLogin);
-    const users = await userRepository.find();
-    res.json(users);
-});
-*/
-
 router.post("/login", async (ctx, next) => {
   const req = ctx.request;
   const res = ctx.response;
@@ -254,36 +300,6 @@ router.post("/login", async (ctx, next) => {
   catch(e) {
     handleException(e, res);
   }
-  await next();
-});
-
-router.get("/finduser", async (ctx, next) => {
-  const req = ctx.request;
-  const res = ctx.response;
-
-  try {
-    const userid = checkUserId(req, res);
-
-    const {findUserName} = req.query;
-    if (!findUserName?.toString()) {
-      throw errorWithStatus("Parameter missing.", 400);
-    }
-
-    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, userid, findUserName.toString(), false, false);
-
-    if (!user) {
-      res.status = 200;
-      res.body = {message: "No user by that name."};
-    }
-    else {
-      res.status = 200;
-      res.body = {message:"User Found.", uid : user.id, name : user.user_name};
-    }
-  }
-  catch(e) {
-    handleException(e, res);
-  }
-
   await next();
 });
 
@@ -351,31 +367,6 @@ router.post("/composepost", async (ctx, next) => {
     await Operations.makePost(userDataSource, userid, req.body.postText);
     res.status = (200);
     res.body = {message: "Posted."};
-  }
-  catch(e) {
-    handleException(e, res);
-  }
-
-  await next();
-});
-
-router.get("/sendtimeline", async (ctx, next) => {
-  const req = ctx.request;
-  const res = ctx.response;
-
-  try
-  {
-    // TODO: User id and modes
-    const userid = checkUserId(req, res);
-
-    const rtl = await Operations.readSendTimeline(userDataSource, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
-    const tl = rtl.map((tle) => {
-      return {postId: tle.post_id,  fromUserId:tle.user_id, sendDate: tle.send_date, sendType:tle.send_type,
-         postText: tle.post?.text, postMentions: tle.post?.mentions};
-    });
-
-    res.status = (200);
-    res.body = ({message: "Read.", timeline: tl});
   }
   catch(e) {
     handleException(e, res);
