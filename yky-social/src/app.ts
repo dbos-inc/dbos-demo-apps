@@ -41,7 +41,7 @@ private async get(req: Request, res: Response, next: NextFunction) {
 
 import "reflect-metadata";
 import Koa from 'koa';
-import {Request, Response, Context, Next} from 'koa';
+import { Request, Response, Context, Next } from 'koa';
 import Router from "@koa/router";
 import logger from "koa-logger";
 import { bodyParser } from "@koa/bodyparser";
@@ -56,7 +56,7 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { Operon, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod, OperonDataValidationError } from "operon";
+import { Operon, Required, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod, OperonDataValidationError } from "operon";
 
 import { OperonTransactionFunction } from "operon";
 import { ArgSources } from "operon/dist/src/decorators";
@@ -180,18 +180,14 @@ class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/finduser')
-  static async findUser(ctx: TransactionContext, findUserName: string) {
+  static async findUser(ctx: TransactionContext, @Required findUserName: string) {
     const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
   
     try {
       const userid = checkUserId(req, res);
   
-      if (!findUserName?.toString()) {
-        throw errorWithStatus("Parameter missing.", 400);
-      }
-  
-      const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, userid, findUserName.toString(), false, false);
+      const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, userid, findUserName, false, false);
   
       if (!user) {
         res.status = 200;
