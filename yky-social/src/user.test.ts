@@ -115,6 +115,13 @@ describe('Go find a friend, follow', () => {
     .send({ username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
 
+    // Should fail if user name is not specified
+    const nounameres = await request(kapp.callback())
+    .get('/finduser')
+    .query({userid:response.body.id});
+    //.query({findUserName: "dollythesheep" });
+    expect(nounameres.statusCode).toBe(400);
+
     const nofindres = await request(kapp.callback())
     .get('/finduser')
     .query({userid:response.body.id})

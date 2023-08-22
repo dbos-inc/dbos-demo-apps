@@ -56,7 +56,7 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { Operon, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod } from "operon";
+import { Operon, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod, OperonDataValidationError } from "operon";
 
 import { OperonTransactionFunction } from "operon";
 import { ArgSources } from "operon/dist/src/decorators";
@@ -244,7 +244,7 @@ forEachMethod((m) => {
         c.response = ctx.response;
 
         // Get the arguments
-        let args: unknown[] = [];
+        const args: unknown[] = [];
         m.args.forEach((marg, idx) => {
           if (idx == 0) {
             return; // The context
@@ -259,15 +259,29 @@ forEachMethod((m) => {
         });
 
         let rv;
-        if (m.txnConfig) {
-          // Wait, does it just need the name?!
-          rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
+        try {
+          if (m.txnConfig) {
+            // Wait, does it just need the name?!
+            rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
+          }
+          else {
+            rv = await m.invoke(undefined, [c, ...args]);
+          }
+          await next();
+          return rv;
         }
-        else {
-          rv = await m.invoke(undefined, [c, ...args]);
+        catch (e) {
+          if (e instanceof OperonDataValidationError) {
+            ctx.response.status = 400;
+            ctx.message = e.message;
+            await next();
+            return;
+          }
+          else {
+            // What else
+            throw e;
+          }
         }
-        await next();
-        return rv;
       });
     }
   }

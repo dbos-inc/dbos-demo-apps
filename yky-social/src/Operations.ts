@@ -33,7 +33,6 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
   return isMatch;
 }
 
-
 export class Operations
 {
 
