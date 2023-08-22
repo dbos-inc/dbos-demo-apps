@@ -132,24 +132,18 @@ class YKY
     const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
   
-    try
-    {
-      const userid = checkUserId(req, res);
-  
-      // TODO: User id and modes
+    const userid = checkUserId(req, res);
 
-      const rtl = await Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true);
-      const tl = rtl.map((tle) => {
-        return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
-           postText: tle.post?.text, postMentions: tle.post?.mentions};
-      });
-      
-      res.status = (200);
-      res.body = {message: "Read.", timeline:tl};
-    }
-    catch(e) {
-      handleException(e, res);
-    }
+    // TODO: User id and modes
+
+    const rtl = await Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true);
+    const tl = rtl.map((tle) => {
+      return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
+          postText: tle.post?.text, postMentions: tle.post?.mentions};
+    });
+
+    res.status = (200);
+    res.body = {message: "Read.", timeline:tl};
   }
 
   @OperonTransaction({readOnly: true})
@@ -158,24 +152,18 @@ class YKY
   {
     const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
-  
-    try
-    {
-      // TODO: User id and modes
-      const userid = checkUserId(req, res);
-  
-      const rtl = await Operations.readSendTimeline(userDataSource, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
-      const tl = rtl.map((tle) => {
-        return {postId: tle.post_id,  fromUserId:tle.user_id, sendDate: tle.send_date, sendType:tle.send_type,
-           postText: tle.post?.text, postMentions: tle.post?.mentions};
-      });
-  
-      res.status = (200);
-      res.body = ({message: "Read.", timeline: tl});
-    }
-    catch(e) {
-      handleException(e, res);
-    }
+
+    // TODO: User id and modes
+    const userid = checkUserId(req, res);
+
+    const rtl = await Operations.readSendTimeline(userDataSource, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
+    const tl = rtl.map((tle) => {
+      return {postId: tle.post_id,  fromUserId:tle.user_id, sendDate: tle.send_date, sendType:tle.send_type,
+          postText: tle.post?.text, postMentions: tle.post?.mentions};
+    });
+
+    res.status = (200);
+    res.body = ({message: "Read.", timeline: tl});
   }
 
   @OperonTransaction({readOnly: true})
@@ -184,22 +172,17 @@ class YKY
     const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
   
-    try {
-      const userid = checkUserId(req, res);
-  
-      const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, userid, findUserName, false, false);
-  
-      if (!user) {
-        res.status = 200;
-        res.body = {message: "No user by that name."};
-      }
-      else {
-        res.status = 200;
-        res.body = {message:"User Found.", uid : user.id, name : user.user_name};
-      }
+    const userid = checkUserId(req, res);
+
+    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, userid, findUserName, false, false);
+
+    if (!user) {
+      res.status = 200;
+      res.body = {message: "No user by that name."};
     }
-    catch(e) {
-      handleException(e, res);
+    else {
+      res.status = 200;
+      res.body = {message:"User Found.", uid : user.id, name : user.user_name};
     }
   }  
 }
