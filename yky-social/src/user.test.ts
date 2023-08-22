@@ -198,5 +198,12 @@ describe('Go read posts', () => {
     expect(readtimeline.statusCode).toBe(200);
     expect(readtimeline.body.timeline).toHaveLength(1);
     expect(readtimeline.body.timeline[0].postText).toBe('Venison for sale...');
+
+    // Retrieve post by id
+    const post = await request(kapp.callback())
+    .get(`/post/${readtimeline.body.timeline[0].postId}`)
+    .query({userid:response.body.id});
+    expect(post.statusCode).toBe(200);
+    expect(post.body.post.text).toBe(readtimeline.body.timeline[0].postText);
   });
 });
