@@ -238,6 +238,21 @@ class YKY
     res.status = 200;
     res.body = { message: 'User created.', id:user.id };
   }
+
+  @OperonTransaction()
+  @PostApi("/follow")
+  static async doFollow(ctx: TransactionContext, @Required followUid: string) {
+    const req = (ctx.request as Koa.Request);
+    const res = (ctx.response as Koa.Response);
+  
+    const userid = checkUserId(req, res);
+
+    const curStatus = await Operations.getGraphStatus(userDataSource, userid, followUid);
+    await Operations.setGraphStatus(userDataSource, userid, req.body.followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+    // TODO: That UID wasn't validated - maybe the DB should validate it
+    res.status = (200);
+    res.body = {message: "Followed."};
+  }
 }
 
 // Initialize Operon.
@@ -341,30 +356,9 @@ forEachMethod((m) => {
   }
 });
 
-// Do we have need to do a special Koa route?
+// Example of how to do a route directly in Koa
 router.get("/koa", async (ctx, next) => {
   return YKY.helloctx(ctx, next);
-});
-
-router.post("/follow", async (ctx, next) => {
-  const req = ctx.request;
-  const res = ctx.response;
-
-  try
-  {
-    const userid = checkUserId(req, res);
-
-    const curStatus = await Operations.getGraphStatus(userDataSource, userid, req.body.follwUid);
-    await Operations.setGraphStatus(userDataSource, userid, req.body.followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
-    // TODO: That UID wasn't validated - maybe the DB should validate it
-    res.status = (200);
-    res.body = {message: "Followed."};
-  }
-  catch(e) {
-    handleException(e, res);
-  }
-
-  await next();
 });
 
 router.post("/composepost", async (ctx, next) => {
