@@ -59,7 +59,7 @@ import { Operations, ResponseError, errorWithStatus } from "./Operations";
 import { Operon, Required, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod, OperonDataValidationError } from "operon";
 
 import { OperonTransactionFunction } from "operon";
-import { ArgSource, ArgSources } from "operon/dist/src/decorators";
+import { ArgSource, ArgSources, LogMask, LogMasks, PostApi } from "operon/dist/src/decorators";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -206,6 +206,17 @@ class YKY
       res.body = {message: 'No such post.'};
     }
   }  
+
+  @OperonTransaction({readOnly: true})
+  @PostApi("/login")
+  static async doLogin(ctx: TransactionContext, @Required username: string, @Required @LogMask(LogMasks.HASH) password: string) {
+    //const req = (ctx.request as Koa.Request);
+    const res = (ctx.response as Koa.Response);
+  
+    const user = await Operations.logInUser(userDataSource, username, password);
+    res.status = 200;
+    res.body = {message: 'Successful login.', id:user.id};
+  }
 }
 
 // Initialize Operon.
@@ -237,53 +248,74 @@ forEachMethod((m) => {
     operon.registerTransaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, m.txnConfig);
   }
   if (m.apiURL) {
-    if (m.apiType === APITypes.GET) {
-      router.get(m.apiURL, async(ctx, next) => {
-        const c: OperonContext = new OperonContext();
-        c.request = ctx.request;
-        c.response = ctx.response;
+    const rf = async(ctx: Koa.Context, next:Koa.Next) => {
+      const c: OperonContext = new OperonContext();
+      c.request = ctx.request;
+      c.response = ctx.response;
 
-        // Get the arguments
-        const args: unknown[] = [];
-        m.args.forEach((marg, idx) => {
-          if (idx == 0) {
-            return; // The context
-          }
-          if (marg.argSource === ArgSources.DEFAULT || marg.argSource === ArgSources.QUERY) {
-            // Validating the arg occurs later...
-            args.push(ctx.request.query[marg.name]);
-          }
-          else if (marg.argSource === ArgSources.URL) {
-            // TODO: This should be the default if the name appears in the URL?
-            args.push(ctx.params[marg.name]);
-          }
-        });
-
-        let rv;
-        try {
-          if (m.txnConfig) {
-            // Wait, does it just need the name?!
-            rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
-          }
-          else {
-            rv = await m.invoke(undefined, [c, ...args]);
-          }
-          await next();
-          return rv;
+      // Get the arguments
+      const args: unknown[] = [];
+      m.args.forEach((marg, idx) => {
+        if (idx == 0) {
+          return; // The context
         }
-        catch (e) {
-          if (e instanceof OperonDataValidationError) {
-            ctx.response.status = 400;
-            ctx.message = e.message;
-            await next();
-            return;
+        if ((m.apiType == APITypes.GET && marg.argSource === ArgSources.DEFAULT)
+            || marg.argSource === ArgSources.QUERY)
+        {
+          // Validating the arg occurs later...
+          args.push(ctx.request.query[marg.name]);
+        }
+        else if ((m.apiType == APITypes.POST && marg.argSource === ArgSources.DEFAULT)
+            || marg.argSource === ArgSources.BODY)
+        {
+          // Validating the arg occurs later...
+          if (!ctx.request.body) {
+            throw new OperonDataValidationError(`Function ${m.name} requires a method body`);
           }
-          else {
-            // What else
-            throw e;
-          }
+          args.push(ctx.request.body[marg.name]);
+        }
+        else if (marg.argSource === ArgSources.URL) {
+          // TODO: This should be the default if the name appears in the URL?
+          args.push(ctx.params[marg.name]);
         }
       });
+
+      let rv;
+      try {
+        if (m.txnConfig) {
+          // Wait, does it just need the name?!
+          rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
+        }
+        else {
+          rv = await m.invoke(undefined, [c, ...args]);
+        }
+        await next();
+        return rv;
+      }
+      catch (e) {
+        if (e instanceof OperonDataValidationError) {
+          ctx.response.status = 400;
+          ctx.body = {message: e.message};
+          await next();
+          return;
+        }
+        if (e instanceof Error) {
+          ctx.response.status = ((e as ResponseError)?.status || 400);
+          ctx.body = {message: e.message};
+          await next();
+          return;
+        }
+        else {
+          // What else
+          throw e;
+        }
+      }
+    };
+    if (m.apiType === APITypes.GET) {
+      router.get(m.apiURL, rf);
+    }
+    if (m.apiType === APITypes.POST) {
+      router.post(m.apiURL, rf);
     }
   }
 });
@@ -317,21 +349,6 @@ router.post("/register", async (ctx, next) => {
     }
 
     await next();
-});
-
-router.post("/login", async (ctx, next) => {
-  const req = ctx.request;
-  const res = ctx.response;
-
-  try {
-    const user = await Operations.logInUser(userDataSource, req.body.username, req.body.password);
-    res.status = 200;
-    res.body = {message: 'Successful login.', id:user.id};
-  }
-  catch(e) {
-    handleException(e, res);
-  }
-  await next();
 });
 
 router.post("/follow", async (ctx, next) => {
