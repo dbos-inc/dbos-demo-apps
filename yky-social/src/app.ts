@@ -253,6 +253,19 @@ class YKY
     res.status = (200);
     res.body = {message: "Followed."};
   }
+
+  @OperonTransaction()
+  @PostApi("/composepost")
+  static async doCompose(ctx: TransactionContext, @Required postText: string) {
+    const req = (ctx.request as Koa.Request);
+    const res = (ctx.response as Koa.Response);
+    
+    const userid = checkUserId(req, res);
+  
+    await Operations.makePost(userDataSource, userid, postText);
+    res.status = (200);
+    res.body = {message: "Posted."};  
+  }
 }
 
 // Initialize Operon.
@@ -359,30 +372,6 @@ forEachMethod((m) => {
 // Example of how to do a route directly in Koa
 router.get("/koa", async (ctx, next) => {
   return YKY.helloctx(ctx, next);
-});
-
-router.post("/composepost", async (ctx, next) => {
-  const req = ctx.request;
-  const res = ctx.response;
-  
-  try
-  {
-    const userid = checkUserId(req, res);
-    if (!req.body.postText) {
-      res.status = (400);
-      res.body = {message: "Post text is required"};
-      return;
-    }
-
-    await Operations.makePost(userDataSource, userid, req.body.postText);
-    res.status = (200);
-    res.body = {message: "Posted."};
-  }
-  catch(e) {
-    handleException(e, res);
-  }
-
-  await next();
 });
 
 /*
