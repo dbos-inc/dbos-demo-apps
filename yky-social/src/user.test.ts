@@ -29,7 +29,7 @@ describe('GET (request-like)', () => {
 });
 
 describe('GET (koa-like)', () => {
-  it('should fail to create a new user with no password', async () => {
+  it('should get - from koa directly', async () => {
     const response = await request(kapp.callback())
       .get('/koa');
     expect(response.statusCode).toBe(200);

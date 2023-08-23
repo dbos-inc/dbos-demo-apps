@@ -200,10 +200,10 @@ class YKY
     const post = await Operations.getPost(userDataSource, userid.toString(), id);
     if (post) {
       res.status = 200;
-      res.body = {message: 'Retrieved.', post:post};
+      res.body = { message: 'Retrieved.', post:post };
     } else {
       res.status = 404;
-      res.body = {message: 'No such post.'};
+      res.body = { message: 'No such post.' };
     }
   }  
 
@@ -215,7 +215,28 @@ class YKY
   
     const user = await Operations.logInUser(userDataSource, username, password);
     res.status = 200;
-    res.body = {message: 'Successful login.', id:user.id};
+    res.body = { message: 'Successful login.', id:user.id };
+  }
+
+  // OK, so the thought here is a browser might call this
+  //  and, there is a nonzero chance that it could get resubmit.
+  // What do we do then?  It's trying to use a transaction to
+  //  protect itself, but it will raise an error.  Should we just
+  //  say hey, it's fine, if it all matches?
+  // Can this be generalized?
+  @OperonTransaction()
+  @PostApi("/register")
+  static async doRegister(ctx: TransactionContext, @Required firstName: string, @Required lastName: string,
+     @Required username: string, @Required @LogMask(LogMasks.HASH) password: string)
+  {
+    //const req = (ctx.request as Koa.Request);
+    const res = (ctx.response as Koa.Response);
+
+    const user = await Operations.createUser(userDataSource,
+      firstName, lastName, username, password);
+
+    res.status = 200;
+    res.body = { message: 'User created.', id:user.id };
   }
 }
 
@@ -323,32 +344,6 @@ forEachMethod((m) => {
 // Do we have need to do a special Koa route?
 router.get("/koa", async (ctx, next) => {
   return YKY.helloctx(ctx, next);
-});
-
-// OK, so the thought here is a browser might call this
-//  and, there is a nonzero chance that it could get resubmit.
-// What do we do then?  It's trying to use a transaction to
-//  protect itself, but it will raise an error.  Should we just
-//  say hey, it's fine, if it all matches?
-// Can this be generalized?
-router.post("/register", async (ctx, next) => {
-    const req = ctx.request;
-    const res = ctx.response;
-    console.log("Register: "+req.body.username+"-"+req.body.password);
-
-    try {
-      const user = await Operations.createUser(userDataSource,
-        req.body.firstName, req.body.lastName, req.body.username, req.body.password);
-
-      res.status = 200;
-      res.body = { message: 'User created.', id:user.id };
-    }
-    catch(e)
-    {
-      handleException(e, res);
-    }
-
-    await next();
 });
 
 router.post("/follow", async (ctx, next) => {
