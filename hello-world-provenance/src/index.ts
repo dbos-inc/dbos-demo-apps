@@ -1,5 +1,6 @@
 import express, { Express, Request, Response } from "express";
 import { TransactionContext, WorkflowContext, Operon, OperonTransaction, OperonWorkflow } from "operon";
+import { ProvenanceDaemon } from "operon/dist/src/provenance";
 
 interface OperonHello {
   greeting_id: number;
@@ -34,6 +35,10 @@ async function startServer() {
   await operon.userDatabase.query(
     "CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);"
   );
+
+  // Create a provenance daemon.
+  const provDaemon = new ProvenanceDaemon(operon.config, "helloworld");
+  await provDaemon.start();
 
   // Invoke the workflow from an Express HTTP handler
   const app: Express = express();
