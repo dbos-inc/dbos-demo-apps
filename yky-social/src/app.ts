@@ -59,7 +59,7 @@ import { Operations, ResponseError, errorWithStatus } from "./Operations";
 import { Operon, Required, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod, OperonDataValidationError } from "operon";
 
 import { OperonTransactionFunction } from "operon";
-import { ArgSources } from "operon/dist/src/decorators";
+import { ArgSource, ArgSources } from "operon/dist/src/decorators";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -184,6 +184,27 @@ class YKY
       res.status = 200;
       res.body = {message:"User Found.", uid : user.id, name : user.user_name};
     }
+  }
+
+  @OperonTransaction({readOnly: true})
+  @GetApi("/post/:id")
+  static async getPost(ctx: TransactionContext, @Required @ArgSource(ArgSources.URL) id: string) {
+    const req = (ctx.request as Koa.Request);
+    const res = (ctx.response as Koa.Response);
+
+    //console.log("Get post "+req.params.id);
+    const userid = checkUserId(req, res);
+
+    // TODO Validate user permissions
+
+    const post = await Operations.getPost(userDataSource, userid.toString(), id);
+    if (post) {
+      res.status = 200;
+      res.body = {message: 'Retrieved.', post:post};
+    } else {
+      res.status = 404;
+      res.body = {message: 'No such post.'};
+    }
   }  
 }
 
@@ -233,7 +254,8 @@ forEachMethod((m) => {
             args.push(ctx.request.query[marg.name]);
           }
           else if (marg.argSource === ArgSources.URL) {
-            // TODO!
+            // TODO: This should be the default if the name appears in the URL?
+            args.push(ctx.params[marg.name]);
           }
         });
 
@@ -309,33 +331,6 @@ router.post("/login", async (ctx, next) => {
   catch(e) {
     handleException(e, res);
   }
-  await next();
-});
-
-router.get("/post/:id", async (ctx, next) => {
-  const req = ctx.request;
-  const res = ctx.response;
-
-  //console.log("Get post "+req.params.id);
-  try
-  {
-    const userid = checkUserId(req, res);
-
-    // TODO Validate user permissions
-
-    const post = await Operations.getPost(userDataSource, userid.toString(), ctx.params.id);
-    if (post) {
-      res.status = 200;
-      res.body = {message: 'Retrieved.', post:post};
-    } else {
-      res.status = 404;
-      res.body = {message: 'No such post.'};
-    }
-  }
-  catch(e) {
-    handleException(e, res);
-  }
-
   await next();
 });
 
