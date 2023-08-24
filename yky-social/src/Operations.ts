@@ -1,6 +1,6 @@
 import bcryptjs from 'bcryptjs';
 
-import { DataSource, In } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 
 //import { MediaItem } from "./entity/Media";
 import { GraphType, SocialGraph } from "./entity/Graph";
@@ -37,7 +37,7 @@ export class Operations
 {
 
 @Traced
-static async createUser(@SkipLogging userDS:DataSource, first:string, last:string, uname:string, pass:string) :
+static async createUser(@SkipLogging manager:EntityManager, first:string, last:string, uname:string, pass:string) :
    Promise<UserLogin>
 {
     if (!first || !last || !uname || !pass) {
@@ -60,7 +60,7 @@ static async createUser(@SkipLogging userDS:DataSource, first:string, last:strin
     }
 
     // TODO: Validation of these things; do something if it is wrong
-    return await userDS.manager.transaction(
+    return await manager.transaction(
     "SERIALIZABLE",
     async (transactionalEntityManager) => {
         const existingUser = await transactionalEntityManager.findOneBy(UserLogin, {
@@ -74,10 +74,10 @@ static async createUser(@SkipLogging userDS:DataSource, first:string, last:strin
     );
 }
 
-static async logInUser(userDS:DataSource, uname:string, pass:string) :
+static async logInUser(manager:EntityManager, uname:string, pass:string) :
    Promise<UserLogin>
 {
-    const userRep = userDS.getRepository(UserLogin);
+    const userRep = manager.getRepository(UserLogin);
     const existingUser = await userRep.findOneBy({
         user_name: uname,
     });
@@ -88,10 +88,10 @@ static async logInUser(userDS:DataSource, uname:string, pass:string) :
     return existingUser;
 }
 
-static async logInUserId(userDS:DataSource, uname:string, pass:string) :
+static async logInUserId(manager:EntityManager, uname:string, pass:string) :
    Promise<string>
 {
-    const userRep = userDS.getRepository(UserLogin);
+    const userRep = manager.getRepository(UserLogin);
     const existingUser = await userRep.findOneBy({
         user_name: uname,
     });
@@ -102,17 +102,17 @@ static async logInUserId(userDS:DataSource, uname:string, pass:string) :
     return existingUser.id;
 }
 
-static async getMyProfile(userDS:DataSource, curUid:string) :
+static async getMyProfile(manager:EntityManager, curUid:string) :
    Promise<UserProfile | null>
 {
-    const upRep = userDS.getRepository(UserProfile);
+    const upRep = manager.getRepository(UserProfile);
     return upRep.findOneBy({id: curUid});
 }
 
-static async getPost(userDS:DataSource, _curUid: string, post:string) :
+static async getPost(manager:EntityManager, _curUid: string, post:string) :
    Promise<Post | null>
 {
-    const pRep = userDS.getRepository(Post);
+    const pRep = manager.getRepository(Post);
     const res = pRep.findOne({
         where: {id: post},
         relations: {
@@ -124,10 +124,10 @@ static async getPost(userDS:DataSource, _curUid: string, post:string) :
 //
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
 //
-static async findUser(userDS:DataSource, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
+static async findUser(manager:EntityManager, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
    Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]> 
 {
-    const userRep = userDS.getRepository(UserLogin);
+    const userRep = manager.getRepository(UserLogin);
     const otherUser = await userRep.findOneBy({
         user_name: uname,
     });
@@ -136,7 +136,7 @@ static async findUser(userDS:DataSource, curUid:string, uname:string, getProfile
     }
 
     // Check to see if we're blocked
-    const sgRep = userDS.getRepository(SocialGraph);
+    const sgRep = manager.getRepository(SocialGraph);
     const rGraph = await sgRep.findOneBy({
         src_id: otherUser.id, tgt_id: curUid
     });
@@ -162,7 +162,7 @@ static async findUser(userDS:DataSource, curUid:string, uname:string, getProfile
     let profile : UserProfile | undefined = undefined;
 
     if (getProfile) {
-        const upRep = userDS.getRepository(UserProfile);
+        const upRep = manager.getRepository(UserProfile);
         const up = await upRep.findOneBy({id: otherUser.id});
         
         // TODO: If we're not friends, may strip part of this out based on preferences
@@ -174,10 +174,10 @@ static async findUser(userDS:DataSource, curUid:string, uname:string, getProfile
     return [otherUser, profile, sgtype, tgtype];
 }
 
-static async getGraphStatus(userDS: DataSource, curUid : string, otherUid : string)
+static async getGraphStatus(manager: EntityManager, curUid : string, otherUid : string)
     : Promise<GraphType>
 {
-    const sgRep = userDS.getRepository(SocialGraph);
+    const sgRep = manager.getRepository(SocialGraph);
     const rGraph = await sgRep.findOneBy({
         src_id: curUid, tgt_id: otherUid
     });
@@ -189,10 +189,10 @@ static async getGraphStatus(userDS: DataSource, curUid : string, otherUid : stri
 }
 
 // Set graph status
-static async setGraphStatus(userDS: DataSource, curUid : string, otherUid : string, status : GraphType)
+static async setGraphStatus(manager: EntityManager, curUid : string, otherUid : string, status : GraphType)
     : Promise<void>
 {
-    const sgRep = userDS.getRepository(SocialGraph);
+    const sgRep = manager.getRepository(SocialGraph);
     const ug = new SocialGraph();
     ug.link_type = status;
     ug.src_id = curUid;
@@ -207,7 +207,7 @@ static async setGraphStatus(userDS: DataSource, curUid : string, otherUid : stri
 }
 
 // Send a post
-static async makePost(userDS: DataSource, curUid : string, txt : string) :
+static async makePost(manager: EntityManager, curUid : string, txt : string) :
     Promise<Post>
 {
     // Create post
@@ -220,7 +220,7 @@ static async makePost(userDS: DataSource, curUid : string, txt : string) :
     p.post_time = new Date();
     p.post_type = PostType.POST;
 
-    const postRep = userDS.getRepository(Post);
+    const postRep = manager.getRepository(Post);
     await postRep.insert(p);
 
     // TODO: Decompose to allow media upload
@@ -233,15 +233,15 @@ static async makePost(userDS: DataSource, curUid : string, txt : string) :
     st.send_date = p.post_time;
     st.user_id = curUid;
 
-    const sendRep = userDS.getRepository(TimelineSend);
+    const sendRep = manager.getRepository(TimelineSend);
     await sendRep.insert(st);
 
     // Deliver post to followers - TODO cross shard; TODO block list
-    const sgRep = userDS.getRepository(SocialGraph);
+    const sgRep = manager.getRepository(SocialGraph);
     const followers : SocialGraph[] = await sgRep.find({
         where: {tgt_id: curUid, link_type: In([GraphType.FOLLOW, GraphType.FOLLOW_FRIEND])}
     });
-    const recvRep = userDS.getRepository(TimelineRecv);
+    const recvRep = manager.getRepository(TimelineRecv);
     // TODO: Cut round trips; could be messages, could be insert+select...
     for (const follower of followers) {
         const rt = new TimelineRecv();
@@ -260,7 +260,7 @@ static async makePost(userDS: DataSource, curUid : string, txt : string) :
 }
 
 // TODO: Deliver a post
-static async makePM(userDS: DataSource, curUid : string, toUid : string, txt : string) :
+static async makePM(manager: EntityManager, curUid : string, toUid : string, txt : string) :
     Promise<void>
 {
     // Create post
@@ -273,7 +273,7 @@ static async makePM(userDS: DataSource, curUid : string, toUid : string, txt : s
     p.post_time = new Date();
     p.post_type = PostType.PM;
 
-    const postRep = userDS.getRepository(Post);
+    const postRep = manager.getRepository(Post);
     await postRep.insert(p);
 
     // TODO: Decompose to allow media upload
@@ -286,11 +286,11 @@ static async makePM(userDS: DataSource, curUid : string, toUid : string, txt : s
     st.send_date = p.post_time;
     st.user_id = curUid;
 
-    const sendRep = userDS.getRepository(TimelineSend);
+    const sendRep = manager.getRepository(TimelineSend);
     await sendRep.insert(st);
 
     // Deliver post to recipient - TODO cross shard; TODO block list
-    const recvRep = userDS.getRepository(TimelineRecv);
+    const recvRep = manager.getRepository(TimelineRecv);
     const rt = new TimelineRecv();
     rt.post = p;
     rt.post_id = p.id;
@@ -304,11 +304,11 @@ static async makePM(userDS: DataSource, curUid : string, toUid : string, txt : s
 }
 
 //  Read a send timeline
-static async readSendTimeline(userDS: DataSource, _curUser : string, timelineUser : string, type : SendType[], getPosts : boolean)
+static async readSendTimeline(manager: EntityManager, _curUser : string, timelineUser : string, type : SendType[], getPosts : boolean)
     : Promise<TimelineSend []>
 {
     // TODO: Permissions
-    const tsRep = userDS.getRepository(TimelineSend);
+    const tsRep = manager.getRepository(TimelineSend);
     return tsRep.find({
         where: {
             user_id: timelineUser,
@@ -325,10 +325,10 @@ static async readSendTimeline(userDS: DataSource, _curUser : string, timelineUse
 
 // TODO: Read a recv timeline
 // TODO: other filters
-static async readRecvTimeline(userDS: DataSource, curUser : string, type : RecvType[], getPosts : boolean)
+static async readRecvTimeline(manager: EntityManager, curUser : string, type : RecvType[], getPosts : boolean)
     : Promise<TimelineRecv []>
 {
-    const trRep = userDS.getRepository(TimelineRecv);
+    const trRep = manager.getRepository(TimelineRecv);
     return trRep.find({
         where: {
             user_id: curUser,
