@@ -57,17 +57,12 @@ class YKY
 {
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi('/')
-  static async hello(ctx: OperonContext) {
-    const res = (ctx.response as Koa.Response);
-
-    res.body = {message: "Welcome to YKY (Yakky not Yucky)!"};
-    // TODO is it supposed to be like Koa?
-    return;
+  static async hello(_ctx: OperonContext) {
+    return {message: "Welcome to YKY (Yakky not Yucky)!"};
   }
   static async helloctx(ctx:Context, next: Next) {
     ctx.body = {message: "Welcome to YKY (Yakky not Yucky)!"};
     return next();
-    // TODO is it supposed to be like Koa?
   }
 
   @OperonTransaction({readOnly: true})
@@ -75,8 +70,6 @@ class YKY
   @RequiredRole(['user'])
   static async receiveTimeline(ctx: TransactionContext) 
   {
-    const res = (ctx.response as Koa.Response);
-  
     // TODO #3 - is this extra layer really necessary or can the code be inlined here?
     const rtl = await Operations.readRecvTimeline(userDataSource, ctx.authUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
     const tl = rtl.map((tle) => {
@@ -84,9 +77,7 @@ class YKY
           postText: tle.post?.text, postMentions: tle.post?.mentions};
     });
 
-    // TODO #5 - would it be better as a return value?
-    res.status = (200);
-    res.body = {message: "Read.", timeline:tl};
+    return {message: "Read.", timeline:tl};
   }
 
   @OperonTransaction({readOnly: true})
@@ -94,8 +85,6 @@ class YKY
   @RequiredRole(['user'])
   static async sendTimeline(ctx: TransactionContext)
   {
-    const res = (ctx.response as Koa.Response);
-
     // TODO: User id and modes
     const userid = ctx.authUser;
 
@@ -105,25 +94,20 @@ class YKY
           postText: tle.post?.text, postMentions: tle.post?.mentions};
     });
 
-    res.status = (200);
-    res.body = ({message: "Read.", timeline: tl});
+    return {message: "Read.", timeline: tl};
   }
 
   @OperonTransaction({readOnly: true})
   @GetApi('/finduser')
   @RequiredRole(['user'])
   static async findUser(ctx: TransactionContext, @Required findUserName: string) {
-    const res = (ctx.response as Koa.Response);
-  
     const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, ctx.authUser, findUserName, false, false);
 
     if (!user) {
-      res.status = 200;
-      res.body = {message: "No user by that name."};
+      return {message: "No user by that name."};
     }
     else {
-      res.status = 200;
-      res.body = {message:"User Found.", uid : user.id, name : user.user_name};
+      return {message:"User Found.", uid : user.id, name : user.user_name};
     }
   }
 
@@ -131,17 +115,13 @@ class YKY
   @GetApi("/post/:id")
   @RequiredRole(['user'])
   static async getPost(ctx: TransactionContext, @Required @ArgSource(ArgSources.URL) id: string) {
-    const res = (ctx.response as Koa.Response);
-
     // TODO Validate user permissions
 
     const post = await Operations.getPost(userDataSource, ctx.authUser, id);
     if (post) {
-      res.status = 200;
-      res.body = { message: 'Retrieved.', post:post };
+      return { message: 'Retrieved.', post:post };
     } else {
-      res.status = 404;
-      res.body = { message: 'No such post.' };
+      return { message: 'No such post.' };
     }
   }  
 
@@ -149,11 +129,8 @@ class YKY
   @PostApi("/login")
   @RequiredRole([]) // Don't need any roles to log in
   static async doLogin(ctx: TransactionContext, @Required username: string, @Required @LogMask(LogMasks.HASH) password: string) {
-    const res = (ctx.response as Koa.Response);
-  
     const user = await Operations.logInUser(userDataSource, username, password);
-    res.status = 200;
-    res.body = { message: 'Successful login.', id:user.id };
+    return { message: 'Successful login.', id:user.id };
   }
 
   // OK, so the thought here is a browser might call this
@@ -168,38 +145,29 @@ class YKY
   static async doRegister(ctx: TransactionContext, @Required firstName: string, @Required lastName: string,
      @Required username: string, @Required @LogMask(LogMasks.HASH) password: string)
   {
-    const res = (ctx.response as Koa.Response);
-
     const user = await Operations.createUser(userDataSource,
       firstName, lastName, username, password);
 
-    res.status = 200;
-    res.body = { message: 'User created.', id:user.id };
+    return { message: 'User created.', id:user.id };
   }
 
   @OperonTransaction()
   @PostApi("/follow")
   @RequiredRole(['user'])
   static async doFollow(ctx: TransactionContext, @Required followUid: string) {
-    const req = (ctx.request as Koa.Request);
-    const res = (ctx.response as Koa.Response);
-  
     const curStatus = await Operations.getGraphStatus(userDataSource, ctx.authUser, followUid);
-    await Operations.setGraphStatus(userDataSource, ctx.authUser, req.body.followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+    await Operations.setGraphStatus(userDataSource, ctx.authUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
     // TODO: That UID wasn't validated - maybe the DB should validate it
-    res.status = (200);
-    res.body = {message: "Followed."};
+
+    return {message: "Followed."};
   }
 
   @OperonTransaction()
   @PostApi("/composepost")
   @RequiredRole(['user'])
   static async doCompose(ctx: TransactionContext, @Required postText: string) {
-    const res = (ctx.response as Koa.Response);
-    
     await Operations.makePost(userDataSource, ctx.authUser, postText);
-    res.status = (200);
-    res.body = {message: "Posted."};  
+    return {message: "Posted."};  
   }
 }
 
@@ -305,8 +273,9 @@ forEachMethod((m) => {
         else {
           rv = await m.invoke(undefined, [c, ...args]);
         }
+        ctx.response.status = 200;
+        ctx.response.body = rv;
         await next();
-        return rv;
       }
       catch (e) {
         if (e instanceof OperonDataValidationError) {
