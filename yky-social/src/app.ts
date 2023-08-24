@@ -4,7 +4,7 @@
 
 import "reflect-metadata";
 import Koa from 'koa';
-import { Request, Response, Context, Next } from 'koa';
+import { Context, Next } from 'koa';
 import Router from "@koa/router";
 import logger from "koa-logger";
 import { bodyParser } from "@koa/bodyparser";
@@ -19,10 +19,13 @@ import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { Operon, Required, GetApi, APITypes, OperonContext, OperonTransaction, TransactionContext, forEachMethod, OperonDataValidationError } from "operon";
+import { Operon, Required, GetApi, APITypes, RequiredRole,
+        OperonContext, OperonTransaction, TransactionContext,
+        forEachMethod, OperonDataValidationError,
+        ArgSource, ArgSources, LogMask, LogMasks, PostApi,
+      } from "operon";
 
 import { OperonTransactionFunction } from "operon";
-import { ArgSource, ArgSources, LogMask, LogMasks, PostApi } from "operon/dist/src/decorators";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -50,15 +53,6 @@ export const userDataSource = new DataSource({
   ],
 });
 
-function checkUserId(req : Request, _res : Response) : string {
-  const {userid} = req.query;
-  if (!userid?.toString()) {
-    const err = errorWithStatus("Not logged in.", 401);
-    throw err;
-  }
-  return userid.toString();
-}
-
 class YKY
 {
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -78,15 +72,13 @@ class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/recvtimeline')
+  @RequiredRole(['user'])
   static async receiveTimeline(ctx: TransactionContext) 
   {
-    const req = (ctx.request as Koa.Request);  // TODO #1 - make this typed (or better, get rid of it).
     const res = (ctx.response as Koa.Response);
   
-    const userid = checkUserId(req, res); // TODO #2 - make this declarative
-
     // TODO #3 - is this extra layer really necessary or can the code be inlined here?
-    const rtl = await Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
+    const rtl = await Operations.readRecvTimeline(userDataSource, ctx.authUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
@@ -99,13 +91,13 @@ class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/sendtimeline')
+  @RequiredRole(['user'])
   static async sendTimeline(ctx: TransactionContext)
   {
-    const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
 
     // TODO: User id and modes
-    const userid = checkUserId(req, res);
+    const userid = ctx.authUser;
 
     const rtl = await Operations.readSendTimeline(userDataSource, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
     const tl = rtl.map((tle) => {
@@ -119,13 +111,11 @@ class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/finduser')
+  @RequiredRole(['user'])
   static async findUser(ctx: TransactionContext, @Required findUserName: string) {
-    const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
   
-    const userid = checkUserId(req, res);
-
-    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, userid, findUserName, false, false);
+    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource, ctx.authUser, findUserName, false, false);
 
     if (!user) {
       res.status = 200;
@@ -139,16 +129,13 @@ class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi("/post/:id")
+  @RequiredRole(['user'])
   static async getPost(ctx: TransactionContext, @Required @ArgSource(ArgSources.URL) id: string) {
-    const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
-
-    //console.log("Get post "+req.params.id);
-    const userid = checkUserId(req, res);
 
     // TODO Validate user permissions
 
-    const post = await Operations.getPost(userDataSource, userid.toString(), id);
+    const post = await Operations.getPost(userDataSource, ctx.authUser, id);
     if (post) {
       res.status = 200;
       res.body = { message: 'Retrieved.', post:post };
@@ -160,8 +147,8 @@ class YKY
 
   @OperonTransaction({readOnly: true})
   @PostApi("/login")
+  @RequiredRole([]) // Don't need any roles to log in
   static async doLogin(ctx: TransactionContext, @Required username: string, @Required @LogMask(LogMasks.HASH) password: string) {
-    //const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
   
     const user = await Operations.logInUser(userDataSource, username, password);
@@ -177,10 +164,10 @@ class YKY
   // Can this be generalized?
   @OperonTransaction()
   @PostApi("/register")
+  @RequiredRole([]) // No role needed to register
   static async doRegister(ctx: TransactionContext, @Required firstName: string, @Required lastName: string,
      @Required username: string, @Required @LogMask(LogMasks.HASH) password: string)
   {
-    //const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
 
     const user = await Operations.createUser(userDataSource,
@@ -192,14 +179,13 @@ class YKY
 
   @OperonTransaction()
   @PostApi("/follow")
+  @RequiredRole(['user'])
   static async doFollow(ctx: TransactionContext, @Required followUid: string) {
     const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
   
-    const userid = checkUserId(req, res);
-
-    const curStatus = await Operations.getGraphStatus(userDataSource, userid, followUid);
-    await Operations.setGraphStatus(userDataSource, userid, req.body.followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+    const curStatus = await Operations.getGraphStatus(userDataSource, ctx.authUser, followUid);
+    await Operations.setGraphStatus(userDataSource, ctx.authUser, req.body.followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
     // TODO: That UID wasn't validated - maybe the DB should validate it
     res.status = (200);
     res.body = {message: "Followed."};
@@ -207,13 +193,11 @@ class YKY
 
   @OperonTransaction()
   @PostApi("/composepost")
+  @RequiredRole(['user'])
   static async doCompose(ctx: TransactionContext, @Required postText: string) {
-    const req = (ctx.request as Koa.Request);
     const res = (ctx.response as Koa.Response);
     
-    const userid = checkUserId(req, res);
-  
-    await Operations.makePost(userDataSource, userid, postText);
+    await Operations.makePost(userDataSource, ctx.authUser, postText);
     res.status = (200);
     res.body = {message: "Posted."};  
   }
@@ -249,9 +233,41 @@ forEachMethod((m) => {
   }
   if (m.apiURL) {
     const rf = async(ctx: Koa.Context, next:Koa.Next) => {
+      // CB: This is an example; it needs to be pluggable
+      const { userid } = ctx.request.query;
+      const uid = userid?.toString();
+      let curRoles = [] as string[];
+
+      // TODO: We really need to validate something, generally it would be a token
+      //  Currently the backend is "taking the front-end's word for it"
+
+      if (m.requiredRole.length > 0) {
+        if (!uid) {
+          const err = errorWithStatus("Not logged in.", 401);
+          throw err;
+        }
+        else {
+          curRoles = ['user'];
+        }
+
+        let authorized = false;
+        const set = new Set(curRoles);
+        for (const str of m.requiredRole) {
+          if (set.has(str)) {
+            authorized = true;
+          }
+        }
+        if (!authorized) {
+          const err = errorWithStatus(`User does not have a role with permission to call ${m.name}`, 401);
+          throw err;
+        }
+      }
+            
       const c: OperonContext = new OperonContext();
       c.request = ctx.request;
       c.response = ctx.response;
+      c.authUser = uid || '';
+      c.authRoles = curRoles;
 
       // Get the arguments
       const args: unknown[] = [];
