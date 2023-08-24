@@ -9,14 +9,14 @@ import { operon } from './app';
 
 beforeAll(async () => {
   await userDataSource.initialize();
-  operon.useNodePostgres(); // TODO Change to typeorm
+  operon.useTypeOrm(userDataSource);
   await operon.init();
 });
 
 afterAll(async () => {
-  await operon.destroy();
   await userDataSource.dropDatabase();
   await userDataSource.destroy();
+  await operon.destroy();
 });
 
 describe('GET (request-like)', () => {

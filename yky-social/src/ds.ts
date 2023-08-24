@@ -7,6 +7,7 @@ import { operon } from "./app";
 userDataSource.initialize()
   .then(() => {
     // TODO: Set operon DS to typeorm
+    operon.useTypeOrm(userDataSource);
     return operon.init();
   })
   .then(() => {

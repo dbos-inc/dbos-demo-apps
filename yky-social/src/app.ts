@@ -9,7 +9,7 @@ import Router from "@koa/router";
 import logger from "koa-logger";
 import { bodyParser } from "@koa/bodyparser";
 
-import { DataSource } from "typeorm";
+import { DataSource, EntityManager } from "typeorm";
 
 import { MediaItem } from "./entity/Media";
 import { Post } from "./entity/Post";
@@ -70,9 +70,11 @@ class YKY
   @RequiredRole(['user'])
   static async receiveTimeline(ctx: TransactionContext) 
   {
-    // TODO #1 - Integrate typeorm into ctx
     // TODO #3 - is this extra layer really necessary or can the code be inlined here?
-    const rtl = await Operations.readRecvTimeline(userDataSource.manager, ctx.authUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
+
+    const manager = ctx.typeormEM as unknown as EntityManager;
+
+    const rtl = await Operations.readRecvTimeline(manager, ctx.authUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
@@ -88,8 +90,9 @@ class YKY
   {
     // TODO: User id and modes
     const userid = ctx.authUser;
+    const manager = ctx.typeormEM as unknown as EntityManager;
 
-    const rtl = await Operations.readSendTimeline(userDataSource.manager, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
+    const rtl = await Operations.readSendTimeline(manager, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id,  fromUserId:tle.user_id, sendDate: tle.send_date, sendType:tle.send_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
@@ -102,8 +105,9 @@ class YKY
   @GetApi('/finduser')
   @RequiredRole(['user'])
   static async findUser(ctx: TransactionContext, @Required findUserName: string) {
-    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(userDataSource.manager
-      , ctx.authUser, findUserName, false, false);
+    const manager = ctx.typeormEM as unknown as EntityManager;
+    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(manager,
+      ctx.authUser, findUserName, false, false);
     if (!user) {
       return {message: "No user by that name."};
     }
@@ -118,7 +122,8 @@ class YKY
   static async getPost(ctx: TransactionContext, @Required @ArgSource(ArgSources.URL) id: string) {
     // TODO Validate user permissions
 
-    const post = await Operations.getPost(userDataSource.manager, ctx.authUser, id);
+    const manager = ctx.typeormEM as unknown as EntityManager;
+    const post = await Operations.getPost(manager, ctx.authUser, id);
     if (post) {
       return { message: 'Retrieved.', post:post };
     } else {
@@ -130,7 +135,8 @@ class YKY
   @PostApi("/login")
   @RequiredRole([]) // Don't need any roles to log in
   static async doLogin(ctx: TransactionContext, @Required username: string, @Required @LogMask(LogMasks.HASH) password: string) {
-    const user = await Operations.logInUser(userDataSource.manager, username, password);
+    const manager = ctx.typeormEM as unknown as EntityManager;
+    const user = await Operations.logInUser(manager, username, password);
     return { message: 'Successful login.', id:user.id };
   }
 
@@ -146,7 +152,8 @@ class YKY
   static async doRegister(ctx: TransactionContext, @Required firstName: string, @Required lastName: string,
      @Required username: string, @Required @LogMask(LogMasks.HASH) password: string)
   {
-    const user = await Operations.createUser(userDataSource.manager,
+    const manager = ctx.typeormEM as unknown as EntityManager;
+    const user = await Operations.createUser(manager,
       firstName, lastName, username, password);
 
     return { message: 'User created.', id:user.id };
@@ -156,8 +163,9 @@ class YKY
   @PostApi("/follow")
   @RequiredRole(['user'])
   static async doFollow(ctx: TransactionContext, @Required followUid: string) {
-    const curStatus = await Operations.getGraphStatus(userDataSource.manager, ctx.authUser, followUid);
-    await Operations.setGraphStatus(userDataSource.manager, ctx.authUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+    const manager = ctx.typeormEM as unknown as EntityManager;
+    const curStatus = await Operations.getGraphStatus(manager, ctx.authUser, followUid);
+    await Operations.setGraphStatus(manager, ctx.authUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
     // TODO: That UID wasn't validated - maybe the DB should validate it
 
     return {message: "Followed."};
@@ -167,7 +175,8 @@ class YKY
   @PostApi("/composepost")
   @RequiredRole(['user'])
   static async doCompose(ctx: TransactionContext, @Required postText: string) {
-    await Operations.makePost(userDataSource.manager, ctx.authUser, postText);
+    const manager = ctx.typeormEM as unknown as EntityManager;
+    await Operations.makePost(manager, ctx.authUser, postText);
     return {message: "Posted."};  
   }
 }
