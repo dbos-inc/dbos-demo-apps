@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from "express";
 import { TransactionContext, WorkflowContext, Operon, OperonTransaction, OperonWorkflow } from "operon";
-import { ProvenanceDaemon } from "operon/dist/src/provenance";
+import { ProvenanceDaemon } from "operon/dist/src/provenance/provenance_daemon"
 
 interface OperonHello {
   greeting_id: number;
