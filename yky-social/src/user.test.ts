@@ -9,7 +9,7 @@ import { operon } from './app';
 
 beforeAll(async () => {
   await userDataSource.initialize();
-  operon.useNodePostgres();
+  operon.useNodePostgres(); // TODO Change to typeorm
   await operon.init();
 });
 
