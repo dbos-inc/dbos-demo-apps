@@ -2,43 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-/*
-export function safeThrow(
-    target: object,
-    key: string | symbol,
-    descriptor: TypedPropertyDescriptor<(req: Request, res: Response, next: NextFunction) => Promise<any>>) {
-    const fun = descriptor.value;
-    descriptor.value = async function () {
-        try {
-            await fun.apply(this, arguments);
-        } catch (err) {
-            arguments[2](err);
-        }
-    };
-}
-
-@safeThrow
-private async get(req: Request, res: Response, next: NextFunction) {
-  throw { status: 404, message: 'Not supported' }
-}
-*/
-
-/*
-  // Error object used in error handling middleware function
-  class AppError extends Error{
-      statusCode: number;
-
-      constructor(statusCode: number, message: string) {
-        super(message);
-    
-        Object.setPrototypeOf(this, new.target.prototype);
-        this.name = Error.name;
-        this.statusCode = statusCode;
-        Error.captureStackTrace(this);
-      }
-  }
- */
-
 import "reflect-metadata";
 import Koa from 'koa';
 import { Request, Response, Context, Next } from 'koa';
@@ -117,19 +80,19 @@ class YKY
   @GetApi('/recvtimeline')
   static async receiveTimeline(ctx: TransactionContext) 
   {
-    const req = (ctx.request as Koa.Request);
+    const req = (ctx.request as Koa.Request);  // TODO #1 - make this typed (or better, get rid of it).
     const res = (ctx.response as Koa.Response);
   
-    const userid = checkUserId(req, res);
+    const userid = checkUserId(req, res); // TODO #2 - make this declarative
 
-    // TODO: User id and modes
-
-    const rtl = await Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true);
+    // TODO #3 - is this extra layer really necessary or can the code be inlined here?
+    const rtl = await Operations.readRecvTimeline(userDataSource, userid, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
     });
 
+    // TODO #5 - would it be better as a return value?
     res.status = (200);
     res.body = {message: "Read.", timeline:tl};
   }
