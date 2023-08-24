@@ -1,0 +1,10 @@
+database:
+  hostname: 'localhost'
+  port: 5432
+  username: 'postgres'
+  connectionTimeoutMillis: 3000
+  user_database: 'postgres'
+  system_database: 'hello_systemdb'
+  observability_database: 'hello_observability'
+telemetryExporters:
+  - 'PostgresExporter'
