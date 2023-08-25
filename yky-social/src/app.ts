@@ -70,8 +70,6 @@ class YKY
   @RequiredRole(['user'])
   static async receiveTimeline(ctx: TransactionContext) 
   {
-    // TODO #3 - is this extra layer really necessary or can the code be inlined here?
-
     const manager = ctx.typeormEM as unknown as EntityManager;
 
     const rtl = await Operations.readRecvTimeline(manager, ctx.authUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
@@ -213,6 +211,7 @@ forEachMethod((m) => {
       const { userid } = ctx.request.query;
       const uid = userid?.toString();
       let curRoles = [] as string[];
+      let authRole: string = '';
 
       // TODO: We really need to validate something, generally it would be a token
       //  Currently the backend is "taking the front-end's word for it"
@@ -231,6 +230,7 @@ forEachMethod((m) => {
         for (const str of m.requiredRole) {
           if (set.has(str)) {
             authorized = true;
+            authRole = str;
           }
         }
         if (!authorized) {
@@ -244,6 +244,7 @@ forEachMethod((m) => {
       c.response = ctx.response;
       c.authUser = uid || '';
       c.authRoles = curRoles;
+      c.authRole = authRole;
 
       // Get the arguments
       const args: unknown[] = [];
