@@ -22,11 +22,9 @@ export function errorWithStatus(msg: string, st: number) : ResponseError
     return err;
 }
 
-// TODO: I am sure this can go elsewhere
-const saltRounds = 10;
-
 async function hashPassword(password: string): Promise<string> {
-   return bcryptjs.hash(password, saltRounds);
+    const saltRounds = 10;
+    return bcryptjs.hash(password, saltRounds);
 }
 
 async function comparePasswords(password: string, hashedPassword: string): Promise<boolean> {
@@ -44,7 +42,7 @@ static async createUser(this: void, ctx: TransactionContext, first:string, last:
     const manager = ctx.typeormEM as unknown as EntityManager;
 
     if (!first || !last || !uname || !pass) {
-        return Promise.reject(errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${pass}`, 400));
+        throw errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${pass}`, 400);
     }
 
     const user = new UserLogin();
@@ -52,29 +50,23 @@ static async createUser(this: void, ctx: TransactionContext, first:string, last:
     user.last_name = last;
     user.user_name = uname;
 
-    // TODO: Check what happens if this throws
     try
     {
        user.password_hash = await hashPassword(pass);
     }
     catch (e)
     {
-        return Promise.reject(errorWithStatus("Password hash failed", 400));
+        throw errorWithStatus("Password hash failed", 400);
     }
 
     // TODO: Validation of these things; do something if it is wrong
-    return await manager.transaction(
-    "SERIALIZABLE",
-    async (transactionalEntityManager) => {
-        const existingUser = await transactionalEntityManager.findOneBy(UserLogin, {
-            user_name: user.user_name,
-        });
-        if (existingUser) {
-          return Promise.reject(errorWithStatus("User already exists.", 400));
-        }
-        return await transactionalEntityManager.save(user);
+    const existingUser = await manager.findOneBy(UserLogin, {
+        user_name: user.user_name,
+    });
+    if (existingUser) {
+        throw errorWithStatus("User already exists.", 400);
     }
-    );
+    return await manager.save(user);
 }
 
 static async logInUser(manager:EntityManager, uname:string, pass:string) :
@@ -85,7 +77,7 @@ static async logInUser(manager:EntityManager, uname:string, pass:string) :
         user_name: uname,
     });
     if (!existingUser || !await comparePasswords(pass, existingUser.password_hash)) {
-      return Promise.reject(errorWithStatus("Incorrect username or password.", 401));
+      throw errorWithStatus("Incorrect username or password.", 401);
     }
 
     return existingUser;
@@ -99,7 +91,7 @@ static async logInUserId(manager:EntityManager, uname:string, pass:string) :
         user_name: uname,
     });
     if (!existingUser || !existingUser.id || !await comparePasswords(pass, existingUser.password_hash)) {
-      return Promise.reject(errorWithStatus("Incorrect username or password.", 401));
+      throw errorWithStatus("Incorrect username or password.", 401);
     }
 
     return existingUser.id;
