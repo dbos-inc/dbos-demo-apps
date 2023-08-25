@@ -9,7 +9,8 @@ import { TimelineRecv, TimelineSend, SendType, RecvType } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from './entity/UserProfile';
 
-import { SkipLogging, Traced } from 'operon';
+import { OperonTransaction, SkipLogging, TransactionContext } from 'operon';
+import { Traced } from 'operon';
 
 export interface ResponseError extends Error {
     status?: number;
@@ -36,10 +37,12 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
 export class Operations
 {
 
-@Traced
-static async createUser(@SkipLogging manager:EntityManager, first:string, last:string, uname:string, pass:string) :
+@OperonTransaction()
+static async createUser(this: void, ctx: TransactionContext, first:string, last:string, uname:string, pass:string) :
    Promise<UserLogin>
 {
+    const manager = ctx.typeormEM as unknown as EntityManager;
+
     if (!first || !last || !uname || !pass) {
         return Promise.reject(errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${pass}`, 400));
     }
@@ -123,8 +126,8 @@ static async getPost(manager:EntityManager, _curUid: string, post:string) :
 
 //
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
-//
-static async findUser(manager:EntityManager, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
+@Traced
+static async findUser(@SkipLogging manager:EntityManager, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
    Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]> 
 {
     const userRep = manager.getRepository(UserLogin);

@@ -146,15 +146,13 @@ class YKY
   //  protect itself, but it will raise an error.  Should we just
   //  say hey, it's fine, if it all matches?
   // Can this be generalized?
-  @OperonTransaction()
   @PostApi("/register")
   @RequiredRole([]) // No role needed to register
-  static async doRegister(ctx: TransactionContext, @Required firstName: string, @Required lastName: string,
+  static async doRegister(ctx: OperonContext, @Required firstName: string, @Required lastName: string,
      @Required username: string, @Required @LogMask(LogMasks.HASH) password: string)
   {
-    const manager = ctx.typeormEM as unknown as EntityManager;
-    const user = await Operations.createUser(manager,
-      firstName, lastName, username, password);
+    const user = await operon.transaction(Operations.createUser, {parentCtx: ctx},
+       firstName, lastName, username, password);
 
     return { message: 'User created.', id:user.id };
   }
