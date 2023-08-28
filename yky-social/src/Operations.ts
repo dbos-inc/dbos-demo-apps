@@ -201,15 +201,17 @@ static async setGraphStatus(manager: EntityManager, curUid : string, otherUid : 
     await sgRep.save(ug);  // Save is 2 round trips?  Investigate...
 }
 
-// Send a post
-static async makePost(manager: EntityManager, curUid : string, txt : string) :
-    Promise<Post>
+// Compose a post
+@OperonTransaction()
+static async makePost(this: void, ctx: TransactionContext, txt : string)
 {
+    const manager = ctx.typeormEM as unknown as EntityManager;
+
     // Create post
     const p = new Post();
     p.text = txt;
-    p.author = curUid;
-    p.author_orignal = curUid;
+    p.author = ctx.authUser;
+    p.author_orignal = ctx.authUser;
     p.media = [];
     p.mentions = [];
     p.post_time = new Date();
@@ -226,15 +228,22 @@ static async makePost(manager: EntityManager, curUid : string, txt : string) :
     st.post_id = p.id;
     st.send_type = SendType.POST;
     st.send_date = p.post_time;
-    st.user_id = curUid;
+    st.user_id = ctx.authUser;
 
     const sendRep = manager.getRepository(TimelineSend);
     await sendRep.insert(st);
+    return p;
+}
+
+// Send a post
+@OperonTransaction()
+static async distributePost(this: void, ctx: TransactionContext, p: Post) {
+    const manager = ctx.typeormEM as unknown as EntityManager;
 
     // Deliver post to followers - TODO cross shard; TODO block list
     const sgRep = manager.getRepository(SocialGraph);
     const followers : SocialGraph[] = await sgRep.find({
-        where: {tgt_id: curUid, link_type: In([GraphType.FOLLOW, GraphType.FOLLOW_FRIEND])}
+        where: {tgt_id: ctx.authUser, link_type: In([GraphType.FOLLOW, GraphType.FOLLOW_FRIEND])}
     });
     const recvRep = manager.getRepository(TimelineRecv);
     // TODO: Cut round trips; could be messages, could be insert+select...
@@ -246,7 +255,7 @@ static async makePost(manager: EntityManager, curUid : string, txt : string) :
         rt.send_date = p.post_time;
         rt.unread = true;
         rt.user_id = follower.src_id;
-        rt.from_user_id = curUid;
+        rt.from_user_id = ctx.authUser;
 
         await recvRep.insert(rt);
     }

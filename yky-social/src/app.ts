@@ -21,6 +21,7 @@ import { Operon, Required, GetApi, APITypes, RequiredRole,
         OperonContext, OperonTransaction, TransactionContext,
         forEachMethod, OperonDataValidationError,
         ArgSource, ArgSources, LogMask, LogMasks, PostApi,
+        OperonWorkflow, WorkflowContext,
       } from "operon";
 
 import { OperonTransactionFunction } from "operon";
@@ -165,12 +166,13 @@ class YKY
     return {message: "Followed."};
   }
 
-  @OperonTransaction()
+  @OperonWorkflow()
   @PostApi("/composepost")
   @RequiredRole(['user'])
-  static async doCompose(ctx: TransactionContext, @Required postText: string) {
-    const manager = ctx.typeormEM as unknown as EntityManager;
-    await Operations.makePost(manager, ctx.authUser, postText);
+  static async doCompose(ctx: WorkflowContext, @Required postText: string) {
+    const post = await operon.transaction(Operations.makePost, {parentCtx: ctx}, postText);
+    // This could be an asynchronous job
+    await operon.transaction(Operations.distributePost, {parentCtx: ctx}, post);
     return {message: "Posted."};  
   }
 }
