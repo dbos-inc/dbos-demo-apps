@@ -131,3 +131,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Editor temp/recovery files
+*.swp
+*.swo

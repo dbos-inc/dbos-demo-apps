@@ -1,0 +1,81 @@
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'yky-social/**'
+  pull_request:
+    paths:
+      - 'yky-social/**'
+      - '.github/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    # Service container for Postgres
+    services:
+      # Label used to access the service container.
+      postgres:
+        image: postgres
+        env:
+          # Specify the password for Postgres superuser.
+          POSTGRES_PASSWORD: dbos
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+    steps:
+      - name: Checkout demo app
+        uses: actions/checkout@v3
+        with:
+          path: operon-demo-apps
+      - name: Checkout operon
+        uses: actions/checkout@v3
+        with:
+          repository: dbos-inc/operon
+          token: ${{ secrets.GH_PAT }} # Created a repo secret named GH_PAT, with the value of a personal access token that has access to private repos.
+            #ref: chuck/apireg_decorators # DELETE ME BEFORE PUSHING!
+          path: operon
+      - name: Set up node 
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'latest'
+          # cache: 'npm'
+      - name: Compile operon
+        run: |
+          cd ./operon
+          npm ci --no-audit --ignore-scripts
+          npm run build
+      - name: Change directory and install dependencies
+        run: |
+          cd ./operon-demo-apps/yky-social
+          npm ci --no-audit --ignore-scripts
+      - name: Create new PG DB and User
+        run: |
+          cd ./operon-demo-apps/yky-social
+          scripts/init_pgdb.sh
+        env:
+          # The postgres superuser password we set above
+          PGPASSWORD: dbos
+      - name: Build Test yky-social
+        working-directory: ./operon-demo-apps/yky-social
+        run: |
+          npm run build
+          npm run lint
+          npm test
+        env:
+          # The stuff used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DBNAME: socialts
+          POSTGRES_USERNAME: socialts
+          POSTGRES_PASSWORD: socialts
