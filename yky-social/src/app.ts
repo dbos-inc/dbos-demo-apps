@@ -24,7 +24,7 @@ import { Operon, Required, GetApi, APITypes, RequiredRole,
         OperonWorkflow, WorkflowContext,
       } from "operon";
 
-import { OperonTransactionFunction } from "operon";
+import { OperonTransactionFunction, OperonWorkflowFunction } from "operon";
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -205,6 +205,9 @@ forEachMethod((m) => {
   if (m.txnConfig) {
     operon.registerTransaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, m.txnConfig);
   }
+  if (m.workflowConfig) {
+    operon.registerWorkflow(m.replacementFunction as OperonWorkflowFunction<unknown[], unknown>, m.workflowConfig);
+  }
   if (m.apiURL) {
     const rf = async(ctx: Koa.Context, next:Koa.Next) => {
       // CB: This is an example; it needs to be pluggable
@@ -278,6 +281,10 @@ forEachMethod((m) => {
         if (m.txnConfig) {
           // Wait, does it just need the name?!
           rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
+        }
+        else if (m.workflowConfig) {
+          const wfh = operon.workflow(m.replacementFunction as OperonWorkflowFunction<unknown[], unknown>, {parentCtx : c}, ...args);
+          rv = await wfh.getResult();
         }
         else {
           rv = await m.invoke(undefined, [c, ...args]);
