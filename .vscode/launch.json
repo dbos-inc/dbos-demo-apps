@@ -5,9 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "command": "npm run dev",
+            "name": "Launch Shop Frontend",
+            "request": "launch",
+            "type": "node-terminal",
+            "cwd": "${workspaceFolder}/shop/shop-app-ts"
+        },
+        {
             "type": "node",
             "request": "launch",
-            "name": "Launch Backend",
+            "name": "Launch Shop Backend",
             "preLaunchTask": "npm: build shop backend",
             "program": "${workspaceFolder}/shop/backend-operon/src/api.ts",
             "cwd": "${workspaceFolder}/shop/backend-operon",
