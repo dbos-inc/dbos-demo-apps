@@ -33,6 +33,8 @@ export async function initializeOperon(): Promise<OperonShop> {
 
     operon.registerWorkflow(paymentWorkflow);
 
+    await operon.init();
+
     return {
         async runPaymentWorkflow(username, origin) {
             const uuid: string = uuidv1();
