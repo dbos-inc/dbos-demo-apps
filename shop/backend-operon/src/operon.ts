@@ -11,7 +11,7 @@ const event_topic = "stripe_event";
 export async function initializeOperon(): Promise<OperonShop> {
 
     const operon: Operon = new Operon();
-    
+
     operon.useNodePostgres();
 
     operon.registerTopic(checkout_topic);
@@ -36,6 +36,7 @@ export async function initializeOperon(): Promise<OperonShop> {
     await operon.init();
 
     return {
+        // TODO: take workflow uuid as a parameter (https://github.com/dbos-inc/operon-demo-apps/issues/24)
         async runPaymentWorkflow(username, origin) {
             const uuid: string = uuidv1();
             operon.workflow(paymentWorkflow, { workflowUUID: uuid }, username, origin);
@@ -45,7 +46,7 @@ export async function initializeOperon(): Promise<OperonShop> {
         getCart(username) { return operon.transaction(getCart, {}, username); },
         addToCart(username, product_id) { return operon.transaction(addToCart, {}, username, product_id); },
         clearCart(username) { return operon.transaction(clearCart, {}, username); },
-        getProducts() { return operon.transaction(getProducts, {});},
+        getProducts() { return operon.transaction(getProducts, {}); },
         getProduct(id) { return operon.transaction(getProduct, {}, id); },
         async stripeWebhook(sigHeader, payload) {
             let event = stripe.webhooks.constructEvent(payload, sigHeader, endpointSecret);
@@ -102,7 +103,7 @@ async function getProducts(ctxt: TransactionContext): Promise<DisplayPriceProduc
     return formattedRows;
 }
 
-async function getProduct(ctxt: TransactionContext, id: number): Promise<DisplayPriceProduct | null>  {
+async function getProduct(ctxt: TransactionContext, id: number): Promise<DisplayPriceProduct | null> {
     const { rows } = await ctxt.pgClient.query<Product>(`SELECT product_id, product, description, image_name, price FROM products WHERE product_id = $1`, [id]);
     if (rows.length === 0) {
         return null;
