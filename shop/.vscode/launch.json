@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/backend-operon/src/backend.ts",
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ],
+            "cwd": "${workspaceFolder}/backend-operon",
+            "env": {
+                "PGPASSWORD": "dbos",
+                "STRIPE_API_KEY": "rk_test_51NkwO6Judjyi63iFrtMpX6WzTN6CwABB7pM4lT3cyEFUSyGVklBb9nTpzcsj4yInLM5E7jvn6Cb8RHZnKL2tci4C00NhRD80xB",
+                "STRIPE_WEBHOOK_SECRET": "whsec_501f1047d43e88cf59bd7a76bcd793c9afb7ee4f11805c560193c89d0cb9681c",
+            }
+        }
+    ]
+}

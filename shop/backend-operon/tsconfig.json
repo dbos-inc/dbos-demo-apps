@@ -12,7 +12,8 @@
       "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file
       "lib": ["es6"], // List of library files to be included in the compilation
       "experimentalDecorators": true, // Enables experimental support for ES7 decorators, which is used by TypeORM and many other libraries
-      "emitDecoratorMetadata": true // Emits metadata for decorators
+      "emitDecoratorMetadata": true, // Emits metadata for decorators
+      "sourceMap": true
     },
     "include": ["src/**/*.ts"], // Files to be included in compilation
     "exclude": ["node_modules"] // Files to be excluded from compilation
