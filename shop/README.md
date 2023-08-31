@@ -82,3 +82,6 @@ To launch the frontend server, open a third terminal window and run:
 ```
 
 The Shop front end website is hosted on `localhost:3000`. 
+
+When testing, use the credit card number 4242-4242-4242-4242 with any CVC and future expiration date.
+For more information on Stripe testing, see [this link](https://stripe.com/docs/testing#cards).
