@@ -9,7 +9,7 @@ import { operon } from './app';
 
 beforeAll(async () => {
   await userDataSource.initialize();
-  operon.useTypeOrm(userDataSource);
+  operon.useTypeORM(userDataSource);
   await operon.init();
 });
 
