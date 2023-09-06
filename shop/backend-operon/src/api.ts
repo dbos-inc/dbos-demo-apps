@@ -63,7 +63,7 @@ async function startServer(port: number) {
 
     app.post('/api/add_to_cart', asyncHandler(async (req: Request, res: Response) => {
         const { username, product_id } = req.body;
-        await operon.addToCart(username, product_id);
+        await operon.addToCart(username, product_id.toString());
         res.status(200).send('Success');
     }));
 
