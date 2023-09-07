@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "tsc",
-    "start": "node dist/backend.js"
+    "start": "node dist/api.js"
   },
   "dependencies": {
     "@stripe/stripe-js": "^1.54.1",
