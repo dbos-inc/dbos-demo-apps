@@ -26,6 +26,20 @@ import { Operon, Required, GetApi, APITypes, RequiredRole,
 
 import { OperonTransactionFunction, OperonWorkflowFunction } from "operon";
 
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+//import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+
+const s3ClientConfig = {
+  region: process.env.AWS_REGION || 'us-east-2', // Replace with your AWS region
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+  }
+};
+
+const s3Client = new S3Client(s3ClientConfig);
+
 export const userDataSource = new DataSource({
   "type": "postgres",
   "host": process.env.POSTGRES_HOST,
@@ -174,6 +188,38 @@ class YKY
     // This could be an asynchronous job
     await operon.transaction(Operations.distributePost, {parentCtx: ctx}, post);
     return {message: "Posted."};  
+  }
+
+  @GetApi("/gets3key")
+  //@RequiredRole(['user'])
+  static async doKeyUpload(_ctx: OperonContext, @Required filename: string) {
+    const key = `photos/${filename}-${Date.now()}`;
+
+    /*
+    const putCommand = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
+      Key: key,
+    });
+  
+    const presignedUrl = await getSignedUrl(s3Client, putCommand, { expiresIn: 3600,  });
+    return {message: "Signed URL", url: presignedUrl, key: key};
+    */
+
+    const postPresigned = await createPresignedPost(
+      s3Client,
+      {
+        Conditions: [
+          ["content-length-range", 1, 10000000],
+        ],
+        Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
+        Key: key,
+        Expires: 3600,
+        Fields: {
+          'Content-Type': 'image/*',
+        }
+      }
+    );
+    return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
   }
 }
 
