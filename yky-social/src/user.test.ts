@@ -3,7 +3,8 @@
 
 import * as fs from 'fs';
 import FormData from 'form-data';
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios';
+import { Readable } from 'stream';
 
 import { describe, expect } from '@jest/globals';
 import request from 'supertest';
@@ -231,7 +232,7 @@ async function uploadToS3(presignedPostData: PresignedPost, filePath: string) {
 }
 
 async function downloadFromS3(presignedGetUrl: string, outputPath: string) {
-  const response = await axios.get(presignedGetUrl, {
+  const response: AxiosResponse<Readable> = await axios.get(presignedGetUrl, {
     responseType: 'stream',  // Important to handle large files
   });
 
@@ -274,7 +275,7 @@ describe('Upload and download media', () => {
     expect(getkey.statusCode).toBe(200);
 
     // Download
-    const presignedGetUrl = getkey.body.url;
+    const presignedGetUrl = (getkey.body.url || 'x') as string;
     const outputPath = '/tmp/YKY.png';
     await downloadFromS3(presignedGetUrl, outputPath);
   });
