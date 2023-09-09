@@ -26,15 +26,15 @@ import { Operon, Required, GetApi, APITypes, RequiredRole,
 
 import { OperonTransactionFunction, OperonWorkflowFunction } from "operon";
 
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-//import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 
 const s3ClientConfig = {
   region: process.env.AWS_REGION || 'us-east-2', // Replace with your AWS region
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+    accessKeyId: process.env.AWS_ACCESS_KEY || 'x',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'x',
   }
 };
 
@@ -190,20 +190,10 @@ class YKY
     return {message: "Posted."};  
   }
 
-  @GetApi("/gets3key")
+  @GetApi("/getMediaUploadKey")
   //@RequiredRole(['user'])
   static async doKeyUpload(_ctx: OperonContext, @Required filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
-
-    /*
-    const putCommand = new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
-      Key: key,
-    });
-  
-    const presignedUrl = await getSignedUrl(s3Client, putCommand, { expiresIn: 3600,  });
-    return {message: "Signed URL", url: presignedUrl, key: key};
-    */
 
     const postPresigned = await createPresignedPost(
       s3Client,
@@ -220,6 +210,20 @@ class YKY
       }
     );
     return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
+  }
+
+  @GetApi("/getdlkey")
+  //@RequiredRole(['user'])
+  static async doKeyDownload(_ctx: OperonContext, @Required filekey: string) {
+    const key = filekey;
+
+    const getObjectCommand = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
+      Key: key,
+    });
+  
+    const presignedUrl = await getSignedUrl(s3Client, getObjectCommand, { expiresIn: 3600, });
+    return { message: "Signed URL", url: presignedUrl, key: key };
   }
 }
 

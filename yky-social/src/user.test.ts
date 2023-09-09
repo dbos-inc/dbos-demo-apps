@@ -1,11 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import {describe, expect} from '@jest/globals';
+import * as fs from 'fs';
+import FormData from 'form-data';
+import axios from 'axios'
+
+import { describe, expect } from '@jest/globals';
 import request from 'supertest';
 import { kapp } from './app';
 import { userDataSource } from './app';
 import { operon } from './app';
+
+import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 beforeAll(async () => {
   await userDataSource.initialize();
@@ -205,5 +211,52 @@ describe('Go read posts', () => {
     .query({userid:response.body.id});
     expect(post.statusCode).toBe(200);
     expect(post.body.post.text).toBe(readtimeline.body.timeline[0].postText);
+  });
+});
+
+async function uploadToS3(presignedPostData: PresignedPost, filePath: string) {
+  const formData = new FormData();
+
+  // Append all the fields from the presigned post data
+  Object.keys(presignedPostData.fields).forEach(key => {
+    formData.append(key, presignedPostData.fields[key]);
+  });
+
+  // Append the file you want to upload
+  const fileStream = fs.createReadStream(filePath);
+  formData.append('file', fileStream);
+
+  try {
+    const response = await axios.post(presignedPostData.url, formData);
+    console.log("Upload successful:", response.status);
+  } catch (error) {
+    console.error("Upload failed:", error);
+  }
+}
+
+// This is a temporary unit test
+//  We would not expose the API, just use as part of a larger workflow
+describe('Upload and download media', () => {
+  it('should log us in, upload, and download', async () => {
+    if (!process.env.AWS_ACCESS_KEY) {
+      return; // Ideally, we do a mock.  For now, we're testing real AWS if the env is set...
+    }
+
+    const response = await request(kapp.callback())
+    .post('/login')
+    .send({ username: "jsmith", password: "jjj" });
+    expect(response.statusCode).toBe(200);
+
+    const postkey = await request(kapp.callback())
+    .get('/getMediaUploadKey')
+    .query({filename: 'YKY.png'});
+    expect(postkey.statusCode).toBe(200);
+
+    // Perform the upload
+    const filePath = './src/YKY.png';
+    await uploadToS3(postkey.body as PresignedPost, filePath);
+
+    // TODO: Request the download key
+    // TODO: Download
   });
 });
