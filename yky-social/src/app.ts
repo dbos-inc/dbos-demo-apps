@@ -212,7 +212,7 @@ class YKY
     return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
   }
 
-  @GetApi("/getdlkey")
+  @GetApi("/getMediaDownloadKey")
   //@RequiredRole(['user'])
   static async doKeyDownload(_ctx: OperonContext, @Required filekey: string) {
     const key = filekey;

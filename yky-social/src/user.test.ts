@@ -226,12 +226,23 @@ async function uploadToS3(presignedPostData: PresignedPost, filePath: string) {
   const fileStream = fs.createReadStream(filePath);
   formData.append('file', fileStream);
 
-  try {
-    const response = await axios.post(presignedPostData.url, formData);
-    console.log("Upload successful:", response.status);
-  } catch (error) {
-    console.error("Upload failed:", error);
-  }
+  const response = await axios.post(presignedPostData.url, formData);
+  console.log("Upload successful:", response.status);
+}
+
+async function downloadFromS3(presignedGetUrl: string, outputPath: string) {
+  const response = await axios.get(presignedGetUrl, {
+    responseType: 'stream',  // Important to handle large files
+  });
+
+  // Use a write stream to save the file to the desired path
+  const writer = fs.createWriteStream(outputPath);
+  response.data.pipe(writer);
+
+  return new Promise((resolve, reject) => {
+    writer.on('finish', resolve);
+    writer.on('error', reject);
+  });
 }
 
 // This is a temporary unit test
@@ -256,7 +267,15 @@ describe('Upload and download media', () => {
     const filePath = './src/YKY.png';
     await uploadToS3(postkey.body as PresignedPost, filePath);
 
-    // TODO: Request the download key
-    // TODO: Download
+    // Request the download key
+    const getkey = await request(kapp.callback())
+    .get('/getMediaDownloadKey')
+    .query({filekey: postkey.body.key});
+    expect(getkey.statusCode).toBe(200);
+
+    // Download
+    const presignedGetUrl = getkey.body.url;
+    const outputPath = '/tmp/YKY.png';
+    await downloadFromS3(presignedGetUrl, outputPath);
   });
 });
