@@ -7,7 +7,6 @@ import {
   OperonWorkflow,
 } from "operon";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
-import { RouterResponse } from "../router";
 import { bankname, bankport } from "../main";
 import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";
@@ -179,23 +178,16 @@ export class BankTransactionHistory {
   static async internalTransferFunc(
     txnCtxt: TransactionContext,
     data: TransactionHistory
-  ): Promise<RouterResponse> {
-    const retResponse: RouterResponse = {
-      body: "",
-      status: 200,
-      message: "",
-    };
+  ): Promise<string> {
 
     // Check if the fromAccount has enough balance.
     const fromAccount: AccountInfo | null =
       await BankAccountInfo.findAccountFunc(txnCtxt, data.fromAccountId);
     if (fromAccount === null) {
-      console.error("Cannot find account!");
       throw new Error("Cannot find account!");
     }
 
     if (fromAccount.balance < BigInt(data.amount)) {
-      console.error("Not enough balance!");
       throw new Error("Not enough balance!");
     }
 
@@ -205,7 +197,6 @@ export class BankTransactionHistory {
       data.toAccountId
     );
     if (toAccount === null) {
-      console.error("Cannot find account!");
       throw new Error("Cannot find account!");
     }
 
@@ -227,14 +218,9 @@ export class BankTransactionHistory {
 
     // Check for errors.
     if (!updateRes || !updateRes2 || !insertRes) {
-      console.error("Failed to perform internal transfer!");
       throw new Error("Failed to perform internal transfer!");
-    } else {
-      retResponse.body = "Internal transfer succeeded!";
-      retResponse.status = 200;
     }
-
-    return retResponse;
+    return "Internal transfer succeeded!";
   }
 
   @OperonWorkflow()
@@ -242,12 +228,6 @@ export class BankTransactionHistory {
     ctxt: WorkflowContext,
     data: TransactionHistory
   ) {
-    const retResponse: RouterResponse = {
-      body: "",
-      status: 200,
-      message: "Deposit succeeded!",
-    };
-
     // Deposite locally first.
     const result = await ctxt.transaction(
       BankTransactionHistory.updateAcctTransactionFunc,
@@ -310,7 +290,7 @@ export class BankTransactionHistory {
       console.log("Deposit from: " + data.fromLocation);
     }
 
-    return retResponse;
+    return "Deposit succeeded!";
   }
 
   @OperonWorkflow()
@@ -318,12 +298,6 @@ export class BankTransactionHistory {
     ctxt: WorkflowContext,
     data: TransactionHistory
   ) {
-    const retResponse: RouterResponse = {
-      body: "",
-      status: 200,
-      message: "Withdraw succeeded!",
-    };
-
     // Withdraw first.
     const result = await ctxt.transaction(
       BankTransactionHistory.updateAcctTransactionFunc,
@@ -385,6 +359,6 @@ export class BankTransactionHistory {
       console.log("Deposit to: " + data.fromLocation);
     }
 
-    return retResponse;
+    return "Withdraw succeeded!";
   }
 }

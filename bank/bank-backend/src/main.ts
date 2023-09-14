@@ -1,11 +1,8 @@
-import Koa from "koa";
-import logger from "koa-logger";
-import { bodyParser } from "@koa/bodyparser";
-import cors from "@koa/cors";
 import * as readline from "node:readline/promises";
 import { Operon } from "operon";
-import { router } from "./router";
 import { PrismaClient } from "@prisma/client";
+import { OperonHttpServer } from "operon/dist/src/httpServer/server";
+import { BankEndpoints } from "./router";
 
 // A hack for bigint serializing to/from JSON.
 import "json-bigint-patch";
@@ -13,6 +10,9 @@ import "json-bigint-patch";
 export let bankname: string;
 export let bankport: string;
 export let operon: Operon;
+
+// TODO: this is a hack -- we must use the BankEndpoints module. Otherwise, even if we import it, it will not be loaded and decorators won't run at all.
+BankEndpoints.load();
 
 async function startServer() {
   // Initialize a Prisma client.
@@ -29,27 +29,18 @@ async function startServer() {
   // Initialize Operon.
   operon = new Operon();
   operon.usePrisma(prisma);
-  await operon.init();
 
   // Register transactions and workflows
   operon.registerDecoratedWT();
 
-  // Start Koa server.
-  const app = new Koa();
-
-  app.use(logger());
-  app.use(bodyParser());
-  app.use(cors());
+  await operon.init();
 
   /**
    * TODO: add back auth once we support customized middleware.
    */
 
-  app.use(router.routes()).use(router.allowedMethods());
-
-  app.listen(bankport, () => {
-    console.log("Koa bank %s started at port: %d", bankname, bankport);
-  });
+  const operonServer = new OperonHttpServer(operon);
+  operonServer.listen(Number(bankport));
 }
 
 void startServer();

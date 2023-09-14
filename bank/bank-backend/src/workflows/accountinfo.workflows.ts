@@ -23,6 +23,7 @@ export class BankAccountInfo {
     data: AccountInfo
   ) {
     const p = txnCtxt.prismaClient as PrismaClient;
+    console.log("create account");
     return p.accountInfo.create({
       data: {
         ownerName: data.ownerName,
