@@ -20,6 +20,12 @@ module.exports = {
   ],
   rules: {
     'indent': ['error', 2],
+    "@typescript-eslint/unbound-method": [
+      "error",
+      {
+        ignoreStatic: true,
+      },
+    ],
   },
   "env": {
     "node": true

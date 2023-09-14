@@ -6,10 +6,6 @@ import * as readline from "node:readline/promises";
 import { Operon } from "operon";
 import { router } from "./router";
 import {
-  createAccountFunc,
-  listAccountsFunc,
-} from "./workflows/accountinfo.workflows";
-import {
   depositWorkflow,
   listTxnForAccountFunc,
   withdrawWorkflow,
@@ -44,8 +40,6 @@ async function startServer() {
   await operon.init();
 
   // Register transactions and workflows
-  operon.registerTransaction(createAccountFunc);
-  operon.registerTransaction(listAccountsFunc);
   operon.registerTransaction(internalTransferFunc);
   operon.registerTransaction(listTxnForAccountFunc);
   operon.registerTransaction(updateAcctTransactionFunc);
@@ -53,6 +47,7 @@ async function startServer() {
 
   operon.registerWorkflow(withdrawWorkflow);
   operon.registerWorkflow(depositWorkflow);
+  operon.registerDecoratedWT();
 
   // Start Koa server.
   const app = new Koa();

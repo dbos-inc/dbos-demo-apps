@@ -1,6 +1,6 @@
 import Router from "@koa/router";
 import { bankname, operon } from "./main";
-import { createAccountFunc, listAccountsFunc } from "./workflows/accountinfo.workflows";
+import { BankAccountInfo } from "./workflows/accountinfo.workflows";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { depositWorkflow, listTxnForAccountFunc, withdrawWorkflow, internalTransferFunc } from "./workflows/txnhistory.workflows";
 
@@ -49,7 +49,7 @@ router.get("/api/admin_greeting", async(ctx, next) => {
 router.get("/api/list_accounts/:ownerName", async(ctx, next) => {
   const name: string = ctx.params.ownerName;
   try {
-    ctx.body = await operon.transaction(listAccountsFunc, {}, name);
+    ctx.body = await operon.transaction(BankAccountInfo.listAccountsFunc, {}, name);
     ctx.status = 200;
   } catch (err) {
     console.error(err);
@@ -71,7 +71,7 @@ router.post("/api/create_account", async(ctx, next) => {
     return;
   }
   try {
-    ctx.body = await operon.transaction(createAccountFunc, {}, data);
+    ctx.body = await operon.transaction(BankAccountInfo.createAccountFunc, {}, data);
     ctx.status = 201;
   } catch (err) {
     console.error(err);

@@ -2,7 +2,7 @@ import { WorkflowContext, TransactionContext, CommunicatorContext } from "operon
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { RouterResponse } from "../router";
 import { bankname, bankport } from "../main";
-import { findAccountFunc } from "./accountinfo.workflows";
+import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";
 
 const REMOTEDB_PREFIX : string = "remoteDB-";
@@ -65,7 +65,7 @@ const updateAccountBalanceFunc = async (txnCtxt: TransactionContext, acctId: big
 
 export const updateAcctTransactionFunc = async (txnCtxt: TransactionContext, acctId: bigint, data: TransactionHistory, deposit: boolean, undoTxn: bigint | null = null) => {
   // First, make sure the account exists, and read the latest balance.
-  const acct = await findAccountFunc(txnCtxt, acctId);
+  const acct = await BankAccountInfo.findAccountFunc(txnCtxt, acctId);
   if (acct === null) {
     console.error("Cannot find account!");
     throw new Error("Cannot find account!");
@@ -123,7 +123,7 @@ export const internalTransferFunc = async (txnCtxt: TransactionContext, data: Tr
   };
 
   // Check if the fromAccount has enough balance.
-  const fromAccount: AccountInfo | null = await findAccountFunc(txnCtxt, data.fromAccountId);
+  const fromAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(txnCtxt, data.fromAccountId);
   if (fromAccount === null) {
     console.error("Cannot find account!");
     throw new Error("Cannot find account!");
@@ -135,7 +135,7 @@ export const internalTransferFunc = async (txnCtxt: TransactionContext, data: Tr
   }
 
   // ToAccount must exist.
-  const toAccount: AccountInfo | null = await findAccountFunc(txnCtxt, data.toAccountId);
+  const toAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(txnCtxt, data.toAccountId);
   if (toAccount === null) {
     console.error("Cannot find account!");
     throw new Error("Cannot find account!");
