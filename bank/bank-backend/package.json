@@ -25,7 +25,8 @@
     "koa": "^2.14.2",
     "koa-jwt": "^4.0.4",
     "koa-logger": "^3.2.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "operon": "file:../../../operon"
   },
   "devDependencies": {
     "@types/jest": "^29.5.3",
