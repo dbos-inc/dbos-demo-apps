@@ -103,7 +103,6 @@ router.post("/api/deposit", async(ctx, next) => {
   const data = convertTransactionHistory(ctx.request.body as TransactionHistory);
   // TODO: implement auth.
   // const token = ctx.request.header["authorization"];
-  // console.log("Retrieved token: " + token); // Should have Bearer prefix.
   if (!data.fromLocation) {
     console.error("fromLocation must not be empty!");
     ctx.status = 500;
