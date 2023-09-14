@@ -5,14 +5,6 @@ import cors from "@koa/cors";
 import * as readline from "node:readline/promises";
 import { Operon } from "operon";
 import { router } from "./router";
-import {
-  depositWorkflow,
-  listTxnForAccountFunc,
-  withdrawWorkflow,
-  internalTransferFunc,
-  updateAcctTransactionFunc,
-  remoteTransferComm,
-} from "./workflows/txnhistory.workflows";
 import { PrismaClient } from "@prisma/client";
 
 // A hack for bigint serializing to/from JSON.
@@ -40,13 +32,6 @@ async function startServer() {
   await operon.init();
 
   // Register transactions and workflows
-  operon.registerTransaction(internalTransferFunc);
-  operon.registerTransaction(listTxnForAccountFunc);
-  operon.registerTransaction(updateAcctTransactionFunc);
-  operon.registerCommunicator(remoteTransferComm);
-
-  operon.registerWorkflow(withdrawWorkflow);
-  operon.registerWorkflow(depositWorkflow);
   operon.registerDecoratedWT();
 
   // Start Koa server.

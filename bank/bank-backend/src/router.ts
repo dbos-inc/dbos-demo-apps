@@ -2,7 +2,7 @@ import Router from "@koa/router";
 import { bankname, operon } from "./main";
 import { BankAccountInfo } from "./workflows/accountinfo.workflows";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
-import { depositWorkflow, listTxnForAccountFunc, withdrawWorkflow, internalTransferFunc } from "./workflows/txnhistory.workflows";
+import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
 
 export const router = new Router();
 
@@ -86,7 +86,7 @@ router.post("/api/create_account", async(ctx, next) => {
 router.get("/api/transaction_history/:accountId",async (ctx, next) => {
   const acctId = BigInt(ctx.params.accountId);
   try {
-    ctx.body = await operon.transaction(listTxnForAccountFunc, {}, acctId);
+    ctx.body = await operon.transaction(BankTransactionHistory.listTxnForAccountFunc, {}, acctId);
     ctx.status = 200;
   } catch (err) {
     console.error(err);
@@ -130,7 +130,7 @@ router.post("/api/deposit", async(ctx, next) => {
   // Invoke the workflow.
   let retResponse: RouterResponse;
   try {
-    retResponse = await operon.workflow(depositWorkflow, {}, data).getResult();
+    retResponse = await operon.workflow(BankTransactionHistory.depositWorkflow, {}, data).getResult();
     ctx.status = retResponse.status;
     ctx.body = retResponse.body;
     ctx.message = retResponse.message;
@@ -178,7 +178,7 @@ router.post("/api/withdraw", async(ctx, next) => {
   // Invoke the workflow.
   let retResponse: RouterResponse;
   try {
-    retResponse = await operon.workflow(withdrawWorkflow, {}, data).getResult();
+    retResponse = await operon.workflow(BankTransactionHistory.withdrawWorkflow, {}, data).getResult();
     ctx.status = retResponse.status;
     ctx.body = retResponse.body;
     ctx.message = retResponse.message;
@@ -223,7 +223,7 @@ router.post("/api/transfer", async(ctx, next) => {
 
   // Invoke the transaction.
   try {
-    const retResponse: RouterResponse = await operon.transaction(internalTransferFunc, {}, data);
+    const retResponse: RouterResponse = await operon.transaction(BankTransactionHistory.internalTransferFunc, {}, data);
     ctx.status = retResponse.status;
     ctx.body = retResponse.body;
     ctx.message = retResponse.message;
