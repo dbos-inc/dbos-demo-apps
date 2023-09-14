@@ -179,7 +179,6 @@ export class BankTransactionHistory {
     txnCtxt: TransactionContext,
     data: TransactionHistory
   ): Promise<string> {
-
     // Check if the fromAccount has enough balance.
     const fromAccount: AccountInfo | null =
       await BankAccountInfo.findAccountFunc(txnCtxt, data.fromAccountId);
