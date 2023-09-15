@@ -1,14 +1,15 @@
-import { OperonTransaction, TransactionContext } from "operon";
-import { AccountInfo, PrismaClient } from "@prisma/client";
+import { GetApi, OperonTransaction, PostApi, TransactionContext } from "operon";
+import { PrismaClient } from "@prisma/client";
 
 export class BankAccountInfo {
   @OperonTransaction()
-  static async listAccountsFunc(txnCtxt: TransactionContext, name: string) {
+  @GetApi("/api/list_accounts/:ownerName")
+  static async listAccountsFunc(txnCtxt: TransactionContext, ownerName: string) {
     const p = txnCtxt.prismaClient as PrismaClient;
     return p.accountInfo.findMany({
       where: {
         ownerName: {
-          equals: name,
+          equals: ownerName,
         },
       },
       orderBy: {
@@ -18,17 +19,14 @@ export class BankAccountInfo {
   }
 
   @OperonTransaction()
-  static async createAccountFunc(
-    txnCtxt: TransactionContext,
-    data: AccountInfo
-  ) {
+  @PostApi("/api/create_account")
+  static async createAccountFunc(txnCtxt: TransactionContext, ownerName: string, type: string, balance: number) {
     const p = txnCtxt.prismaClient as PrismaClient;
-    console.log("create account");
     return p.accountInfo.create({
       data: {
-        ownerName: data.ownerName,
-        type: data.type,
-        balance: data.balance,
+        ownerName: ownerName,
+        type: type,
+        balance: BigInt(balance ?? 0),
       },
     });
   }
