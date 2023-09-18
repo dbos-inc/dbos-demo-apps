@@ -5,7 +5,7 @@ import { createContext, useContext, useState } from 'react';
 export type CurUserLogin = {
     uid : string | undefined;
     uname : string | undefined;
-}
+};
 
 export type ThemeContextType = {
     currentTheme : string;

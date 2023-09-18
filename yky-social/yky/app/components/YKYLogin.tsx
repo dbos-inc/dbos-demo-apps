@@ -44,7 +44,7 @@ const LoginPage: React.FC<Props> = ({ regurl }) => {
       // But we store it in an HTTP header and so no client script
       //  can actually access it.
       const ures = await res.json();
-      setCurrentUser({uid: ures.user.userid, uname: ures.user.username})
+      setCurrentUser({uid: ures.user.userid, uname: ures.user.username});
 
       router.push('/main');
     }
