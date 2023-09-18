@@ -25,13 +25,15 @@
     "koa": "^2.14.2",
     "koa-jwt": "^4.0.4",
     "koa-logger": "^3.2.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "operon": "file:../../../operon"
   },
   "devDependencies": {
     "@types/jest": "^29.5.3",
     "@types/koa": "^2.13.8",
     "@types/koa__cors": "^4.0.0",
     "@types/koa__router": "^12.0.0",
+    "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-logger": "^3.1.2",
     "@types/lodash": "^4.14.197",
     "@typescript-eslint/eslint-plugin": "^6.1.0",

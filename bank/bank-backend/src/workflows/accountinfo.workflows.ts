@@ -1,34 +1,43 @@
-import { TransactionContext } from "operon";
-import { AccountInfo, PrismaClient } from "@prisma/client";
+import { GetApi, OperonTransaction, PostApi, TransactionContext } from "operon";
+import { PrismaClient } from "@prisma/client";
 
-export const listAccountsFunc = async (txnCtxt: TransactionContext, name: string): Promise<AccountInfo[]> => {
-  const p = txnCtxt.prismaClient as PrismaClient;
-  return p.accountInfo.findMany({
-    where: {
-      ownerName: {
-        equals: name
-      }
-    },
-    orderBy: {
-      accountId: 'asc'
-    }
-  });
-};
+export class BankAccountInfo {
+  @OperonTransaction()
+  @GetApi("/api/list_accounts/:ownerName")
+  static async listAccountsFunc(txnCtxt: TransactionContext, ownerName: string) {
+    const p = txnCtxt.prismaClient as PrismaClient;
+    return p.accountInfo.findMany({
+      where: {
+        ownerName: {
+          equals: ownerName,
+        },
+      },
+      orderBy: {
+        accountId: "asc",
+      },
+    });
+  }
 
-export const createAccountFunc = async (txnCtxt: TransactionContext, data: AccountInfo) => {
-  const p = txnCtxt.prismaClient as PrismaClient;
-  return p.accountInfo.create({ data: {
-    ownerName: data.ownerName,
-    type: data.type,
-    balance: data.balance
-  }});
-};
+  @OperonTransaction()
+  @PostApi("/api/create_account")
+  static async createAccountFunc(txnCtxt: TransactionContext, ownerName: string, type: string, balance: number) {
+    const p = txnCtxt.prismaClient as PrismaClient;
+    return p.accountInfo.create({
+      data: {
+        ownerName: ownerName,
+        type: type,
+        balance: BigInt(balance ?? 0),
+      },
+    });
+  }
 
-export const findAccountFunc = async (txnCtxt: TransactionContext, acctId: bigint) => {
-  const p = txnCtxt.prismaClient as PrismaClient;
-  return p.accountInfo.findUnique({
-    where: {
-      accountId: acctId,
-    }
-  });
-};
+  @OperonTransaction()
+  static async findAccountFunc(txnCtxt: TransactionContext, acctId: bigint) {
+    const p = txnCtxt.prismaClient as PrismaClient;
+    return p.accountInfo.findUnique({
+      where: {
+        accountId: acctId,
+      },
+    });
+  }
+}
