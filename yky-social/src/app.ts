@@ -26,6 +26,8 @@ import { Operon, Required, GetApi, APITypes, RequiredRole,
 
 import { OperonTransactionFunction, OperonWorkflowFunction } from "operon";
 
+import { OperonHandlerRegistrationBase } from "operon";
+
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
@@ -251,12 +253,13 @@ kapp.use(bodyParser());
 const router = new Router();
 
 // For now, do it ourselves, but it could be part of the framework...
-forEachMethod((m) => {
+forEachMethod((bm) => {
+  const m = bm as OperonHandlerRegistrationBase;
   if (m.txnConfig) {
-    operon.registerTransaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, m.txnConfig);
+    operon.registerTransaction(m.registeredFunction as OperonTransactionFunction<unknown[], unknown>, m.txnConfig);
   }
   if (m.workflowConfig) {
-    operon.registerWorkflow(m.replacementFunction as OperonWorkflowFunction<unknown[], unknown>, m.workflowConfig);
+    operon.registerWorkflow(m.registeredFunction as OperonWorkflowFunction<unknown[], unknown>, m.workflowConfig);
   }
   if (m.apiURL) {
     const rf = async(ctx: Koa.Context, next:Koa.Next) => {
@@ -305,13 +308,14 @@ forEachMethod((m) => {
         if (idx == 0) {
           return; // The context
         }
-        if ((m.apiType == APITypes.GET && marg.argSource === ArgSources.DEFAULT)
+        marg.argSource = marg.argSource ?? ArgSources.DEFAULT;  // Assign a default value.
+        if ((m.apiType === APITypes.GET && marg.argSource === ArgSources.DEFAULT)
             || marg.argSource === ArgSources.QUERY)
         {
           // Validating the arg occurs later...
           args.push(ctx.request.query[marg.name]);
         }
-        else if ((m.apiType == APITypes.POST && marg.argSource === ArgSources.DEFAULT)
+        else if ((m.apiType === APITypes.POST && marg.argSource === ArgSources.DEFAULT)
             || marg.argSource === ArgSources.BODY)
         {
           // Validating the arg occurs later...
@@ -330,10 +334,10 @@ forEachMethod((m) => {
       try {
         if (m.txnConfig) {
           // Wait, does it just need the name?!
-          rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
+          rv = await operon.transaction(m.registeredFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
         }
         else if (m.workflowConfig) {
-          const wfh = operon.workflow(m.replacementFunction as OperonWorkflowFunction<unknown[], unknown>, {parentCtx : c}, ...args);
+          const wfh = operon.workflow(m.registeredFunction as OperonWorkflowFunction<unknown[], unknown>, {parentCtx : c}, ...args);
           rv = await wfh.getResult();
         }
         else {

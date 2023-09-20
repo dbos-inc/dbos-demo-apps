@@ -5,7 +5,6 @@ import {Entity, PrimaryGeneratedColumn, Column} from "typeorm";
  The profile, which is larger, shares the same key, but is in a different table
  What if we want to use an external auth service like "sign in with google" or use Okta?
  */
-// Wisdom of naming the table "user" when that is a reserved word
 @Entity("user_login")
 export class UserLogin {
     @PrimaryGeneratedColumn("uuid")
