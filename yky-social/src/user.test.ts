@@ -1,15 +1,22 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import {describe, expect} from '@jest/globals';
+import * as fs from 'fs';
+import FormData from 'form-data';
+import axios, { AxiosResponse } from 'axios';
+import { Readable } from 'stream';
+
+import { describe, expect } from '@jest/globals';
 import request from 'supertest';
 import { kapp } from './app';
 import { userDataSource } from './app';
 import { operon } from './app';
 
+import { PresignedPost } from '@aws-sdk/s3-presigned-post';
+
 beforeAll(async () => {
   await userDataSource.initialize();
-  operon.useTypeOrm(userDataSource);
+  operon.useTypeORM(userDataSource);
   await operon.init();
 });
 
@@ -205,5 +212,71 @@ describe('Go read posts', () => {
     .query({userid:response.body.id});
     expect(post.statusCode).toBe(200);
     expect(post.body.post.text).toBe(readtimeline.body.timeline[0].postText);
+  });
+});
+
+async function uploadToS3(presignedPostData: PresignedPost, filePath: string) {
+  const formData = new FormData();
+
+  // Append all the fields from the presigned post data
+  Object.keys(presignedPostData.fields).forEach(key => {
+    formData.append(key, presignedPostData.fields[key]);
+  });
+
+  // Append the file you want to upload
+  const fileStream = fs.createReadStream(filePath);
+  formData.append('file', fileStream);
+
+  const response = await axios.post(presignedPostData.url, formData);
+  console.log("Upload successful:", response.status);
+}
+
+async function downloadFromS3(presignedGetUrl: string, outputPath: string) {
+  const response: AxiosResponse<Readable> = await axios.get(presignedGetUrl, {
+    responseType: 'stream',  // Important to handle large files
+  });
+
+  // Use a write stream to save the file to the desired path
+  const writer = fs.createWriteStream(outputPath);
+  response.data.pipe(writer);
+
+  return new Promise((resolve, reject) => {
+    writer.on('finish', resolve);
+    writer.on('error', reject);
+  });
+}
+
+// This is a temporary unit test
+//  We would not expose the API, just use as part of a larger workflow
+describe('Upload and download media', () => {
+  it('should log us in, upload, and download', async () => {
+    if (!process.env.AWS_ACCESS_KEY) {
+      return; // Ideally, we do a mock.  For now, we're testing real AWS if the env is set...
+    }
+
+    const response = await request(kapp.callback())
+    .post('/login')
+    .send({ username: "jsmith", password: "jjj" });
+    expect(response.statusCode).toBe(200);
+
+    const postkey = await request(kapp.callback())
+    .get('/getMediaUploadKey')
+    .query({filename: 'YKY.png'});
+    expect(postkey.statusCode).toBe(200);
+
+    // Perform the upload
+    const filePath = './src/YKY.png';
+    await uploadToS3(postkey.body as PresignedPost, filePath);
+
+    // Request the download key
+    const getkey = await request(kapp.callback())
+    .get('/getMediaDownloadKey')
+    .query({filekey: postkey.body.key});
+    expect(getkey.statusCode).toBe(200);
+
+    // Download
+    const presignedGetUrl = (getkey.body.url || 'x') as string;
+    const outputPath = '/tmp/YKY.png';
+    await downloadFromS3(presignedGetUrl, outputPath);
   });
 });

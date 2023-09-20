@@ -24,7 +24,23 @@ import { Operon, Required, GetApi, APITypes, RequiredRole,
         OperonWorkflow, WorkflowContext,
       } from "operon";
 
-import { OperonTransactionFunction } from "operon";
+import { OperonTransactionFunction, OperonWorkflowFunction } from "operon";
+
+import { OperonHandlerRegistrationBase } from "operon";
+
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+
+const s3ClientConfig = {
+  region: process.env.AWS_REGION || 'us-east-2', // Replace with your AWS region
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY || 'x',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'x',
+  }
+};
+
+const s3Client = new S3Client(s3ClientConfig);
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -175,6 +191,42 @@ class YKY
     await operon.transaction(Operations.distributePost, {parentCtx: ctx}, post);
     return {message: "Posted."};  
   }
+
+  @GetApi("/getMediaUploadKey")
+  //@RequiredRole(['user'])
+  static async doKeyUpload(_ctx: OperonContext, @Required filename: string) {
+    const key = `photos/${filename}-${Date.now()}`;
+
+    const postPresigned = await createPresignedPost(
+      s3Client,
+      {
+        Conditions: [
+          ["content-length-range", 1, 10000000],
+        ],
+        Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
+        Key: key,
+        Expires: 3600,
+        Fields: {
+          'Content-Type': 'image/*',
+        }
+      }
+    );
+    return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
+  }
+
+  @GetApi("/getMediaDownloadKey")
+  //@RequiredRole(['user'])
+  static async doKeyDownload(_ctx: OperonContext, @Required filekey: string) {
+    const key = filekey;
+
+    const getObjectCommand = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
+      Key: key,
+    });
+  
+    const presignedUrl = await getSignedUrl(s3Client, getObjectCommand, { expiresIn: 3600, });
+    return { message: "Signed URL", url: presignedUrl, key: key };
+  }
 }
 
 // Initialize Operon.
@@ -201,9 +253,13 @@ kapp.use(bodyParser());
 const router = new Router();
 
 // For now, do it ourselves, but it could be part of the framework...
-forEachMethod((m) => {
+forEachMethod((bm) => {
+  const m = bm as OperonHandlerRegistrationBase;
   if (m.txnConfig) {
-    operon.registerTransaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, m.txnConfig);
+    operon.registerTransaction(m.registeredFunction as OperonTransactionFunction<unknown[], unknown>, m.txnConfig);
+  }
+  if (m.workflowConfig) {
+    operon.registerWorkflow(m.registeredFunction as OperonWorkflowFunction<unknown[], unknown>, m.workflowConfig);
   }
   if (m.apiURL) {
     const rf = async(ctx: Koa.Context, next:Koa.Next) => {
@@ -252,13 +308,14 @@ forEachMethod((m) => {
         if (idx == 0) {
           return; // The context
         }
-        if ((m.apiType == APITypes.GET && marg.argSource === ArgSources.DEFAULT)
+        marg.argSource = marg.argSource ?? ArgSources.DEFAULT;  // Assign a default value.
+        if ((m.apiType === APITypes.GET && marg.argSource === ArgSources.DEFAULT)
             || marg.argSource === ArgSources.QUERY)
         {
           // Validating the arg occurs later...
           args.push(ctx.request.query[marg.name]);
         }
-        else if ((m.apiType == APITypes.POST && marg.argSource === ArgSources.DEFAULT)
+        else if ((m.apiType === APITypes.POST && marg.argSource === ArgSources.DEFAULT)
             || marg.argSource === ArgSources.BODY)
         {
           // Validating the arg occurs later...
@@ -277,7 +334,11 @@ forEachMethod((m) => {
       try {
         if (m.txnConfig) {
           // Wait, does it just need the name?!
-          rv = await operon.transaction(m.replacementFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
+          rv = await operon.transaction(m.registeredFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
+        }
+        else if (m.workflowConfig) {
+          const wfh = operon.workflow(m.registeredFunction as OperonWorkflowFunction<unknown[], unknown>, {parentCtx : c}, ...args);
+          rv = await wfh.getResult();
         }
         else {
           rv = await m.invoke(undefined, [c, ...args]);
