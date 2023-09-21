@@ -280,19 +280,6 @@ forEachMethod((bm) => {
         else {
           curRoles = ['user'];
         }
-
-        let authorized = false;
-        const set = new Set(curRoles);
-        for (const str of m.requiredRole) {
-          if (set.has(str)) {
-            authorized = true;
-            authRole = str;
-          }
-        }
-        if (!authorized) {
-          const err = errorWithStatus(`User does not have a role with permission to call ${m.name}`, 401);
-          throw err;
-        }
       }
             
       const c: OperonContext = new OperonContext();
