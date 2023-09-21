@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import "reflect-metadata";
-import { IncomingMessage } from "http";
 import Koa from 'koa';
 import { Context, Next } from 'koa';
 import Router from "@koa/router";
@@ -363,24 +362,6 @@ forEachMethod((bm) => {
 });
 */
 
-function getQueryParams(req: IncomingMessage): Record<string, string> {
-  // Ensure there's a URL to parse
-  if (!req.url) {
-      throw new Error("No URL");
-  }
-
-  // Parse the URL
-  const parsedUrl = new URL(req.url, "http://baseurl.biz/");
-
-  // Convert the URLSearchParams object to a plain object
-  const queryParams: Record<string, string> = {};
-  for (const [key, value] of parsedUrl.searchParams.entries()) {
-      queryParams[key] = value;
-  }
-
-  return queryParams;
-}
-
 operon.registerDecoratedWT();
 OperonHttpServer.registerDecoratedEndpoints(operon, router, {
   auth: {
@@ -392,7 +373,7 @@ OperonHttpServer.registerDecoratedEndpoints(operon, router, {
 
         // TODO: We really need to validate something, generally it would be a token
         //  Currently the backend is "taking the front-end's word for it"
-        const { userid } = getQueryParams(ctx.request);
+        const { userid } = ctx.koaContext.request.query;
         const uid = userid?.toString();
 
         if (!uid) {
