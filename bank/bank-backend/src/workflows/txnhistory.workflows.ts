@@ -123,8 +123,12 @@ export class BankTransactionHistory {
 
   @OperonCommunicator()
   static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory) {
+    const token = commCtxt.request?.headers["authorization"];
     try {
-      const remoteRes = await axios.post(remoteUrl, data);
+      const remoteRes = await axios.post(remoteUrl, data,
+        {headers: {
+          "Authorization": token
+        }});
       if (remoteRes.status != 200) {
         console.error("Remote transfer failed, returned with status: " + remoteRes.statusText);
         return false;

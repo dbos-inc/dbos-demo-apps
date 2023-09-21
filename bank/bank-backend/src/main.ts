@@ -9,9 +9,16 @@ import "json-bigint-patch";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
 import { BankAccountInfo } from "./workflows/accountinfo.workflows";
 
+import Koa from "koa";
+import logger from "koa-logger";
+import { bodyParser } from "@koa/bodyparser";
+import cors from "@koa/cors";
+import jwt from "koa-jwt";
+import { koaJwtSecret } from "jwks-rsa";
+
 export let bankname: string;
 export let bankport: string;
-export let operon: Operon;
+let operon: Operon;
 
 async function startServer() {
   // Initialize a Prisma client.
@@ -31,11 +38,38 @@ async function startServer() {
 
   await operon.init(BankEndpoints, BankTransactionHistory, BankAccountInfo);
 
-  /**
-   * TODO: add back auth once we support customized middleware.
-   */
+  // Create a Koa server and register customized middlewares.
+  const app = new Koa();
+  app.use(logger());
+  app.use(bodyParser());
+  app.use(cors());
 
-  const operonServer = new OperonHttpServer(operon);
+  // Custom 401 handling if you don't want to expose koa-jwt errors to users
+  app.use(function(ctx, next){
+    return next().catch((err) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (401 === err.status) {
+        ctx.status = 401;
+        ctx.body = 'Protected resource, use Authorization header to get access\n';
+      } else {
+        throw err;
+      }
+    });
+  });
+
+  app.use(jwt({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    secret: koaJwtSecret({
+      jwksUri: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos/protocol/openid-connect/certs`,
+      cache: true,
+      cacheMaxEntries: 5,
+      cacheMaxAge: 600000
+    }),
+    // audience: 'urn:api/',
+    issuer: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`
+  }));
+
+  const operonServer = new OperonHttpServer(operon, app);
   operonServer.listen(Number(bankport));
 }
 

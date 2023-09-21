@@ -1,4 +1,4 @@
-import { bankname, operon } from "./main";
+import { bankname } from "./main";
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
 import { GetApi, HandlerContext, PostApi } from "operon/dist/src/httpServer/handler";
@@ -48,7 +48,8 @@ export class BankEndpoints {
     }
 
     // Invoke the workflow.
-    return operon.workflow(BankTransactionHistory.depositWorkflow, {}, data).getResult();
+    // TODO: we need to find a better way to pass in parent context automatically.
+    return ctx.operon.workflow(BankTransactionHistory.depositWorkflow, {parentCtx: ctx}, data).getResult();
   }
 
   // Withdraw.
@@ -75,7 +76,7 @@ export class BankEndpoints {
     }
 
     // Invoke the workflow.
-    return operon.workflow(BankTransactionHistory.withdrawWorkflow, {}, data).getResult();
+    return ctx.operon.workflow(BankTransactionHistory.withdrawWorkflow, {parentCtx: ctx}, data).getResult();
   }
 
   // Internal transfer
@@ -97,6 +98,6 @@ export class BankEndpoints {
     }
 
     // Invoke the transaction.
-    return operon.transaction(BankTransactionHistory.internalTransferFunc, {}, data);
+    return ctx.operon.transaction(BankTransactionHistory.internalTransferFunc, {parentCtx: ctx}, data);
   }
 }
