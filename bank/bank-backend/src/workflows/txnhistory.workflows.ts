@@ -121,11 +121,17 @@ export class BankTransactionHistory {
   @OperonCommunicator()
   static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory) {
     const token = commCtxt.request?.headers["authorization"];
+    if (!token) {
+      commCtxt.log("ERROR", "Failed to extract valid token!");
+      return false;
+    }
+
     try {
-      const remoteRes = await axios.post(remoteUrl, data,
-        {headers: {
-          "Authorization": token
-        }});
+      const remoteRes = await axios.post(remoteUrl, data, {
+        headers: {
+          Authorization: token,
+        },
+      });
       if (remoteRes.status != 200) {
         commCtxt.log("ERROR", "Remote transfer failed, returned with status: " + remoteRes.statusText);
         return false;
