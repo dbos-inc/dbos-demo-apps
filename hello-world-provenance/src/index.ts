@@ -30,8 +30,7 @@ async function startServer() {
   // Initialize Postgres and Operon.
   const operon: Operon = new Operon();
   operon.useNodePostgres();
-  operon.registerDecoratedWT();
-  await operon.init();
+  await operon.init(Hello);
   await operon.userDatabase.query(
     "CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);"
   );
