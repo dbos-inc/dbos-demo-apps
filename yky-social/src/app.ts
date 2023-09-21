@@ -296,8 +296,7 @@ forEachMethod((bm) => {
       }
             
       const c: OperonContext = new OperonContext();
-      c.request = ctx.request;
-      c.response = ctx.response;
+      c.request = ctx.req;
       c.authUser = uid || '';
       c.authRoles = curRoles;
       c.authRole = authRole;
