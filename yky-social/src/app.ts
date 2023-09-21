@@ -390,6 +390,8 @@ OperonHttpServer.registerDecoratedEndpoints(operon, router, {
           throw new Error("No request");
         }
 
+        // TODO: We really need to validate something, generally it would be a token
+        //  Currently the backend is "taking the front-end's word for it"
         const { userid } = getQueryParams(ctx.request);
         const uid = userid?.toString();
 
