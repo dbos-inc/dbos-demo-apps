@@ -56,9 +56,6 @@ export class BankEndpoints {
   @PostApi("/api/withdraw")
   static async withdraw(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
-    // TODO: implement auth.
-    // const token = ctx.request.header["authorization"];
-    // console.log("Retrieved token: " + token); // Should have Bearer prefix.
     if (!data.toLocation) {
       throw new Error("toLocation must not be empty!");
     }
