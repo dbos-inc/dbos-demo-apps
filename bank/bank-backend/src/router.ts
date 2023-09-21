@@ -18,8 +18,6 @@ function convertTransactionHistory(data: TransactionHistory): TransactionHistory
 }
 
 export class BankEndpoints {
-  static load() {}
-
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/api/greeting")
   static async greeting(ctx: HandlerContext) {

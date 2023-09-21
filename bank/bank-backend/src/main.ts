@@ -6,13 +6,12 @@ import { BankEndpoints } from "./router";
 
 // A hack for bigint serializing to/from JSON.
 import "json-bigint-patch";
+import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
+import { BankAccountInfo } from "./workflows/accountinfo.workflows";
 
 export let bankname: string;
 export let bankport: string;
 export let operon: Operon;
-
-// TODO: this is a hack -- we must use the BankEndpoints module. Otherwise, even if we import it, it will not be loaded and decorators won't run at all.
-BankEndpoints.load();
 
 async function startServer() {
   // Initialize a Prisma client.
@@ -30,10 +29,7 @@ async function startServer() {
   operon = new Operon();
   operon.usePrisma(prisma);
 
-  // Register transactions and workflows
-  operon.registerDecoratedWT();
-
-  await operon.init();
+  await operon.init(BankEndpoints, BankTransactionHistory, BankAccountInfo);
 
   /**
    * TODO: add back auth once we support customized middleware.
