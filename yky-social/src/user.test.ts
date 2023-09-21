@@ -126,22 +126,21 @@ describe('Go find a friend, follow', () => {
     const nounameres = await request(kapp.callback())
     .get('/finduser')
     .query({userid:response.body.id});
-    //.query({findUserName: "dollythesheep" });
     expect(nounameres.statusCode).toBe(400);
 
     const nofindres = await request(kapp.callback())
     .get('/finduser')
-    .query({userid:response.body.id})
-    .query({findUserName: "dollythesheep" });
+    .query({userid:response.body.id,
+            findUserName: "dollythesheep" });
     expect(nofindres.statusCode).toBe(200);
     expect(nofindres.body.message).toBe("No user by that name.");
 
     const findres = await request(kapp.callback())
     .get('/finduser')
-    .query({userid:response.body.id})
-    .query({findUserName: "jdeer" });
-    expect(findres.statusCode).toBe(200);
+    .query({userid:response.body.id,
+            findUserName: "jdeer" });
     expect(findres.body.message).toBe("User Found.");
+    expect(findres.statusCode).toBe(200);
 
     const followres = await request(kapp.callback())
     .post('/follow')

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import "reflect-metadata";
+import { IncomingMessage } from "http";
 import Koa from 'koa';
 import { Context, Next } from 'koa';
 import Router from "@koa/router";
@@ -16,17 +17,16 @@ import { RecvType, SendType, TimelineRecv, TimelineSend } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
-import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { Operon, Required, GetApi, APITypes, RequiredRole,
-        OperonContext, OperonTransaction, TransactionContext,
-        forEachMethod, OperonDataValidationError,
-        ArgSource, ArgSources, LogMask, LogMasks, PostApi,
-        OperonWorkflow, WorkflowContext,
-      } from "operon";
+import { Operations } from "./Operations";
+import {
+  Operon, Required, GetApi, RequiredRole,
+  OperonContext, OperonTransaction, TransactionContext,
+  ArgSource, ArgSources, LogMask, LogMasks, PostApi,
+  OperonWorkflow, WorkflowContext,
+  OperonHttpServer, OperonHandlerRegistrationBase, HandlerContext,
+  OperonNotAuthorizedError,
+} from "operon";
 
-import { OperonTransactionFunction, OperonWorkflowFunction } from "operon";
-
-import { OperonHandlerRegistrationBase } from "operon";
 
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -252,6 +252,7 @@ kapp.use(bodyParser());
 
 const router = new Router();
 
+/*
 // For now, do it ourselves, but it could be part of the framework...
 forEachMethod((bm) => {
   const m = bm as OperonHandlerRegistrationBase;
@@ -357,6 +358,52 @@ forEachMethod((bm) => {
     }
     if (m.apiType === APITypes.POST) {
       router.post(m.apiURL, rf);
+    }
+  }
+});
+*/
+
+function getQueryParams(req: IncomingMessage): Record<string, string> {
+  // Ensure there's a URL to parse
+  if (!req.url) {
+      throw new Error("No URL");
+  }
+
+  // Parse the URL
+  const parsedUrl = new URL(req.url, "http://baseurl.biz/");
+
+  // Convert the URLSearchParams object to a plain object
+  const queryParams: Record<string, string> = {};
+  for (const [key, value] of parsedUrl.searchParams.entries()) {
+      queryParams[key] = value;
+  }
+
+  return queryParams;
+}
+
+operon.registerDecoratedWT();
+OperonHttpServer.registerDecoratedEndpoints(operon, router, {
+  auth: {
+    authenticate(handler: OperonHandlerRegistrationBase, ctx: HandlerContext) : Promise<boolean> {
+      if (handler.requiredRole.length > 0) {
+        if (!ctx.request) {
+          throw new Error("No request");
+        }
+
+        const { userid } = getQueryParams(ctx.request);
+        const uid = userid?.toString();
+
+        if (!uid) {
+          const err = new OperonNotAuthorizedError("Not logged in.", 401);
+          throw err;
+        }
+        else {
+          ctx.authUser = uid;
+          ctx.authRoles = ['user'];
+        }
+      }
+
+      return Promise.resolve(true);
     }
   }
 });
