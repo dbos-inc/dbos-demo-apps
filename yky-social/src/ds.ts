@@ -9,7 +9,9 @@ userDataSource.initialize()
   .then(() => {
     // Set operon DS to typeorm
     operon.useTypeORM(userDataSource);
-    return operon.init(YKY);
+  })
+  .then(() => {
+    operon.init(YKY);
   })
   .then(() => {
     console.log("User Data Source has been initialized!");

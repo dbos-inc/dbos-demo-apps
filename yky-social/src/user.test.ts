@@ -8,7 +8,7 @@ import { Readable } from 'stream';
 
 import { describe, expect } from '@jest/globals';
 import request from 'supertest';
-import { kapp } from './app';
+import { YKY, kapp } from './app';
 import { userDataSource } from './app';
 import { operon } from './app';
 
@@ -17,7 +17,7 @@ import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 beforeAll(async () => {
   await userDataSource.initialize();
   operon.useTypeORM(userDataSource);
-  await operon.init();
+  await operon.init(YKY);
 });
 
 afterAll(async () => {
