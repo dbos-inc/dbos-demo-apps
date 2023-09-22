@@ -362,33 +362,36 @@ forEachMethod((bm) => {
 });
 */
 
-OperonHttpServer.registerDecoratedEndpoints(operon, router, {
-  auth: {
-    authenticate(handler: OperonHandlerRegistrationBase, ctx: HandlerContext) : Promise<boolean> {
-      if (handler.requiredRole.length > 0) {
-        if (!ctx.request) {
-          throw new Error("No request");
+export function ykyInit()
+{
+  OperonHttpServer.registerDecoratedEndpoints(operon, router, {
+    auth: {
+      authenticate(handler: OperonHandlerRegistrationBase, ctx: HandlerContext) : Promise<boolean> {
+        if (handler.requiredRole.length > 0) {
+          if (!ctx.request) {
+            throw new Error("No request");
+          }
+
+          // TODO: We really need to validate something, generally it would be a token
+          //  Currently the backend is "taking the front-end's word for it"
+          const { userid } = ctx.koaContext.request.query;
+          const uid = userid?.toString();
+
+          if (!uid) {
+            const err = new OperonNotAuthorizedError("Not logged in.", 401);
+            throw err;
+          }
+          else {
+            ctx.authUser = uid;
+            ctx.authRoles = ['user'];
+          }
         }
 
-        // TODO: We really need to validate something, generally it would be a token
-        //  Currently the backend is "taking the front-end's word for it"
-        const { userid } = ctx.koaContext.request.query;
-        const uid = userid?.toString();
-
-        if (!uid) {
-          const err = new OperonNotAuthorizedError("Not logged in.", 401);
-          throw err;
-        }
-        else {
-          ctx.authUser = uid;
-          ctx.authRoles = ['user'];
-        }
+        return Promise.resolve(true);
       }
-
-      return Promise.resolve(true);
     }
-  }
-});
+  });
+}
 
 // Example of how to do a route directly in Koa
 router.get("/koa", async (ctx, next) => {

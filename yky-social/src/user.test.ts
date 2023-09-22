@@ -8,7 +8,7 @@ import { Readable } from 'stream';
 
 import { describe, expect } from '@jest/globals';
 import request from 'supertest';
-import { YKY, kapp } from './app';
+import { kapp, YKY, ykyInit } from './app';
 import { userDataSource } from './app';
 import { operon } from './app';
 
@@ -18,6 +18,7 @@ beforeAll(async () => {
   await userDataSource.initialize();
   operon.useTypeORM(userDataSource);
   await operon.init(YKY);
+  ykyInit();
 });
 
 afterAll(async () => {
