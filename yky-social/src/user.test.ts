@@ -13,11 +13,12 @@ import { userDataSource } from './app';
 import { operon } from './app';
 
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
+import { Operations } from './Operations';
 
 beforeAll(async () => {
   await userDataSource.initialize();
   operon.useTypeORM(userDataSource);
-  await operon.init(YKY);
+  await operon.init(YKY, Operations);
   ykyInit();
 });
 

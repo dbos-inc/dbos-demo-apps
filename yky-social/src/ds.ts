@@ -4,6 +4,7 @@ import { kapp, YKY } from './app';
 import { userDataSource } from "./app";
 import { operon } from "./app";
 import { ykyInit } from "./app";
+import { Operations } from "./Operations";
 
 userDataSource.initialize()
   .then(() => {
@@ -11,7 +12,7 @@ userDataSource.initialize()
     operon.useTypeORM(userDataSource);
   })
   .then(() => {
-    return operon.init(YKY);
+    return operon.init(YKY, Operations);
   })
   .then(() => {
     console.log("User Data Source has been initialized!");
