@@ -86,7 +86,7 @@ export class YKY
   {
     const manager = ctx.typeormEM as unknown as EntityManager;
 
-    const rtl = await Operations.readRecvTimeline(manager, ctx.authUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
+    const rtl = await Operations.readRecvTimeline(manager, ctx.authenticatedUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
@@ -101,7 +101,7 @@ export class YKY
   static async sendTimeline(ctx: TransactionContext)
   {
     // TODO: User id and modes
-    const userid = ctx.authUser;
+    const userid = ctx.authenticatedUser;
     const manager = ctx.typeormEM as unknown as EntityManager;
 
     const rtl = await Operations.readSendTimeline(manager, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
@@ -119,7 +119,7 @@ export class YKY
   static async findUser(ctx: TransactionContext, @Required findUserName: string) {
     const manager = ctx.typeormEM as unknown as EntityManager;
     const [user, _prof, _gsrc, _gdst] = await Operations.findUser(manager,
-      ctx.authUser, findUserName, false, false);
+      ctx.authenticatedUser, findUserName, false, false);
     if (!user) {
       return {message: "No user by that name."};
     }
@@ -135,7 +135,7 @@ export class YKY
     // TODO Validate user permissions
 
     const manager = ctx.typeormEM as unknown as EntityManager;
-    const post = await Operations.getPost(manager, ctx.authUser, id);
+    const post = await Operations.getPost(manager, ctx.authenticatedUser, id);
     if (post) {
       return { message: 'Retrieved.', post:post };
     } else {
@@ -174,8 +174,8 @@ export class YKY
   @RequiredRole(['user'])
   static async doFollow(ctx: TransactionContext, @Required followUid: string) {
     const manager = ctx.typeormEM as unknown as EntityManager;
-    const curStatus = await Operations.getGraphStatus(manager, ctx.authUser, followUid);
-    await Operations.setGraphStatus(manager, ctx.authUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+    const curStatus = await Operations.getGraphStatus(manager, ctx.authenticatedUser, followUid);
+    await Operations.setGraphStatus(manager, ctx.authenticatedUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
     // TODO: That UID wasn't validated - maybe the DB should validate it
 
     return {message: "Followed."};
@@ -382,8 +382,8 @@ export function ykyInit()
             throw err;
           }
           else {
-            ctx.authUser = uid;
-            ctx.authRoles = ['user'];
+            ctx.authenticatedUser = uid;
+            ctx.authenticatedRoles = ['user'];
           }
         }
 
