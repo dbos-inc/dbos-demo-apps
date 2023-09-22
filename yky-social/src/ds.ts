@@ -3,12 +3,13 @@ import "reflect-metadata";
 import { kapp } from './app';
 import { userDataSource } from "./app";
 import { operon } from "./app";
+import { YKY } from "./app";
 
 userDataSource.initialize()
   .then(() => {
     // Set operon DS to typeorm
     operon.useTypeORM(userDataSource);
-    return operon.init();
+    return operon.init(YKY);
   })
   .then(() => {
     console.log("User Data Source has been initialized!");

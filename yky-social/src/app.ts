@@ -67,7 +67,7 @@ export const userDataSource = new DataSource({
   ],
 });
 
-class YKY
+export class YKY
 {
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi('/')
@@ -362,7 +362,6 @@ forEachMethod((bm) => {
 });
 */
 
-operon.registerDecoratedWT();
 OperonHttpServer.registerDecoratedEndpoints(operon, router, {
   auth: {
     authenticate(handler: OperonHandlerRegistrationBase, ctx: HandlerContext) : Promise<boolean> {
