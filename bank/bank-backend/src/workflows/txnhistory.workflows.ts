@@ -87,7 +87,6 @@ export class BankTransactionHistory {
     // First, make sure the account exists, and read the latest balance.
     const acct = await BankAccountInfo.findAccountFunc(txnCtxt, acctId);
     if (acct === null) {
-      console.error("Cannot find account!");
       throw new Error("Cannot find account!");
     }
 
@@ -98,14 +97,12 @@ export class BankTransactionHistory {
     } else {
       newBalance = acct.balance - BigInt(data.amount);
       if (newBalance < 0n) {
-        console.error("Not enough balance!");
         throw new Error("Not enough balance!");
       }
     }
 
     const resId = await BankTransactionHistory.updateAccountBalanceFunc(txnCtxt, acctId, newBalance);
     if (!resId || String(resId) !== String(acctId)) {
-      console.error("Failed to update account balance!");
       throw new Error("Not enough balance!");
     }
 
@@ -123,10 +120,20 @@ export class BankTransactionHistory {
 
   @OperonCommunicator()
   static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory) {
+    const token = commCtxt.request?.headers["authorization"];
+    if (!token) {
+      commCtxt.log("ERROR", "Failed to extract valid token!");
+      return false;
+    }
+
     try {
-      const remoteRes = await axios.post(remoteUrl, data);
+      const remoteRes = await axios.post(remoteUrl, data, {
+        headers: {
+          Authorization: token,
+        },
+      });
       if (remoteRes.status != 200) {
-        console.error("Remote transfer failed, returned with status: " + remoteRes.statusText);
+        commCtxt.log("ERROR", "Remote transfer failed, returned with status: " + remoteRes.statusText);
         return false;
       }
     } catch (err) {
@@ -176,7 +183,7 @@ export class BankTransactionHistory {
 
     // Then, Contact remote DB to withdraw.
     if (data.fromLocation && !(data.fromLocation === "cash") && !data.fromLocation.startsWith(REMOTEDB_PREFIX)) {
-      console.log("Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
+      ctxt.log("INFO", "Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
       const remoteUrl = data.fromLocation + "/api/withdraw";
       const thReq = {
         fromAccountId: data.fromAccountId,
@@ -191,13 +198,13 @@ export class BankTransactionHistory {
         // Undo transaction is a withdrawal.
         const undoRes = await ctxt.transaction(BankTransactionHistory.updateAcctTransactionFunc, data.toAccountId, data, false, result);
         if (!undoRes || undoRes !== result) {
-          console.error("Mismatch: Original txnId: %d, undo txnId: %d", result, undoRes);
+          ctxt.log("ERROR", `Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
         }
         throw new Error("Failed to withdraw from remote bank.");
       }
     } else {
-      console.log("Deposit from: " + data.fromLocation);
+      ctxt.log("INFO", "Deposit from: " + data.fromLocation);
     }
 
     return "Deposit succeeded!";
@@ -213,7 +220,7 @@ export class BankTransactionHistory {
 
     // Then, contact remote DB to deposit.
     if (data.toLocation && !(data.toLocation === "cash") && !data.toLocation.startsWith(REMOTEDB_PREFIX)) {
-      console.log("Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
+      ctxt.log("INFO", "Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
       const remoteUrl = data.toLocation + "/api/deposit";
       const thReq = {
         fromAccountId: data.fromAccountId,
@@ -232,7 +239,7 @@ export class BankTransactionHistory {
         throw new Error("Failed to deposit to remote bank.");
       }
     } else {
-      console.log("Deposit to: " + data.fromLocation);
+      ctxt.log("INFO", "Deposit to: " + data.fromLocation);
     }
 
     return "Withdraw succeeded!";

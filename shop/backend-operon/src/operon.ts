@@ -17,9 +17,7 @@ export async function initializeOperon(): Promise<OperonShop> {
     operon.registerCommunicator($OperonShop.createStripeSession);
     operon.registerCommunicator($OperonShop.retrieveStripeSession);
 
-    operon.registerDecoratedWT();
-
-    await operon.init();
+    await operon.init($OperonShop);
 
     return {
         getCart(username) { return operon.transaction($OperonShop.getCart, {}, username); },

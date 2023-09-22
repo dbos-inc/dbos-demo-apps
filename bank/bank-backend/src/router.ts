@@ -1,25 +1,27 @@
-import { bankname, operon } from "./main";
+import { bankname } from "./main";
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
 import { GetApi, HandlerContext, PostApi } from "operon/dist/src/httpServer/handler";
+import { OperonResponseError } from "operon";
 
 // Helper functions to convert to the correct data types.
 // Especially convert the bigint.
 function convertTransactionHistory(data: TransactionHistory): TransactionHistory {
+  if (!data.amount || data.amount <= 0.0) {
+    throw new OperonResponseError("Invalid amount! " + data.amount, 400);
+  }
   return {
     txnId: BigInt(data.txnId ?? -1n),
     fromAccountId: BigInt(data.fromAccountId ?? -1n),
     fromLocation: data.fromLocation ?? undefined,
     toAccountId: BigInt(data.toAccountId ?? -1n),
     toLocation: data.toLocation ?? undefined,
-    amount: data.amount ?? undefined,
+    amount: data.amount,
     timestamp: data.timestamp ?? undefined,
   };
 }
 
 export class BankEndpoints {
-  static load() {}
-
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/api/greeting")
   static async greeting(ctx: HandlerContext) {
@@ -31,53 +33,29 @@ export class BankEndpoints {
   @PostApi("/api/deposit")
   static async deposit(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
-    // TODO: implement auth.
-    // const token = ctx.request.header["authorization"];
     if (!data.fromLocation) {
-      throw new Error("fromLocation must not be empty!");
-    }
-
-    if (!data.amount || data.amount <= 0) {
-      throw new Error("Invalid amount! " + data.amount);
+      throw new OperonResponseError("fromLocation must not be empty!", 400);
     }
 
     // Must to local.
     data.toLocation = "local";
 
-    // Let it be -1 for cash.
-    if (!data.fromAccountId) {
-      data.fromAccountId = -1n;
-    }
-
-    // Invoke the workflow.
-    return operon.workflow(BankTransactionHistory.depositWorkflow, {}, data).getResult();
+    // TODO: we need to find a better way to pass in parent context automatically.
+    return ctx.operon.workflow(BankTransactionHistory.depositWorkflow, {parentCtx: ctx}, data).getResult();
   }
 
   // Withdraw.
   @PostApi("/api/withdraw")
   static async withdraw(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
-    // TODO: implement auth.
-    // const token = ctx.request.header["authorization"];
-    // console.log("Retrieved token: " + token); // Should have Bearer prefix.
     if (!data.toLocation) {
-      throw new Error("toLocation must not be empty!");
-    }
-
-    if (!data.amount || data.amount <= 0) {
-      throw new Error("Invalid amount! " + data.amount);
+      throw new OperonResponseError("toLocation must not be empty!", 400);
     }
 
     // Must from local.
     data.fromLocation = "local";
 
-    // Let it be -1 for cash.
-    if (!data.toAccountId) {
-      data.toAccountId = -1n;
-    }
-
-    // Invoke the workflow.
-    return operon.workflow(BankTransactionHistory.withdrawWorkflow, {}, data).getResult();
+    return ctx.operon.workflow(BankTransactionHistory.withdrawWorkflow, {parentCtx: ctx}, data).getResult();
   }
 
   // Internal transfer
@@ -94,11 +72,6 @@ export class BankEndpoints {
       throw new Error("Invalid input!");
     }
 
-    if (data.amount <= 0.0) {
-      throw new Error("Invalid amount!");
-    }
-
-    // Invoke the transaction.
-    return operon.transaction(BankTransactionHistory.internalTransferFunc, {}, data);
+    return ctx.operon.transaction(BankTransactionHistory.internalTransferFunc, {parentCtx: ctx}, data);
   }
 }
