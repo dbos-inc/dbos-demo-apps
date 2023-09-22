@@ -69,7 +69,7 @@ async function startServer() {
     issuer: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`
   }));
 
-  const operonServer = new OperonHttpServer(operon, app);
+  const operonServer = new OperonHttpServer(operon, {koa: app});
   operonServer.listen(Number(bankport));
 }
 
