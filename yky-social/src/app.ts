@@ -22,7 +22,7 @@ import {
   OperonContext, OperonTransaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   OperonWorkflow, WorkflowContext,
-  OperonHttpServer, OperonHandlerRegistrationBase, HandlerContext,
+  OperonHttpServer, OperonRegistrationMetadata, HandlerContext,
   OperonNotAuthorizedError,
 } from "operon";
 
@@ -366,7 +366,7 @@ export function ykyInit()
 {
   OperonHttpServer.registerDecoratedEndpoints(operon, router, {
     auth: {
-      authenticate(handler: OperonHandlerRegistrationBase, ctx: HandlerContext) : Promise<boolean> {
+      authenticate(handler: OperonRegistrationMetadata, ctx: HandlerContext) : Promise<boolean> {
         if (handler.requiredRole.length > 0) {
           if (!ctx.request) {
             throw new Error("No request");
