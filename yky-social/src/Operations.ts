@@ -210,8 +210,8 @@ static async makePost(this: void, ctx: TransactionContext, txt : string)
     // Create post
     const p = new Post();
     p.text = txt;
-    p.author = ctx.authUser;
-    p.author_orignal = ctx.authUser;
+    p.author = ctx.authenticatedUser;
+    p.author_orignal = ctx.authenticatedUser;
     p.media = [];
     p.mentions = [];
     p.post_time = new Date();
@@ -228,7 +228,7 @@ static async makePost(this: void, ctx: TransactionContext, txt : string)
     st.post_id = p.id;
     st.send_type = SendType.POST;
     st.send_date = p.post_time;
-    st.user_id = ctx.authUser;
+    st.user_id = ctx.authenticatedUser;
 
     const sendRep = manager.getRepository(TimelineSend);
     await sendRep.insert(st);
@@ -243,7 +243,7 @@ static async distributePost(this: void, ctx: TransactionContext, p: Post) {
     // Deliver post to followers - TODO cross shard; TODO block list
     const sgRep = manager.getRepository(SocialGraph);
     const followers : SocialGraph[] = await sgRep.find({
-        where: {tgt_id: ctx.authUser, link_type: In([GraphType.FOLLOW, GraphType.FOLLOW_FRIEND])}
+        where: {tgt_id: ctx.authenticatedUser, link_type: In([GraphType.FOLLOW, GraphType.FOLLOW_FRIEND])}
     });
     const recvRep = manager.getRepository(TimelineRecv);
     // TODO: Cut round trips; could be messages, could be insert+select...
@@ -255,7 +255,7 @@ static async distributePost(this: void, ctx: TransactionContext, p: Post) {
         rt.send_date = p.post_time;
         rt.unread = true;
         rt.user_id = follower.src_id;
-        rt.from_user_id = ctx.authUser;
+        rt.from_user_id = ctx.authenticatedUser;
 
         await recvRep.insert(rt);
     }

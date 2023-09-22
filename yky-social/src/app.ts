@@ -16,17 +16,16 @@ import { RecvType, SendType, TimelineRecv, TimelineSend } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
-import { Operations, ResponseError, errorWithStatus } from "./Operations";
-import { Operon, Required, GetApi, APITypes, RequiredRole,
-        OperonContext, OperonTransaction, TransactionContext,
-        forEachMethod, OperonDataValidationError,
-        ArgSource, ArgSources, LogMask, LogMasks, PostApi,
-        OperonWorkflow, WorkflowContext,
-      } from "operon";
+import { Operations } from "./Operations";
+import {
+  Operon, Required, GetApi, RequiredRole,
+  OperonContext, OperonTransaction, TransactionContext,
+  ArgSource, ArgSources, LogMask, LogMasks, PostApi,
+  OperonWorkflow, WorkflowContext,
+  OperonHttpServer, OperonRegistrationMetadata, HandlerContext,
+  OperonNotAuthorizedError,
+} from "operon";
 
-import { OperonTransactionFunction, OperonWorkflowFunction } from "operon";
-
-import { OperonHandlerRegistrationBase } from "operon";
 
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -68,7 +67,7 @@ export const userDataSource = new DataSource({
   ],
 });
 
-class YKY
+export class YKY
 {
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi('/')
@@ -87,7 +86,7 @@ class YKY
   {
     const manager = ctx.typeormEM as unknown as EntityManager;
 
-    const rtl = await Operations.readRecvTimeline(manager, ctx.authUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
+    const rtl = await Operations.readRecvTimeline(manager, ctx.authenticatedUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
@@ -102,7 +101,7 @@ class YKY
   static async sendTimeline(ctx: TransactionContext)
   {
     // TODO: User id and modes
-    const userid = ctx.authUser;
+    const userid = ctx.authenticatedUser;
     const manager = ctx.typeormEM as unknown as EntityManager;
 
     const rtl = await Operations.readSendTimeline(manager, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
@@ -120,7 +119,7 @@ class YKY
   static async findUser(ctx: TransactionContext, @Required findUserName: string) {
     const manager = ctx.typeormEM as unknown as EntityManager;
     const [user, _prof, _gsrc, _gdst] = await Operations.findUser(manager,
-      ctx.authUser, findUserName, false, false);
+      ctx.authenticatedUser, findUserName, false, false);
     if (!user) {
       return {message: "No user by that name."};
     }
@@ -136,7 +135,7 @@ class YKY
     // TODO Validate user permissions
 
     const manager = ctx.typeormEM as unknown as EntityManager;
-    const post = await Operations.getPost(manager, ctx.authUser, id);
+    const post = await Operations.getPost(manager, ctx.authenticatedUser, id);
     if (post) {
       return { message: 'Retrieved.', post:post };
     } else {
@@ -175,8 +174,8 @@ class YKY
   @RequiredRole(['user'])
   static async doFollow(ctx: TransactionContext, @Required followUid: string) {
     const manager = ctx.typeormEM as unknown as EntityManager;
-    const curStatus = await Operations.getGraphStatus(manager, ctx.authUser, followUid);
-    await Operations.setGraphStatus(manager, ctx.authUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+    const curStatus = await Operations.getGraphStatus(manager, ctx.authenticatedUser, followUid);
+    await Operations.setGraphStatus(manager, ctx.authenticatedUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
     // TODO: That UID wasn't validated - maybe the DB should validate it
 
     return {message: "Followed."};
@@ -252,128 +251,36 @@ kapp.use(bodyParser());
 
 const router = new Router();
 
-// For now, do it ourselves, but it could be part of the framework...
-forEachMethod((bm) => {
-  const m = bm as OperonHandlerRegistrationBase;
-  if (m.txnConfig) {
-    operon.registerTransaction(m.registeredFunction as OperonTransactionFunction<unknown[], unknown>, m.txnConfig);
-  }
-  if (m.workflowConfig) {
-    operon.registerWorkflow(m.registeredFunction as OperonWorkflowFunction<unknown[], unknown>, m.workflowConfig);
-  }
-  if (m.apiURL) {
-    const rf = async(ctx: Koa.Context, next:Koa.Next) => {
-      // CB: This is an example; it needs to be pluggable
-      const { userid } = ctx.request.query;
-      const uid = userid?.toString();
-      let curRoles = [] as string[];
-      let authRole: string = '';
+export function ykyInit()
+{
+  OperonHttpServer.registerDecoratedEndpoints(operon, router, {
+    auth: {
+      authenticate(handler: OperonRegistrationMetadata, ctx: HandlerContext) : Promise<boolean> {
+        if (handler.requiredRole.length > 0) {
+          if (!ctx.request) {
+            throw new Error("No request");
+          }
 
-      // TODO: We really need to validate something, generally it would be a token
-      //  Currently the backend is "taking the front-end's word for it"
+          // TODO: We really need to validate something, generally it would be a token
+          //  Currently the backend is "taking the front-end's word for it"
+          const { userid } = ctx.koaContext.request.query;
+          const uid = userid?.toString();
 
-      if (m.requiredRole.length > 0) {
-        if (!uid) {
-          const err = errorWithStatus("Not logged in.", 401);
-          throw err;
-        }
-        else {
-          curRoles = ['user'];
-        }
-
-        let authorized = false;
-        const set = new Set(curRoles);
-        for (const str of m.requiredRole) {
-          if (set.has(str)) {
-            authorized = true;
-            authRole = str;
+          if (!uid) {
+            const err = new OperonNotAuthorizedError("Not logged in.", 401);
+            throw err;
+          }
+          else {
+            ctx.authenticatedUser = uid;
+            ctx.authenticatedRoles = ['user'];
           }
         }
-        if (!authorized) {
-          const err = errorWithStatus(`User does not have a role with permission to call ${m.name}`, 401);
-          throw err;
-        }
-      }
-            
-      const c: OperonContext = new OperonContext();
-      c.request = ctx.request;
-      c.response = ctx.response;
-      c.authUser = uid || '';
-      c.authRoles = curRoles;
-      c.authRole = authRole;
 
-      // Get the arguments
-      const args: unknown[] = [];
-      m.args.forEach((marg, idx) => {
-        if (idx == 0) {
-          return; // The context
-        }
-        marg.argSource = marg.argSource ?? ArgSources.DEFAULT;  // Assign a default value.
-        if ((m.apiType === APITypes.GET && marg.argSource === ArgSources.DEFAULT)
-            || marg.argSource === ArgSources.QUERY)
-        {
-          // Validating the arg occurs later...
-          args.push(ctx.request.query[marg.name]);
-        }
-        else if ((m.apiType === APITypes.POST && marg.argSource === ArgSources.DEFAULT)
-            || marg.argSource === ArgSources.BODY)
-        {
-          // Validating the arg occurs later...
-          if (!ctx.request.body) {
-            throw new OperonDataValidationError(`Function ${m.name} requires a method body`);
-          }
-          args.push(ctx.request.body[marg.name]);
-        }
-        else if (marg.argSource === ArgSources.URL) {
-          // TODO: This should be the default if the name appears in the URL?
-          args.push(ctx.params[marg.name]);
-        }
-      });
-
-      let rv;
-      try {
-        if (m.txnConfig) {
-          // Wait, does it just need the name?!
-          rv = await operon.transaction(m.registeredFunction as OperonTransactionFunction<unknown[], unknown>, { parentCtx : c }, ...args);
-        }
-        else if (m.workflowConfig) {
-          const wfh = operon.workflow(m.registeredFunction as OperonWorkflowFunction<unknown[], unknown>, {parentCtx : c}, ...args);
-          rv = await wfh.getResult();
-        }
-        else {
-          rv = await m.invoke(undefined, [c, ...args]);
-        }
-        ctx.response.status = 200;
-        ctx.response.body = rv;
-        await next();
+        return Promise.resolve(true);
       }
-      catch (e) {
-        if (e instanceof OperonDataValidationError) {
-          ctx.response.status = 400;
-          ctx.body = {message: e.message};
-          await next();
-          return;
-        }
-        if (e instanceof Error) {
-          ctx.response.status = ((e as ResponseError)?.status || 400);
-          ctx.body = {message: e.message};
-          await next();
-          return;
-        }
-        else {
-          // What else
-          throw e;
-        }
-      }
-    };
-    if (m.apiType === APITypes.GET) {
-      router.get(m.apiURL, rf);
     }
-    if (m.apiType === APITypes.POST) {
-      router.post(m.apiURL, rf);
-    }
-  }
-});
+  });
+}
 
 // Example of how to do a route directly in Koa
 router.get("/koa", async (ctx, next) => {
