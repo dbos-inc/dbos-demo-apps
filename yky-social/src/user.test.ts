@@ -23,7 +23,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await userDataSource.dropDatabase();
   await userDataSource.destroy();
-  await operon[Symbol.asyncDispose]();
+  await operon.dispose();
 });
 
 describe('GET (request-like)', () => {
