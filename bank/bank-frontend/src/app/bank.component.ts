@@ -296,9 +296,6 @@ export class BankComponent {
 
       getMsg(){
         let url = '/api/greeting';
-        if (this.userRole === 'appAdmin') {
-          url = '/api/admin_greeting'
-        }
         this._service.getResource(this.bankUrl + url)
           .subscribe(
             {

@@ -2,7 +2,34 @@ import { bankname } from "./main";
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
 import { GetApi, HandlerContext, PostApi } from "operon/dist/src/httpServer/handler";
-import { OperonResponseError } from "operon";
+import { OperonRegistrationMetadata, OperonResponseError, RequiredRole } from "operon";
+
+export async function bankAuthMiddleware (regMeta: OperonRegistrationMetadata, ctx: HandlerContext): Promise<boolean> {
+  if (regMeta.requiredRole.length > 0) {
+    console.log("required role: ", regMeta.requiredRole);
+    if (!ctx.koaContext) {
+      throw new OperonResponseError("No Koa context!");
+    } else if (!ctx.koaContext.state.user) {
+      throw new OperonResponseError("No authenticated user!", 401);
+    }
+
+    // TODO: it's a bit dangerous to let the middleware directly modify the context. I think it's better to define a return type.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    ctx.authenticatedUser = ctx.koaContext.state.user["preferred_username"];
+    console.log("current user: ", ctx.authenticatedUser);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    ctx.authenticatedRoles = ctx.koaContext.state.user["realm_access"]["roles"];
+    console.log("JWT claimed roles: ", ctx.authenticatedRoles);
+    if (ctx.authenticatedRoles.includes('appAdmin')) {
+      // appAdmin role has more priviledges than appUser.
+      ctx.authenticatedRoles.push('appUser');
+    }
+    console.log("authenticated roles: ", ctx.authenticatedRoles);
+
+  }
+
+  return Promise.resolve(true);
+}
 
 // Helper functions to convert to the correct data types.
 // Especially convert the bigint.
@@ -22,8 +49,11 @@ function convertTransactionHistory(data: TransactionHistory): TransactionHistory
 }
 
 export class BankEndpoints {
+
+  // Can we have some class-wide default required roles?
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/api/greeting")
+  @RequiredRole(['appUser'])
   static async greeting(ctx: HandlerContext) {
     void ctx;
     return { msg: `Hello from DBOS Operon ${bankname}!` };
@@ -31,6 +61,7 @@ export class BankEndpoints {
 
   // Deposit.
   @PostApi("/api/deposit")
+  @RequiredRole(['appUser'])
   static async deposit(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
     if (!data.fromLocation) {
@@ -46,6 +77,7 @@ export class BankEndpoints {
 
   // Withdraw.
   @PostApi("/api/withdraw")
+  @RequiredRole(['appUser'])
   static async withdraw(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
     if (!data.toLocation) {
@@ -60,6 +92,7 @@ export class BankEndpoints {
 
   // Internal transfer
   @PostApi("/api/transfer")
+  @RequiredRole(['appUser'])
   static async internalTransfer(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
     // Check the transaction is within the local database.

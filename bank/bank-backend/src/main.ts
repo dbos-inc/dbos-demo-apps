@@ -2,7 +2,7 @@ import * as readline from "node:readline/promises";
 import { Operon } from "operon";
 import { PrismaClient } from "@prisma/client";
 import { OperonHttpServer } from "operon/dist/src/httpServer/server";
-import { BankEndpoints } from "./router";
+import { BankEndpoints, bankAuthMiddleware } from "./router";
 
 // A hack for bigint serializing to/from JSON.
 import "json-bigint-patch";
@@ -69,7 +69,8 @@ async function startServer() {
     issuer: `http://${operon.config.poolConfig.host || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`
   }));
 
-  const operonServer = new OperonHttpServer(operon, {koa: app});
+  // TODO: should OperonHTTPAuthMiddleware be a function type not an interface? The semantics here is a bit verbose.
+  const operonServer = new OperonHttpServer(operon, {koa: app, authMiddleware: {authenticate: bankAuthMiddleware}});
   operonServer.listen(Number(bankport));
 }
 
