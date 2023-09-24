@@ -84,7 +84,7 @@ jobs:
         working-directory: operon-demo-apps/bank/bank-backend
         run: |
           npm install
-          npx prisma migrate dev --name init
+          npx prisma migrate dev --name init --schema prisma/schema.prisma
           npm run lint
           npm run build
         env:
