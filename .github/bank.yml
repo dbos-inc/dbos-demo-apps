@@ -1,0 +1,97 @@
+name: CI for Bank demo
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'bank/**'
+      - '.github/workflows/bank.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'bank/**'
+      - '.github/workflows/bank.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Service container for Postgres
+    services:
+      # Label used to access the service container.
+      bank-db:
+        image: postgres:15.4
+        env:
+          # Specify the password for Postgres superuser.
+          POSTGRES_PASSWORD: dbos
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+    steps:
+      - name: "Setup postgres config"
+        run: |
+          docker exec -i ${{ job.services.postgres.id }} apt update
+          docker exec -i ${{ job.services.postgres.id }} apt install -y postgresql-15-wal2json
+          docker exec ${{ job.services.postgres.id }} sh -c 'echo "wal_level=logical" >> /var/lib/postgresql/data/postgresql.conf'
+          docker restart ${{ job.services.postgres.id }}
+      - name: Checkout demo app
+        uses: actions/checkout@v3
+        with:
+          path: operon-demo-apps
+      - name: Checkout operon
+        uses: actions/checkout@v3
+        with:
+          repository: dbos-inc/operon
+          token: ${{ secrets.GH_PAT }} # Created a repo secret named GH_PAT, with the value of a personal access token that has access to private repos.
+          path: operon
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install psql
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client coreutils
+      - name: Setup Postgres
+        run: |
+          cd ./operon-demo-apps/bank
+          scripts/init_postgres.sh
+        env:
+          # The hostname used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: localhost
+          # The default PostgreSQL port
+          POSTGRES_PORT: 5432
+          POSTGRES_PASSWORD: dbos
+          BANK_PORT: 8081
+      - name: Compile operon
+        run: |
+          cd ./operon
+          npm ci --no-audit --ignore-scripts
+          npm run build
+      - name: Compile Bank Server
+        working-directory: operon-demo-apps/bank
+        run: |
+          cd bank-backend
+          npm install
+          npx prisma migrate dev --name init
+          npm run lint
+          npm run build
+        env:
+          # The hostname used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: localhost
+          # The default PostgreSQL port
+          POSTGRES_PORT: 5432
+          POSTGRES_PASSWORD: dbos
+          BANK_PORT: 8081
