@@ -81,12 +81,10 @@ jobs:
           npm ci --no-audit --ignore-scripts
           npm run build
       - name: Compile Bank Server
-        working-directory: operon-demo-apps/bank
+        working-directory: operon-demo-apps/bank/bank-backend
         run: |
-          cd bank-backend
           npm install
           npx prisma migrate dev --name init
-          npx prisma generate
           npm run lint
           npm run build
         env:
