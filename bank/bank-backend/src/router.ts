@@ -1,12 +1,12 @@
 import { bankname } from "./main";
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
-import { OperonRegistrationMetadata, OperonResponseError, RequiredRole, GetApi, HandlerContext, PostApi } from "operon";
+import { MiddlewareContext, OperonResponseError, RequiredRole, GetApi, HandlerContext, PostApi } from "operon";
 
 // eslint-disable-next-line @typescript-eslint/require-await
-export async function bankAuthMiddleware(regMeta: OperonRegistrationMetadata, ctx: HandlerContext) {
-  if (regMeta.requiredRole.length > 0) {
-    console.log("required role: ", regMeta.requiredRole);
+export async function bankAuthMiddleware(ctx: MiddlewareContext) {
+  if (ctx.requiredRole.length > 0) {
+    console.log("required role: ", ctx.requiredRole);
     if (!ctx.koaContext) {
       throw new OperonResponseError("No Koa context!");
     } else if (!ctx.koaContext.state.user) {
