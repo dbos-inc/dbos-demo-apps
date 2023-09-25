@@ -23,11 +23,10 @@ export async function initShopOperations(): Promise<ShopOperations> {
     getProducts() { return operon.transaction($ShopOperations.getProducts, {}); },
     getProduct(id) { return operon.transaction($ShopOperations.getProduct, {}, id); },
 
-    // TODO: take workflow uuid as a parameter (https://github.com/dbos-inc/operon-demo-apps/issues/24)
-    async runPaymentWorkflow(username, origin) {
-      const checkoutUrlWFID = uuidv1();
-      operon.workflow($ShopOperations.paymentWorkflow, {}, username, origin, checkoutUrlWFID);
-      return await operon.workflow($ShopOperations.checkoutUrlWorkflow, { workflowUUID: checkoutUrlWFID }).getResult();
+    async runPaymentWorkflow(username, origin, workflowUUID?: string) {
+      const handle = operon.workflow($ShopOperations.paymentWorkflow, { workflowUUID }, username, origin);
+      workflowUUID = handle.getWorkflowUUID();
+      return await operon.getEvent<string | null>(workflowUUID, checkout_url_topic);
     },
 
     async stripeWebhook(sigHeader, payload) {
@@ -49,7 +48,7 @@ export interface ShopOperations {
   addToCart(username: string, product_id: string): Promise<void>;
   getProduct(id: number): Promise<DisplayPriceProduct | null>;
   getProducts(): Promise<DisplayPriceProduct[]>;
-  runPaymentWorkflow(username: string, origin: string): Promise<string | null>;
+  runPaymentWorkflow(username: string, origin: string, workflowUUID?: string): Promise<string | null>;
   stripeWebhook(sigHeader: string, payload: string): Promise<void>;
   destroy(): Promise<void>;
 }
@@ -205,18 +204,12 @@ class $ShopOperations {
     return session;
   }
 
-
   @OperonWorkflow()
-  static async checkoutUrlWorkflow(this: void, ctxt: WorkflowContext): Promise<string | null> {
-    return ctxt.recv<string>(checkout_url_topic, 10);
-  }
-
-  @OperonWorkflow()
-  static async paymentWorkflow(this: void, ctxt: WorkflowContext, username: string, origin: string, checkoutUrlWFID: string) {
+  static async paymentWorkflow(this: void, ctxt: WorkflowContext, username: string, origin: string) {
 
     const productDetails = await ctxt.transaction($ShopOperations.getCart, username);
     if (productDetails.length === 0) {
-      await ctxt.send(checkoutUrlWFID, null, checkout_url_topic);
+      await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
 
@@ -224,18 +217,18 @@ class $ShopOperations {
 
     const valid: boolean = await ctxt.transaction($ShopOperations.subtractInventory, productDetails);
     if (!valid) {
-      await ctxt.send(checkoutUrlWFID, null, checkout_url_topic);
+      await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
 
     const stripeSession = await ctxt.external($ShopOperations.createStripeSession, ctxt.workflowUUID, productDetails, origin);
     if (!stripeSession?.url) {
       await ctxt.transaction($ShopOperations.undoSubtractInventory, productDetails);
-      await ctxt.send(checkoutUrlWFID, null, checkout_url_topic);
+      await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
 
-    await ctxt.send(checkoutUrlWFID, stripeSession.url, checkout_url_topic);
+    await ctxt.setEvent(checkout_url_topic, stripeSession.url);
     const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
 
     // if the checkout complete notification arrived, the payment is successful so fulfull the order
