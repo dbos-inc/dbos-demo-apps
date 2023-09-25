@@ -1,5 +1,4 @@
 import express, { Request, Response, NextFunction } from "express";
-import Stripe from 'stripe';
 import cors from 'cors';
 import { initializeOperon } from "./operon";
 
@@ -63,13 +62,13 @@ async function startServer(port: number) {
       }
     }));
 
-    app.post('/api/add_to_cart', asyncHandler(async (req: Request, res: Response) => {
+    app.post('/api/add_to_cart', asyncHandler(async (req: Request<unknown, unknown, { username: string, product_id: number}>, res: Response) => {
       const { username, product_id } = req.body;
       await operon.addToCart(username, product_id.toString());
       res.status(200).send('Success');
     }));
 
-    app.post('/api/get_cart', asyncHandler(async (req: Request, res: Response) => {
+    app.post('/api/get_cart', asyncHandler(async (req: Request<unknown, unknown, { username: string }>, res: Response) => {
       const { username } = req.body;
       const productDetails = await operon.getCart(username);
       res.send(productDetails);
@@ -93,7 +92,7 @@ async function startServer(port: number) {
       if (url === null) {
         res.redirect(303, `${origin}/checkout/cancel`);
       } else {
-        res.redirect(303, url)
+        res.redirect(303, url);
       }
     }));
 
@@ -101,7 +100,7 @@ async function startServer(port: number) {
       console.log(`[server]: Server is running at http://localhost:${port}`);
     });
   } finally {
-    await operon.destroy;
+    await operon.destroy();
   }
 }
 
