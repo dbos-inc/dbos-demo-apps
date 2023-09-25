@@ -2,32 +2,32 @@ import { TransactionContext, WorkflowContext, Operon, CommunicatorContext, Opero
 import Stripe from 'stripe';
 import { v1 as uuidv1 } from 'uuid';
 
-const stripe = new Stripe(process.env.STRIPE_API_KEY || 'error_no_stripe_key', { apiVersion: '2022-11-15' });
+const stripe = new Stripe(process.env.STRIPE_API_KEY || 'error_no_stripe_key', { apiVersion: '2023-08-16' });
 const endpointSecret: string = process.env.STRIPE_WEBHOOK_SECRET || 'error_no_webhook_secret';
 
 const checkout_url_topic = "stripe_checkout_url";
 const checkout_complete_topic = "stripe_checkout_complete";
 
-export async function initializeOperon(): Promise<OperonShop> {
+export async function initShopOperations(): Promise<ShopOperations> {
 
   const operon: Operon = new Operon();
   operon.useNodePostgres();
-  await operon.init($OperonShop);
+  await operon.init($ShopOperations);
 
   return {
     destroy() { return operon.destroy(); },
 
-    getCart(username) { return operon.transaction($OperonShop.getCart, {}, username); },
-    addToCart(username, product_id) { return operon.transaction($OperonShop.addToCart, {}, username, product_id); },
-    clearCart(username) { return operon.transaction($OperonShop.clearCart, {}, username); },
-    getProducts() { return operon.transaction($OperonShop.getProducts, {}); },
-    getProduct(id) { return operon.transaction($OperonShop.getProduct, {}, id); },
+    getCart(username) { return operon.transaction($ShopOperations.getCart, {}, username); },
+    addToCart(username, product_id) { return operon.transaction($ShopOperations.addToCart, {}, username, product_id); },
+    clearCart(username) { return operon.transaction($ShopOperations.clearCart, {}, username); },
+    getProducts() { return operon.transaction($ShopOperations.getProducts, {}); },
+    getProduct(id) { return operon.transaction($ShopOperations.getProduct, {}, id); },
 
     // TODO: take workflow uuid as a parameter (https://github.com/dbos-inc/operon-demo-apps/issues/24)
     async runPaymentWorkflow(username, origin) {
       const checkoutUrlWFID = uuidv1();
-      operon.workflow($OperonShop.paymentWorkflow, {}, username, origin, checkoutUrlWFID);
-      return await operon.workflow($OperonShop.checkoutUrlWorkflow, { workflowUUID: checkoutUrlWFID }).getResult();
+      operon.workflow($ShopOperations.paymentWorkflow, {}, username, origin, checkoutUrlWFID);
+      return await operon.workflow($ShopOperations.checkoutUrlWorkflow, { workflowUUID: checkoutUrlWFID }).getResult();
     },
 
     async stripeWebhook(sigHeader, payload) {
@@ -43,7 +43,7 @@ export async function initializeOperon(): Promise<OperonShop> {
   };
 }
 
-export interface OperonShop {
+export interface ShopOperations {
   clearCart(username: string): Promise<void>;
   getCart(username: string): Promise<DisplayPriceProduct[]>;
   addToCart(username: string, product_id: string): Promise<void>;
@@ -77,7 +77,7 @@ interface DisplayPriceProduct extends Product {
 
 // Transactions
 
-class $OperonShop {
+class $ShopOperations {
 
   @OperonTransaction({ readOnly: true })
   static async getProducts(this: void, ctxt: TransactionContext): Promise<DisplayPriceProduct[]> {
@@ -112,7 +112,7 @@ class $OperonShop {
   static async getCart(this: void, ctxt: TransactionContext, username: string): Promise<DisplayPriceProduct[]> {
     const { rows } = await ctxt.pgClient.query<{ product_id: number, quantity: number }>(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
     const productDetails = await Promise.all(rows.map(async (row) => ({
-      ...(await $OperonShop.getProduct(ctxt, row.product_id))!,
+      ...(await $ShopOperations.getProduct(ctxt, row.product_id))!,
       inventory: row.quantity,
     })));
     return productDetails;
@@ -214,23 +214,23 @@ class $OperonShop {
   @OperonWorkflow()
   static async paymentWorkflow(this: void, ctxt: WorkflowContext, username: string, origin: string, checkoutUrlWFID: string) {
 
-    const productDetails = await ctxt.transaction($OperonShop.getCart, username);
+    const productDetails = await ctxt.transaction($ShopOperations.getCart, username);
     if (productDetails.length === 0) {
       await ctxt.send(checkoutUrlWFID, null, checkout_url_topic);
       return;
     }
 
-    const orderID = await ctxt.transaction($OperonShop.createOrder, username, productDetails);
+    const orderID = await ctxt.transaction($ShopOperations.createOrder, username, productDetails);
 
-    const valid: boolean = await ctxt.transaction($OperonShop.subtractInventory, productDetails);
+    const valid: boolean = await ctxt.transaction($ShopOperations.subtractInventory, productDetails);
     if (!valid) {
       await ctxt.send(checkoutUrlWFID, null, checkout_url_topic);
       return;
     }
 
-    const stripeSession = await ctxt.external($OperonShop.createStripeSession, ctxt.workflowUUID, productDetails, origin);
+    const stripeSession = await ctxt.external($ShopOperations.createStripeSession, ctxt.workflowUUID, productDetails, origin);
     if (!stripeSession?.url) {
-      await ctxt.transaction($OperonShop.undoSubtractInventory, productDetails);
+      await ctxt.transaction($ShopOperations.undoSubtractInventory, productDetails);
       await ctxt.send(checkoutUrlWFID, null, checkout_url_topic);
       return;
     }
@@ -240,14 +240,14 @@ class $OperonShop {
 
     // if the checkout complete notification arrived, the payment is successful so fulfull the order
     if (notification) {
-      await ctxt.transaction($OperonShop.fulfillOrder, orderID);
-      await ctxt.transaction($OperonShop.clearCart, username);
+      await ctxt.transaction($ShopOperations.fulfillOrder, orderID);
+      await ctxt.transaction($ShopOperations.clearCart, username);
       return;
     }
 
     // if the checkout complete notification didn't arrive in time, retrive the session information 
     // in order to check the payment status explicitly 
-    const updatedSession = await ctxt.external($OperonShop.retrieveStripeSession, stripeSession.id);
+    const updatedSession = await ctxt.external($ShopOperations.retrieveStripeSession, stripeSession.id);
     if (!updatedSession) {
       // TODO: should we do something more meaningful if we can't retrieve the stripe session?
       console.error(`Recovering order #${orderID} failed: Stripe unreachable`);
@@ -255,11 +255,11 @@ class $OperonShop {
     }
 
     if (updatedSession.payment_status == 'paid') {
-      await ctxt.transaction($OperonShop.fulfillOrder, orderID);
-      await ctxt.transaction($OperonShop.clearCart, username);
+      await ctxt.transaction($ShopOperations.fulfillOrder, orderID);
+      await ctxt.transaction($ShopOperations.clearCart, username);
     } else {
-      await ctxt.transaction($OperonShop.undoSubtractInventory, productDetails);
-      await ctxt.transaction($OperonShop.errorOrder, orderID);
+      await ctxt.transaction($ShopOperations.undoSubtractInventory, productDetails);
+      await ctxt.transaction($ShopOperations.errorOrder, orderID);
     }
   }
 }

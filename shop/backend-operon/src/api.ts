@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from 'cors';
-import { initializeOperon } from "./operon";
+import { initShopOperations } from "./operations";
 
 // Wrapper for async express handlers.
 const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
@@ -11,7 +11,7 @@ const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => P
 async function startServer(port: number) {
 
   // initialize Operon backend
-  const operon = await initializeOperon();
+  const shopOps = await initShopOperations();
 
   try {
 
@@ -28,7 +28,7 @@ async function startServer(port: number) {
       const payload: string = (req.body as Buffer).toString();
 
       try {
-        await operon.stripeWebhook(sigHeader, payload);
+        await shopOps.stripeWebhook(sigHeader, payload);
       } catch (err) {
         console.log(err);
         res.status(400).send(`Webhook Error`);
@@ -44,7 +44,7 @@ async function startServer(port: number) {
     app.use(cors());
 
     app.get('/api/products', asyncHandler(async (req: Request, res: Response) => {
-      const products = await operon.getProducts();
+      const products = await shopOps.getProducts();
       res.send(products);
     }));
 
@@ -54,7 +54,7 @@ async function startServer(port: number) {
         res.status(400).send('Invalid product ID');
         return;
       }
-      const product = await operon.getProduct(Number(id));
+      const product = await shopOps.getProduct(Number(id));
       if (product == null) {
         res.status(500).send('Error');
       } else {
@@ -64,13 +64,13 @@ async function startServer(port: number) {
 
     app.post('/api/add_to_cart', asyncHandler(async (req: Request<unknown, unknown, { username: string, product_id: number}>, res: Response) => {
       const { username, product_id } = req.body;
-      await operon.addToCart(username, product_id.toString());
+      await shopOps.addToCart(username, product_id.toString());
       res.status(200).send('Success');
     }));
 
     app.post('/api/get_cart', asyncHandler(async (req: Request<unknown, unknown, { username: string }>, res: Response) => {
       const { username } = req.body;
-      const productDetails = await operon.getCart(username);
+      const productDetails = await shopOps.getCart(username);
       res.send(productDetails);
     }));
 
@@ -88,7 +88,7 @@ async function startServer(port: number) {
         res.status(400).send("Invalid request");
         return;
       }
-      const url = await operon.runPaymentWorkflow(username, origin);
+      const url = await shopOps.runPaymentWorkflow(username, origin);
       if (url === null) {
         res.redirect(303, `${origin}/checkout/cancel`);
       } else {
@@ -100,7 +100,7 @@ async function startServer(port: number) {
       console.log(`[server]: Server is running at http://localhost:${port}`);
     });
   } finally {
-    await operon.destroy();
+    // await shopOps.destroy();
   }
 }
 
