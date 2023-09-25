@@ -78,7 +78,7 @@ interface DisplayPriceProduct extends Product {
 class $ShopOperations {
 
   @OperonTransaction({ readOnly: true })
-  static async getProducts(this: void, ctxt: TransactionContext): Promise<DisplayPriceProduct[]> {
+  static async getProducts(ctxt: TransactionContext): Promise<DisplayPriceProduct[]> {
     const { rows } = await ctxt.pgClient.query<Product>('SELECT product_id, product, description, image_name, price FROM products');
     const formattedRows: DisplayPriceProduct[] = rows.map((row) => ({
       ...row,
@@ -89,7 +89,7 @@ class $ShopOperations {
   }
 
   @OperonTransaction({ readOnly: true })
-  static async getProduct(this: void, ctxt: TransactionContext, id: number): Promise<DisplayPriceProduct | null> {
+  static async getProduct(ctxt: TransactionContext, id: number): Promise<DisplayPriceProduct | null> {
     const { rows } = await ctxt.pgClient.query<Product>(`SELECT product_id, product, description, image_name, price FROM products WHERE product_id = $1`, [id]);
     if (rows.length === 0) {
       return null;
@@ -102,12 +102,12 @@ class $ShopOperations {
   }
 
   @OperonTransaction()
-  static async addToCart(this: void, ctxt: TransactionContext, username: string, product_id: string) {
+  static async addToCart(ctxt: TransactionContext, username: string, product_id: string) {
     await ctxt.pgClient.query(`INSERT INTO cart VALUES($1, $2, 1) ON CONFLICT (username, product_id) DO UPDATE SET quantity = cart.quantity + 1`, [username, product_id]);
   }
 
   @OperonTransaction({ readOnly: true })
-  static async getCart(this: void, ctxt: TransactionContext, username: string): Promise<DisplayPriceProduct[]> {
+  static async getCart(ctxt: TransactionContext, username: string): Promise<DisplayPriceProduct[]> {
     const { rows } = await ctxt.pgClient.query<{ product_id: number, quantity: number }>(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
     const productDetails = await Promise.all(rows.map(async (row) => ({
       ...(await $ShopOperations.getProduct(ctxt, row.product_id))!,
@@ -117,12 +117,12 @@ class $ShopOperations {
   }
 
   @OperonTransaction()
-  static async clearCart(this: void, ctxt: TransactionContext, username: string) {
+  static async clearCart(ctxt: TransactionContext, username: string) {
     await ctxt.pgClient.query(`DELETE FROM cart WHERE username=$1`, [username]);
   }
 
   @OperonTransaction()
-  static async subtractInventory(this: void, ctxt: TransactionContext, products: Product[]): Promise<boolean> {
+  static async subtractInventory(ctxt: TransactionContext, products: Product[]): Promise<boolean> {
     let hasEnoughInventory = true;
     for (const product of products) {
       const { rows } = await ctxt.pgClient.query<Product>(`SELECT inventory FROM products WHERE product_id = $1`, [product.product_id]);
@@ -143,14 +143,14 @@ class $ShopOperations {
   }
 
   @OperonTransaction()
-  static async undoSubtractInventory(this: void, ctxt: TransactionContext, products: Product[]) {
+  static async undoSubtractInventory(ctxt: TransactionContext, products: Product[]) {
     for (const product of products) {
       await ctxt.pgClient.query(`UPDATE products SET inventory = inventory + $1 WHERE product_id = $2`, [product.inventory, product.product_id]);
     }
   }
 
   @OperonTransaction()
-  static async createOrder(this: void, ctxt: TransactionContext, username: string, productDetails: Product[]): Promise<number> {
+  static async createOrder(ctxt: TransactionContext, username: string, productDetails: Product[]): Promise<number> {
     const { rows } = await ctxt.pgClient.query<{ order_id: number }>(`INSERT INTO orders(username, order_status, last_update_time) VALUES ($1, $2, $3) RETURNING order_id`,
       [username, OrderStatus.PENDING, 0]);
     const orderID = rows[0].order_id;
@@ -162,17 +162,17 @@ class $ShopOperations {
   }
 
   @OperonTransaction()
-  static async fulfillOrder(this: void, ctxt: TransactionContext, orderID: number) {
+  static async fulfillOrder(ctxt: TransactionContext, orderID: number) {
     await ctxt.pgClient.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.FULFILLED, orderID]);
   }
 
   @OperonTransaction()
-  static async errorOrder(this: void, ctxt: TransactionContext, orderID: number) {
+  static async errorOrder(ctxt: TransactionContext, orderID: number) {
     await ctxt.pgClient.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.CANCELLED, orderID]);
   }
 
   @OperonCommunicator()
-  static async createStripeSession(this: void, _ctxt: CommunicatorContext, uuid: string, productDetails: Product[], origin: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+  static async createStripeSession(_ctxt: CommunicatorContext, uuid: string, productDetails: Product[], origin: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
     const lineItems = productDetails.map((item) => ({
       quantity: item.inventory,
       price_data: {
@@ -193,7 +193,7 @@ class $ShopOperations {
   }
 
   @OperonCommunicator()
-  static async retrieveStripeSession(this: void, _ctxt: CommunicatorContext, sessionID: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+  static async retrieveStripeSession(_ctxt: CommunicatorContext, sessionID: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
     const session = await stripe.checkout.sessions.retrieve(sessionID);
     try {
       await stripe.checkout.sessions.expire(sessionID); // Ensure nothing changes in the session.
@@ -204,7 +204,7 @@ class $ShopOperations {
   }
 
   @OperonWorkflow()
-  static async paymentWorkflow(this: void, ctxt: WorkflowContext, username: string, origin: string) {
+  static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string) {
 
     const productDetails = await ctxt.transaction($ShopOperations.getCart, username);
     if (productDetails.length === 0) {
