@@ -24,7 +24,7 @@ import {
   OperonWorkflow, WorkflowContext,
   OperonHttpServer, OperonRegistrationMetadata, HandlerContext,
   OperonNotAuthorizedError,
-} from "operon";
+} from "@dbos-inc/operon";
 
 
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';

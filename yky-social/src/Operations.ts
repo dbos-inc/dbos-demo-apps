@@ -9,8 +9,8 @@ import { TimelineRecv, TimelineSend, SendType, RecvType } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from './entity/UserProfile';
 
-import { OperonTransaction, SkipLogging, TransactionContext } from 'operon';
-import { Traced } from 'operon';
+import { OperonTransaction, SkipLogging, TransactionContext } from '@dbos-inc/operon';
+import { Traced } from '@dbos-inc/operon';
 
 export interface ResponseError extends Error {
     status?: number;
