@@ -25,7 +25,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await userDataSource.dropDatabase();
   await userDataSource.destroy();
-  await operon.dispose();
+  await operon.destroy();
 });
 
 describe('GET (request-like)', () => {
