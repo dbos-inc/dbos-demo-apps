@@ -10,7 +10,7 @@ This demo assumes there is a PostgreSQL database running on localhost on port 54
 To set up Postgres (creating a `socialts` user and database), run:
 
 ```shell
-yky-social/scripts/init_postgres.sh
+yky-social/scripts/init_pgdb.sh
 ```
 
 This script will ask you multiple times for the PostgreSQL password, unless it is already stored in the PGPASSWORD environment variable.
