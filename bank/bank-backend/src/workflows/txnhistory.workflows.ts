@@ -1,4 +1,4 @@
-import { WorkflowContext, TransactionContext, CommunicatorContext, OperonTransaction, OperonCommunicator, OperonWorkflow, GetApi } from "operon";
+import { WorkflowContext, TransactionContext, CommunicatorContext, OperonTransaction, OperonCommunicator, OperonWorkflow, GetApi, RequiredRole } from "operon";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { bankname, bankport } from "../main";
 import { BankAccountInfo } from "./accountinfo.workflows";
@@ -9,6 +9,7 @@ const REMOTEDB_PREFIX: string = "remoteDB-";
 export class BankTransactionHistory {
   @OperonTransaction()
   @GetApi("/api/transaction_history/:accountId")
+  @RequiredRole(['appUser'])
   static async listTxnForAccountFunc(txnCtxt: TransactionContext, accountId: number) {
     const acctId = BigInt(accountId);
     const p = txnCtxt.prismaClient as PrismaClient;
