@@ -1,10 +1,10 @@
 import { bankname } from "./main";
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
-import { GetApi, HandlerContext, PostApi } from "operon/dist/src/httpServer/handler";
-import { OperonRegistrationMetadata, OperonResponseError, RequiredRole } from "operon";
+import { OperonRegistrationMetadata, OperonResponseError, RequiredRole, GetApi, HandlerContext, PostApi } from "operon";
 
-export async function bankAuthMiddleware (regMeta: OperonRegistrationMetadata, ctx: HandlerContext): Promise<boolean> {
+// eslint-disable-next-line @typescript-eslint/require-await
+export async function bankAuthMiddleware(regMeta: OperonRegistrationMetadata, ctx: HandlerContext) {
   if (regMeta.requiredRole.length > 0) {
     console.log("required role: ", regMeta.requiredRole);
     if (!ctx.koaContext) {
@@ -13,22 +13,20 @@ export async function bankAuthMiddleware (regMeta: OperonRegistrationMetadata, c
       throw new OperonResponseError("No authenticated user!", 401);
     }
 
-    // TODO: it's a bit dangerous to let the middleware directly modify the context. I think it's better to define a return type.
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    ctx.authenticatedUser = ctx.koaContext.state.user["preferred_username"];
-    console.log("current user: ", ctx.authenticatedUser);
+    const authenticatedUser: string = ctx.koaContext.state.user["preferred_username"] ?? "";
+    console.log("current user: ", authenticatedUser);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    ctx.authenticatedRoles = ctx.koaContext.state.user["realm_access"]["roles"];
-    console.log("JWT claimed roles: ", ctx.authenticatedRoles);
-    if (ctx.authenticatedRoles.includes('appAdmin')) {
+    const authenticatedRoles: string[] = ctx.koaContext.state.user["realm_access"]["roles"] ?? [];
+    console.log("JWT claimed roles: ", authenticatedRoles);
+    if (authenticatedRoles.includes("appAdmin")) {
       // appAdmin role has more priviledges than appUser.
-      ctx.authenticatedRoles.push('appUser');
+      authenticatedRoles.push("appUser");
     }
-    console.log("authenticated roles: ", ctx.authenticatedRoles);
-
+    console.log("authenticated roles: ", authenticatedRoles);
+    return { authenticatedUser: authenticatedUser, authenticatedRoles: authenticatedRoles };
   }
-
-  return Promise.resolve(true);
+  return;
 }
 
 // Helper functions to convert to the correct data types.
