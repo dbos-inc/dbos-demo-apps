@@ -70,7 +70,7 @@ async function startServer() {
   }));
 
   // TODO: should OperonHTTPAuthMiddleware be a function type not an interface? The semantics here is a bit verbose.
-  const operonServer = new OperonHttpServer(operon, {koa: app, authMiddleware: {authenticate: bankAuthMiddleware}});
+  const operonServer = new OperonHttpServer(operon, {koa: app, authMiddleware: bankAuthMiddleware});
   operonServer.listen(Number(bankport));
 }
 
