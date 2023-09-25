@@ -47,7 +47,7 @@ jobs:
       - name: Change directory and install dependencies
         run: |
           cd ./operon-demo-apps/yky-social
-          npm ci --no-audit --ignore-scripts --legacy-auth
+          npm ci --no-audit --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Create new PG DB and User
