@@ -26,7 +26,6 @@ export async function bankAuthMiddleware(ctx: MiddlewareContext) {
     console.log("authenticated roles: ", authenticatedRoles);
     return { authenticatedUser: authenticatedUser, authenticatedRoles: authenticatedRoles };
   }
-  return;
 }
 
 // Helper functions to convert to the correct data types.
