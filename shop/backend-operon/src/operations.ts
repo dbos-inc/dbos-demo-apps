@@ -1,6 +1,5 @@
 import { TransactionContext, WorkflowContext, Operon, CommunicatorContext, OperonWorkflow, OperonTransaction, OperonCommunicator } from 'operon';
 import Stripe from 'stripe';
-import { v1 as uuidv1 } from 'uuid';
 
 const stripe = new Stripe(process.env.STRIPE_API_KEY || 'error_no_stripe_key', { apiVersion: '2023-08-16' });
 const endpointSecret: string = process.env.STRIPE_WEBHOOK_SECRET || 'error_no_webhook_secret';
