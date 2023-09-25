@@ -50,6 +50,7 @@ jobs:
           npm ci --no-audit
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Create new PG DB and User
         run: |
           cd ./operon-demo-apps/yky-social
