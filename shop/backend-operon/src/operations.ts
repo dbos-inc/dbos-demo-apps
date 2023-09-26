@@ -1,4 +1,4 @@
-import { TransactionContext, WorkflowContext, Operon, CommunicatorContext, OperonWorkflow, OperonTransaction, OperonCommunicator } from 'operon';
+import { TransactionContext, WorkflowContext, Operon, CommunicatorContext, OperonWorkflow, OperonTransaction, OperonCommunicator } from '@dbos-inc/operon';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_API_KEY || 'error_no_stripe_key', { apiVersion: '2023-08-16' });
@@ -172,7 +172,8 @@ class $ShopOperations {
   }
 
   @OperonCommunicator()
-  static async createStripeSession(_ctxt: CommunicatorContext, uuid: string, productDetails: Product[], origin: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+  static async createStripeSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+    
     const lineItems = productDetails.map((item) => ({
       quantity: item.inventory,
       price_data: {
@@ -186,7 +187,7 @@ class $ShopOperations {
     return await stripe.checkout.sessions.create({
       line_items: lineItems,
       mode: 'payment',
-      client_reference_id: uuid,
+      client_reference_id: ctxt.workflowUUID,
       success_url: `${origin}/checkout/success`,
       cancel_url: `${origin}/checkout/cancel`,
     });
@@ -220,7 +221,7 @@ class $ShopOperations {
       return;
     }
 
-    const stripeSession = await ctxt.external($ShopOperations.createStripeSession, ctxt.workflowUUID, productDetails, origin);
+    const stripeSession = await ctxt.external($ShopOperations.createStripeSession, productDetails, origin);
     if (!stripeSession?.url) {
       await ctxt.transaction($ShopOperations.undoSubtractInventory, productDetails);
       await ctxt.setEvent(checkout_url_topic, null);
