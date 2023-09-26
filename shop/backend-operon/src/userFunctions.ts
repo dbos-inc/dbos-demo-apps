@@ -77,8 +77,8 @@ export class Shop {
         if (typeof username !== 'string' || typeof origin !== 'string') {
             throw new OperonResponseError("Invalid request!", 400);
         }
-        const handle = ctxt.operon.workflow(Shop.paymentWorkflow, {}, username, origin);
-        const url = await ctxt.operon.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+        const handle = ctxt.workflow(Shop.paymentWorkflow, {}, username, origin);
+        const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 
         if (url === null) {
             ctxt.koaContext.redirect(`${origin}/checkout/cancel`);
@@ -239,7 +239,7 @@ export class Shop {
                 const session = await stripe.checkout.sessions.retrieve((event.data.object as Stripe.Response<Stripe.Checkout.Session>).id);
                 if (session.client_reference_id !== null) {
                     const uuid: string = session.client_reference_id;
-                    await ctxt.operon.send({}, uuid, "checkout.session.completed", checkout_complete_topic);
+                    await ctxt.send({}, uuid, "checkout.session.completed", checkout_complete_topic);
                 }
             }
         } catch (err) {
