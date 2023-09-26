@@ -50,12 +50,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: operon-demo-apps
-      - name: Checkout operon
-        uses: actions/checkout@v3
-        with:
-          repository: dbos-inc/operon
-          token: ${{ secrets.GH_PAT }} # Created a repo secret named GH_PAT, with the value of a personal access token that has access to private repos.
-          path: operon
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
@@ -75,11 +69,6 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_PASSWORD: dbos
           BANK_PORT: 8081
-      - name: Compile operon
-        run: |
-          cd ./operon
-          npm ci --no-audit --ignore-scripts
-          npm run build
       - name: Compile Bank Server
         working-directory: operon-demo-apps/bank/bank-backend
         run: |
@@ -95,3 +84,4 @@ jobs:
           POSTGRES_PASSWORD: dbos
           BANK_PORT: 8081
           DATABASE_URL: postgresql://bank:bank@localhost:5432/bank?schema=prisma
+          NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

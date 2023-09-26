@@ -15,6 +15,7 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
+    "@dbos-inc/operon": "^0.0.2",
     "@koa/bodyparser": "^5.0.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
@@ -25,8 +26,7 @@
     "koa": "^2.14.2",
     "koa-jwt": "^4.0.4",
     "koa-logger": "^3.2.1",
-    "lodash": "^4.17.21",
-    "operon": "file:../../../operon"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/jest": "^29.5.3",
@@ -36,6 +36,7 @@
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-logger": "^3.1.2",
     "@types/lodash": "^4.14.197",
+    "@types/pg": "^8.10.3",
     "@typescript-eslint/eslint-plugin": "^6.1.0",
     "@typescript-eslint/parser": "^6.1.0",
     "eslint": "^8.45.0",

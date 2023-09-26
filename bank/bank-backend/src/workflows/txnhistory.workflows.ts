@@ -1,4 +1,4 @@
-import { WorkflowContext, TransactionContext, CommunicatorContext, OperonTransaction, OperonCommunicator, OperonWorkflow, GetApi, RequiredRole } from "operon";
+import { WorkflowContext, TransactionContext, CommunicatorContext, OperonTransaction, OperonCommunicator, OperonWorkflow, GetApi, RequiredRole } from "@dbos-inc/operon";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { bankname, bankport } from "../main";
 import { BankAccountInfo } from "./accountinfo.workflows";

@@ -1,7 +1,7 @@
 import { bankname } from "./main";
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
-import { MiddlewareContext, OperonResponseError, RequiredRole, GetApi, HandlerContext, PostApi } from "operon";
+import { MiddlewareContext, OperonResponseError, RequiredRole, GetApi, HandlerContext, PostApi } from "@dbos-inc/operon";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function bankAuthMiddleware(ctx: MiddlewareContext) {
