@@ -1,4 +1,4 @@
-import { GetApi, OperonTransaction, PostApi, RequiredRole, TransactionContext } from "operon";
+import { GetApi, OperonTransaction, PostApi, RequiredRole, TransactionContext } from "@dbos-inc/operon";
 import { PrismaClient } from "@prisma/client";
 
 export class BankAccountInfo {

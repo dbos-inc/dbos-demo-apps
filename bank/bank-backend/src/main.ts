@@ -1,7 +1,6 @@
 import * as readline from "node:readline/promises";
-import { Operon } from "operon";
+import { Operon, OperonHttpServer } from "@dbos-inc/operon";
 import { PrismaClient } from "@prisma/client";
-import { OperonHttpServer } from "operon/dist/src/httpServer/server";
 import { BankEndpoints, bankAuthMiddleware } from "./router";
 
 // A hack for bigint serializing to/from JSON.
