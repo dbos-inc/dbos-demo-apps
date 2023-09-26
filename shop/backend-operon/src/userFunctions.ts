@@ -17,9 +17,6 @@ export interface Product {
     image_name: string,
     price: number,
     inventory: number,
-}
-
-export interface DisplayPriceProduct extends Product {
     display_price: string;
 }
 
@@ -28,8 +25,6 @@ const endpointSecret: string = process.env.STRIPE_WEBHOOK_SECRET || 'error_no_we
 
 const checkout_url_topic = "stripe_checkout_url";
 const checkout_complete_topic = "stripe_checkout_complete";
-
-const PAYMENT_SERVICE_URL = "http://localhost:8082/api/payment";
 
 export class Shop {
 
@@ -58,26 +53,25 @@ export class Shop {
 
     @OperonTransaction()
     @GetApi('/api/products')
-    static async getProducts(txnCtxt: TransactionContext): Promise<DisplayPriceProduct[]> {
+    static async getProducts(txnCtxt: TransactionContext): Promise<Product[]> {
         const { rows } = await txnCtxt.pgClient.query<Product>('SELECT product_id, product, description, image_name, price FROM products');
-        const formattedRows: DisplayPriceProduct[] = rows.map((row) => ({
+        const formattedRows: Product[] = rows.map((row) => ({
             ...row,
             display_price: (row.price / 100).toFixed(2),
         }));
 
         return formattedRows;
-    };
-
+    }
 
     @GetApi('/api/products/:id')
     @OperonTransaction({ readOnly: true })
-    static async getProduct(ctxt: TransactionContext, id: number): Promise<DisplayPriceProduct | null> {
+    static async getProduct(ctxt: TransactionContext, id: number): Promise<Product | null> {
 
         const { rows } = await ctxt.pgClient.query<Product>(`SELECT product_id, product, description, image_name, price FROM products WHERE product_id = $1`, [id]);
         if (rows.length === 0) {
             return null;
         }
-        const product: DisplayPriceProduct = {
+        const product: Product = {
             ...rows[0],
             display_price: (rows[0].price / 100).toFixed(2),
         };
@@ -86,16 +80,14 @@ export class Shop {
 
     @PostApi('/api/add_to_cart')
     @OperonTransaction()
-    static async addToCart(ctxt: TransactionContext, username: string, product_id: any) {
-        console.log("username:" + username);
-        console.log("product_id" + product_id.toString());
-        await ctxt.pgClient.query(`INSERT INTO cart VALUES($1, $2, 1) ON CONFLICT (username, product_id) DO UPDATE SET quantity = cart.quantity + 1`, [username, product_id.toString()]);
+    static async addToCart(ctxt: TransactionContext, username: string, product_id: string | number) {
+        await ctxt.pgClient.query(`INSERT INTO cart VALUES($1, $2, 1) ON CONFLICT (username, product_id) DO UPDATE SET quantity = cart.quantity + 1`, [username, product_id]);
     }
 
     @PostApi('/api/get_cart')
     @OperonTransaction({ readOnly: true })
-    static async getCart(ctxt: TransactionContext, username: string): Promise<DisplayPriceProduct[]> {
-        const { rows } = await ctxt.pgClient.query(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
+    static async getCart(ctxt: TransactionContext, username: string): Promise<Product[]> {
+        const { rows } = await ctxt.pgClient.query<{ product_id: number, quantity: number }>(`SELECT product_id, quantity FROM cart WHERE username=$1`, [username]);
         const productDetails = await Promise.all(rows.map(async (row) => ({
             ...(await Shop.getProduct(ctxt, row.product_id))!,
             inventory: row.quantity,
@@ -103,17 +95,14 @@ export class Shop {
         return productDetails;
     }
 
-
-    @PostApi('/api/clear_cart')
     @OperonTransaction()
     static async clearCart(ctxt: TransactionContext, username: string) {
         await ctxt.pgClient.query(`DELETE FROM cart WHERE username=$1`, [username]);
     }
 
-
     @OperonTransaction()
     static async createOrder(ctxt: TransactionContext, username: string, productDetails: Product[]): Promise<number> {
-        const { rows } = await ctxt.pgClient.query(`INSERT INTO orders(username, order_status, last_update_time) VALUES ($1, $2, $3) RETURNING order_id`,
+        const { rows } = await ctxt.pgClient.query<{ order_id: number }>(`INSERT INTO orders(username, order_status, last_update_time) VALUES ($1, $2, $3) RETURNING order_id`,
             [username, OrderStatus.PENDING, 0]);
         const orderID: number = rows[0].order_id;
         for (const product of productDetails) {
@@ -148,10 +137,8 @@ export class Shop {
                 await ctxt.pgClient.query(`UPDATE products SET inventory = inventory - $1 WHERE product_id = $2`, [product.inventory, product.product_id]);
             }
         }
-
         return hasEnoughInventory;
     }
-
 
     @OperonTransaction()
     static async fulfillOrder(ctxt: TransactionContext, orderID: number) {
@@ -161,19 +148,6 @@ export class Shop {
     @OperonTransaction()
     static async errorOrder(ctxt: TransactionContext, orderID: number) {
         await ctxt.pgClient.query(`UPDATE orders SET order_status=$1 WHERE order_id=$2`, [OrderStatus.CANCELLED, orderID]);
-    }
-
-
-    @PostApi('/api/payment')
-    @OperonWorkflow()
-    static async payment(ctxt: WorkflowContext, callingWorkflowId: string) {
-
-        console.log("Received a payment request from " + callingWorkflowId);
-
-        // Received payment
-        // send message
-        ctxt.send(callingWorkflowId, "checkout.session.completed", checkout_complete_topic)
-
     }
 
     @OperonWorkflow()
@@ -228,7 +202,6 @@ export class Shop {
         }
     }
 
-
     @PostApi('/api/checkout_session')
     static async webCheckout(ctxt: HandlerContext) {
 
@@ -249,7 +222,6 @@ export class Shop {
             ctxt.koaContext.redirect(url);
         }
     }
-
 
     @OperonCommunicator()
     static async createStripeSession(_ctxt: CommunicatorContext, uuid: string, productDetails: Product[], origin: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
@@ -282,5 +254,4 @@ export class Shop {
         }
         return session;
     }
-
 }
