@@ -21,7 +21,13 @@
       { "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_" }
     ],
-    "no-case-declarations": "off"
+    "no-case-declarations": "off",
+    "@typescript-eslint/unbound-method": [
+      "error",
+      {
+        "ignoreStatic": true
+      }
+    ]
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {

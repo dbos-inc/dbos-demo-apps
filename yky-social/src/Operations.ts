@@ -9,8 +9,8 @@ import { TimelineRecv, TimelineSend, SendType, RecvType } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from './entity/UserProfile';
 
-import { OperonTransaction, SkipLogging, TransactionContext } from 'operon';
-import { Traced } from 'operon';
+import { OperonTransaction, SkipLogging, TransactionContext } from '@dbos-inc/operon';
+import { Traced } from '@dbos-inc/operon';
 
 export interface ResponseError extends Error {
     status?: number;
@@ -36,7 +36,7 @@ export class Operations
 {
 
 @OperonTransaction()
-static async createUser(this: void, ctx: TransactionContext, first:string, last:string, uname:string, pass:string) :
+static async createUser(ctx: TransactionContext, first:string, last:string, uname:string, pass:string) :
    Promise<UserLogin>
 {
     const manager = ctx.typeormEM as unknown as EntityManager;
@@ -203,7 +203,7 @@ static async setGraphStatus(manager: EntityManager, curUid : string, otherUid : 
 
 // Compose a post
 @OperonTransaction()
-static async makePost(this: void, ctx: TransactionContext, txt : string)
+static async makePost(ctx: TransactionContext, txt : string)
 {
     const manager = ctx.typeormEM as unknown as EntityManager;
 
@@ -237,7 +237,7 @@ static async makePost(this: void, ctx: TransactionContext, txt : string)
 
 // Send a post
 @OperonTransaction()
-static async distributePost(this: void, ctx: TransactionContext, p: Post) {
+static async distributePost(ctx: TransactionContext, p: Post) {
     const manager = ctx.typeormEM as unknown as EntityManager;
 
     // Deliver post to followers - TODO cross shard; TODO block list
