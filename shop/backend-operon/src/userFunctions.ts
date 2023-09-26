@@ -103,7 +103,7 @@ export class Shop {
             return;
         }
 
-        const stripeSession = await ctxt.external(Shop.createStripeSession, ctxt.workflowUUID, productDetails, origin);
+        const stripeSession = await ctxt.external(Shop.createStripeSession, productDetails, origin);
         if (!stripeSession?.url) {
             await ctxt.transaction(Shop.undoSubtractInventory, productDetails);
             await ctxt.setEvent(checkout_url_topic, null);
@@ -194,7 +194,7 @@ export class Shop {
     }
 
     @OperonCommunicator()
-    static async createStripeSession(_ctxt: CommunicatorContext, uuid: string, productDetails: Product[], origin: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+    static async createStripeSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
         const lineItems = productDetails.map((item) => ({
             quantity: item.inventory,
             price_data: {
@@ -208,7 +208,7 @@ export class Shop {
         return await stripe.checkout.sessions.create({
             line_items: lineItems,
             mode: 'payment',
-            client_reference_id: uuid,
+            client_reference_id: ctxt.workflowUUID,
             success_url: `${origin}/checkout/success`,
             cancel_url: `${origin}/checkout/cancel`,
         });
