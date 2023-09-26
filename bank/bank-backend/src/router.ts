@@ -69,7 +69,7 @@ export class BankEndpoints {
     data.toLocation = "local";
 
     // TODO: we need to find a better way to pass in parent context automatically.
-    return ctx.operon.workflow(BankTransactionHistory.depositWorkflow, {parentCtx: ctx}, data).getResult();
+    return ctx.workflow(BankTransactionHistory.depositWorkflow, {parentCtx: ctx}, data).getResult();
   }
 
   // Withdraw.
@@ -84,7 +84,7 @@ export class BankEndpoints {
     // Must from local.
     data.fromLocation = "local";
 
-    return ctx.operon.workflow(BankTransactionHistory.withdrawWorkflow, {parentCtx: ctx}, data).getResult();
+    return ctx.workflow(BankTransactionHistory.withdrawWorkflow, {parentCtx: ctx}, data).getResult();
   }
 
   // Internal transfer
@@ -102,6 +102,6 @@ export class BankEndpoints {
       throw new Error("Invalid input!");
     }
 
-    return ctx.operon.transaction(BankTransactionHistory.internalTransferFunc, {parentCtx: ctx}, data);
+    return ctx.transaction(BankTransactionHistory.internalTransferFunc, {parentCtx: ctx}, data);
   }
 }
