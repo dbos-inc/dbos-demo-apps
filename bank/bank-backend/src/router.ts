@@ -68,7 +68,6 @@ export class BankEndpoints {
     // Must to local.
     data.toLocation = "local";
 
-    // TODO: we need to find a better way to pass in parent context automatically.
     return ctx.workflow(BankTransactionHistory.depositWorkflow, {}, data).getResult();
   }
 
