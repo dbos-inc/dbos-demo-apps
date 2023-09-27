@@ -21,6 +21,12 @@ You can simply run:
 ./scripts/start_keycloak_docker.sh
 ```
 
+### Start a Jaeger tracing server
+We use Jaeger to visualize traces of Operon operations. We provide a script to automatically start it in a docker container:
+```shell
+./scripts/start_jaeger_docker.sh
+```
+
 ### Start the backend
 To compile and run the bank backend, enter the `bank-backend/` directory and install dependencies:
 ```shell
@@ -59,3 +65,5 @@ npm start
 ```
 
 Now, you should be able to view the bank website in your browser: http://localhost:8089/
+
+You can see traces via the Jaeger UI: http://localhost:16686/
