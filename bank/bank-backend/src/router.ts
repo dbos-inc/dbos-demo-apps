@@ -1,32 +1,8 @@
 import { bankname } from "./main";
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
-import { MiddlewareContext, OperonResponseError, RequiredRole, GetApi, HandlerContext, PostApi } from "@dbos-inc/operon";
-
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function bankAuthMiddleware(ctx: MiddlewareContext) {
-  if (ctx.requiredRole.length > 0) {
-    console.log("required role: ", ctx.requiredRole);
-    if (!ctx.koaContext) {
-      throw new OperonResponseError("No Koa context!");
-    } else if (!ctx.koaContext.state.user) {
-      throw new OperonResponseError("No authenticated user!", 401);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const authenticatedUser: string = ctx.koaContext.state.user["preferred_username"] ?? "";
-    console.log("current user: ", authenticatedUser);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const authenticatedRoles: string[] = ctx.koaContext.state.user["realm_access"]["roles"] ?? [];
-    console.log("JWT claimed roles: ", authenticatedRoles);
-    if (authenticatedRoles.includes("appAdmin")) {
-      // appAdmin role has more priviledges than appUser.
-      authenticatedRoles.push("appUser");
-    }
-    console.log("authenticated roles: ", authenticatedRoles);
-    return { authenticatedUser: authenticatedUser, authenticatedRoles: authenticatedRoles };
-  }
-}
+import { OperonResponseError, GetApi, HandlerContext, PostApi, DefaultRequiredRole, Authentication, KoaMiddleware } from "@dbos-inc/operon";
+import { bankAuthMiddleware, koaLogger, customizeHandle, bankJwt } from "./middleware";
 
 // Helper functions to convert to the correct data types.
 // Especially convert the bigint.
@@ -45,12 +21,14 @@ function convertTransactionHistory(data: TransactionHistory): TransactionHistory
   };
 }
 
+@DefaultRequiredRole(['appUser'])
+@Authentication(bankAuthMiddleware)
+@KoaMiddleware(koaLogger, customizeHandle, bankJwt)
 export class BankEndpoints {
 
   // Can we have some class-wide default required roles?
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/api/greeting")
-  @RequiredRole(['appUser'])
   static async greeting(ctx: HandlerContext) {
     void ctx;
     return { msg: `Hello from DBOS Operon ${bankname}!` };
@@ -58,7 +36,6 @@ export class BankEndpoints {
 
   // Deposit.
   @PostApi("/api/deposit")
-  @RequiredRole(['appUser'])
   static async deposit(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
     if (!data.fromLocation) {
@@ -73,7 +50,6 @@ export class BankEndpoints {
 
   // Withdraw.
   @PostApi("/api/withdraw")
-  @RequiredRole(['appUser'])
   static async withdraw(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
     if (!data.toLocation) {
@@ -88,7 +64,6 @@ export class BankEndpoints {
 
   // Internal transfer
   @PostApi("/api/transfer")
-  @RequiredRole(['appUser'])
   static async internalTransfer(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
     // Check the transaction is within the local database.

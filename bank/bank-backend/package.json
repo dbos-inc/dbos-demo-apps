@@ -15,7 +15,7 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@dbos-inc/operon": "0.0.3",
+    "@dbos-inc/operon": "0.0.4",
     "@koa/bodyparser": "^5.0.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",

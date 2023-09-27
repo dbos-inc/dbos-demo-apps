@@ -1,10 +1,13 @@
-import { GetApi, OperonTransaction, PostApi, RequiredRole, TransactionContext } from "@dbos-inc/operon";
+import { Authentication, DefaultRequiredRole, GetApi, KoaMiddleware, OperonTransaction, PostApi, RequiredRole, TransactionContext } from "@dbos-inc/operon";
 import { PrismaClient } from "@prisma/client";
+import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
 
+@DefaultRequiredRole(['appUser'])
+@Authentication(bankAuthMiddleware)
+@KoaMiddleware(koaLogger, customizeHandle, bankJwt)
 export class BankAccountInfo {
   @OperonTransaction()
   @GetApi("/api/list_accounts/:ownerName")
-  @RequiredRole(['appUser'])
   static async listAccountsFunc(txnCtxt: TransactionContext, ownerName: string) {
     const p = txnCtxt.prismaClient as PrismaClient;
     return p.accountInfo.findMany({

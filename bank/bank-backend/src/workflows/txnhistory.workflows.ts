@@ -1,15 +1,18 @@
-import { WorkflowContext, TransactionContext, CommunicatorContext, OperonTransaction, OperonCommunicator, OperonWorkflow, GetApi, RequiredRole } from "@dbos-inc/operon";
+import { WorkflowContext, TransactionContext, CommunicatorContext, OperonTransaction, OperonCommunicator, OperonWorkflow, GetApi, DefaultRequiredRole, Authentication, KoaMiddleware } from "@dbos-inc/operon";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { bankname, bankport } from "../main";
 import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";
+import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
 
+@DefaultRequiredRole(['appUser'])
+@Authentication(bankAuthMiddleware)
+@KoaMiddleware(koaLogger, customizeHandle, bankJwt)
 export class BankTransactionHistory {
   @OperonTransaction()
   @GetApi("/api/transaction_history/:accountId")
-  @RequiredRole(['appUser'])
   static async listTxnForAccountFunc(txnCtxt: TransactionContext, accountId: number) {
     const acctId = BigInt(accountId);
     const p = txnCtxt.prismaClient as PrismaClient;
