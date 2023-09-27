@@ -1,8 +1,7 @@
 {
   "scripts": {
     "build": "tsc",
-    "lint": "eslint --fix --ext .ts .",
-    "start": "node dist/api.js"
+    "lint": "eslint --fix --ext .ts ."
   },
   "dependencies": {
     "cors": "^2.8.5",
