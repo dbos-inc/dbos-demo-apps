@@ -6,4 +6,5 @@ database:
   connectionTimeoutMillis: 3000
 telemetryExporters:
   - 'ConsoleExporter'
+  - 'JaegerExporter'
 
