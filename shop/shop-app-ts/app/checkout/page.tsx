@@ -6,7 +6,6 @@ import { getRequestCookie } from "@/lib/session";
 import { backendAddress } from "@/lib/config";
 import { redirect } from "next/navigation";
 
-
 const getCart = async (username: String): Promise<Product[]> => {
     try {
         const bodyParams = {

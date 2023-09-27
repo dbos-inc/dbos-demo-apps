@@ -56,23 +56,21 @@ The Shop Backend requires the following environment variables:
 > At this time, the core Operon package has not been published to NPM. In order to run the Shop backend,
 > the core [Operon repo](https://github.com/dbos-inc/operon) needs to be cloned and built locally.
 
-Change to the `shop/backend-operon` directory and install dependencies:
+Change to the `shop/backend-operon` directory, install dependencies, and build:
 
 ```shell
 npm install
 npm link <path to local operon repo>
+npm run build
 ```
 
-Once the dependencies are installed, build and run the backend:
+Then, run the backend serverlessly:
 
 ```shell
-npm run build
-npm start
+npx operon start -p 8082
 ```
 
-> Note, you can build & debug the backend in VSCode via the `Launch Shop Backend` launch configuration.
-
-## Run Shop FrontEnd
+## Run Shop Frontend
 
 To launch the frontend server, open a third terminal window and run:
 

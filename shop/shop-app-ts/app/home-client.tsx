@@ -86,9 +86,9 @@ const Home: React.FC<HomeProps> = ({ products, user }) => {
             </Col>
           ))}
         </Row>
-        <Link href="/checkout">
+        <a href="checkout">
           <Button variant="success" className="mt-5">Proceed to Checkout</Button>
-        </Link>
+        </a>
       </Container>
     </>
   );

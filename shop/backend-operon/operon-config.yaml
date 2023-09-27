@@ -4,3 +4,7 @@ database:
   username: 'postgres'
   user_database: 'shop'
   connectionTimeoutMillis: 3000
+telemetryExporters:
+  - 'ConsoleExporter'
+  - 'JaegerExporter'
+
