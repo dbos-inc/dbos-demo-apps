@@ -22,8 +22,10 @@ import {
   OperonContext, OperonTransaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   OperonWorkflow, WorkflowContext,
-  OperonHttpServer, OperonRegistrationMetadata, HandlerContext,
+  OperonHttpServer,
   OperonNotAuthorizedError,
+  MiddlewareContext,
+  DefaultRequiredRole,
 } from "@dbos-inc/operon";
 
 
@@ -67,10 +69,12 @@ export const userDataSource = new DataSource({
   ],
 });
 
+@DefaultRequiredRole(['user'])
 export class YKY
 {
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi('/')
+  @RequiredRole([])
   static async hello(_ctx: OperonContext) {
     return {message: "Welcome to YKY (Yakky not Yucky)!"};
   }
@@ -81,7 +85,6 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/recvtimeline')
-  @RequiredRole(['user'])
   static async receiveTimeline(ctx: TransactionContext) 
   {
     const manager = ctx.typeormEM as unknown as EntityManager;
@@ -97,7 +100,6 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/sendtimeline')
-  @RequiredRole(['user'])
   static async sendTimeline(ctx: TransactionContext)
   {
     // TODO: User id and modes
@@ -115,7 +117,6 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/finduser')
-  @RequiredRole(['user'])
   static async findUser(ctx: TransactionContext, @Required findUserName: string) {
     const manager = ctx.typeormEM as unknown as EntityManager;
     const [user, _prof, _gsrc, _gdst] = await Operations.findUser(manager,
@@ -130,7 +131,6 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi("/post/:id")
-  @RequiredRole(['user'])
   static async getPost(ctx: TransactionContext, @Required @ArgSource(ArgSources.URL) id: string) {
     // TODO Validate user permissions
 
@@ -171,7 +171,6 @@ export class YKY
 
   @OperonTransaction()
   @PostApi("/follow")
-  @RequiredRole(['user'])
   static async doFollow(ctx: TransactionContext, @Required followUid: string) {
     const manager = ctx.typeormEM as unknown as EntityManager;
     const curStatus = await Operations.getGraphStatus(manager, ctx.authenticatedUser, followUid);
@@ -183,7 +182,6 @@ export class YKY
 
   @OperonWorkflow()
   @PostApi("/composepost")
-  @RequiredRole(['user'])
   static async doCompose(ctx: WorkflowContext, @Required postText: string) {
     const post = await operon.transaction(Operations.makePost, {parentCtx: ctx}, postText);
     // This could be an asynchronous job
@@ -192,7 +190,7 @@ export class YKY
   }
 
   @GetApi("/getMediaUploadKey")
-  //@RequiredRole(['user'])
+  @RequiredRole([])
   static async doKeyUpload(_ctx: OperonContext, @Required filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
 
@@ -214,7 +212,7 @@ export class YKY
   }
 
   @GetApi("/getMediaDownloadKey")
-  //@RequiredRole(['user'])
+  @RequiredRole([])
   static async doKeyDownload(_ctx: OperonContext, @Required filekey: string) {
     const key = filekey;
 
@@ -254,29 +252,22 @@ const router = new Router();
 export function ykyInit()
 {
   OperonHttpServer.registerDecoratedEndpoints(operon, router, {
-    auth: {
-      authenticate(handler: OperonRegistrationMetadata, ctx: HandlerContext) : Promise<boolean> {
-        if (handler.requiredRole.length > 0) {
-          if (!ctx.request) {
-            throw new Error("No request");
-          }
+  // eslint-disable-next-line @typescript-eslint/require-await
+  auth: async (ctx: MiddlewareContext) => {
+      if (ctx.requiredRole.length > 0) {
+        // TODO: We really need to validate something, generally it would be a token
+        //  Currently the backend is "taking the front-end's word for it"
+        const { userid } = ctx.koaContext.request.query;
+        const uid = userid?.toString();
 
-          // TODO: We really need to validate something, generally it would be a token
-          //  Currently the backend is "taking the front-end's word for it"
-          const { userid } = ctx.koaContext.request.query;
-          const uid = userid?.toString();
-
-          if (!uid) {
-            const err = new OperonNotAuthorizedError("Not logged in.", 401);
-            throw err;
-          }
-          else {
-            ctx.authenticatedUser = uid;
-            ctx.authenticatedRoles = ['user'];
-          }
+        if (!uid) {
+          const err = new OperonNotAuthorizedError("Not logged in.", 401);
+          throw err;
         }
-
-        return Promise.resolve(true);
+        return {
+          authenticatedUser: uid,
+          authenticatedRoles: ['user']
+        };
       }
     }
   });
