@@ -9,7 +9,19 @@ import { TimelineRecv, TimelineSend, SendType, RecvType } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from './entity/UserProfile';
 
-import { OperonTransaction, SkipLogging, TransactionContext } from '@dbos-inc/operon';
+//import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+//import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
+
+import { getS3Client } from './app';
+
+import {
+ OperonCommunicator,
+ CommunicatorContext,
+ OperonTransaction,
+ TransactionContext,
+ SkipLogging,
+} from '@dbos-inc/operon';
 import { Traced } from '@dbos-inc/operon';
 
 export interface ResponseError extends Error {
@@ -343,4 +355,24 @@ static async readRecvTimeline(manager: EntityManager, curUser : string, type : R
         },
     });
 }
+
+@OperonCommunicator()
+static async createS3UploadKey(ctx: CommunicatorContext, key: string) : Promise<PresignedPost> {
+    const postPresigned = await createPresignedPost(
+      getS3Client(),
+      {
+        Conditions: [
+          ["content-length-range", 1, 10000000],
+        ],
+        Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
+        Key: key,
+        Expires: 3600,
+        Fields: {
+          'Content-Type': 'image/*',
+        }
+      }
+    );
+    return postPresigned;
+}
+
 }
