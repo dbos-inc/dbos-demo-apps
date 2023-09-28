@@ -202,16 +202,12 @@ export class YKY
 
   @GetApi("/getMediaDownloadKey")
   @RequiredRole([])
-  static async doKeyDownload(_ctx: OperonContext, @Required filekey: string) {
+  @OperonWorkflow()
+  static async doKeyDownload(ctx: WorkflowContext, @Required filekey: string) {
     const key = filekey;
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
-
-    const getObjectCommand = new GetObjectCommand({
-      Bucket: bucket,
-      Key: key,
-    });
   
-    const presignedUrl = await getSignedUrl(s3Client, getObjectCommand, { expiresIn: 3600, });
+    const presignedUrl = await ctx.external(Operations.getS3DownloadKey, key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
   }
 }
