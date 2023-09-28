@@ -21,6 +21,7 @@ import {
  OperonTransaction,
  TransactionContext,
  SkipLogging,
+ RequiredRole,
 } from '@dbos-inc/operon';
 import { Traced } from '@dbos-inc/operon';
 
@@ -48,6 +49,7 @@ export class Operations
 {
 
 @OperonTransaction()
+@RequiredRole([])
 static async createUser(ctx: TransactionContext, first:string, last:string, uname:string, pass:string) :
    Promise<UserLogin>
 {
@@ -215,6 +217,7 @@ static async setGraphStatus(manager: EntityManager, curUid : string, otherUid : 
 
 // Compose a post
 @OperonTransaction()
+@RequiredRole(['user'])
 static async makePost(ctx: TransactionContext, txt : string)
 {
     const manager = ctx.typeormEM as unknown as EntityManager;
@@ -249,6 +252,7 @@ static async makePost(ctx: TransactionContext, txt : string)
 
 // Send a post
 @OperonTransaction()
+@RequiredRole(['user'])
 static async distributePost(ctx: TransactionContext, p: Post) {
     const manager = ctx.typeormEM as unknown as EntityManager;
 
@@ -357,6 +361,7 @@ static async readRecvTimeline(manager: EntityManager, curUser : string, type : R
 }
 
 @OperonCommunicator()
+@RequiredRole([])
 static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
     const postPresigned = await createPresignedPost(
       getS3Client(),
@@ -376,6 +381,7 @@ static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: st
 }
 
 @OperonCommunicator()
+@RequiredRole([])
 static async getS3DownloadKey(_ctx: CommunicatorContext, key: string, bucket: string) {
   const getObjectCommand = new GetObjectCommand({
     Bucket: bucket,
