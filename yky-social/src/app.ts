@@ -31,7 +31,6 @@ import {
 
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 
 const s3ClientConfig = {
   region: process.env.AWS_REGION || 'us-east-2', // Replace with your AWS region
@@ -195,7 +194,8 @@ export class YKY
   @OperonWorkflow()
   static async doKeyUpload(ctx: WorkflowContext, @Required filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
-    const postPresigned = await ctx.external(Operations.createS3UploadKey, key);
+    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+    const postPresigned = await ctx.external(Operations.createS3UploadKey, key, bucket);
 
     return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
   }
@@ -204,9 +204,10 @@ export class YKY
   @RequiredRole([])
   static async doKeyDownload(_ctx: OperonContext, @Required filekey: string) {
     const key = filekey;
+    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
 
     const getObjectCommand = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
+      Bucket: bucket,
       Key: key,
     });
   

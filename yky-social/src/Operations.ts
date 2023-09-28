@@ -9,8 +9,8 @@ import { TimelineRecv, TimelineSend, SendType, RecvType } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from './entity/UserProfile';
 
-//import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-//import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { getS3Client } from './app';
@@ -357,14 +357,14 @@ static async readRecvTimeline(manager: EntityManager, curUser : string, type : R
 }
 
 @OperonCommunicator()
-static async createS3UploadKey(ctx: CommunicatorContext, key: string) : Promise<PresignedPost> {
+static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
     const postPresigned = await createPresignedPost(
       getS3Client(),
       {
         Conditions: [
           ["content-length-range", 1, 10000000],
         ],
-        Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
+        Bucket: bucket,
         Key: key,
         Expires: 3600,
         Fields: {
@@ -373,6 +373,18 @@ static async createS3UploadKey(ctx: CommunicatorContext, key: string) : Promise<
       }
     );
     return postPresigned;
+}
+
+@OperonCommunicator()
+static async getS3DownloadKey(_ctx: CommunicatorContext, key: string, bucket: string) {
+  const getObjectCommand = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  const presignedUrl = await getSignedUrl(getS3Client(), getObjectCommand, { expiresIn: 3600, });
+
+  return presignedUrl;
 }
 
 }
