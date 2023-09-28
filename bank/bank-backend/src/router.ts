@@ -4,28 +4,10 @@ import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
 import { OperonResponseError, GetApi, HandlerContext, PostApi, DefaultRequiredRole, Authentication, KoaMiddleware } from "@dbos-inc/operon";
 import { bankAuthMiddleware, koaLogger, customizeHandle, bankJwt } from "./middleware";
 
-// Helper functions to convert to the correct data types.
-// Especially convert the bigint.
-function convertTransactionHistory(data: TransactionHistory): TransactionHistory {
-  if (!data.amount || data.amount <= 0.0) {
-    throw new OperonResponseError("Invalid amount! " + data.amount, 400);
-  }
-  return {
-    txnId: BigInt(data.txnId ?? -1n),
-    fromAccountId: BigInt(data.fromAccountId ?? -1n),
-    fromLocation: data.fromLocation ?? undefined,
-    toAccountId: BigInt(data.toAccountId ?? -1n),
-    toLocation: data.toLocation ?? undefined,
-    amount: data.amount,
-    timestamp: data.timestamp ?? undefined,
-  };
-}
-
-@DefaultRequiredRole(['appUser'])
+@DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
 @KoaMiddleware(koaLogger, customizeHandle, bankJwt)
 export class BankEndpoints {
-
   // Can we have some class-wide default required roles?
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/api/greeting")
@@ -78,4 +60,21 @@ export class BankEndpoints {
 
     return ctx.transaction(BankTransactionHistory.internalTransferFunc, {}, data);
   }
+}
+
+// Helper functions to convert to the correct data types.
+// Especially convert the bigint.
+function convertTransactionHistory(data: TransactionHistory): TransactionHistory {
+  if (!data.amount || data.amount <= 0.0) {
+    throw new OperonResponseError("Invalid amount! " + data.amount, 400);
+  }
+  return {
+    txnId: BigInt(data.txnId ?? -1n),
+    fromAccountId: BigInt(data.fromAccountId ?? -1n),
+    fromLocation: data.fromLocation ?? undefined,
+    toAccountId: BigInt(data.toAccountId ?? -1n),
+    toLocation: data.toLocation ?? undefined,
+    amount: data.amount,
+    timestamp: data.timestamp ?? undefined,
+  };
 }

@@ -1,4 +1,15 @@
-import { WorkflowContext, TransactionContext, CommunicatorContext, OperonTransaction, OperonCommunicator, OperonWorkflow, GetApi, DefaultRequiredRole, Authentication, KoaMiddleware } from "@dbos-inc/operon";
+import {
+  WorkflowContext,
+  TransactionContext,
+  CommunicatorContext,
+  OperonTransaction,
+  OperonCommunicator,
+  OperonWorkflow,
+  GetApi,
+  DefaultRequiredRole,
+  Authentication,
+  KoaMiddleware,
+} from "@dbos-inc/operon";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { bankname, bankport } from "../main";
 import { BankAccountInfo } from "./accountinfo.workflows";
@@ -7,7 +18,7 @@ import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../midd
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
 
-@DefaultRequiredRole(['appUser'])
+@DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
 @KoaMiddleware(koaLogger, customizeHandle, bankJwt)
 export class BankTransactionHistory {

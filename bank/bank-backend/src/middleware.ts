@@ -4,7 +4,7 @@ import Koa from "koa";
 import jwt from "koa-jwt";
 import logger from "koa-logger";
 
-// TODO: if we put these middleware functions in router.ts, txnhistory and accountinfo classes will get undefined middlewares.
+// If we put these middleware functions in router.ts, txnhistory and accountinfo classes will get undefined middlewares due to circular dependencies.
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function bankAuthMiddleware(ctx: MiddlewareContext) {
@@ -30,14 +30,14 @@ export async function bankAuthMiddleware(ctx: MiddlewareContext) {
     return { authenticatedUser: authenticatedUser, authenticatedRoles: authenticatedRoles };
   }
 }
-// Custom 401 handling if you don't want to expose koa-jwt errors to users
 
+// Custom 401 handling if you don't want to expose koa-jwt errors to users
 export function customizeHandle(ctx: Koa.Context, next: Koa.Next) {
   return next().catch((err) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (401 === err.status) {
       ctx.status = 401;
-      ctx.body = 'Protected resource, use Authorization header to get access\n';
+      ctx.body = "Protected resource, use Authorization header to get access\n";
     } else {
       throw err;
     }
@@ -51,10 +51,10 @@ export const bankJwt = jwt({
     jwksUri: `http://${process.env.BANK_HOST || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos/protocol/openid-connect/certs`,
     cache: true,
     cacheMaxEntries: 5,
-    cacheMaxAge: 600000
+    cacheMaxAge: 600000,
   }),
   // audience: 'urn:api/',
-  issuer: `http://${process.env.BANK_HOST || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`
+  issuer: `http://${process.env.BANK_HOST || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`,
 });
 
 export const koaLogger = logger();
