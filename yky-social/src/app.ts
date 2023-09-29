@@ -182,7 +182,7 @@ export class YKY
   static async doRegister(ctx: HandlerContext, @Required firstName: string, @Required lastName: string,
      @Required username: string, @Required @LogMask(LogMasks.HASH) password: string)
   {
-    const user = await ctx.invoke(Operations).createUser({},
+    const user = await ctx.invoke(Operations).createUser(
        firstName, lastName, username, password);
 
     return { message: 'User created.', id:user.id };
@@ -235,7 +235,7 @@ export class YKY
     // TODO: Rate limit the user's requests as they start workflows... or we could give the existing workflow if any?
 
     const fn = `photos/${mediaKey}-${Date.now()}`;
-    const wfh = ctx.invoke(Operations).mediaUpload({}, mediaKey, fn, bucket);
+    const wfh = ctx.invoke(Operations).mediaUpload(mediaKey, fn, bucket);
     const upkey = await ctx.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
     return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
   }
@@ -245,7 +245,7 @@ export class YKY
   static async finishMediaUpload(ctx: HandlerContext, wfid: string) {
     // TODO: Validate that the workflow belongs to the user?  How would I do that?
     const wfhandle = ctx.retrieveWorkflow(wfid);
-    await ctx.send({}, wfid, "", "uploadfinish");
+    await ctx.send(wfid, "", "uploadfinish");
     return await wfhandle.getResult();
   }
 }
