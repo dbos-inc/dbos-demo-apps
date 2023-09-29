@@ -397,12 +397,12 @@ static async getS3DownloadKey(key: string, bucket: string) {
 @OperonTransaction()
 static async writeMediaPost(ctx: TransactionContext, mid: string, mkey: string) {
     const m = new MediaItem();
-    m.description = "I forgot to do this";
+    m.description = mkey;
     m.media_id = mid;
     m.owner_id = ctx.authenticatedUser;
     //m.media_type = ? // This may not be important enough to deal with...
     const manager = ctx.typeormEM as unknown as EntityManager;
-    manager.save(m);
+    await manager.save(m);
 }
 
 /*
@@ -420,7 +420,7 @@ static async mediaUpload(ctx: WorkflowContext, mediaId: string, mediaFile: strin
     await ctx.setEvent<PresignedPost>("uploadkey", mkey);
     try {
         await ctx.recv("uploadfinish", 3600);
-        ctx.transaction(Operations.writeMediaPost, mediaId, mediaFile);
+        await ctx.transaction(Operations.writeMediaPost, mediaId, mediaFile);
     }
     catch (e) {
         // No need to make a database record, or, at this point, roll anything back.

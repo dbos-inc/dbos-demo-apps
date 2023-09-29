@@ -245,7 +245,7 @@ export class YKY
   static async finishMediaUpload(ctx: HandlerContext, wfid: string) {
     // TODO: Validate that the workflow belongs to the user?  How would I do that?
     const wfhandle = ctx.retrieveWorkflow(wfid);
-    ctx.send({}, wfid, "", "uploadfinish");
+    await ctx.send({}, wfid, "", "uploadfinish");
     return await wfhandle.getResult();
   }
 }
