@@ -179,10 +179,10 @@ export class YKY
   // Can this be generalized?
   @PostApi("/register")
   @RequiredRole([]) // No role needed to register
-  static async doRegister(ctx: OperonContext, @Required firstName: string, @Required lastName: string,
+  static async doRegister(ctx: HandlerContext, @Required firstName: string, @Required lastName: string,
      @Required username: string, @Required @LogMask(LogMasks.HASH) password: string)
   {
-    const user = await operon.transaction(Operations.createUser, {parentCtx: ctx},
+    const user = await ctx.invoke(Operations).createUser({},
        firstName, lastName, username, password);
 
     return { message: 'User created.', id:user.id };
@@ -202,10 +202,10 @@ export class YKY
   @OperonWorkflow()
   @PostApi("/composepost")
   static async doCompose(ctx: WorkflowContext, @Required postText: string) {
-    const post = await operon.transaction(Operations.makePost, {parentCtx: ctx}, postText);
+    const post = await ctx.invoke(Operations).makePost(postText);
     // This could be an asynchronous job
-    await operon.transaction(Operations.distributePost, {parentCtx: ctx}, post);
-    return {message: "Posted."};  
+    await ctx.invoke(Operations).distributePost(post);
+    return {message: "Posted."};
   }
 
   @GetApi("/getMediaUploadKey")
@@ -213,7 +213,7 @@ export class YKY
   static async doKeyUpload(ctx: WorkflowContext, @Required filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
-    const postPresigned = await ctx.external(Operations.createS3UploadKey, key, bucket);
+    const postPresigned = await ctx.invoke(Operations).createS3UploadKey(key, bucket);
 
     return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
   }
@@ -235,7 +235,7 @@ export class YKY
     // TODO: Rate limit the user's requests as they start workflows... or we could give the existing workflow if any?
 
     const fn = `photos/${mediaKey}-${Date.now()}`;
-    const wfh = operon.workflow(Operations.mediaUpload, {parentCtx: ctx}, mediaKey, fn, bucket);
+    const wfh = ctx.invoke(Operations).mediaUpload({}, mediaKey, fn, bucket);
     const upkey = await ctx.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
     return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
   }

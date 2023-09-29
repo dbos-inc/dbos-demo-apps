@@ -416,11 +416,11 @@ static async writeMediaPost(ctx: TransactionContext, mid: string, mkey: string) 
 @OperonWorkflow()
 static async mediaUpload(ctx: WorkflowContext, mediaId: string, mediaFile: string, bucket: string)
 {
-    const mkey = await ctx.external(Operations.createS3UploadKey, mediaFile, bucket);
+    const mkey = await ctx.invoke(Operations).createS3UploadKey(mediaFile, bucket);
     await ctx.setEvent<PresignedPost>("uploadkey", mkey);
     try {
         await ctx.recv("uploadfinish", 3600);
-        await ctx.transaction(Operations.writeMediaPost, mediaId, mediaFile);
+        await ctx.invoke(Operations).writeMediaPost(mediaId, mediaFile);
     }
     catch (e) {
         // No need to make a database record, or, at this point, roll anything back.
