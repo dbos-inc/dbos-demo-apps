@@ -1,15 +1,29 @@
-import { WorkflowContext, TransactionContext, CommunicatorContext, OperonTransaction, OperonCommunicator, OperonWorkflow, GetApi, RequiredRole } from "@dbos-inc/operon";
+import {
+  WorkflowContext,
+  TransactionContext,
+  CommunicatorContext,
+  OperonTransaction,
+  OperonCommunicator,
+  OperonWorkflow,
+  GetApi,
+  DefaultRequiredRole,
+  Authentication,
+  KoaMiddleware,
+} from "@dbos-inc/operon";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { bankname, bankport } from "../main";
 import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";
+import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
 
+@DefaultRequiredRole(["appUser"])
+@Authentication(bankAuthMiddleware)
+@KoaMiddleware(koaLogger, customizeHandle, bankJwt)
 export class BankTransactionHistory {
   @OperonTransaction()
   @GetApi("/api/transaction_history/:accountId")
-  @RequiredRole(['appUser'])
   static async listTxnForAccountFunc(txnCtxt: TransactionContext, accountId: number) {
     const acctId = BigInt(accountId);
     const p = txnCtxt.prismaClient as PrismaClient;
@@ -123,7 +137,7 @@ export class BankTransactionHistory {
   static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory) {
     const token = commCtxt.request?.headers["authorization"];
     if (!token) {
-      commCtxt.log("ERROR", "Failed to extract valid token!");
+      commCtxt.error("Failed to extract valid token!");
       return false;
     }
 
@@ -134,7 +148,7 @@ export class BankTransactionHistory {
         },
       });
       if (remoteRes.status != 200) {
-        commCtxt.log("ERROR", "Remote transfer failed, returned with status: " + remoteRes.statusText);
+        commCtxt.error("Remote transfer failed, returned with status: " + remoteRes.statusText);
         return false;
       }
     } catch (err) {
@@ -184,7 +198,7 @@ export class BankTransactionHistory {
 
     // Then, Contact remote DB to withdraw.
     if (data.fromLocation && !(data.fromLocation === "cash") && !data.fromLocation.startsWith(REMOTEDB_PREFIX)) {
-      ctxt.log("INFO", "Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
+      ctxt.info("Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
       const remoteUrl = data.fromLocation + "/api/withdraw";
       const thReq = {
         fromAccountId: data.fromAccountId,
@@ -199,13 +213,13 @@ export class BankTransactionHistory {
         // Undo transaction is a withdrawal.
         const undoRes = await ctxt.transaction(BankTransactionHistory.updateAcctTransactionFunc, data.toAccountId, data, false, result);
         if (!undoRes || undoRes !== result) {
-          ctxt.log("ERROR", `Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
+          ctxt.error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
         }
         throw new Error("Failed to withdraw from remote bank.");
       }
     } else {
-      ctxt.log("INFO", "Deposit from: " + data.fromLocation);
+      ctxt.info("Deposit from: " + data.fromLocation);
     }
 
     return "Deposit succeeded!";
@@ -221,7 +235,7 @@ export class BankTransactionHistory {
 
     // Then, contact remote DB to deposit.
     if (data.toLocation && !(data.toLocation === "cash") && !data.toLocation.startsWith(REMOTEDB_PREFIX)) {
-      ctxt.log("INFO", "Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
+      ctxt.info("Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
       const remoteUrl = data.toLocation + "/api/deposit";
       const thReq = {
         fromAccountId: data.fromAccountId,
@@ -240,7 +254,7 @@ export class BankTransactionHistory {
         throw new Error("Failed to deposit to remote bank.");
       }
     } else {
-      ctxt.log("INFO", "Deposit to: " + data.fromLocation);
+      ctxt.info("Deposit to: " + data.fromLocation);
     }
 
     return "Withdraw succeeded!";

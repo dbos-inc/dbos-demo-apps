@@ -83,5 +83,4 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_PASSWORD: dbos
           BANK_PORT: 8081
-          DATABASE_URL: postgresql://bank:bank@localhost:5432/bank?schema=prisma
           NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

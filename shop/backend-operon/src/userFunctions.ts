@@ -77,7 +77,7 @@ export class Shop {
         if (typeof username !== 'string' || typeof origin !== 'string') {
             throw new OperonResponseError("Invalid request!", 400);
         }
-        const handle = ctxt.workflow(Shop.paymentWorkflow, {}, username, origin);
+        const handle = ctxt.invoke(Shop).paymentWorkflow({}, username, origin);
         const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 
         if (url === null) {
@@ -89,23 +89,23 @@ export class Shop {
 
     @OperonWorkflow()
     static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string) {
-        const productDetails = await ctxt.transaction(Shop.getCart, username);
+        const productDetails = await ctxt.invoke(Shop).getCart(username);
         if (productDetails.length === 0) {
             await ctxt.setEvent(checkout_url_topic, null);
             return;
         }
 
-        const orderID = await ctxt.transaction(Shop.createOrder, username, productDetails);
+        const orderID = await ctxt.invoke(Shop).createOrder(username, productDetails);
 
-        const valid: boolean = await ctxt.transaction(Shop.subtractInventory, productDetails);
+        const valid: boolean = await ctxt.invoke(Shop).subtractInventory(productDetails);
         if (!valid) {
             await ctxt.setEvent(checkout_url_topic, null);
             return;
         }
 
-        const stripeSession = await ctxt.external(Shop.createStripeSession, productDetails, origin);
+        const stripeSession = await ctxt.invoke(Shop).createStripeSession(productDetails, origin);
         if (!stripeSession?.url) {
-            await ctxt.transaction(Shop.undoSubtractInventory, productDetails);
+            await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
             await ctxt.setEvent(checkout_url_topic, null);
             return;
         }
@@ -115,8 +115,8 @@ export class Shop {
 
         // if the checkout complete notification arrived, the payment is successful so fulfull the order
         if (notification) {
-            await ctxt.transaction(Shop.fulfillOrder, orderID);
-            await ctxt.transaction(Shop.clearCart, username);
+            await ctxt.invoke(Shop).fulfillOrder(orderID);
+            await ctxt.invoke(Shop).clearCart(username);
             return;
         }
 
@@ -130,11 +130,11 @@ export class Shop {
         }
 
         if (updatedSession.payment_status == 'paid') {
-            await ctxt.transaction(Shop.fulfillOrder, orderID);
-            await ctxt.transaction(Shop.clearCart, username);
+            await ctxt.invoke(Shop).fulfillOrder(orderID);
+            await ctxt.invoke(Shop).clearCart(username);
         } else {
-            await ctxt.transaction(Shop.undoSubtractInventory, productDetails);
-            await ctxt.transaction(Shop.errorOrder, orderID);
+            await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
+            await ctxt.invoke(Shop).errorOrder(orderID);
         }
     }
 
