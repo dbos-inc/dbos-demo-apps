@@ -65,12 +65,8 @@ export const userDataSource = new DataSource({
     TimelineSend,
     TimelineRecv,
   ],
-  "migrations": [
-     "./migration/**/*.ts"
-  ],
-  "subscribers": [
-     "./subscriber/**/*.ts"
-  ],
+  "migrations": [],
+  "subscribers": [],
 });
 
 // eslint-disable-next-line @typescript-eslint/require-await
