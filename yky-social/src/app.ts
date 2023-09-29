@@ -256,9 +256,6 @@ export const operon = new Operon({
     port: Number(process.env.POSTGRES_PORT),
     host: process.env.POSTGRES_HOST,
   },
-  httpServer : {
-    port: Number(process.env.OPERON_PORT).valueOf() || 3000
-  },
   system_database: 'opsys',
 });
 
