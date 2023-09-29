@@ -262,7 +262,7 @@ describe('Upload and download media', () => {
 
     const postkey = await request(kapp.callback())
     .get('/getMediaUploadKey')
-    .query({filename: 'YKY.png'});
+    .query({filename: 'YKY.png', userid:response.body.id});
     expect(postkey.statusCode).toBe(200);
 
     // Perform the upload
@@ -272,7 +272,47 @@ describe('Upload and download media', () => {
     // Request the download key
     const getkey = await request(kapp.callback())
     .get('/getMediaDownloadKey')
-    .query({filekey: postkey.body.key});
+    .query({filekey: postkey.body.key, userid:response.body.id});
+    expect(getkey.statusCode).toBe(200);
+
+    // Download
+    const presignedGetUrl = (getkey.body.url || 'x') as string;
+    const outputPath = '/tmp/YKY.png';
+    await downloadFromS3(presignedGetUrl, outputPath);
+  });
+});
+
+//  Test a larger workflow
+describe('Upload media in workflow', () => {
+  it('should log us in, upload and record to database', async () => {
+    if (!process.env.AWS_ACCESS_KEY) {
+      return; // Ideally, we do a mock.  For now, we're testing real AWS if the env is set...
+    }
+
+    const response = await request(kapp.callback())
+    .post('/login')
+    .send({ username: "jsmith", password: "jjj" });
+    expect(response.statusCode).toBe(200);
+
+    const postkey = await request(kapp.callback())
+    .get('/startMediaUpload')
+    .query({userid:response.body.id});
+    expect(postkey.statusCode).toBe(200);
+
+    // Perform the upload
+    const filePath = './src/YKY.png';
+    await uploadToS3(postkey.body.key as PresignedPost, filePath);
+
+    // Complete the workflow
+    const _finishkey = await request(kapp.callback())
+    .get('/finishMediaUpload')
+    .query({userid:response.body.id, wfid: postkey.body.wfHandle});
+    expect(postkey.statusCode).toBe(200);
+
+    // Request the download key
+    const getkey = await request(kapp.callback())
+    .get('/getMediaDownloadKey')
+    .query({filekey: postkey.body.file, userid:response.body.id});
     expect(getkey.statusCode).toBe(200);
 
     // Download

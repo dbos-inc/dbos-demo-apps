@@ -21,17 +21,20 @@ import {
   Operon, Required, GetApi, RequiredRole,
   OperonContext, OperonTransaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
-  OperonWorkflow, WorkflowContext,
+  HandlerContext,
+  OperonWorkflow,
+  WorkflowContext,
+  Authentication,
   OperonHttpServer,
   OperonNotAuthorizedError,
   MiddlewareContext,
   DefaultRequiredRole,
 } from "@dbos-inc/operon";
 
+import { v4 as uuidv4 } from 'uuid';
+import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { S3Client } from '@aws-sdk/client-s3';
 
 const s3ClientConfig = {
   region: process.env.AWS_REGION || 'us-east-2', // Replace with your AWS region
@@ -42,6 +45,7 @@ const s3ClientConfig = {
 };
 
 const s3Client = new S3Client(s3ClientConfig);
+export function getS3Client() {return s3Client;}
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -61,14 +65,30 @@ export const userDataSource = new DataSource({
     TimelineSend,
     TimelineRecv,
   ],
-  "migrations": [
-     "./migration/**/*.ts"
-  ],
-  "subscribers": [
-     "./subscriber/**/*.ts"
-  ],
+  "migrations": [],
+  "subscribers": [],
 });
 
+// eslint-disable-next-line @typescript-eslint/require-await
+async function authMiddleware (ctx: MiddlewareContext) {
+  if (ctx.requiredRole.length > 0) {
+    // TODO: We really need to validate something, generally it would be a token
+    //  Currently the backend is "taking the front-end's word for it"
+    const { userid } = ctx.koaContext.request.query;
+    const uid = userid?.toString();
+
+    if (!uid) {
+      const err = new OperonNotAuthorizedError("Not logged in.", 401);
+      throw err;
+    }
+    return {
+      authenticatedUser: uid,
+      authenticatedRoles: ['user']
+    };
+  }
+}
+
+@Authentication(authMiddleware)
 @DefaultRequiredRole(['user'])
 export class YKY
 {
@@ -117,9 +137,8 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/finduser')
-  static async findUser(ctx: TransactionContext, @Required findUserName: string) {
-    const manager = ctx.typeormEM as unknown as EntityManager;
-    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(manager,
+  static async doFindUser(ctx: TransactionContext, @Required findUserName: string) {
+    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(ctx,
       ctx.authenticatedUser, findUserName, false, false);
     if (!user) {
       return {message: "No user by that name."};
@@ -160,10 +179,10 @@ export class YKY
   // Can this be generalized?
   @PostApi("/register")
   @RequiredRole([]) // No role needed to register
-  static async doRegister(ctx: OperonContext, @Required firstName: string, @Required lastName: string,
+  static async doRegister(ctx: HandlerContext, @Required firstName: string, @Required lastName: string,
      @Required username: string, @Required @LogMask(LogMasks.HASH) password: string)
   {
-    const user = await operon.transaction(Operations.createUser, {parentCtx: ctx},
+    const user = await ctx.invoke(Operations).createUser(
        firstName, lastName, username, password);
 
     return { message: 'User created.', id:user.id };
@@ -183,46 +202,51 @@ export class YKY
   @OperonWorkflow()
   @PostApi("/composepost")
   static async doCompose(ctx: WorkflowContext, @Required postText: string) {
-    const post = await operon.transaction(Operations.makePost, {parentCtx: ctx}, postText);
+    const post = await ctx.invoke(Operations).makePost(postText);
     // This could be an asynchronous job
-    await operon.transaction(Operations.distributePost, {parentCtx: ctx}, post);
-    return {message: "Posted."};  
+    await ctx.invoke(Operations).distributePost(post);
+    return {message: "Posted."};
   }
 
   @GetApi("/getMediaUploadKey")
-  @RequiredRole([])
-  static async doKeyUpload(_ctx: OperonContext, @Required filename: string) {
+  @OperonWorkflow()
+  static async doKeyUpload(ctx: WorkflowContext, @Required filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
+    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+    const postPresigned = await ctx.invoke(Operations).createS3UploadKey(key, bucket);
 
-    const postPresigned = await createPresignedPost(
-      s3Client,
-      {
-        Conditions: [
-          ["content-length-range", 1, 10000000],
-        ],
-        Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
-        Key: key,
-        Expires: 3600,
-        Fields: {
-          'Content-Type': 'image/*',
-        }
-      }
-    );
     return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
   }
 
   @GetApi("/getMediaDownloadKey")
-  @RequiredRole([])
-  static async doKeyDownload(_ctx: OperonContext, @Required filekey: string) {
+  static async doKeyDownload(ctx: OperonContext, @Required filekey: string) {
     const key = filekey;
-
-    const getObjectCommand = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME || 'yky-social-photos',
-      Key: key,
-    });
+    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
   
-    const presignedUrl = await getSignedUrl(s3Client, getObjectCommand, { expiresIn: 3600, });
+    const presignedUrl = await Operations.getS3DownloadKey(key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
+  }
+
+  @GetApi("/startMediaUpload")
+  static async doStartMediaUpload(ctx: HandlerContext) {
+    const mediaKey = uuidv4();
+    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+
+    // TODO: Rate limit the user's requests as they start workflows... or we could give the existing workflow if any?
+
+    const fn = `photos/${mediaKey}-${Date.now()}`;
+    const wfh = ctx.invoke(Operations).mediaUpload(mediaKey, fn, bucket);
+    const upkey = await ctx.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
+    return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  @GetApi("/finishMediaUpload")
+  static async finishMediaUpload(ctx: HandlerContext, wfid: string) {
+    // TODO: Validate that the workflow belongs to the user?  How would I do that?
+    const wfhandle = ctx.retrieveWorkflow(wfid);
+    await ctx.send(wfid, "", "uploadfinish");
+    return await wfhandle.getResult();
   }
 }
 
@@ -235,9 +259,7 @@ export const operon = new Operon({
     port: Number(process.env.POSTGRES_PORT),
     host: process.env.POSTGRES_HOST,
   },
-  telemetryExporters: undefined,
   system_database: 'opsys',
-  observability_database: undefined
 });
 
 export const kapp = new Koa();
@@ -251,26 +273,7 @@ const router = new Router();
 
 export function ykyInit()
 {
-  OperonHttpServer.registerDecoratedEndpoints(operon, router, {
-  // eslint-disable-next-line @typescript-eslint/require-await
-  auth: async (ctx: MiddlewareContext) => {
-      if (ctx.requiredRole.length > 0) {
-        // TODO: We really need to validate something, generally it would be a token
-        //  Currently the backend is "taking the front-end's word for it"
-        const { userid } = ctx.koaContext.request.query;
-        const uid = userid?.toString();
-
-        if (!uid) {
-          const err = new OperonNotAuthorizedError("Not logged in.", 401);
-          throw err;
-        }
-        return {
-          authenticatedUser: uid,
-          authenticatedRoles: ['user']
-        };
-      }
-    }
-  });
+  OperonHttpServer.registerDecoratedEndpoints(operon, router);
 }
 
 // Example of how to do a route directly in Koa

@@ -9,8 +9,25 @@ import { TimelineRecv, TimelineSend, SendType, RecvType } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from './entity/UserProfile';
 
-import { OperonTransaction, SkipLogging, TransactionContext } from '@dbos-inc/operon';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
+
+import { getS3Client } from './app';
+
+import {
+ OperonCommunicator,
+ CommunicatorContext,
+ OperonTransaction,
+ TransactionContext,
+ SkipLogging,
+ RequiredRole,
+ DefaultRequiredRole,
+ OperonWorkflow,
+ WorkflowContext,
+} from '@dbos-inc/operon';
 import { Traced } from '@dbos-inc/operon';
+import { MediaItem } from './entity/Media';
 
 export interface ResponseError extends Error {
     status?: number;
@@ -32,11 +49,13 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
   return isMatch;
 }
 
+@DefaultRequiredRole(['user'])
 export class Operations
 {
 
 @OperonTransaction()
-static async createUser(ctx: TransactionContext, first:string, last:string, uname:string, pass:string) :
+@RequiredRole([])
+static async createUser(ctx: TransactionContext, first:string, last:string, uname:string, @SkipLogging pass:string) :
    Promise<UserLogin>
 {
     const manager = ctx.typeormEM as unknown as EntityManager;
@@ -119,9 +138,10 @@ static async getPost(manager:EntityManager, _curUid: string, post:string) :
 //
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
 @Traced
-static async findUser(@SkipLogging manager:EntityManager, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
+static async findUser(ctx: TransactionContext, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
    Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]> 
 {
+    const manager = ctx.typeormEM as unknown as EntityManager;
     const userRep = manager.getRepository(UserLogin);
     const otherUser = await userRep.findOneBy({
         user_name: uname,
@@ -343,4 +363,71 @@ static async readRecvTimeline(manager: EntityManager, curUser : string, type : R
         },
     });
 }
+
+@OperonCommunicator()
+static async createS3UploadKey(_ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
+    const postPresigned = await createPresignedPost(
+      getS3Client(),
+      {
+        Conditions: [
+          ["content-length-range", 1, 10000000],
+        ],
+        Bucket: bucket,
+        Key: key,
+        Expires: 3600,
+        Fields: {
+          'Content-Type': 'image/*',
+        }
+      }
+    );
+    return postPresigned;
+}
+
+static async getS3DownloadKey(key: string, bucket: string) {
+  const getObjectCommand = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  const presignedUrl = await getSignedUrl(getS3Client(), getObjectCommand, { expiresIn: 3600, });
+
+  return presignedUrl;
+}
+
+@OperonTransaction()
+static async writeMediaPost(ctx: TransactionContext, mid: string, mkey: string) {
+    const m = new MediaItem();
+    m.description = mkey;
+    m.media_id = mid;
+    m.owner_id = ctx.authenticatedUser;
+    //m.media_type = ? // This may not be important enough to deal with...
+    const manager = ctx.typeormEM as unknown as EntityManager;
+    await manager.save(m);
+}
+
+/*
+ * We are gonna trust workflow to remember to do things.
+ * Our steps:
+ *   Give the client a workflow handle.  They will make a call that sends a message to this to bump it along
+ *   With that, we will bundle a presigned upload URL
+ *   We then wait for notification that this was accomplished.
+ *     If it fails for any reason, the workflow can just terminate.  Its database record is the record.
+ */
+@OperonWorkflow()
+static async mediaUpload(ctx: WorkflowContext, mediaId: string, mediaFile: string, bucket: string)
+{
+    const mkey = await ctx.invoke(Operations).createS3UploadKey(mediaFile, bucket);
+    await ctx.setEvent<PresignedPost>("uploadkey", mkey);
+    try {
+        await ctx.recv("uploadfinish", 3600);
+        await ctx.invoke(Operations).writeMediaPost(mediaId, mediaFile);
+    }
+    catch (e) {
+        // No need to make a database record, or, at this point, roll anything back.
+        // It might be a good idea to clobber the s3 key, but doing so wouldn't prevent it from appearing later.
+        //   (The access key does that though.)
+    }
+    return {};
+}
+
 }
