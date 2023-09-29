@@ -22,6 +22,7 @@ import {
   OperonContext, OperonTransaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   OperonWorkflow, WorkflowContext,
+  Authentication,
   OperonHttpServer,
   OperonNotAuthorizedError,
   MiddlewareContext,
@@ -68,6 +69,26 @@ export const userDataSource = new DataSource({
   ],
 });
 
+// eslint-disable-next-line @typescript-eslint/require-await
+async function authMiddleware (ctx: MiddlewareContext) {
+  if (ctx.requiredRole.length > 0) {
+    // TODO: We really need to validate something, generally it would be a token
+    //  Currently the backend is "taking the front-end's word for it"
+    const { userid } = ctx.koaContext.request.query;
+    const uid = userid?.toString();
+
+    if (!uid) {
+      const err = new OperonNotAuthorizedError("Not logged in.", 401);
+      throw err;
+    }
+    return {
+      authenticatedUser: uid,
+      authenticatedRoles: ['user']
+    };
+  }
+}
+
+@Authentication(authMiddleware)
 @DefaultRequiredRole(['user'])
 export class YKY
 {
@@ -220,9 +241,10 @@ export const operon = new Operon({
     port: Number(process.env.POSTGRES_PORT),
     host: process.env.POSTGRES_HOST,
   },
-  telemetryExporters: undefined,
+  httpServer : {
+    port: Number(process.env.OPERON_PORT).valueOf() || 3000
+  },
   system_database: 'opsys',
-  observability_database: undefined
 });
 
 export const kapp = new Koa();
@@ -236,26 +258,7 @@ const router = new Router();
 
 export function ykyInit()
 {
-  OperonHttpServer.registerDecoratedEndpoints(operon, router, {
-  // eslint-disable-next-line @typescript-eslint/require-await
-  auth: async (ctx: MiddlewareContext) => {
-      if (ctx.requiredRole.length > 0) {
-        // TODO: We really need to validate something, generally it would be a token
-        //  Currently the backend is "taking the front-end's word for it"
-        const { userid } = ctx.koaContext.request.query;
-        const uid = userid?.toString();
-
-        if (!uid) {
-          const err = new OperonNotAuthorizedError("Not logged in.", 401);
-          throw err;
-        }
-        return {
-          authenticatedUser: uid,
-          authenticatedRoles: ['user']
-        };
-      }
-    }
-  });
+  OperonHttpServer.registerDecoratedEndpoints(operon, router);
 }
 
 // Example of how to do a route directly in Koa
