@@ -299,20 +299,25 @@ describe('Upload media in workflow', () => {
     .query({userid:response.body.id});
     expect(postkey.statusCode).toBe(200);
 
-    /*
     // Perform the upload
-    await uploadToS3(postkey.body.upkey as PresignedPost, postkey.body.fn as string);
+    const filePath = './src/YKY.png';
+    await uploadToS3(postkey.body.key as PresignedPost, filePath);
+
+    // Complete the workflow
+    const _finishkey = await request(kapp.callback())
+    .get('/finishMediaUpload')
+    .query({userid:response.body.id, wfid: postkey.body.wfHandle});
+    expect(postkey.statusCode).toBe(200);
 
     // Request the download key
     const getkey = await request(kapp.callback())
     .get('/getMediaDownloadKey')
-    .query({filekey: postkey.body.key, userid:response.body.id});
+    .query({filekey: postkey.body.file, userid:response.body.id});
     expect(getkey.statusCode).toBe(200);
 
     // Download
     const presignedGetUrl = (getkey.body.url || 'x') as string;
     const outputPath = '/tmp/YKY.png';
     await downloadFromS3(presignedGetUrl, outputPath);
-    */
   });
 });

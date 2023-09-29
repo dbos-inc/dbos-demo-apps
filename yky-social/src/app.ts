@@ -235,15 +235,18 @@ export class YKY
     // TODO: Rate limit the user's requests as they start workflows... or we could give the existing workflow if any?
 
     const fn = `photos/${mediaKey}-${Date.now()}`;
-    const wfh = operon.workflow(Operations.mediaUpload, {parentCtx: ctx}, fn, bucket);
+    const wfh = operon.workflow(Operations.mediaUpload, {parentCtx: ctx}, mediaKey, fn, bucket);
     const upkey = await ctx.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
     return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/finishMediaUpload")
-  static async finishMediaUpload(_ctx: HandlerContext) {
+  static async finishMediaUpload(ctx: HandlerContext, wfid: string) {
     // TODO: Validate that the workflow belongs to the user?  How would I do that?
+    const wfhandle = ctx.retrieveWorkflow(wfid);
+    ctx.send({}, wfid, "", "uploadfinish");
+    return await wfhandle.getResult();
   }
 }
 

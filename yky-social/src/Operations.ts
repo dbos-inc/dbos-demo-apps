@@ -27,6 +27,7 @@ import {
  WorkflowContext,
 } from '@dbos-inc/operon';
 import { Traced } from '@dbos-inc/operon';
+import { MediaItem } from './entity/Media';
 
 export interface ResponseError extends Error {
     status?: number;
@@ -393,6 +394,17 @@ static async getS3DownloadKey(key: string, bucket: string) {
   return presignedUrl;
 }
 
+@OperonTransaction()
+static async writeMediaPost(ctx: TransactionContext, mid: string, mkey: string) {
+    const m = new MediaItem();
+    m.description = "I forgot to do this";
+    m.media_id = mid;
+    m.owner_id = ctx.authenticatedUser;
+    //m.media_type = ? // This may not be important enough to deal with...
+    const manager = ctx.typeormEM as unknown as EntityManager;
+    manager.save(m);
+}
+
 /*
  * We are gonna trust workflow to remember to do things.
  * Our steps:
@@ -402,10 +414,19 @@ static async getS3DownloadKey(key: string, bucket: string) {
  *     If it fails for any reason, the workflow can just terminate.  Its database record is the record.
  */
 @OperonWorkflow()
-static async mediaUpload(ctx: WorkflowContext, mediaFile: string, bucket: string)
+static async mediaUpload(ctx: WorkflowContext, mediaId: string, mediaFile: string, bucket: string)
 {
     const mkey = await ctx.external(Operations.createS3UploadKey, mediaFile, bucket);
     await ctx.setEvent<PresignedPost>("uploadkey", mkey);
+    try {
+        await ctx.recv("uploadfinish", 3600);
+        ctx.transaction(Operations.writeMediaPost, mediaId, mediaFile);
+    }
+    catch (e) {
+        // No need to make a database record, or, at this point, roll anything back.
+        // It might be a good idea to clobber the s3 key, but doing so wouldn't prevent it from appearing later.
+        //   (The access key does that though.)
+    }
     return {};
 }
 
