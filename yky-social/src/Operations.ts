@@ -16,7 +16,6 @@ import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { getS3Client } from './app';
 
 import {
- OperonContext,
  OperonCommunicator,
  CommunicatorContext,
  OperonTransaction,
@@ -53,7 +52,7 @@ export class Operations
 
 @OperonTransaction()
 @RequiredRole([])
-static async createUser(ctx: TransactionContext, first:string, last:string, uname:string, pass:string) :
+static async createUser(ctx: TransactionContext, first:string, last:string, uname:string, @SkipLogging pass:string) :
    Promise<UserLogin>
 {
     const manager = ctx.typeormEM as unknown as EntityManager;
