@@ -190,9 +190,8 @@ export class BankTransactionHistory {
 
   @OperonWorkflow()
   static async depositWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
-    const bankProxy = ctxt.invoke(BankTransactionHistory);
     // Deposite locally first.
-    const result = await bankProxy.updateAcctTransactionFunc(data.toAccountId, data, true);
+    const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, true);
     if (!result) {
       throw new Error("Deposit failed!");
     }
@@ -209,10 +208,10 @@ export class BankTransactionHistory {
         toLocation: REMOTEDB_PREFIX + bankname + ":" + bankport,
       };
 
-      const remoteRes: boolean | null = await bankProxy.remoteTransferComm(remoteUrl, thReq as TransactionHistory);
+      const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory);
       if (!remoteRes) {
         // Undo transaction is a withdrawal.
-        const undoRes = await bankProxy.updateAcctTransactionFunc(data.toAccountId, data, false, result);
+        const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, false, result);
         if (!undoRes || undoRes !== result) {
           ctxt.error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
@@ -228,9 +227,8 @@ export class BankTransactionHistory {
 
   @OperonWorkflow()
   static async withdrawWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
-    const bankProxy = ctxt.invoke(BankTransactionHistory);
     // Withdraw first.
-    const result = await bankProxy.updateAcctTransactionFunc(data.fromAccountId, data, false);
+    const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, false);
     if (!result) {
       throw new Error("Withdraw failed!");
     }
@@ -246,10 +244,10 @@ export class BankTransactionHistory {
         toLocation: "local",
         fromLocation: REMOTEDB_PREFIX + bankname + ":" + bankport,
       };
-      const remoteRes: boolean | null = await bankProxy.remoteTransferComm(remoteUrl, thReq as TransactionHistory);
+      const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory);
       if (!remoteRes) {
         // Undo transaction is a deposit.
-        const undoRes = await bankProxy.updateAcctTransactionFunc(data.fromAccountId, data, true, result);
+        const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, true, result);
         if (!undoRes || undoRes !== result) {
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
         }
