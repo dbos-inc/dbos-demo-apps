@@ -27,7 +27,7 @@ export class BankEndpoints {
     // Must to local.
     data.toLocation = "local";
 
-    return ctx.workflow(BankTransactionHistory.depositWorkflow, {}, data).getResult();
+    return ctx.invoke(BankTransactionHistory).depositWorkflow({}, data).getResult();
   }
 
   // Withdraw.
@@ -41,7 +41,7 @@ export class BankEndpoints {
     // Must from local.
     data.fromLocation = "local";
 
-    return ctx.workflow(BankTransactionHistory.withdrawWorkflow, {}, data).getResult();
+    return ctx.invoke(BankTransactionHistory).withdrawWorkflow({}, data).getResult();
   }
 
   // Internal transfer
@@ -58,7 +58,7 @@ export class BankEndpoints {
       throw new Error("Invalid input!");
     }
 
-    return ctx.transaction(BankTransactionHistory.internalTransferFunc, {}, data);
+    return ctx.invoke(BankTransactionHistory).insertTxnHistoryFunc({}, data);
   }
 }
 
