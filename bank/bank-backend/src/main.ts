@@ -1,5 +1,6 @@
 import * as readline from "node:readline/promises";
 import { Operon, OperonHttpServer } from "@dbos-inc/operon";
+import { parseConfigFile } from "@dbos-inc/operon/dist/src/operon-runtime/config";
 import { PrismaClient } from "@prisma/client";
 import { BankEndpoints } from "./router";
 
@@ -25,7 +26,11 @@ async function startServer() {
   bankport = bankport ? bankport : "8081";
 
   // Initialize Operon.
-  operon = new Operon();
+
+  // FIXME: remove reading config file once fully serverless.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [operonConfig, _runtimeConfig] = parseConfigFile();
+  operon = new Operon(operonConfig);
   operon.usePrisma(prisma);
 
   await operon.init(BankEndpoints, BankTransactionHistory, BankAccountInfo);
