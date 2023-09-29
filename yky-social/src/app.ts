@@ -137,7 +137,7 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/finduser')
-  static async findUser(ctx: TransactionContext, @Required findUserName: string) {
+  static async doFindUser(ctx: TransactionContext, @Required findUserName: string) {
     const [user, _prof, _gsrc, _gdst] = await Operations.findUser(ctx,
       ctx.authenticatedUser, findUserName, false, false);
     if (!user) {
@@ -219,12 +219,11 @@ export class YKY
   }
 
   @GetApi("/getMediaDownloadKey")
-  @OperonWorkflow()
-  static async doKeyDownload(ctx: WorkflowContext, @Required filekey: string) {
+  static async doKeyDownload(ctx: OperonContext, @Required filekey: string) {
     const key = filekey;
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
   
-    const presignedUrl = await ctx.external(Operations.getS3DownloadKey, key, bucket);
+    const presignedUrl = await Operations.getS3DownloadKey(key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
   }
 }

@@ -362,7 +362,7 @@ static async readRecvTimeline(manager: EntityManager, curUser : string, type : R
 }
 
 @OperonCommunicator()
-static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
+static async createS3UploadKey(_ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
     const postPresigned = await createPresignedPost(
       getS3Client(),
       {
@@ -380,8 +380,7 @@ static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: st
     return postPresigned;
 }
 
-@OperonCommunicator()
-static async getS3DownloadKey(_ctx: CommunicatorContext, key: string, bucket: string) {
+static async getS3DownloadKey(key: string, bucket: string) {
   const getObjectCommand = new GetObjectCommand({
     Bucket: bucket,
     Key: key,
