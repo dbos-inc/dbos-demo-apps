@@ -262,7 +262,7 @@ describe('Upload and download media', () => {
 
     const postkey = await request(kapp.callback())
     .get('/getMediaUploadKey')
-    .query({filename: 'YKY.png'});
+    .query({filename: 'YKY.png', userid:response.body.id});
     expect(postkey.statusCode).toBe(200);
 
     // Perform the upload
@@ -272,7 +272,7 @@ describe('Upload and download media', () => {
     // Request the download key
     const getkey = await request(kapp.callback())
     .get('/getMediaDownloadKey')
-    .query({filekey: postkey.body.key});
+    .query({filekey: postkey.body.key, userid:response.body.id});
     expect(getkey.statusCode).toBe(200);
 
     // Download

@@ -16,12 +16,14 @@ import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { getS3Client } from './app';
 
 import {
+ OperonContext,
  OperonCommunicator,
  CommunicatorContext,
  OperonTransaction,
  TransactionContext,
  SkipLogging,
  RequiredRole,
+ DefaultRequiredRole,
 } from '@dbos-inc/operon';
 import { Traced } from '@dbos-inc/operon';
 
@@ -45,6 +47,7 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
   return isMatch;
 }
 
+@DefaultRequiredRole(['user'])
 export class Operations
 {
 
@@ -133,9 +136,10 @@ static async getPost(manager:EntityManager, _curUid: string, post:string) :
 //
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
 @Traced
-static async findUser(@SkipLogging manager:EntityManager, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
+static async findUser(ctx: TransactionContext, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
    Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]> 
 {
+    const manager = ctx.typeormEM as unknown as EntityManager;
     const userRep = manager.getRepository(UserLogin);
     const otherUser = await userRep.findOneBy({
         user_name: uname,
@@ -217,7 +221,6 @@ static async setGraphStatus(manager: EntityManager, curUid : string, otherUid : 
 
 // Compose a post
 @OperonTransaction()
-@RequiredRole(['user'])
 static async makePost(ctx: TransactionContext, txt : string)
 {
     const manager = ctx.typeormEM as unknown as EntityManager;
@@ -252,7 +255,6 @@ static async makePost(ctx: TransactionContext, txt : string)
 
 // Send a post
 @OperonTransaction()
-@RequiredRole(['user'])
 static async distributePost(ctx: TransactionContext, p: Post) {
     const manager = ctx.typeormEM as unknown as EntityManager;
 
@@ -361,7 +363,6 @@ static async readRecvTimeline(manager: EntityManager, curUser : string, type : R
 }
 
 @OperonCommunicator()
-@RequiredRole([])
 static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
     const postPresigned = await createPresignedPost(
       getS3Client(),
@@ -381,7 +382,6 @@ static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: st
 }
 
 @OperonCommunicator()
-@RequiredRole([])
 static async getS3DownloadKey(_ctx: CommunicatorContext, key: string, bucket: string) {
   const getObjectCommand = new GetObjectCommand({
     Bucket: bucket,

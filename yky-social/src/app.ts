@@ -138,8 +138,7 @@ export class YKY
   @OperonTransaction({readOnly: true})
   @GetApi('/finduser')
   static async findUser(ctx: TransactionContext, @Required findUserName: string) {
-    const manager = ctx.typeormEM as unknown as EntityManager;
-    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(manager,
+    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(ctx,
       ctx.authenticatedUser, findUserName, false, false);
     if (!user) {
       return {message: "No user by that name."};
@@ -210,7 +209,6 @@ export class YKY
   }
 
   @GetApi("/getMediaUploadKey")
-  @RequiredRole([])
   @OperonWorkflow()
   static async doKeyUpload(ctx: WorkflowContext, @Required filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
@@ -221,7 +219,6 @@ export class YKY
   }
 
   @GetApi("/getMediaDownloadKey")
-  @RequiredRole([])
   @OperonWorkflow()
   static async doKeyDownload(ctx: WorkflowContext, @Required filekey: string) {
     const key = filekey;
