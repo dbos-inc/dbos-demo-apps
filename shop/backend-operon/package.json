@@ -4,7 +4,7 @@
     "lint": "eslint --fix --ext .ts ."
   },
   "dependencies": {
-    "@dbos-inc/operon": "^0.0.5",
+    "@dbos-inc/operon": "0.0.5",
     "stripe": "^13.7.0"
   },
   "devDependencies": {
