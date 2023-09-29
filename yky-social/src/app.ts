@@ -21,7 +21,9 @@ import {
   Operon, Required, GetApi, RequiredRole,
   OperonContext, OperonTransaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
-  OperonWorkflow, WorkflowContext,
+  HandlerContext,
+  OperonWorkflow,
+  WorkflowContext,
   Authentication,
   OperonHttpServer,
   OperonNotAuthorizedError,
@@ -29,6 +31,8 @@ import {
   DefaultRequiredRole,
 } from "@dbos-inc/operon";
 
+import { v4 as uuidv4 } from 'uuid';
+import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client } from '@aws-sdk/client-s3';
 
@@ -225,6 +229,25 @@ export class YKY
   
     const presignedUrl = await Operations.getS3DownloadKey(key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
+  }
+
+  @GetApi("/startMediaUpload")
+  static async doStartMediaUpload(ctx: HandlerContext) {
+    const mediaKey = uuidv4();
+    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+
+    // TODO: Rate limit the user's requests as they start workflows... or we could give the existing workflow if any?
+
+    const fn = `photos/${mediaKey}-${Date.now()}`;
+    const wfh = operon.workflow(Operations.mediaUpload, {parentCtx: ctx}, fn, bucket);
+    const upkey = await ctx.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
+    return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  @GetApi("/finishMediaUpload")
+  static async finishMediaUpload(_ctx: HandlerContext) {
+    // TODO: Validate that the workflow belongs to the user?  How would I do that?
   }
 }
 

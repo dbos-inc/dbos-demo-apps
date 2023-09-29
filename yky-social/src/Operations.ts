@@ -23,6 +23,8 @@ import {
  SkipLogging,
  RequiredRole,
  DefaultRequiredRole,
+ OperonWorkflow,
+ WorkflowContext,
 } from '@dbos-inc/operon';
 import { Traced } from '@dbos-inc/operon';
 
@@ -389,6 +391,22 @@ static async getS3DownloadKey(key: string, bucket: string) {
   const presignedUrl = await getSignedUrl(getS3Client(), getObjectCommand, { expiresIn: 3600, });
 
   return presignedUrl;
+}
+
+/*
+ * We are gonna trust workflow to remember to do things.
+ * Our steps:
+ *   Give the client a workflow handle.  They will make a call that sends a message to this to bump it along
+ *   With that, we will bundle a presigned upload URL
+ *   We then wait for notification that this was accomplished.
+ *     If it fails for any reason, the workflow can just terminate.  Its database record is the record.
+ */
+@OperonWorkflow()
+static async mediaUpload(ctx: WorkflowContext, mediaFile: string, bucket: string)
+{
+    const mkey = await ctx.external(Operations.createS3UploadKey, mediaFile, bucket);
+    await ctx.setEvent<PresignedPost>("uploadkey", mkey);
+    return {};
 }
 
 }
