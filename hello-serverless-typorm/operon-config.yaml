@@ -1,0 +1,12 @@
+database:
+  hostname: 'localhost'
+  port: 5432
+  username: 'postgres'
+  user_database: 'hellotypeorm'
+  connectionTimeoutMillis: 3000
+  user_dbclient: "typeorm"
+
+dbClientMetadata:
+  entities: ['dist/OperonHello.js']
+
+
