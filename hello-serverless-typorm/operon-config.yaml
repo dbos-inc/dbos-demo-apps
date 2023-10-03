@@ -5,6 +5,3 @@ database:
   user_database: 'hellotypeorm'
   connectionTimeoutMillis: 3000
   user_dbclient: "typeorm"
-
-
-

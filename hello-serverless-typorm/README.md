@@ -13,6 +13,10 @@ Then compile this app:
 npm run build
 ```
 
+Update operon-config.yaml to point to your database which must
+be create prior to running the app
+
+
 Finally, start the simple HTTP server:
 ```shell
 npx operon start
