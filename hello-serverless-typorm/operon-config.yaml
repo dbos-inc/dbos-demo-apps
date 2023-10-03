@@ -6,7 +6,5 @@ database:
   connectionTimeoutMillis: 3000
   user_dbclient: "typeorm"
 
-dbClientMetadata:
-  entities: ['dist/OperonHello.js']
 
 
