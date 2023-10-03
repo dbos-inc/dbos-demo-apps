@@ -1,5 +1,5 @@
 import express, { Express, Request, Response } from 'express';
-import { TransactionContext, WorkflowContext, Operon, } from 'operon';
+import { TransactionContext, WorkflowContext, Operon, } from '@dbos-inc/operon';
 
 // Declare an Operon function
 const helloFunction = async (txnCtxt: TransactionContext, name: string) => {
