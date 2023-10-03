@@ -1,16 +1,14 @@
-import PostForm from '@/app/components/PostForm';
+import YKYUpload from '@/app/components/YKYUpload';
 
 import { Metadata } from 'next';
-import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'YKY Home',
+    title: 'YKY Profile',
 };
 
 const UserHome: React.FC = () => (
   <div className="container mx-auto">
-    <Link href="/main/updateprofile">Update Profile</Link>
-    <PostForm />
+    <YKYUpload ultype='profile' title='Upload a profile picture'/>
   </div>
 );
 
