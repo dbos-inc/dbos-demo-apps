@@ -14,8 +14,6 @@
     "ts-node": "^10.9.1",
     "typeorm": "^0.3.17",
     "typescript": "^5.2.2"
-  },
-  "dependencies": {
-    "@dbos-inc/operon": "file:../../operon/dbos-inc-operon-0.0.5.tgz"
   }
+  
 }
