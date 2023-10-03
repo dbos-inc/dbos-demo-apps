@@ -1,7 +1,7 @@
 import { TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, GetApi, OrmEntities } from 'operon';
 import { Entity, EntityManager, PrimaryGeneratedColumn, Column } from "typeorm"
 
-@Entity()
+@Entity("operonhello")
 export class OperonHello {
     @PrimaryGeneratedColumn()
     greeting_id: number = 0

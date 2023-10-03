@@ -15,6 +15,8 @@ npm run build
 
 Update operon-config.yaml to point to your database which must
 be create prior to running the app
+Run this command in the database to create table:
+CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);
 
 
 Finally, start the simple HTTP server:
