@@ -16,6 +16,7 @@ import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { getS3, getS3Client } from './app';
 
 import {
+ OperonContext,
  OperonCommunicator,
  CommunicatorContext,
  OperonTransaction,
@@ -394,7 +395,7 @@ static async getS3DownloadKey(key: string, bucket: string) {
   return presignedUrl;
 }
 
-static async ensureS3FileDropped(key: string, bucket: string) {
+static async ensureS3FileDropped(ctx: OperonContext, key: string, bucket: string) {
     try {
         const params = {
             Bucket: bucket,
@@ -404,8 +405,10 @@ static async ensureS3FileDropped(key: string, bucket: string) {
         const s3 = getS3();
 
         await s3.deleteObject(params);
+        ctx.debug(`S3 key ${key} was deleted successfully.`);
     } catch (error) {
         // Generally expected to occur sometimes
+        ctx.info(`S3 key ${key} couldn't be deleted, or was already deleted.`);
     }
 }
 
@@ -446,6 +449,7 @@ static async mediaUpload(ctx: WorkflowContext, mtype: string, mediaId: string, m
 {
     const mkey = await ctx.invoke(Operations).createS3UploadKey(mediaFile, bucket);
     await ctx.setEvent<PresignedPost>("uploadkey", mkey);
+
     try {
         await ctx.recv("uploadfinish", 1500); // No upload in 25 minutes, give up?
         if (mtype === 'profile') {
@@ -459,7 +463,7 @@ static async mediaUpload(ctx: WorkflowContext, mtype: string, mediaId: string, m
         // No need to make a database record, or, at this point, roll anything back.
         // It might be a good idea to clobber the s3 key in case it arrived but we weren't told.
         //   (The access key duration is less than the time we wait, so it can't be started.)
-        await this.ensureS3FileDropped(mediaFile, bucket);
+        await this.ensureS3FileDropped(ctx, mediaFile, bucket);
     }
     return {};
 }

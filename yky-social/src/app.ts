@@ -230,13 +230,13 @@ export class YKY
   }
 
   @GetApi("/deleteMedia")
-  static async doMediaDelete(_ctx: HandlerContext, @Required filekey: string) {
+  static async doMediaDelete(ctx: HandlerContext, @Required filekey: string) {
     const key = filekey;
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
 
     // TODO: Validate user and drop from table
 
-    const presignedUrl = await Operations.ensureS3FileDropped(key, bucket);
+    const presignedUrl = await Operations.ensureS3FileDropped(ctx, key, bucket);
     return { message: "Dropped", url: presignedUrl, key: key };
   }
 
@@ -266,6 +266,7 @@ export class YKY
     if (stat!.authenticatedUser != ctx.authenticatedUser) {
       errorWithStatus("Unable to access workflow", 403);
     }
+    // Should we look at status?  What happens if this is a resubmit?
     await ctx.send(wfid, "", "uploadfinish");
     return await wfhandle.getResult();
   }
