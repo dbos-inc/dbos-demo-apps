@@ -31,8 +31,3 @@ export class Hello {
   };
 
 }
-
-
-
-
-
