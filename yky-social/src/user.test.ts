@@ -319,5 +319,11 @@ describe('Upload media in workflow', () => {
     const presignedGetUrl = (getkey.body.url || 'x') as string;
     const outputPath = '/tmp/YKY.png';
     await downloadFromS3(presignedGetUrl, outputPath);
+
+    // Delete
+    const dropres = await request(kapp.callback())
+    .get('/deleteMedia')
+    .query({filekey: postkey.body.file, userid:response.body.id});
+    expect(dropres.statusCode).toBe(200);
   });
 });

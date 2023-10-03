@@ -3,10 +3,16 @@ import {Entity, PrimaryGeneratedColumn, Column} from "typeorm";
 /*
  Type of graph relationship
  */
-enum MediaType {
+export enum MediaType {
     INVALID = 0,
     JPG = 1,
     PNG = 2,
+}
+
+export enum MediaUsage {
+    INVALID = 0,
+    PROFILE = 1,
+    POST = 2,
 }
 
 /*
@@ -27,5 +33,11 @@ export class MediaItem {
     media_type: MediaType = MediaType.INVALID;
 
     @Column()
+    media_usage: MediaUsage = MediaUsage.INVALID;
+
+    @Column()
     description : string = '';
+
+    @Column()
+    media_url : string = '';
 }

@@ -16,25 +16,25 @@ import { RecvType, SendType, TimelineRecv, TimelineSend } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
-import { Operations } from "./Operations";
+import { Operations, errorWithStatus } from "./Operations";
 import {
   Operon, Required, GetApi, RequiredRole,
-  OperonContext, OperonTransaction, TransactionContext,
+  OperonTransaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   HandlerContext,
   OperonWorkflow,
   WorkflowContext,
   Authentication,
   OperonHttpServer,
-  OperonNotAuthorizedError,
   MiddlewareContext,
   DefaultRequiredRole,
+  Error,
 } from "@dbos-inc/operon";
 
 import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
-import { S3Client } from '@aws-sdk/client-s3';
+import { S3Client, S3 } from '@aws-sdk/client-s3';
 
 const s3ClientConfig = {
   region: process.env.AWS_REGION || 'us-east-2', // Replace with your AWS region
@@ -46,6 +46,8 @@ const s3ClientConfig = {
 
 const s3Client = new S3Client(s3ClientConfig);
 export function getS3Client() {return s3Client;}
+const awsS3 = new S3(s3ClientConfig);
+export function getS3() {return awsS3;}
 
 export const userDataSource = new DataSource({
   "type": "postgres",
@@ -78,7 +80,7 @@ async function authMiddleware (ctx: MiddlewareContext) {
     const uid = userid?.toString();
 
     if (!uid) {
-      const err = new OperonNotAuthorizedError("Not logged in.", 401);
+      const err = new Error.OperonNotAuthorizedError("Not logged in.", 401);
       throw err;
     }
     return {
@@ -95,7 +97,7 @@ export class YKY
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi('/')
   @RequiredRole([])
-  static async hello(_ctx: OperonContext) {
+  static async hello(_ctx: HandlerContext) {
     return {message: "Welcome to YKY (Yakky not Yucky)!"};
   }
   static async helloctx(ctx:Context, next: Next) {
@@ -219,12 +221,23 @@ export class YKY
   }
 
   @GetApi("/getMediaDownloadKey")
-  static async doKeyDownload(ctx: OperonContext, @Required filekey: string) {
+  static async doKeyDownload(_ctx: HandlerContext, @Required filekey: string) {
     const key = filekey;
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
   
     const presignedUrl = await Operations.getS3DownloadKey(key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
+  }
+
+  @GetApi("/deleteMedia")
+  static async doMediaDelete(_ctx: HandlerContext, @Required filekey: string) {
+    const key = filekey;
+    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+
+    // TODO: Validate user and drop from table
+
+    const presignedUrl = await Operations.ensureS3FileDropped(key, bucket);
+    return { message: "Dropped", url: presignedUrl, key: key };
   }
 
   @GetApi("/startMediaUpload")
@@ -235,7 +248,7 @@ export class YKY
     // TODO: Rate limit the user's requests as they start workflows... or we could give the existing workflow if any?
 
     const fn = `photos/${mediaKey}-${Date.now()}`;
-    const wfh = ctx.invoke(Operations).mediaUpload(mediaKey, fn, bucket);
+    const wfh = await ctx.invoke(Operations).mediaUpload('profile', mediaKey, fn, bucket);
     const upkey = await ctx.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
     return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
   }
@@ -243,8 +256,16 @@ export class YKY
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/finishMediaUpload")
   static async finishMediaUpload(ctx: HandlerContext, wfid: string) {
-    // TODO: Validate that the workflow belongs to the user?  How would I do that?
     const wfhandle = ctx.retrieveWorkflow(wfid);
+    const stat = await wfhandle.getStatus();
+
+    // Validate that the workflow belongs to the user
+    if (!stat) {
+      errorWithStatus("Upload not in progress", 400);
+    }
+    if (stat!.authenticatedUser != ctx.authenticatedUser) {
+      errorWithStatus("Unable to access workflow", 403);
+    }
     await ctx.send(wfid, "", "uploadfinish");
     return await wfhandle.getResult();
   }
