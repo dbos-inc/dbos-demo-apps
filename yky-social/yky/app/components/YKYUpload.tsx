@@ -26,22 +26,34 @@ const YKYUpload: React.FC<ULProps> = (props) => {
 
     // 1. Get the pre-signed URL from the Next.js API route.
     const response = await fetch(`/doupload`);
+    console.log("Getting the wfhandle and key");
     const { wfHandle, key, file: _fpath} = await response.json();
+    console.log("Got the wfhandle and key");
+    console.log(JSON.stringify(key));
+    console.log(JSON.stringify(wfHandle));
 
     // 2. Use the pre-signed URL to upload the file to S3.
-    const uploadResponse = await fetch(key, {
-      method: 'PUT',
-      body: file,
-      headers: {
-        'Content-Type': file.type,
-      },
+    // Construct form data
+    const formData = new FormData();
+    Object.entries(key.fields).forEach(([key, value]) => {
+      formData.append(key, value as string);
     });
+    formData.append('file', file);
+    formData.append('Content-Type', file.type);
+
+    // Upload using presigned POST
+    const uploadResponse = await fetch(key.url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    console.log("Post complete");
 
     setUploading(false);
 
     if (uploadResponse.ok) {
       // Inform the server that the upload was successful.
-      const finresponse = await fetch(`/dofinishupload?wfid=${wfHandle}`);
+      const _finresponse = await fetch(`/dofinishupload?wfid=${wfHandle}`);
       setUploadSuccess(true);
     } else {
       setUploadSuccess(false);

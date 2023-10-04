@@ -2,9 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getuserid } from '@/app/components/userid';
 import { getAPIServer } from '@/app/components/backend';
 
-export async function POST(request: NextRequest) {
-  console.log("Post!");
-
+export async function GET(request: NextRequest) {
   const userid = getuserid();
   const rqwfid = request.nextUrl.searchParams.get('wfid');
   if (!rqwfid) {
@@ -20,7 +18,6 @@ export async function POST(request: NextRequest) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(await request.json()),
   });
  
   if (res.ok) {

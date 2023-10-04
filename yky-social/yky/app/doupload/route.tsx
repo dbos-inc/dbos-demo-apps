@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getuserid } from '@/app/components/userid';
 import { getAPIServer } from '@/app/components/backend';
 
-export async function POST(request: Request) {
+export async function GET(_request: Request) {
   console.log("Post!");
 
   const userid = getuserid();
@@ -18,7 +18,8 @@ export async function POST(request: Request) {
   });
  
   if (res.ok) {
-    const data = res.json();
+    const data = await res.json();
+    console.log(data);
     return NextResponse.json(data);
   }
   else {
