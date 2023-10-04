@@ -22,7 +22,6 @@ export class Hello {
   @GetApi('/greeting/:name')
   static async helloWorkflow(workflowCtxt: WorkflowContext, name: string) {
     console.log("Received request with name " + name );
-    // return await workflowCtxt.transaction(Hello.helloFunction, name);
     return await workflowCtxt.invoke(Hello).helloFunction(name);
   };
 
