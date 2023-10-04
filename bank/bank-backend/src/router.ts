@@ -12,7 +12,7 @@ export class BankEndpoints {
   @GetApi("/api/greeting")
   static async greeting(ctx: HandlerContext) {
     void ctx;
-    return { msg: "Hello from DBOS Operon " };
+    return { msg: "Hello from DBOS Operon " + ctx.getConfig("bankname") };
   }
 
   // Deposit.
@@ -26,7 +26,7 @@ export class BankEndpoints {
     // Must to local.
     data.toLocation = "local";
 
-    return await ctx.invoke(BankTransactionHistory).depositWorkflow(data).then(x => x.getResult());
+    return ctx.invoke(BankTransactionHistory).depositWorkflow(data).then(x => x.getResult());
   }
 
   // Withdraw.
@@ -40,7 +40,7 @@ export class BankEndpoints {
     // Must from local.
     data.fromLocation = "local";
 
-    return await ctx.invoke(BankTransactionHistory).withdrawWorkflow(data).then(x => x.getResult());
+    return ctx.invoke(BankTransactionHistory).withdrawWorkflow(data).then(x => x.getResult());
   }
 
   // Internal transfer
@@ -57,7 +57,7 @@ export class BankEndpoints {
       throw new Error("Invalid input!");
     }
 
-    return await ctx.invoke(BankTransactionHistory).internalTransferFunc(data);
+    return ctx.invoke(BankTransactionHistory).internalTransferFunc(data);
   }
 }
 
