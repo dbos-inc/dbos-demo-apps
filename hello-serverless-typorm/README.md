@@ -2,10 +2,10 @@
 
 A demo app for Operon.
 
-You need to use `npm link` to install the Operon package.
+You need to use `npm install` to install the Operon package.
 
 ```shell
-npm link <operon repo path>
+npm install @dbos-inc/operon
 ```
 
 Then compile this app:
