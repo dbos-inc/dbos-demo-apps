@@ -1,4 +1,4 @@
-name: CI for Bank demo
+name: CI for Hello world demo
 
 on:
   push:
