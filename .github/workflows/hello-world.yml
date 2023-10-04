@@ -59,8 +59,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client coreutils
       - name: Setup Postgres
-        run: |
-          ./operon-demo-apps/hello-world/init_database.sh
+        run: ./operon-demo-apps/hello-world/init_database.sh
+        env:
+          POSTGRES_PASSWORD: dbos
       - name: Compile Hello World
         working-directory: operon-demo-apps/hello-world
         run: |
@@ -68,4 +69,3 @@ jobs:
           npm run build
         env:
           NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          POSTGRES_PASSWORD: dbos
