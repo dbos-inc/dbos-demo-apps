@@ -61,7 +61,7 @@ jobs:
       - name: Setup Postgres
         run: ./operon-demo-apps/hello-world/init_database.sh
         env:
-          POSTGRES_PASSWORD: dbos
+          PGPASSWORD: dbos
       - name: Compile Hello World
         working-directory: operon-demo-apps/hello-world
         run: |

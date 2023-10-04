@@ -1,5 +1,11 @@
 #! /bin/bash
 
+# Exit if PGPASSWORD not provided
+if [[ -z "${PGPASSWORD}" ]]; then
+    echo "PGPASSWORD not provided"
+    exit 1
+fi
+
 if [[ -z "${POSTGRES_HOST}" ]]; then
   export POSTGRES_HOST="localhost"
 fi
