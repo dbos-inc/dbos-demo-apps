@@ -54,6 +54,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: npm
       - name: Install psql
         run: |
           sudo apt-get update
@@ -72,7 +73,7 @@ jobs:
       - name: Compile Bank Server
         working-directory: operon-demo-apps/bank/bank-backend
         run: |
-          npm install
+          npm ci
           npx prisma migrate dev --name init --schema prisma/schema.prisma
           npm run lint
           npm run build
