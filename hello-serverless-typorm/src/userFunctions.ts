@@ -17,7 +17,7 @@ export class Hello {
   static async helloFunction (txnCtxt: TransactionContext, name: string)  {
     const greeting = `Hello, ${name}!`
 
-    const p: EntityManager = txnCtxt.typeormEM as EntityManager ;
+    const p: EntityManager = txnCtxt.typeormEM as EntityManager;
     const g: OperonHello = new OperonHello();
     g.greeting = greeting;
     const res = await p.save(g);
@@ -27,7 +27,8 @@ export class Hello {
   @OperonWorkflow()
   @GetApi('/greeting/:name')
   static async helloWorkflow(workflowCtxt: WorkflowContext, name: string) {
-    return await workflowCtxt.transaction(Hello.helloFunction, name);
+    // return await workflowCtxt.transaction(Hello.helloFunction, name);
+    return await workflowCtxt.invoke(Hello).helloFunction(name);
   };
 
 }
