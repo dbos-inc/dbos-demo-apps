@@ -25,11 +25,11 @@ const YKYUpload: React.FC<ULProps> = (props) => {
     setUploading(true);
 
     // 1. Get the pre-signed URL from the Next.js API route.
-    const response = await fetch(`/api/get-upload-url?filename=${file.name}&filetype=${file.type}&mtype=${ultype}`);
-    const { signedUrl } = await response.json();
+    const response = await fetch(`/doupload`);
+    const { wfHandle, key, file: _fpath} = await response.json();
 
     // 2. Use the pre-signed URL to upload the file to S3.
-    const uploadResponse = await fetch(signedUrl, {
+    const uploadResponse = await fetch(key, {
       method: 'PUT',
       body: file,
       headers: {
@@ -40,8 +40,9 @@ const YKYUpload: React.FC<ULProps> = (props) => {
     setUploading(false);
 
     if (uploadResponse.ok) {
+      // Inform the server that the upload was successful.
+      const finresponse = await fetch(`/dofinishupload?wfid=${wfHandle}`);
       setUploadSuccess(true);
-      // Optionally inform the server that the upload was successful.
     } else {
       setUploadSuccess(false);
     }
