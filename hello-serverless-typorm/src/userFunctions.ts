@@ -1,4 +1,4 @@
-import { TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, GetApi, OrmEntities } from 'operon';
+import { TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, GetApi, OrmEntities } from '@dbos-inc/operon';
 import { Entity, EntityManager, PrimaryGeneratedColumn, Column } from "typeorm"
 
 @Entity("operonhello")
