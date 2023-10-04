@@ -60,8 +60,7 @@ jobs:
           sudo apt-get install -y postgresql-client coreutils
       - name: Setup Postgres
         run: |
-          cd ./operon-demo-apps/hello-world
-          init_database.sh
+          ./operon-demo-apps/hello-world/init_database.sh
       - name: Compile Hello World
         working-directory: operon-demo-apps/hello-world
         run: |
