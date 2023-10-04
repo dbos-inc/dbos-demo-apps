@@ -270,6 +270,17 @@ export class YKY
     await ctx.send(wfid, "", "uploadfinish");
     return await wfhandle.getResult();
   }
+
+  @GetApi("/getProfilePhoto")
+  static async getProfilePhoto(ctx: HandlerContext) {
+    const filekey = await ctx.invoke(Operations).getMyProfilePhotoKey(ctx.authenticatedUser);
+    if (filekey === null) return {};
+
+    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+  
+    const presignedUrl = await Operations.getS3DownloadKey(filekey, bucket);
+    return { message: "Signed URL", url: presignedUrl, key: filekey };
+  }
 }
 
 // Initialize Operon.

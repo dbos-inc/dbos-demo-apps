@@ -124,6 +124,18 @@ static async getMyProfile(manager:EntityManager, curUid:string) :
     return upRep.findOneBy({id: curUid});
 }
 
+@OperonTransaction({readOnly: true})
+static async getMyProfilePhotoKey(ctx: TransactionContext, curUid:string) :
+   Promise<string | null>
+{
+    const mRep = (ctx.typeormEM as EntityManager).getRepository(MediaItem);
+    const mi = await mRep.findOneBy({owner_id: curUid, media_usage: MediaUsage.PROFILE});
+    if (!mi) {
+        return null;
+    }
+    return mi.media_url;
+}
+
 static async getPost(manager:EntityManager, _curUid: string, post:string) :
    Promise<Post | null>
 {
