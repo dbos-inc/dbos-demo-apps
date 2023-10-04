@@ -5,7 +5,7 @@ A demo app for Operon.
 You need to use `npm install` to install the Operon package.
 
 ```shell
-npm install @dbos-inc/operon
+npm install
 ```
 
 Then compile this app:
