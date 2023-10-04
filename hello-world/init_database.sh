@@ -27,4 +27,4 @@ psql -U postgres -h $POSTGRES_HOST -d hello -c "GRANT CREATE, USAGE ON SCHEMA pu
 ################################################################
 
 export PGPASSWORD='hello'
-psql -U hello -h $POSTGRES_HOST -d hello -c "CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);"%
+psql -U hello -h $POSTGRES_HOST -d hello -c "CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);"
