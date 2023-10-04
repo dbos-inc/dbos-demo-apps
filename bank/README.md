@@ -31,12 +31,7 @@ We use Jaeger to visualize traces of Operon operations. We provide a script to a
 To compile and run the bank backend, enter the `bank-backend/` directory and install dependencies:
 ```shell
 cd bank-backend/
-npm install
-```
-
-Then, you need to use `npm link` to install the Operon package:
-```shell
-npm link <operon repo path>
+npm ci
 ```
 
 If you just created a database, you can configure your database path in the `.env` file and create tables using Prisma:

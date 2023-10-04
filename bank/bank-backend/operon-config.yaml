@@ -4,7 +4,14 @@ database:
   username: 'bank'
   connectionTimeoutMillis: 3000
   user_database: 'bank'
+  password: ${PGPASSWORD}
   system_database: 'operon_bank_systemdb'
+  user_dbclient: "prisma"
 telemetryExporters:
   - 'ConsoleExporter'
   - 'JaegerExporter'
+localRuntimeConfig:
+  port: 8081
+application:
+  bankname: 'localbank'
+  bankport: '8081'
