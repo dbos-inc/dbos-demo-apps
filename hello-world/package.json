@@ -2,11 +2,8 @@
   "name": "hello-world",
   "version": "0.0.1",
   "description": "Hello world demo app for operon",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "start": "node .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
