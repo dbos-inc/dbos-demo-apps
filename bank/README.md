@@ -43,7 +43,7 @@ npx prisma migrate dev --name init
 Finally, compile and run the backend:
 ```shell
 npm run build
-npm start
+npx operon start
 ```
 It will listen at http://localhost:8081 
 
