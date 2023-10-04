@@ -2,20 +2,20 @@
 
 A demo app for Operon.
 
-You need to use `npm link` to install the Operon package.
-
+Install and build the app:
 ```shell
-npm link <operon repo path>
-```
-
-Then compile this app:
-```shell
+npm install
 npm run build
 ```
 
-Finally, start the simple HTTP server:
+Initialize a database:
 ```shell
-npm start
+./init_database.sh
+```
+
+Start your Operon app:
+```shell
+npx operon start
 ```
 
 It should print the output:
