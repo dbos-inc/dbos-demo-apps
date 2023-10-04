@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   });
  
   if (res.ok) {
-    const data = res.json();
+    const data = await res.json();
     console.log("Got the key for "+userid+JSON.stringify(data));
     return NextResponse.json(data);
   }

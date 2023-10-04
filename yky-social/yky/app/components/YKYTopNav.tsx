@@ -15,6 +15,9 @@ const YKYTopNav: React.FC = () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
+    localStorage.removeItem('ykyuid');
+    localStorage.removeItem('ykyuname');
+
     setCurrentUser({uname: undefined, uid: undefined});
     if (!res.ok) {
        alert("Failed to log out.");

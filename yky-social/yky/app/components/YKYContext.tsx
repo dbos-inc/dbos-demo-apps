@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 export type CurUserLogin = {
     uid : string | undefined;
@@ -29,6 +29,25 @@ export default function YKYContextProviders({
     const [currentUser, setCurrentUser] = useState<CurUserLogin>({uid:undefined, uname:undefined});
     const [currentTheme, setCurrentTheme] = useState<string>("");
 
+    useEffect(() => {
+      setCurrentUser({uid:localStorage.getItem('ykyuid') || undefined, uname:localStorage.getItem('ykyuname') || undefined});
+
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === 'ykyuid') {
+          setCurrentUser({uid: e.newValue || undefined, uname: currentUser.uname});
+        }
+        if (e.key === 'ykyuname') {
+          setCurrentUser({uid: currentUser.uid || undefined, uname: e.newValue || undefined});
+        }
+      };
+    
+      window.addEventListener('storage', handleStorageChange);
+    
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+      };
+    }, []);
+
     return (
       <ThemeContext.Provider value={{currentTheme, setCurrentTheme}}>
         <CurrentUserContext.Provider
@@ -46,7 +65,7 @@ export default function YKYContextProviders({
 export const useTheme = (): ThemeContextType => {
     const context = useContext(ThemeContext);
     if (context === undefined) {
-      throw new Error('useTheme must be used within a ThemeProvider');
+      throw new Error('useTheme must be used within a ThemeContext');
     }
     return context;
   };
@@ -54,7 +73,7 @@ export const useTheme = (): ThemeContextType => {
 export const useUserLogin = (): UserContextType => {
     const context = useContext(CurrentUserContext);
     if (context === undefined) {
-      throw new Error('useUserLogin must be used within a ThemeProvider');
+      throw new Error('useUserLogin must be used within a CurrentUserContext');
     }
     return context;
   };

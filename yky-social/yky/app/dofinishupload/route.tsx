@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({error: "Workflow not specified"}, {status:400});
   }
 
-  const res = await fetch(getAPIServer() + '/dofinishupload'+'?' + new URLSearchParams({
+  const res = await fetch(getAPIServer() + '/finishMediaUpload'+'?' + new URLSearchParams({
     userid: userid,
     wfid: rqwfid,
   }),

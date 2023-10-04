@@ -125,14 +125,18 @@ static async getMyProfile(manager:EntityManager, curUid:string) :
 }
 
 @OperonTransaction({readOnly: true})
+@RequiredRole([])
 static async getMyProfilePhotoKey(ctx: TransactionContext, curUid:string) :
    Promise<string | null>
 {
     const mRep = (ctx.typeormEM as EntityManager).getRepository(MediaItem);
+    ctx.log(`Doing profile photo get for ${curUid}`);
     const mi = await mRep.findOneBy({owner_id: curUid, media_usage: MediaUsage.PROFILE});
     if (!mi) {
+        ctx.log(`Photo get for ${curUid} got nothing`);
         return null;
     }
+    ctx.log(`Photo get for ${curUid} got ${mi.media_url}`);
     return mi.media_url;
 }
 
@@ -445,6 +449,12 @@ static async writeMediaProfilePhoto(ctx: TransactionContext, mid: string, mkey: 
     //m.media_type = ? // This may not be important enough to deal with...
     m.media_usage = MediaUsage.PROFILE;
     const manager = ctx.typeormEM as unknown as EntityManager;
+    // Should really delete the old keys from AWS...
+    const deleted = await manager.delete(MediaItem, {
+        owner_id: ctx.authenticatedUser,
+        media_usage: MediaUsage.PROFILE
+    })
+    ctx.log(`Deleted ${deleted.affected} old items`);
     await manager.save(m);
 }
 
