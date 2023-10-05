@@ -69,9 +69,6 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_PASSWORD: dbos
           BANK_PORT: 8081
-      - name: Start Keycloak
-        working-directory: bank/
-        run: scripts/start_keycloak_docker.sh
       - name: Compile Bank Server
         working-directory: bank/bank-backend/
         run: |
@@ -81,10 +78,10 @@ jobs:
           npm run build
           npm test
         env:
+          PGPASSWORD: bank
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
-          POSTGRES_PASSWORD: dbos
           BANK_PORT: 8081
           NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

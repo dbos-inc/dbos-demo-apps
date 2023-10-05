@@ -20,6 +20,7 @@ async function waitForMessageTest(command: ChildProcess, port: string) {
     };
 
     stdout.on("data", onData);
+    stderr.on("data", onData);
 
     command.on("error", (error) => {
       reject(error); // Reject promise on command error
