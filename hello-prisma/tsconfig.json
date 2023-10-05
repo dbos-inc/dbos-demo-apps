@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      /* Visit https://aka.ms/tsconfig to read more about this file */
+  
+      "target": "esnext",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+      "module": "commonjs",                                /* Specify what module code is generated. */
+      "baseUrl": "./",                                     /* Specify the base directory to resolve non-relative module names. */
+      "declaration": true,                                 /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
+      "declarationMap": true,                              /* Create sourcemaps for d.ts files. */
+      "sourceMap": true,                                   /* Create source map files for emitted JavaScript files. */
+      "outDir": "./dist",                                  /* Specify an output folder for all emitted files. */
+      "newLine": "lf",                                     /* Set the newline character for emitting files. */
+      "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
+      "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */
+      "skipLibCheck": true ,                                /* Skip type checking all .d.ts files. */
+      "experimentalDecorators": true, // Enables experimental support for ES7 decorators, which is used by TypeORM and many other libraries
+      "emitDecoratorMetadata": true // Emits metadata for decorators
+    }
+  }
