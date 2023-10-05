@@ -13,8 +13,6 @@ export class Hello {
         greeting: greeting,
         },
     });
-
-    console.log("invoked prisma got "+ res);
     return `Greeting ${res.greeting_id}: ${greeting}`;
   };
 
