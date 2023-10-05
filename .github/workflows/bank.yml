@@ -76,6 +76,7 @@ jobs:
           npx prisma migrate dev --name init --schema prisma/schema.prisma
           npm run lint
           npm run build
+          npm test
         env:
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
