@@ -49,11 +49,12 @@ jobs:
       - name: Checkout demo app
         uses: actions/checkout@v3
       - name: Use Node.js 18
-        working-directory: bank/bank-backend
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: npm
+          cache-dependency-path: 'bank/bank-backend/package-lock.json'
+
       - name: Install psql
         run: |
           sudo apt-get update
@@ -69,7 +70,7 @@ jobs:
           POSTGRES_PASSWORD: dbos
           BANK_PORT: 8081
       - name: Compile Bank Server
-        working-directory: bank/bank-backend
+        working-directory: bank/bank-backend/
         run: |
           npm ci
           npx prisma migrate dev --name init --schema prisma/schema.prisma
