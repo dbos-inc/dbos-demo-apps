@@ -48,20 +48,20 @@ jobs:
           docker restart ${{ job.services.postgres.id }}
       - name: Checkout demo app
         uses: actions/checkout@v3
-        with:
-          path: operon-demo-apps
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: npm
+          cache-dependency-path: 'bank/bank-backend/package-lock.json'
+
       - name: Install psql
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client coreutils
       - name: Setup Postgres
-        run: |
-          cd ./operon-demo-apps/bank
-          scripts/init_postgres.sh
+        working-directory: bank/
+        run: scripts/init_postgres.sh
         env:
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
@@ -70,9 +70,9 @@ jobs:
           POSTGRES_PASSWORD: dbos
           BANK_PORT: 8081
       - name: Compile Bank Server
-        working-directory: operon-demo-apps/bank/bank-backend
+        working-directory: bank/bank-backend/
         run: |
-          npm install
+          npm ci
           npx prisma migrate dev --name init --schema prisma/schema.prisma
           npm run lint
           npm run build
