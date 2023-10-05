@@ -44,7 +44,7 @@ describe("runtime-tests", () => {
   });
 
   test("basic-greeting", async () => {
-    const command = spawn('node_modules/@dbos-inc/operon/dist/src/operon-runtime/cli.js', ['start'], {
+    const command = spawn('./node_modules/@dbos-inc/operon/dist/src/operon-runtime/cli.js', ['start'], {
       env: process.env
     });
     await waitForMessageTest(command, '8081');
