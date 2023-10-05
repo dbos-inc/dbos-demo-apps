@@ -76,11 +76,12 @@ jobs:
           npx prisma migrate dev --name init --schema prisma/schema.prisma
           npm run lint
           npm run build
+          npm test
         env:
+          PGPASSWORD: bank
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
-          POSTGRES_PASSWORD: dbos
           BANK_PORT: 8081
           NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

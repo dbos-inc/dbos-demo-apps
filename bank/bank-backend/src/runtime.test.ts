@@ -20,6 +20,7 @@ async function waitForMessageTest(command: ChildProcess, port: string) {
     };
 
     stdout.on("data", onData);
+    stderr.on("data", onData);
 
     command.on("error", (error) => {
       reject(error); // Reject promise on command error
@@ -44,7 +45,7 @@ describe("runtime-tests", () => {
   });
 
   test("basic-greeting", async () => {
-    const command = spawn('node_modules/@dbos-inc/operon/dist/src/operon-runtime/cli.js', ['start'], {
+    const command = spawn('./node_modules/@dbos-inc/operon/dist/src/operon-runtime/cli.js', ['start'], {
       env: process.env
     });
     await waitForMessageTest(command, '8081');
