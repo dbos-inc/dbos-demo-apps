@@ -1,4 +1,4 @@
-import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, HandlerContext, PostApi } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -28,5 +28,19 @@ export class Hello {
   @GetApi('/greeting/:name')
   static async helloHandler(handlerCtxt: HandlerContext, name: string) {
     return handlerCtxt.invoke(Hello).helloTransaction(name);
+  }
+
+  @OperonTransaction()
+  static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
+    // Delete a users's entry.
+    await txnCtxt.client<operon_hello>("operon_hello")
+      .where({name: name})
+      .delete()
+    return `Cleared greet_count for ${name}!\n`
+  }
+
+  @PostApi('/clear/:name')
+  static async clearHandler(handlerCtxt: HandlerContext, name: string) {
+    return handlerCtxt.invoke(Hello).clearTransaction(name);
   }
 }
