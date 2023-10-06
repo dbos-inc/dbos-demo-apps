@@ -9,22 +9,17 @@ import { Readable } from 'stream';
 import { describe, expect } from '@jest/globals';
 import request from 'supertest';
 import { kapp, YKY, ykyInit } from './app';
-import { userDataSource } from './app';
 import { operon } from './app';
 
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { Operations } from './Operations';
 
 beforeAll(async () => {
-  await userDataSource.initialize();
-  operon.useTypeORM(userDataSource);
   await operon.init(YKY, Operations);
   ykyInit();
 });
 
 afterAll(async () => {
-  await userDataSource.dropDatabase();
-  await userDataSource.destroy();
   await operon.destroy();
 });
 

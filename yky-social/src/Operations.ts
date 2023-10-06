@@ -453,7 +453,7 @@ static async writeMediaProfilePhoto(ctx: TransactionContext, mid: string, mkey: 
     const deleted = await manager.delete(MediaItem, {
         owner_id: ctx.authenticatedUser,
         media_usage: MediaUsage.PROFILE
-    })
+    });
     ctx.log(`Deleted ${deleted.affected} old items`);
     await manager.save(m);
 }

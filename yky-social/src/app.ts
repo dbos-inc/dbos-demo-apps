@@ -7,7 +7,7 @@ import Router from "@koa/router";
 import logger from "koa-logger";
 import { bodyParser } from "@koa/bodyparser";
 
-import { DataSource, EntityManager } from "typeorm";
+import { EntityManager } from "typeorm";
 
 import { MediaItem } from "./entity/Media";
 import { Post } from "./entity/Post";
@@ -29,6 +29,7 @@ import {
   MiddlewareContext,
   DefaultRequiredRole,
   Error,
+  OrmEntities,
 } from "@dbos-inc/operon";
 
 import { v4 as uuidv4 } from 'uuid';
@@ -49,6 +50,7 @@ export function getS3Client() {return s3Client;}
 const awsS3 = new S3(s3ClientConfig);
 export function getS3() {return awsS3;}
 
+/*
 export const userDataSource = new DataSource({
   "type": "postgres",
   "host": process.env.POSTGRES_HOST,
@@ -70,6 +72,7 @@ export const userDataSource = new DataSource({
   "migrations": [],
   "subscribers": [],
 });
+*/
 
 // eslint-disable-next-line @typescript-eslint/require-await
 async function authMiddleware (ctx: MiddlewareContext) {
@@ -92,6 +95,15 @@ async function authMiddleware (ctx: MiddlewareContext) {
 
 @Authentication(authMiddleware)
 @DefaultRequiredRole(['user'])
+@OrmEntities([
+  MediaItem,
+  Post,
+  SocialGraph,
+  UserLogin,
+  UserProfile,
+  TimelineSend,
+  TimelineRecv,
+])
 export class YKY
 {
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -162,7 +174,7 @@ export class YKY
     } else {
       return { message: 'No such post.' };
     }
-  }  
+  }
 
   @OperonTransaction({readOnly: true})
   @PostApi("/login")
@@ -293,6 +305,7 @@ export const operon = new Operon({
     port: Number(process.env.POSTGRES_PORT),
     host: process.env.POSTGRES_HOST,
   },
+  userDbclient: 'typeorm',
   system_database: 'opsys',
 });
 
@@ -316,3 +329,15 @@ router.get("/koa", async (ctx, next) => {
 });
 
 kapp.use(router.routes()).use(router.allowedMethods());
+
+operon.init(YKY, Operations)
+  .then(() => {
+    console.log("Operon has been initialized!");
+    ykyInit();
+    kapp.listen(3000, () => {
+      console.log("Server started on port 3000");
+    });
+  })
+  .catch((err) => {
+    console.error("Error during Data Source initialization", err);
+  });
