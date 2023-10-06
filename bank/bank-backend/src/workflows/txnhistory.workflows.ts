@@ -11,7 +11,6 @@ import {
   KoaMiddleware,
 } from "@dbos-inc/operon";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
-import { bankname, bankport } from "../main";
 import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";
 import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
@@ -205,7 +204,7 @@ export class BankTransactionHistory {
         toAccountId: data.toAccountId,
         amount: data.amount,
         fromLocation: "local",
-        toLocation: REMOTEDB_PREFIX + bankname + ":" + bankport,
+        toLocation: REMOTEDB_PREFIX + ctxt.getConfig("bankname") + ":" + ctxt.getConfig("bankport"),
       };
 
       const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory);
@@ -242,7 +241,7 @@ export class BankTransactionHistory {
         toAccountId: data.toAccountId,
         amount: data.amount,
         toLocation: "local",
-        fromLocation: REMOTEDB_PREFIX + bankname + ":" + bankport,
+        fromLocation: REMOTEDB_PREFIX + ctxt.getConfig("bankname") + ":" + ctxt.getConfig("bankport"),
       };
       const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory);
       if (!remoteRes) {
