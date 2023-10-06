@@ -16,6 +16,7 @@ import axios from "axios";
 import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
+type PrismaContext = TransactionContext<PrismaClient>;
 
 @DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
@@ -23,10 +24,9 @@ const REMOTEDB_PREFIX: string = "remoteDB-";
 export class BankTransactionHistory {
   @OperonTransaction()
   @GetApi("/api/transaction_history/:accountId")
-  static async listTxnForAccountFunc(txnCtxt: TransactionContext, accountId: number) {
+  static async listTxnForAccountFunc(txnCtxt: PrismaContext, accountId: number) {
     const acctId = BigInt(accountId);
-    const p = txnCtxt.prismaClient as PrismaClient;
-    return p.transactionHistory.findMany({
+    return txnCtxt.client.transactionHistory.findMany({
       where: {
         OR: [
           {
@@ -46,9 +46,8 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async insertTxnHistoryFunc(txnCtxt: TransactionContext, data: TransactionHistory) {
-    const p = txnCtxt.prismaClient as PrismaClient;
-    return p.transactionHistory
+  static async insertTxnHistoryFunc(txnCtxt: PrismaContext, data: TransactionHistory) {
+    return txnCtxt.client.transactionHistory
       .create({
         data: {
           // Escape txnId and timestamp fields.
@@ -66,9 +65,8 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async deleteTxnHistoryFunc(txnCtxt: TransactionContext, txnId: bigint) {
-    const p = txnCtxt.prismaClient as PrismaClient;
-    return p.transactionHistory
+  static async deleteTxnHistoryFunc(txnCtxt: PrismaContext, txnId: bigint) {
+    return txnCtxt.client.transactionHistory
       .delete({
         where: {
           txnId: txnId,
@@ -81,9 +79,8 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async updateAccountBalanceFunc(txnCtxt: TransactionContext, acctId: bigint, balance: bigint) {
-    const p = txnCtxt.prismaClient as PrismaClient;
-    return p.accountInfo
+  static async updateAccountBalanceFunc(txnCtxt: PrismaContext, acctId: bigint, balance: bigint) {
+    return txnCtxt.client.accountInfo
       .update({
         where: { accountId: acctId },
         data: {
@@ -97,7 +94,7 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async updateAcctTransactionFunc(txnCtxt: TransactionContext, acctId: bigint, data: TransactionHistory, deposit: boolean, undoTxn: bigint | null = null) {
+  static async updateAcctTransactionFunc(txnCtxt: PrismaContext, acctId: bigint, data: TransactionHistory, deposit: boolean, undoTxn: bigint | null = null) {
     // First, make sure the account exists, and read the latest balance.
     const acct = await BankAccountInfo.findAccountFunc(txnCtxt, acctId);
     if (acct === null) {
@@ -158,7 +155,7 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async internalTransferFunc(txnCtxt: TransactionContext, data: TransactionHistory): Promise<string> {
+  static async internalTransferFunc(txnCtxt: PrismaContext, data: TransactionHistory): Promise<string> {
     // Check if the fromAccount has enough balance.
     const fromAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(txnCtxt, data.fromAccountId);
     if (fromAccount === null) {
