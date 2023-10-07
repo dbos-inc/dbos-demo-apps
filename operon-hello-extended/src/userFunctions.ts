@@ -34,28 +34,6 @@ export class Hello {
       .decrement('greet_count', 1);
   }
 
-  @GetApi('/greeting/:name')
-  @OperonWorkflow()
-  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
-    const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
-    if (await wfCtxt.invoke(Hello).postmanFunction(greeting)) {
-      return greeting;
-    } else {
-      await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
-      return `Greeting failed for ${name}\n`
-    }
-  }
-
-  @OperonTransaction()
-  static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
-    // Delete greet_count for a user.
-    await txnCtxt.client<operon_hello>("operon_hello")
-      .where({ name: name })
-      .delete()
-    return `Cleared greet_count for ${name}!\n`
-  }
-
-  @PostApi('/clear/:name')
   @OperonCommunicator()
   static async postmanFunction(_commCtxt: CommunicatorContext, greeting: string) {
     try {
@@ -70,5 +48,27 @@ export class Hello {
       console.warn("Error sending request:", e);
       return false;
     }
+  }
+
+  @GetApi('/greeting/:name')
+  @OperonWorkflow()
+  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
+    const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
+    if (await wfCtxt.invoke(Hello).postmanFunction(greeting)) {
+      return greeting;
+    } else {
+      await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
+      return `Greeting failed for ${name}\n`
+    }
+  }
+
+  @PostApi('/clear/:name')
+  @OperonTransaction()
+  static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
+    // Delete greet_count for a user.
+    await txnCtxt.client<operon_hello>("operon_hello")
+      .where({ name: name })
+      .delete()
+    return `Cleared greet_count for ${name}!\n`
   }
 }
