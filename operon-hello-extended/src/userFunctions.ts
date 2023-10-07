@@ -1,4 +1,4 @@
-import { TransactionContext, OperonTransaction, GetApi, HandlerContext, PostApi, CommunicatorContext, OperonCommunicator } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, HandlerContext, PostApi, CommunicatorContext, OperonCommunicator, OperonWorkflow, WorkflowContext } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 import axios from 'axios';
 
@@ -32,15 +32,16 @@ export class Hello {
     await txnCtxt.client<operon_hello>("operon_hello")
       .where({ name: name })
       .decrement('greet_count', 1);
-}
+  }
 
   @GetApi('/greeting/:name')
-  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
-    const greeting = await handlerCtxt.invoke(Hello).helloTransaction(name);
-    if (await handlerCtxt.invoke(Hello).postmanFunction(greeting)) {
+  @OperonWorkflow()
+  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
+    const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
+    if (await wfCtxt.invoke(Hello).postmanFunction(greeting)) {
       return greeting;
     } else {
-      await handlerCtxt.invoke(Hello).rollbackHelloTransaction(name);
+      await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
       return `Greeting failed for ${name}\n`
     }
   }
@@ -55,10 +56,6 @@ export class Hello {
   }
 
   @PostApi('/clear/:name')
-  static async clearHandler(handlerCtxt: HandlerContext, name: string) {
-    return handlerCtxt.invoke(Hello).clearTransaction(name);
-  }
-
   @OperonCommunicator()
   static async postmanFunction(_commCtxt: CommunicatorContext, greeting: string) {
     try {
