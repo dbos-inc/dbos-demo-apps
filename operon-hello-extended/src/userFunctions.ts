@@ -26,11 +26,23 @@ export class Hello {
     return `Hello, ${name}! You have been greeted ${greet_count} times.\n`;
   }
 
+  @OperonTransaction()
+  static async rollbackHelloTransaction(txnCtxt: KnexTransactionContext, name: string) {
+    // Decrement greet_count.
+    await txnCtxt.client<operon_hello>("operon_hello")
+      .where({ name: name })
+      .decrement('greet_count', 1);
+}
+
   @GetApi('/greeting/:name')
   static async helloHandler(handlerCtxt: HandlerContext, name: string) {
     const greeting = await handlerCtxt.invoke(Hello).helloTransaction(name);
-    handlerCtxt.invoke(Hello).postmanFunction(greeting);
-    return greeting;
+    if (await handlerCtxt.invoke(Hello).postmanFunction(greeting)) {
+      return greeting;
+    } else {
+      await handlerCtxt.invoke(Hello).rollbackHelloTransaction(name);
+      return `Greeting failed for ${name}\n`
+    }
   }
 
   @OperonTransaction()
