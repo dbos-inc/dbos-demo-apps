@@ -36,27 +36,23 @@ export class Hello {
 
   @OperonCommunicator()
   static async postmanFunction(_commCtxt: CommunicatorContext, greeting: string) {
-    try {
-      await axios.get("https://postman-echo.com/get", {
-        params: {
-          greeting: greeting
-        }
-      });
-      console.log(`Greeting sent to postman!`)
-      return true;
-    } catch (e) {
-      console.warn("Error sending request:", e);
-      return false;
-    }
+    await axios.get("https://postman-echo.com/get", {
+      params: {
+        greeting: greeting
+      }
+    });
+    console.log(`Greeting sent to postman!`);
   }
 
   @GetApi('/greeting/:name')
   @OperonWorkflow()
   static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
     const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
-    if (await wfCtxt.invoke(Hello).postmanFunction(greeting)) {
+    try {
+      await wfCtxt.invoke(Hello).postmanFunction(greeting);
       return greeting;
-    } else {
+    } catch (e) {
+      console.warn("Error sending request:", e);
       await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
       return `Greeting failed for ${name}\n`
     }
