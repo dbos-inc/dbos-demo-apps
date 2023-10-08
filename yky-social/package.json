@@ -6,8 +6,8 @@
   "scripts": {
     "test": "jest --detectOpenHandles",
     "build": "tsc",
-    "dev": "ts-node src/app.ts",
-    "reg": "ts-node-dev src/ds.ts",
+    "dev": "ts-node src/init.ts",
+    "reg": "ts-node-dev src/init.ts",
     "lint": "eslint --fix --ext .ts .",
     "tsc": "tsc",
     "clean": "rm -rf dist",

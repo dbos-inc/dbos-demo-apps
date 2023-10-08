@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
@@ -14,12 +15,16 @@ import { operon } from './app';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { Operations } from './Operations';
 
+import { TypeORMDatabase } from '@dbos-inc/operon/dist/src/user_database';
+import { DataSource } from 'typeorm';
+
 beforeAll(async () => {
   await operon.init(YKY, Operations);
   ykyInit();
 });
 
 afterAll(async () => {
+  await ((operon.userDatabase as TypeORMDatabase).dataSource as DataSource).dropDatabase();
   await operon.destroy();
 });
 
