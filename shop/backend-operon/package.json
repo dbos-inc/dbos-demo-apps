@@ -4,7 +4,7 @@
     "lint": "eslint --fix --ext .ts ."
   },
   "dependencies": {
-    "@dbos-inc/operon": "0.5.13-preview",
+    "@dbos-inc/operon": "0.5.16-preview",
     "bcrypt": "^5.1.1",
     "stripe": "^13.7.0"
   },

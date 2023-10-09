@@ -6,8 +6,6 @@ import Stripe from 'stripe';
 import bcrypt from 'bcrypt';
 import { Knex } from 'knex';
 
-// TODO: change Promise<null> return types -> Promise<void> once core issue with Promise<void> return types is resolved
-
 type KnexTransactionContext = TransactionContext<Knex>;
 
 const OrderStatus = {
@@ -63,26 +61,23 @@ export class Shop {
 
   @PostApi('/api/login')
   @OperonTransaction({ readOnly: true })
-  static async login(ctx: KnexTransactionContext, username: string, password:string): Promise<null> {
+  static async login(ctx: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctx.client<User>('users').select("password").where({ username }).first();
-    if (user && await bcrypt.compare(password, user.password)) {
-      return null;
-    } else {
+    if (!(user && await bcrypt.compare(password, user.password))) {
       throw new OperonResponseError("Invalid username or password", 400);
     }
   }
 
   @PostApi('/api/register')
   @OperonTransaction()
-  static async register(ctx: KnexTransactionContext, username: string, password: string): Promise<null> {
+  static async register(ctx: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctx.client<User>('users').select().where({ username }).first();
     if (user) {
       throw new OperonResponseError("Username already exists", 400);
     }
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
     await ctx.client<User>('users').insert({ username, password: hashedPassword });
-    return null;
   }
 
   @GetApi('/api/products')
@@ -113,9 +108,8 @@ export class Shop {
 
   @PostApi('/api/add_to_cart')
   @OperonTransaction()
-  static async addToCart(ctx: KnexTransactionContext, username: string, product_id: number): Promise<null> {
+  static async addToCart(ctx: KnexTransactionContext, username: string, product_id: number): Promise<void> {
     await ctx.client<Cart>('cart').insert({ username, product_id, quantity: 1 }).onConflict(['username', 'product_id']).merge({ quantity: ctx.client.raw('cart.quantity + 1') });
-    return null;
   }
 
   @PostApi('/api/get_cart')
@@ -130,7 +124,7 @@ export class Shop {
   }
 
   @PostApi('/api/checkout_session')
-  static async webCheckout(ctxt: HandlerContext, @ArgSource(ArgSources.QUERY) username: string): Promise<null> {
+  static async webCheckout(ctxt: HandlerContext, @ArgSource(ArgSources.QUERY) username: string): Promise<void> {
     const origin = ctxt.koaContext.request?.headers.origin as string;
     if (typeof username !== 'string' || typeof origin !== 'string') {
       throw new OperonResponseError("Invalid request!", 400);
@@ -143,15 +137,13 @@ export class Shop {
     } else {
       ctxt.koaContext.redirect(url);
     }
-    return null;
   }
 
   @OperonWorkflow()
-  static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<null> {
+  static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
     const productDetails = await ctxt.invoke(Shop).getCart(username);
     if (productDetails.length === 0) {
       await ctxt.setEvent(checkout_url_topic, null);
-      return null;
     }
 
     const orderID = await ctxt.invoke(Shop).createOrder(username, productDetails);
@@ -159,14 +151,12 @@ export class Shop {
     const valid: boolean = await ctxt.invoke(Shop).subtractInventory(productDetails);
     if (!valid) {
       await ctxt.setEvent(checkout_url_topic, null);
-      return null;
     }
 
     const stripeSession = await ctxt.invoke(Shop).createStripeSession(productDetails, origin);
     if (!stripeSession?.url) {
       await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
       await ctxt.setEvent(checkout_url_topic, null);
-      return null;
     }
 
     await ctxt.setEvent(checkout_url_topic, stripeSession.url);
@@ -176,7 +166,6 @@ export class Shop {
     if (notification) {
       await ctxt.invoke(Shop).fulfillOrder(orderID);
       await ctxt.invoke(Shop).clearCart(username);
-      return null;
     }
 
     // if the checkout complete notification didn't arrive in time, retrive the session information 
@@ -185,7 +174,6 @@ export class Shop {
     if (!updatedSession) {
       // TODO: should we do something more meaningful if we can't retrieve the stripe session?
       console.error(`Recovering order #${orderID} failed: Stripe unreachable`);
-      return null;
     }
 
     if (updatedSession.payment_status == 'paid') {
@@ -195,8 +183,6 @@ export class Shop {
       await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
       await ctxt.invoke(Shop).errorOrder(orderID);
     }
-
-    return null;
   }
 
   @OperonTransaction()
@@ -230,29 +216,25 @@ export class Shop {
   }
 
   @OperonTransaction()
-  static async undoSubtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<null> {
+  static async undoSubtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<void> {
     for (const product of products) {
       await ctxt.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctxt.client.raw('inventory + ?', [product.inventory]) });
     }
-    return null;
   }
 
   @OperonTransaction()
-  static async fulfillOrder(ctx: KnexTransactionContext, orderID: number): Promise<null> {
+  static async fulfillOrder(ctx: KnexTransactionContext, orderID: number): Promise<void> {
     await ctx.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.FULFILLED });
-    return null;
   }
 
   @OperonTransaction()
-  static async errorOrder(ctx: KnexTransactionContext, orderID: number): Promise<null> {
+  static async errorOrder(ctx: KnexTransactionContext, orderID: number): Promise<void> {
     await ctx.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.CANCELLED });
-    return null;
   }
 
   @OperonTransaction()
-  static async clearCart(ctx: KnexTransactionContext, username: string): Promise<null> {
+  static async clearCart(ctx: KnexTransactionContext, username: string): Promise<void> {
     await ctx.client<Cart>('cart').where({ username }).del();
-    return null;
   }
 
   @OperonCommunicator()
@@ -288,7 +270,7 @@ export class Shop {
   }
 
   @PostApi('/stripe_webhook')
-  static async stripeWebhook(ctxt: HandlerContext): Promise<null> {
+  static async stripeWebhook(ctxt: HandlerContext): Promise<void> {
     const req = ctxt.koaContext.request;
     const sigHeader = req.headers['stripe-signature'];
     if (typeof sigHeader !== 'string') {
@@ -308,6 +290,5 @@ export class Shop {
       console.log(err);
       throw new OperonResponseError("Webhook Error", 400);
     }
-    return null;
   }
 }
