@@ -8,6 +8,7 @@ interface operon_hello {
   name: string;
   greet_count: number;
 }
+
 export class Hello {
 
   @OperonTransaction()
