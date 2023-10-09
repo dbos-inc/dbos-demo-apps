@@ -1,6 +1,6 @@
 import bcryptjs from 'bcryptjs';
 
-import { EntityManager, In } from 'typeorm';
+import { EntityManager, In, Transaction } from 'typeorm';
 
 //import { MediaItem } from "./entity/Media";
 import { GraphType, SocialGraph } from "./entity/Graph";
@@ -27,8 +27,8 @@ import {
  OperonWorkflow,
  WorkflowContext,
 } from '@dbos-inc/operon';
-import { Traced } from '@dbos-inc/operon';
 import { MediaItem, MediaUsage } from './entity/Media';
+import { TypeORMDataSource } from '@dbos-inc/operon/dist/src/user_database';
 
 export interface ResponseError extends Error {
     status?: number;
@@ -56,10 +56,10 @@ export class Operations
 
 @OperonTransaction()
 @RequiredRole([])
-static async createUser(ctx: TransactionContext, first:string, last:string, uname:string, @SkipLogging pass:string) :
+static async createUser(ctx: TransactionContext<EntityManager>, first:string, last:string, uname:string, @SkipLogging pass:string) :
    Promise<UserLogin>
 {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
 
     if (!first || !last || !uname || !pass) {
         throw errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${pass}`, 400);
@@ -126,10 +126,10 @@ static async getMyProfile(manager:EntityManager, curUid:string) :
 
 @OperonTransaction({readOnly: true})
 @RequiredRole([])
-static async getMyProfilePhotoKey(ctx: TransactionContext, curUid:string) :
+static async getMyProfilePhotoKey(ctx: TransactionContext<EntityManager>, curUid:string) :
    Promise<string | null>
 {
-    const mRep = (ctx.typeormEM as EntityManager).getRepository(MediaItem);
+    const mRep = ctx.client.getRepository(MediaItem);
     ctx.log(`Doing profile photo get for ${curUid}`);
     const mi = await mRep.findOneBy({owner_id: curUid, media_usage: MediaUsage.PROFILE});
     if (!mi) {
@@ -154,11 +154,11 @@ static async getPost(manager:EntityManager, _curUid: string, post:string) :
 
 //
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
-@Traced
-static async findUser(ctx: TransactionContext, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
+@OperonTransaction({readOnly: true})
+static async findUser(ctx: TransactionContext<EntityManager>, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
    Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]> 
 {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
     const userRep = manager.getRepository(UserLogin);
     const otherUser = await userRep.findOneBy({
         user_name: uname,
@@ -240,9 +240,9 @@ static async setGraphStatus(manager: EntityManager, curUid : string, otherUid : 
 
 // Compose a post
 @OperonTransaction()
-static async makePost(ctx: TransactionContext, txt : string)
+static async makePost(ctx: TransactionContext<EntityManager>, txt : string)
 {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
 
     // Create post
     const p = new Post();
@@ -274,8 +274,8 @@ static async makePost(ctx: TransactionContext, txt : string)
 
 // Send a post
 @OperonTransaction()
-static async distributePost(ctx: TransactionContext, p: Post) {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+static async distributePost(ctx: TransactionContext<EntityManager>, p: Post) {
+    const manager = ctx.client;
 
     // Deliver post to followers - TODO cross shard; TODO block list
     const sgRep = manager.getRepository(SocialGraph);
@@ -429,26 +429,26 @@ static async ensureS3FileDropped(ctx: OperonContext, key: string, bucket: string
 }
 
 @OperonTransaction()
-static async writeMediaPost(ctx: TransactionContext, mid: string, mkey: string) {
+static async writeMediaPost(ctx: TransactionContext<EntityManager>, mid: string, mkey: string) {
     const m = new MediaItem();
     m.media_url = mkey;
     m.media_id = mid;
     m.owner_id = ctx.authenticatedUser;
     //m.media_type = ? // This may not be important enough to deal with...
     m.media_usage = MediaUsage.POST;
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
     await manager.save(m);
 }
 
 @OperonTransaction()
-static async writeMediaProfilePhoto(ctx: TransactionContext, mid: string, mkey: string) {
+static async writeMediaProfilePhoto(ctx: TransactionContext<EntityManager>, mid: string, mkey: string) {
     const m = new MediaItem();
     m.media_url = mkey;
     m.media_id = mid;
     m.owner_id = ctx.authenticatedUser;
     //m.media_type = ? // This may not be important enough to deal with...
     m.media_usage = MediaUsage.PROFILE;
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
     // Should really delete the old keys from AWS...
     const deleted = await manager.delete(MediaItem, {
         owner_id: ctx.authenticatedUser,

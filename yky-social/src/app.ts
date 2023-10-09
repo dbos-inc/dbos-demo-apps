@@ -119,9 +119,9 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/recvtimeline')
-  static async receiveTimeline(ctx: TransactionContext) 
+  static async receiveTimeline(ctx: TransactionContext<EntityManager>) 
   {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
 
     const rtl = await Operations.readRecvTimeline(manager, ctx.authenticatedUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
     const tl = rtl.map((tle) => {
@@ -134,11 +134,11 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi('/sendtimeline')
-  static async sendTimeline(ctx: TransactionContext)
+  static async sendTimeline(ctx: TransactionContext<EntityManager>)
   {
     // TODO: User id and modes
     const userid = ctx.authenticatedUser;
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
 
     const rtl = await Operations.readSendTimeline(manager, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
     const tl = rtl.map((tle) => {
@@ -149,10 +149,9 @@ export class YKY
     return {message: "Read.", timeline: tl};
   }
 
-  @OperonTransaction({readOnly: true})
   @GetApi('/finduser')
-  static async doFindUser(ctx: TransactionContext, @Required findUserName: string) {
-    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(ctx,
+  static async doFindUser(ctx: HandlerContext, @Required findUserName: string) {
+    const [user, _prof, _gsrc, _gdst] = await ctx.invoke(Operations).findUser(
       ctx.authenticatedUser, findUserName, false, false);
     if (!user) {
       return {message: "No user by that name."};
@@ -164,10 +163,10 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi("/post/:id")
-  static async getPost(ctx: TransactionContext, @Required @ArgSource(ArgSources.URL) id: string) {
+  static async getPost(ctx: TransactionContext<EntityManager>, @Required @ArgSource(ArgSources.URL) id: string) {
     // TODO Validate user permissions
 
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
     const post = await Operations.getPost(manager, ctx.authenticatedUser, id);
     if (post) {
       return { message: 'Retrieved.', post:post };
@@ -179,8 +178,8 @@ export class YKY
   @OperonTransaction({readOnly: true})
   @PostApi("/login")
   @RequiredRole([]) // Don't need any roles to log in
-  static async doLogin(ctx: TransactionContext, @Required username: string, @Required @LogMask(LogMasks.HASH) password: string) {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+  static async doLogin(ctx: TransactionContext<EntityManager>, @Required username: string, @Required @LogMask(LogMasks.HASH) password: string) {
+    const manager = ctx.client;
     const user = await Operations.logInUser(manager, username, password);
     return { message: 'Successful login.', id:user.id };
   }
@@ -204,8 +203,8 @@ export class YKY
 
   @OperonTransaction()
   @PostApi("/follow")
-  static async doFollow(ctx: TransactionContext, @Required followUid: string) {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+  static async doFollow(ctx: TransactionContext<EntityManager>, @Required followUid: string) {
+    const manager = ctx.client;
     const curStatus = await Operations.getGraphStatus(manager, ctx.authenticatedUser, followUid);
     await Operations.setGraphStatus(manager, ctx.authenticatedUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
     // TODO: That UID wasn't validated - maybe the DB should validate it
