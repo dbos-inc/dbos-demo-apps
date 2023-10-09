@@ -6,25 +6,26 @@
     "configurations": [
         {
             "command": "npm run dev",
-            "name": "Launch Shop Frontend",
+            "name": "Shop Frontend",
             "request": "launch",
             "type": "node-terminal",
             "cwd": "${workspaceFolder}/shop/shop-app-ts"
         },
         {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch Shop Backend",
+            "command": "npx operon start -p 8082",
+            "name": "Shop Backend",
             "preLaunchTask": "npm: build shop backend",
-            "program": "${workspaceFolder}/shop/backend-operon/src/api.ts",
+            "request": "launch",
+            "type": "node-terminal",
             "cwd": "${workspaceFolder}/shop/backend-operon",
-            "envFile": "${workspaceFolder}/shop/.env",
-            "outFiles": [
-                "${workspaceFolder}/shop/backend-operon/dist/*.js"
-            ],
-            "skipFiles": [
-                "${workspaceFolder}/shop/backend-operon/node_modules/**"
-            ],
+            "envFile": "${workspaceFolder}/shop/.env"
         }
-    ]
+    ],
+    "compounds": [
+        {
+          "name": "Shop",
+          "configurations": ["Shop Frontend", "Shop Backend"],
+          "stopAll": true
+        }
+      ]
 }
