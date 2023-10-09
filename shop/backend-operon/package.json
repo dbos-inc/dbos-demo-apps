@@ -1,7 +1,8 @@
 {
   "scripts": {
     "build": "tsc",
-    "lint": "eslint --fix --ext .ts ."
+    "lint": "eslint --fix --ext .ts .",
+    "setup": "knex migrate:latest && knex seed:run"
   },
   "dependencies": {
     "@dbos-inc/operon": "0.5.16-preview",
