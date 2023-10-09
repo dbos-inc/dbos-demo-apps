@@ -3,6 +3,7 @@ import {
   GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources
 } from '@dbos-inc/operon';
 import Stripe from 'stripe';
+import bcrypt from 'bcrypt';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -45,6 +46,11 @@ interface OrderItem {
   quantity: number,
 }
 
+interface User {
+  username: string,
+  password: string,
+}
+
 const stripe = new Stripe(process.env.STRIPE_API_KEY || 'error_no_stripe_key', { apiVersion: '2023-08-16' });
 const endpointSecret: string = process.env.STRIPE_WEBHOOK_SECRET || 'error_no_webhook_secret';
 
@@ -52,6 +58,25 @@ const checkout_url_topic = "stripe_checkout_url";
 const checkout_complete_topic = "stripe_checkout_complete";
 
 export class Shop {
+
+  @GetApi('/api/login')
+  @OperonTransaction({ readOnly: true })
+  static async login(ctx: KnexTransactionContext, username: string, password:string) {
+    const user = await ctx.client<User>('users').select("password").where({ username }).first();
+    return user ? await bcrypt.compare(password, user.password) : false;
+  }
+
+  @PostApi('/api/register')
+  @OperonTransaction()
+  static async register(ctx: KnexTransactionContext, username: string, password: string) {
+    const user = await ctx.client<User>('users').select().where({ username }).first();
+    if (user) {
+      throw new OperonResponseError("Username already exists!", 400);
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await ctx.client<User>('users').insert({ username, password: hashedPassword });
+  }
 
   @GetApi('/api/products')
   @OperonTransaction()
