@@ -2,18 +2,6 @@
 
 Note, this demo requires three separate processes to run: the front end, the back end and the Stripe webhook listener.
 
-
-## Configure database
-
-This demo assumes there is a PostgreSQL database running on localhost on port 5432. 
-To set up Postgres (creating a `shop` user and database), run:
-
-```shell
-shop/scripts/init_postgres.sh
-```
-
-This script will ask you multiple times for the PostgreSQL password, unless it is already stored in the PGPASSWORD environment variable.
-
 ## Configure Stripe 
 
 The Operon Shop Demo uses [Stripe](https://stripe.com/) to simulate payment processing (test API only).
@@ -26,7 +14,7 @@ Logging into Stripe will generate a restricted use Stripe API key that will allo
 Execute the `stripe config --list` command and make note of the `test_mode_api_key` value. 
 You will need that key later when configuring the Shop backend process.
 
-## Run the Stripe Webhook Listener
+### Run the Stripe Webhook Listener
 
 Start the Stripe webhook listener via the following command:
 
@@ -37,49 +25,68 @@ stripe listen --forward-to localhost:8082/stripe_webhook
 Make note of the `webhook signing secret` this command prints to the console. 
 This value wil also be needed later when configuring the Shop backend process.
 
+## Configure PostgreSQL Database
+
+This demo requires a PostgreSQL database running on localhost on port 5432 with a `shop` database.
+
+### PostgreSQL Docker Container
+
+We have provided a shell script `start_postgres_docker.sh` to start a PostgreSQL Docker container and create the `shop` database.
+Note, this script requires the `PGPASSWORD` environment variable to be set. This value is used as the PostgreSQL superuser password.
+
+### Scehma and Seed Data
+
+The Operon Shop Demo uses [Knex](https://knexjs.org/) for its database interaction logic.
+The `setup` NPM script in `shop/backend-operon/package.json` will automatically configure the `shop` database with the correct schema and seed data.
+Like the PostgreSQL Docker Container section above, this script requires the PostgreSQL superuser password to be specified via the `PGPASSWORD` environment variable.
+
+From the `shop/backend-operon` directory, configure the `shop` database schema and seed data via these commands:
+
+```shell
+npm install
+npm run setup
+```
+
 ## Compile and Run the Shop Backend
+
+> Note, the `operon-demo-apps` repo provides VSCode debugger launch configurations for the Shop demo. 
+> You can use these configurations to run the backend, frontent or both under the debugger.
 
 ### Backend Environment Variables 
 
 With the Stripe Webhook Listener running in the first terminal window, launch a second window to run the Shop backend.
 The Shop Backend requires the following environment variables:
 
-* PGPASSWORD, set to the PostgreSQL password as described in the Configure database section above
+* PGPASSWORD, set to the PostgreSQL superuser password as described in the Configure database section above
 * STRIPE_API_KEY, set to the `test_mode_api_key` value returned by `stripe config --list`
 * STRIPE_WEBHOOK_SECRET, set to the `webhook signing secret` value printed when `stripe listen` was run
 
-> Note, if you put these values in the `shop/.env` file, the VSCode debugger will pick them up automatically if you 
-> debug the `Launch Shop Backend` launch configuration.
+> Note, if you put these values in the `shop/backend-operon/.env` file, the VSCode debugger will use them automatically  
+> when debugging the Shop backend.
 
 ### Build and Run Backend
 
-> At this time, the core Operon package has not been published to NPM. In order to run the Shop backend,
-> the core [Operon repo](https://github.com/dbos-inc/operon) needs to be cloned and built locally.
+From the `shop/backend-operon` directory, build and run the Shop backend via these commands:
 
-Change to the `shop/backend-operon` directory, install dependencies, and build:
+> Note, we installed NPM dependencies above in the Scehma and Seed Data section.
 
 ```shell
-npm install
-npm link <path to local operon repo>
 npm run build
-```
-
-Then, run the backend serverlessly:
-
-```shell
 npx operon start -p 8082
 ```
 
 ## Run Shop Frontend
 
-To launch the frontend server, open a third terminal window and run:
+From the `shop/shop-app-ts` directory, run the Shop front end via this command:
 
 ```shell
-    cd shop/shop-app-ts
-    npm run dev
+npm run dev
 ```
 
-The Shop front end website is hosted on `localhost:3000`. 
+## Running the demo
 
-When testing, use the credit card number 4242-4242-4242-4242 with any CVC and future expiration date.
+Navigate to `http://localhost:3000` to access the Operon Shop Demo front end.
+
+When testing checkout, the Operon Shop Demo will redirect to a [Stripe](https://stripe.com/) testing payment page.
+On the Stripe payment page, use the credit card number `4242-4242-4242-4242` with any three digit CVC and future expiration date to test the payment workflow.
 For more information on Stripe testing, see [this link](https://stripe.com/docs/testing#cards).
