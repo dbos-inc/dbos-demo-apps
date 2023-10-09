@@ -20,6 +20,7 @@ import { DataSource } from 'typeorm';
 
 beforeAll(async () => {
   await operon.init(YKY, Operations);
+  await ((operon.userDatabase as TypeORMDatabase).dataSource as DataSource).synchronize();
   ykyInit();
 });
 
