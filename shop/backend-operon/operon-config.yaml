@@ -9,5 +9,5 @@ database:
   user_dbclient: 'knex'
 telemetryExporters:
   - 'ConsoleExporter'
-  - 'JaegerExporter'
+  # - 'JaegerExporter'
 

@@ -18,7 +18,7 @@
             "request": "launch",
             "type": "node-terminal",
             "cwd": "${workspaceFolder}/shop/backend-operon",
-            "envFile": "${workspaceFolder}/shop/.env"
+            "envFile": "${workspaceFolder}/shop/backend-operon/.env"
         }
     ],
     "compounds": [
