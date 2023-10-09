@@ -30,6 +30,7 @@ interface Product {
 }
 
 type DisplayProduct = Omit<Product, 'inventory'> & { display_price: string };
+type CartProduct = Product & { display_price: string };
 
 interface Order {
   order_id: number,
@@ -61,8 +62,8 @@ export class Shop {
 
   @PostApi('/api/login')
   @OperonTransaction({ readOnly: true })
-  static async login(ctx: KnexTransactionContext, username: string, password: string): Promise<void> {
-    const user = await ctx.client<User>('users').select("password").where({ username }).first();
+  static async login(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
+    const user = await ctxt.client<User>('users').select("password").where({ username }).first();
     if (!(user && await bcrypt.compare(password, user.password))) {
       throw new OperonResponseError("Invalid username or password", 400);
     }
@@ -70,20 +71,20 @@ export class Shop {
 
   @PostApi('/api/register')
   @OperonTransaction()
-  static async register(ctx: KnexTransactionContext, username: string, password: string): Promise<void> {
-    const user = await ctx.client<User>('users').select().where({ username }).first();
+  static async register(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
+    const user = await ctxt.client<User>('users').select().where({ username }).first();
     if (user) {
       throw new OperonResponseError("Username already exists", 400);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await ctx.client<User>('users').insert({ username, password: hashedPassword });
+    await ctxt.client<User>('users').insert({ username, password: hashedPassword });
   }
 
   @GetApi('/api/products')
   @OperonTransaction()
-  static async getProducts(ctx: KnexTransactionContext): Promise<DisplayProduct[]> {
-    const rows = await ctx.client<Product>('products').select("product_id", "product", "description", "image_name", "price");
+  static async getProducts(ctxt: KnexTransactionContext): Promise<DisplayProduct[]> {
+    const rows = await ctxt.client<Product>('products').select("product_id", "product", "description", "image_name", "price");
     const formattedRows: DisplayProduct[] = rows.map((row) => ({
       ...row,
       display_price: (row.price / 100).toFixed(2),
@@ -93,9 +94,9 @@ export class Shop {
 
   @GetApi('/api/products/:id')
   @OperonTransaction({ readOnly: true })
-  static async getProduct(ctx: KnexTransactionContext, id: number): Promise<DisplayProduct | null> {
+  static async getProduct(ctxt: KnexTransactionContext, id: number): Promise<DisplayProduct | null> {
 
-    const rows = await ctx.client<Product>('products').select("product_id", "product", "description", "image_name", "price").where({ product_id: id });
+    const rows = await ctxt.client<Product>('products').select("product_id", "product", "description", "image_name", "price").where({ product_id: id });
     if (rows.length === 0) {
       return null;
     }
@@ -108,17 +109,17 @@ export class Shop {
 
   @PostApi('/api/add_to_cart')
   @OperonTransaction()
-  static async addToCart(ctx: KnexTransactionContext, username: string, product_id: number): Promise<void> {
-    await ctx.client<Cart>('cart').insert({ username, product_id, quantity: 1 }).onConflict(['username', 'product_id']).merge({ quantity: ctx.client.raw('cart.quantity + 1') });
+  static async addToCart(ctxt: KnexTransactionContext, username: string, product_id: number): Promise<void> {
+    await ctxt.client<Cart>('cart').insert({ username, product_id, quantity: 1 }).onConflict(['username', 'product_id']).merge({ quantity: ctxt.client.raw('cart.quantity + 1') });
   }
 
   @PostApi('/api/get_cart')
   @OperonTransaction({ readOnly: true })
-  static async getCart(ctx: KnexTransactionContext, username: string): Promise<Product[]> {
-    const rows = await ctx.client<Cart>('cart').select("product_id", "quantity").where({ username });
+  static async getCart(ctxt: KnexTransactionContext, username: string): Promise<CartProduct[]> {
+    const rows = await ctxt.client<Cart>('cart').select("product_id", "quantity").where({ username });
     const products = rows.map(async (row) => {
-      const product = await ctx.client<Product>('products').select("product_id", "product", "description", "image_name", "price").where({ product_id: row.product_id }).first();
-      return <Product>{ ...product, inventory: row.quantity };
+      const product = await Shop.getProduct(ctxt, row.product_id)!;
+      return <CartProduct>{ ...product, inventory: row.quantity };
     });
     return await Promise.all(products);
   }
@@ -186,21 +187,21 @@ export class Shop {
   }
 
   @OperonTransaction()
-  static async createOrder(ctx: KnexTransactionContext, username: string, products: Product[]): Promise<number> {
-    const orders = await ctx.client<Order>('orders').insert({ username, order_status: OrderStatus.PENDING, last_update_time: 0n }).returning('order_id');
+  static async createOrder(ctxt: KnexTransactionContext, username: string, products: Product[]): Promise<number> {
+    const orders = await ctxt.client<Order>('orders').insert({ username, order_status: OrderStatus.PENDING, last_update_time: 0n }).returning('order_id');
     const orderID = orders[0].order_id;
 
     for (const product of products) {
-      await ctx.client<OrderItem>('order_items').insert({ order_id: orderID, product_id: product.product_id, price: product.price, quantity: product.inventory });
+      await ctxt.client<OrderItem>('order_items').insert({ order_id: orderID, product_id: product.product_id, price: product.price, quantity: product.inventory });
     }
 
     return orderID;
   }
 
   @OperonTransaction()
-  static async subtractInventory(ctx: KnexTransactionContext, products: Product[]): Promise<boolean> {
+  static async subtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<boolean> {
     for (const product of products) {
-      const row = await ctx.client<Product>('products').where({ product_id: product.product_id }).select('inventory').first();
+      const row = await ctxt.client<Product>('products').where({ product_id: product.product_id }).select('inventory').first();
       const inventory = row?.inventory ?? 0;
       if (inventory < product.inventory) {
         return false;
@@ -209,7 +210,7 @@ export class Shop {
 
     // If all products have enough inventory, subtract the inventory from the products in the database
     for (const product of products) {
-      await ctx.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctx.client.raw('inventory - ?', [product.inventory]) });
+      await ctxt.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctxt.client.raw('inventory - ?', [product.inventory]) });
     }
 
     return true;
@@ -223,18 +224,18 @@ export class Shop {
   }
 
   @OperonTransaction()
-  static async fulfillOrder(ctx: KnexTransactionContext, orderID: number): Promise<void> {
-    await ctx.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.FULFILLED });
+  static async fulfillOrder(ctxt: KnexTransactionContext, orderID: number): Promise<void> {
+    await ctxt.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.FULFILLED });
   }
 
   @OperonTransaction()
-  static async errorOrder(ctx: KnexTransactionContext, orderID: number): Promise<void> {
-    await ctx.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.CANCELLED });
+  static async errorOrder(ctxt: KnexTransactionContext, orderID: number): Promise<void> {
+    await ctxt.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.CANCELLED });
   }
 
   @OperonTransaction()
-  static async clearCart(ctx: KnexTransactionContext, username: string): Promise<void> {
-    await ctx.client<Cart>('cart').where({ username }).del();
+  static async clearCart(ctxt: KnexTransactionContext, username: string): Promise<void> {
+    await ctxt.client<Cart>('cart').where({ username }).del();
   }
 
   @OperonCommunicator()

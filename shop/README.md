@@ -88,5 +88,5 @@ npm run dev
 Navigate to `http://localhost:3000` to access the Operon Shop Demo front end.
 
 When testing checkout, the Operon Shop Demo will redirect to a [Stripe](https://stripe.com/) testing payment page.
-Use the credit card number `4242-4242-4242-4242` with any three digit CVC and future expiration date to test the payment workflow.
+On the Stripe payment page, use the credit card number `4242-4242-4242-4242` with any three digit CVC and future expiration date to test the payment workflow.
 For more information on Stripe testing, see [this link](https://stripe.com/docs/testing#cards).
