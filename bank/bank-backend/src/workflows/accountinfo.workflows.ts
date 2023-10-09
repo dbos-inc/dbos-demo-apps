@@ -26,7 +26,7 @@ export class BankAccountInfo {
   @OperonTransaction()
   @PostApi("/api/create_account")
   @RequiredRole(["appAdmin"]) // Only an admin can create a new account.
-  static async createAccountFunc(txnCtxt: PrismaContext, ownerName: string, type: string, balance: number) {
+  static async createAccountFunc(txnCtxt: PrismaContext, ownerName: string, type: string, balance?: number) {
     return txnCtxt.client.accountInfo.create({
       data: {
         ownerName: ownerName,

@@ -11,7 +11,6 @@ export class BankEndpoints {
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/api/greeting")
   static async greeting(ctx: HandlerContext) {
-    void ctx;
     return { msg: "Hello from DBOS Operon " + ctx.getConfig("bankname") };
   }
 

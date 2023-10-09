@@ -131,7 +131,7 @@ export class BankTransactionHistory {
 
   @OperonCommunicator()
   static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory) {
-    const token = commCtxt.request?.headers["authorization"];
+    const token = commCtxt.request?.headers!["authorization"];
     if (!token) {
       commCtxt.error("Failed to extract valid token!");
       return false;
