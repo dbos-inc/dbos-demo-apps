@@ -62,7 +62,7 @@ export class BankEndpoints {
 
 // Helper functions to convert to the correct data types.
 // Especially convert the bigint.
-function convertTransactionHistory(data: TransactionHistory): TransactionHistory {
+export function convertTransactionHistory(data: TransactionHistory): TransactionHistory {
   if (!data.amount || data.amount <= 0.0) {
     throw new OperonResponseError("Invalid amount! " + data.amount, 400);
   }
