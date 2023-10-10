@@ -18,7 +18,7 @@ import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, errorWithStatus } from "./Operations";
 import {
-  Operon, Required, GetApi, RequiredRole,
+  Operon, ArgRequired, GetApi, RequiredRole,
   OperonTransaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   HandlerContext,
@@ -36,6 +36,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client, S3 } from '@aws-sdk/client-s3';
+import { createLogger } from "winston";
 
 const s3ClientConfig = {
   region: process.env.AWS_REGION || 'us-east-2', // Replace with your AWS region
@@ -49,30 +50,6 @@ const s3Client = new S3Client(s3ClientConfig);
 export function getS3Client() {return s3Client;}
 const awsS3 = new S3(s3ClientConfig);
 export function getS3() {return awsS3;}
-
-/*
-export const userDataSource = new DataSource({
-  "type": "postgres",
-  "host": process.env.POSTGRES_HOST,
-  "port": Number(process.env.POSTGRES_PORT),
-  "username": process.env.POSTGRES_USERNAME,
-  "password": process.env.POSTGRES_PASSWORD,
-  "database": process.env.POSTGRES_DBNAME,
-  "synchronize": true,
-  "logging": false,
-  "entities": [
-    MediaItem,
-    Post,
-    SocialGraph,
-    UserLogin,
-    UserProfile,
-    TimelineSend,
-    TimelineRecv,
-  ],
-  "migrations": [],
-  "subscribers": [],
-});
-*/
 
 // eslint-disable-next-line @typescript-eslint/require-await
 async function authMiddleware (ctx: MiddlewareContext) {
@@ -150,7 +127,7 @@ export class YKY
   }
 
   @GetApi('/finduser')
-  static async doFindUser(ctx: HandlerContext, @Required findUserName: string) {
+  static async doFindUser(ctx: HandlerContext, findUserName: string) {
     const [user, _prof, _gsrc, _gdst] = await ctx.invoke(Operations).findUser(
       ctx.authenticatedUser, findUserName, false, false);
     if (!user) {
@@ -163,7 +140,7 @@ export class YKY
 
   @OperonTransaction({readOnly: true})
   @GetApi("/post/:id")
-  static async getPost(ctx: TransactionContext<EntityManager>, @Required @ArgSource(ArgSources.URL) id: string) {
+  static async getPost(ctx: TransactionContext<EntityManager>, @ArgRequired @ArgSource(ArgSources.URL) id: string) {
     // TODO Validate user permissions
 
     const manager = ctx.client;
@@ -178,7 +155,7 @@ export class YKY
   @OperonTransaction({readOnly: true})
   @PostApi("/login")
   @RequiredRole([]) // Don't need any roles to log in
-  static async doLogin(ctx: TransactionContext<EntityManager>, @Required username: string, @Required @LogMask(LogMasks.HASH) password: string) {
+  static async doLogin(ctx: TransactionContext<EntityManager>, @ArgRequired username: string, @ArgRequired @LogMask(LogMasks.HASH) password: string) {
     const manager = ctx.client;
     const user = await Operations.logInUser(manager, username, password);
     return { message: 'Successful login.', id:user.id };
@@ -192,8 +169,8 @@ export class YKY
   // Can this be generalized?
   @PostApi("/register")
   @RequiredRole([]) // No role needed to register
-  static async doRegister(ctx: HandlerContext, @Required firstName: string, @Required lastName: string,
-     @Required username: string, @Required @LogMask(LogMasks.HASH) password: string)
+  static async doRegister(ctx: HandlerContext, firstName: string, lastName: string,
+     username: string, @LogMask(LogMasks.HASH) password: string)
   {
     const user = await ctx.invoke(Operations).createUser(
        firstName, lastName, username, password);
@@ -203,7 +180,7 @@ export class YKY
 
   @OperonTransaction()
   @PostApi("/follow")
-  static async doFollow(ctx: TransactionContext<EntityManager>, @Required followUid: string) {
+  static async doFollow(ctx: TransactionContext<EntityManager>, followUid: string) {
     const manager = ctx.client;
     const curStatus = await Operations.getGraphStatus(manager, ctx.authenticatedUser, followUid);
     await Operations.setGraphStatus(manager, ctx.authenticatedUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
@@ -214,7 +191,7 @@ export class YKY
 
   @OperonWorkflow()
   @PostApi("/composepost")
-  static async doCompose(ctx: WorkflowContext, @Required postText: string) {
+  static async doCompose(ctx: WorkflowContext, @ArgRequired postText: string) {
     const post = await ctx.invoke(Operations).makePost(postText);
     // This could be an asynchronous job
     await ctx.invoke(Operations).distributePost(post);
@@ -223,7 +200,7 @@ export class YKY
 
   @GetApi("/getMediaUploadKey")
   @OperonWorkflow()
-  static async doKeyUpload(ctx: WorkflowContext, @Required filename: string) {
+  static async doKeyUpload(ctx: WorkflowContext, filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
     const postPresigned = await ctx.invoke(Operations).createS3UploadKey(key, bucket);
@@ -232,7 +209,7 @@ export class YKY
   }
 
   @GetApi("/getMediaDownloadKey")
-  static async doKeyDownload(_ctx: HandlerContext, @Required filekey: string) {
+  static async doKeyDownload(_ctx: HandlerContext, filekey: string) {
     const key = filekey;
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
   
@@ -241,7 +218,7 @@ export class YKY
   }
 
   @GetApi("/deleteMedia")
-  static async doMediaDelete(ctx: HandlerContext, @Required filekey: string) {
+  static async doMediaDelete(ctx: HandlerContext, filekey: string) {
     const key = filekey;
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
 
@@ -304,7 +281,7 @@ export const operon = new Operon({
     port: Number(process.env.POSTGRES_PORT),
     host: process.env.POSTGRES_HOST,
   },
-  logger: ,
+  logger: createLogger({silent: true}),
   userDbclient: 'typeorm',
   system_database: 'opsys',
 });
