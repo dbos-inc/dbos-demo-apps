@@ -163,26 +163,26 @@ export class Shop {
     await ctxt.setEvent(checkout_url_topic, stripeSession.url);
     const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
 
-    // if the checkout complete notification arrived, the payment is successful so fulfull the order
     if (notification) {
-      await ctxt.invoke(Shop).fulfillOrder(orderID);
-      await ctxt.invoke(Shop).clearCart(username);
-    }
-
-    // if the checkout complete notification didn't arrive in time, retrive the session information 
-    // in order to check the payment status explicitly 
-    const updatedSession = await ctxt.invoke(Shop).retrieveStripeSession(stripeSession.id);
-    if (!updatedSession) {
-      // TODO: should we do something more meaningful if we can't retrieve the stripe session?
-      console.error(`Recovering order #${orderID} failed: Stripe unreachable`);
-    }
-
-    if (updatedSession.payment_status == 'paid') {
+      // if the checkout complete notification arrived, the payment is successful so fulfull the order
       await ctxt.invoke(Shop).fulfillOrder(orderID);
       await ctxt.invoke(Shop).clearCart(username);
     } else {
-      await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
-      await ctxt.invoke(Shop).errorOrder(orderID);
+      // if the checkout complete notification didn't arrive in time, retrive the session information 
+      // in order to check the payment status explicitly 
+      const updatedSession = await ctxt.invoke(Shop).retrieveStripeSession(stripeSession.id);
+      if (!updatedSession) {
+        // TODO: should we do something more meaningful if we can't retrieve the stripe session?
+        ctxt.logger.error(`Recovering order #${orderID} failed: Stripe unreachable`);
+      }
+
+      if (updatedSession.payment_status == 'paid') {
+        await ctxt.invoke(Shop).fulfillOrder(orderID);
+        await ctxt.invoke(Shop).clearCart(username);
+      } else {
+        await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
+        await ctxt.invoke(Shop).errorOrder(orderID);
+      }
     }
   }
 
@@ -288,6 +288,7 @@ export class Shop {
         }
       }
     } catch (err) {
+      // TODO: update to ctxt.logger.error once https://github.com/dbos-inc/operon/pull/111 is merged
       console.log(err);
       throw new OperonResponseError("Webhook Error", 400);
     }
