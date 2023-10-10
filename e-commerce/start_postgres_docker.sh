@@ -21,3 +21,5 @@ done
 
 # Create a database in Postgres.
 docker exec operon-shop psql -U postgres -c "CREATE DATABASE shop;"
+docker exec operon-shop psql -U postgres -c "CREATE DATABASE payment;"
+
