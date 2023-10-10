@@ -5,3 +5,4 @@ database:
   password: ${PGPASSWORD}
   user_database: 'hello'
   connectionTimeoutMillis: 3000
+  user_dbclient: 'knex'
