@@ -9,7 +9,7 @@
             "name": "Shop Frontend",
             "request": "launch",
             "type": "node-terminal",
-            "cwd": "${workspaceFolder}/shop/shop-app-ts"
+            "cwd": "${workspaceFolder}/e-commerce/shop-frontend"
         },
         {
             "command": "npx operon start -p 8082",
@@ -17,8 +17,8 @@
             "preLaunchTask": "npm: build shop backend",
             "request": "launch",
             "type": "node-terminal",
-            "cwd": "${workspaceFolder}/shop/backend-operon",
-            "envFile": "${workspaceFolder}/shop/backend-operon/.env"
+            "cwd": "${workspaceFolder}/e-commerce/shop-backend",
+            "envFile": "${workspaceFolder}/e-commerce/shop-backend/.env"
         }
     ],
     "compounds": [

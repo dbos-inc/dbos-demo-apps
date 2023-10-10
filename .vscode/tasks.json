@@ -4,7 +4,7 @@
 		{
 			"type": "npm",
 			"script": "build",
-			"path": "shop/backend-operon",
+			"path": "e-commerce/shop-backend",
 			"group": "build",
 			"problemMatcher": [
 				"$tsc"
