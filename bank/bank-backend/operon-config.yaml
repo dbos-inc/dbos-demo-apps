@@ -9,7 +9,7 @@ database:
   user_dbclient: "prisma"
 telemetryExporters:
   - 'ConsoleExporter'
-  - 'JaegerExporter'
+  # - 'JaegerExporter'
 localRuntimeConfig:
   port: 8081
 application:

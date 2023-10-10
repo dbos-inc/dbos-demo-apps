@@ -11,7 +11,6 @@ export class BankEndpoints {
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/api/greeting")
   static async greeting(ctx: HandlerContext) {
-    void ctx;
     return { msg: "Hello from DBOS Operon " + ctx.getConfig("bankname") };
   }
 
@@ -63,7 +62,7 @@ export class BankEndpoints {
 
 // Helper functions to convert to the correct data types.
 // Especially convert the bigint.
-function convertTransactionHistory(data: TransactionHistory): TransactionHistory {
+export function convertTransactionHistory(data: TransactionHistory): TransactionHistory {
   if (!data.amount || data.amount <= 0.0) {
     throw new OperonResponseError("Invalid amount! " + data.amount, 400);
   }

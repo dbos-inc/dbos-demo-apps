@@ -9,6 +9,7 @@ import {
   DefaultRequiredRole,
   Authentication,
   KoaMiddleware,
+  ArgOptional,
 } from "@dbos-inc/operon";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { BankAccountInfo } from "./accountinfo.workflows";
@@ -16,6 +17,7 @@ import axios from "axios";
 import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
+type PrismaContext = TransactionContext<PrismaClient>;
 
 @DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
@@ -23,10 +25,9 @@ const REMOTEDB_PREFIX: string = "remoteDB-";
 export class BankTransactionHistory {
   @OperonTransaction()
   @GetApi("/api/transaction_history/:accountId")
-  static async listTxnForAccountFunc(txnCtxt: TransactionContext, accountId: number) {
+  static async listTxnForAccountFunc(txnCtxt: PrismaContext, accountId: number) {
     const acctId = BigInt(accountId);
-    const p = txnCtxt.prismaClient as PrismaClient;
-    return p.transactionHistory.findMany({
+    return txnCtxt.client.transactionHistory.findMany({
       where: {
         OR: [
           {
@@ -46,9 +47,8 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async insertTxnHistoryFunc(txnCtxt: TransactionContext, data: TransactionHistory) {
-    const p = txnCtxt.prismaClient as PrismaClient;
-    return p.transactionHistory
+  static async insertTxnHistoryFunc(txnCtxt: PrismaContext, data: TransactionHistory) {
+    return txnCtxt.client.transactionHistory
       .create({
         data: {
           // Escape txnId and timestamp fields.
@@ -66,9 +66,8 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async deleteTxnHistoryFunc(txnCtxt: TransactionContext, txnId: bigint) {
-    const p = txnCtxt.prismaClient as PrismaClient;
-    return p.transactionHistory
+  static async deleteTxnHistoryFunc(txnCtxt: PrismaContext, txnId: bigint) {
+    return txnCtxt.client.transactionHistory
       .delete({
         where: {
           txnId: txnId,
@@ -81,9 +80,8 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async updateAccountBalanceFunc(txnCtxt: TransactionContext, acctId: bigint, balance: bigint) {
-    const p = txnCtxt.prismaClient as PrismaClient;
-    return p.accountInfo
+  static async updateAccountBalanceFunc(txnCtxt: PrismaContext, acctId: bigint, balance: bigint) {
+    return txnCtxt.client.accountInfo
       .update({
         where: { accountId: acctId },
         data: {
@@ -97,7 +95,7 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async updateAcctTransactionFunc(txnCtxt: TransactionContext, acctId: bigint, data: TransactionHistory, deposit: boolean, undoTxn: bigint | null = null) {
+  static async updateAcctTransactionFunc(txnCtxt: PrismaContext, acctId: bigint, data: TransactionHistory, deposit: boolean, @ArgOptional undoTxn: bigint | null = null) {
     // First, make sure the account exists, and read the latest balance.
     const acct = await BankAccountInfo.findAccountFunc(txnCtxt, acctId);
     if (acct === null) {
@@ -134,9 +132,9 @@ export class BankTransactionHistory {
 
   @OperonCommunicator()
   static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory) {
-    const token = commCtxt.request?.headers["authorization"];
+    const token = commCtxt.request?.headers!["authorization"];
     if (!token) {
-      commCtxt.error("Failed to extract valid token!");
+      commCtxt.logger.error("Failed to extract valid token!");
       return false;
     }
 
@@ -147,7 +145,7 @@ export class BankTransactionHistory {
         },
       });
       if (remoteRes.status != 200) {
-        commCtxt.error("Remote transfer failed, returned with status: " + remoteRes.statusText);
+        commCtxt.logger.error("Remote transfer failed, returned with status: " + remoteRes.statusText);
         return false;
       }
     } catch (err) {
@@ -158,7 +156,7 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async internalTransferFunc(txnCtxt: TransactionContext, data: TransactionHistory): Promise<string> {
+  static async internalTransferFunc(txnCtxt: PrismaContext, data: TransactionHistory): Promise<string> {
     // Check if the fromAccount has enough balance.
     const fromAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(txnCtxt, data.fromAccountId);
     if (fromAccount === null) {
@@ -197,7 +195,7 @@ export class BankTransactionHistory {
 
     // Then, Contact remote DB to withdraw.
     if (data.fromLocation && !(data.fromLocation === "cash") && !data.fromLocation.startsWith(REMOTEDB_PREFIX)) {
-      ctxt.info("Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
+      ctxt.logger.info("Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
       const remoteUrl = data.fromLocation + "/api/withdraw";
       const thReq = {
         fromAccountId: data.fromAccountId,
@@ -212,13 +210,13 @@ export class BankTransactionHistory {
         // Undo transaction is a withdrawal.
         const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, false, result);
         if (!undoRes || undoRes !== result) {
-          ctxt.error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
+          ctxt.logger.error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
         }
         throw new Error("Failed to withdraw from remote bank.");
       }
     } else {
-      ctxt.info("Deposit from: " + data.fromLocation);
+      ctxt.logger.info("Deposit from: " + data.fromLocation);
     }
 
     return "Deposit succeeded!";
@@ -234,7 +232,7 @@ export class BankTransactionHistory {
 
     // Then, contact remote DB to deposit.
     if (data.toLocation && !(data.toLocation === "cash") && !data.toLocation.startsWith(REMOTEDB_PREFIX)) {
-      ctxt.info("Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
+      ctxt.logger.info("Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
       const remoteUrl = data.toLocation + "/api/deposit";
       const thReq = {
         fromAccountId: data.fromAccountId,
@@ -253,7 +251,7 @@ export class BankTransactionHistory {
         throw new Error("Failed to deposit to remote bank.");
       }
     } else {
-      ctxt.info("Deposit to: " + data.fromLocation);
+      ctxt.logger.info("Deposit to: " + data.fromLocation);
     }
 
     return "Withdraw succeeded!";
