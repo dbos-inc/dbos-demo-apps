@@ -290,7 +290,7 @@ export class YKY
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
   
     const presignedUrl = await Operations.getS3DownloadKey(filekey, bucket);
-    ctx.log("Giving URL "+presignedUrl);
+    ctx.logger.debug("Giving URL "+presignedUrl);
     return { message: "Signed URL", url: presignedUrl, key: filekey };
   }
 }
@@ -304,6 +304,7 @@ export const operon = new Operon({
     port: Number(process.env.POSTGRES_PORT),
     host: process.env.POSTGRES_HOST,
   },
+  logger: ,
   userDbclient: 'typeorm',
   system_database: 'opsys',
 });

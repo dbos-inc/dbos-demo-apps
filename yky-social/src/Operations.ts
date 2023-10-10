@@ -129,13 +129,13 @@ static async getMyProfilePhotoKey(ctx: TransactionContext<EntityManager>, curUid
    Promise<string | null>
 {
     const mRep = ctx.client.getRepository(MediaItem);
-    ctx.log(`Doing profile photo get for ${curUid}`);
+    ctx.logger.debug(`Doing profile photo get for ${curUid}`);
     const mi = await mRep.findOneBy({owner_id: curUid, media_usage: MediaUsage.PROFILE});
     if (!mi) {
-        ctx.log(`Photo get for ${curUid} got nothing`);
+        ctx.logger.debug(`Photo get for ${curUid} got nothing`);
         return null;
     }
-    ctx.log(`Photo get for ${curUid} got ${mi.media_url}`);
+    ctx.logger.debug(`Photo get for ${curUid} got ${mi.media_url}`);
     return mi.media_url;
 }
 
@@ -420,10 +420,10 @@ static async ensureS3FileDropped(ctx: OperonContext, key: string, bucket: string
         const s3 = getS3();
 
         await s3.deleteObject(params);
-        ctx.debug(`S3 key ${key} was deleted successfully.`);
+        ctx.logger.debug(`S3 key ${key} was deleted successfully.`);
     } catch (error) {
         // Generally expected to occur sometimes
-        ctx.info(`S3 key ${key} couldn't be deleted, or was already deleted.`);
+        ctx.logger.info(`S3 key ${key} couldn't be deleted, or was already deleted.`);
     }
 }
 
@@ -453,7 +453,7 @@ static async writeMediaProfilePhoto(ctx: TransactionContext<EntityManager>, mid:
         owner_id: ctx.authenticatedUser,
         media_usage: MediaUsage.PROFILE
     });
-    ctx.log(`Deleted ${deleted.affected} old items`);
+    ctx.logger.debug(`Deleted ${deleted.affected} old items`);
     await manager.save(m);
 }
 
