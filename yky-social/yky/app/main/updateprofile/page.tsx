@@ -7,9 +7,7 @@ export const metadata: Metadata = {
 };
 
 const UserHome: React.FC = () => (
-  <div className="container mx-auto">
-    <YKYUpload ultype='profile' title='Upload a profile picture'/>
-  </div>
+  <YKYUpload ultype='profile' title='Upload a profile picture'/>
 );
 
 export default UserHome;

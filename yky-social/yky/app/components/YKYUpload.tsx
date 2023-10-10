@@ -8,7 +8,7 @@ interface ULProps {
 }
 
 const YKYUpload: React.FC<ULProps> = (props) => {
-  const {title, ultype} = props;
+  const {title, ultype: _ultype} = props;
 
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
@@ -61,12 +61,16 @@ const YKYUpload: React.FC<ULProps> = (props) => {
   };
 
   return (
-    <div>
-      <h1>{title}</h1>
+    <div className = "flex flex-col flex-grow items-center justify-center px-4 py-8">
+      <h1 className="text-2xl font-bold mb-4">{title}</h1>
 
       <input type="file" onChange={handleFileChange} />
 
-      <button onClick={handleUpload} disabled={uploading || !file}>
+      <button className={(uploading || !file) ? "bg-gray-700                   text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                              : "bg-cyan-700 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"} 
+              onClick={handleUpload}
+              disabled={uploading || !file}
+      >
         Upload
       </button>
 
