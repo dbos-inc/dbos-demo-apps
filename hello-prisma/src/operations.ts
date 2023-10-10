@@ -4,10 +4,10 @@ import { PrismaClient } from "@prisma/client";
 export class Hello {
 
   @OperonTransaction()
-  static async helloFunction(txnCtxt: TransactionContext, name: string)  {
+  static async helloFunction(txnCtxt: TransactionContext<PrismaClient>, name: string)  {
     const greeting = `Hello, ${name}!`;
     console.log(greeting);
-    const p: PrismaClient = txnCtxt.prismaClient as PrismaClient;
+    const p: PrismaClient = txnCtxt.client as PrismaClient;
     const res = await p.operonHello.create({
         data: {
         greeting: greeting,
