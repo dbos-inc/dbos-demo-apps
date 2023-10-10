@@ -15,7 +15,7 @@ const YKYProfilePhoto: React.FC = () => {
     console.log(data);
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen py-2">
+      <div className="flex flex-col flex-grow items-center justify-center py-2">
         <img width={500} height={"auto"} src={data?.url === undefined ? '/YKY_Pixels.png' : data?.url} alt="Profile Photo"/>
       </div>
     );

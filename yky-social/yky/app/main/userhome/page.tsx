@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 
 const UserHome: React.FC = () => {
   return (
-  <div className="container mx-auto">
+  <div className="flex-grow flex flex-col items-center justify-center">
     <YKYProfilePhoto/>
-    <Link href="/main/updateprofile">Update Profile</Link>
+    <Link href="/main/updateprofile" className="block mt-4 lg:inline-block lg:mt-0 text-cyan-700 hover:text-cyan-400 mr-4">Update Profile</Link>
     <PostForm />
   </div>
   );
