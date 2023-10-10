@@ -3,9 +3,6 @@ import { operon } from "./app";
 import { ykyInit } from "./app";
 import { Operations } from "./Operations";
 
-import { TypeORMDatabase } from '@dbos-inc/operon/dist/src/user_database';
-import { DataSource } from 'typeorm';
-
 operon.init(YKY, Operations)
   .then(() => {
     return operon.userDatabase.createSchema();
