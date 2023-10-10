@@ -1,6 +1,5 @@
 {
-  "name": "shop-app-ts",
-  "version": "0.1.0",
+  "name": "operon-demo-shop-frontend",
   "private": true,
   "scripts": {
     "dev": "next dev",

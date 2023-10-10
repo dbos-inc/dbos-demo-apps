@@ -1,4 +1,6 @@
 {
+  "name": "operon-demo-shop-backend",
+  "private": true,
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix --ext .ts .",
