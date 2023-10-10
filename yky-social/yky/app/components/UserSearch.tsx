@@ -62,7 +62,7 @@ const SearchPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+    <div className="flex flex-col flex-grow items-center justify-center py-2">
       <form
         className="w-full max-w-md mx-auto bg-white p-5 rounded-md shadow-sm"
         onSubmit={handleSearch}
