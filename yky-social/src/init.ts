@@ -8,7 +8,7 @@ import { DataSource } from 'typeorm';
 
 operon.init(YKY, Operations)
   .then(() => {
-    return ((operon.userDatabase as TypeORMDatabase).dataSource as DataSource).synchronize();
+    return operon.userDatabase.createSchema();
   })
   .then(() => {
     console.log("Operon has been initialized!");
