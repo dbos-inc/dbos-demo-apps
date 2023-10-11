@@ -12,7 +12,7 @@
             "cwd": "${workspaceFolder}/e-commerce/shop-frontend"
         },
         {
-            "command": "npx operon start -p 8082",
+            "command": "npx operon start",
             "name": "Shop Backend",
             "preLaunchTask": "npm: build shop backend",
             "request": "launch",

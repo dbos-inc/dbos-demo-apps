@@ -9,5 +9,6 @@ database:
   user_dbclient: 'knex'
 telemetryExporters:
   - 'ConsoleExporter'
-  # - 'JaegerExporter'
+localRuntimeConfig:
+  port: 8082
 
