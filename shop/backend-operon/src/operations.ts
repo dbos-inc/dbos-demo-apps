@@ -288,8 +288,7 @@ export class Shop {
         }
       }
     } catch (err) {
-      // TODO: update to ctxt.logger.error once https://github.com/dbos-inc/operon/pull/111 is merged
-      console.log(err);
+      ctxt.logger.error(err);
       throw new OperonResponseError("Webhook Error", 400);
     }
   }
