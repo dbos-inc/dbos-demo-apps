@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 type KnexTransactionContext = TransactionContext<Knex>;
 
-interface Session {
+export interface Session {
   session_id: string;
   client_reference_id: string;
   success_url: string;
@@ -18,7 +18,7 @@ interface Session {
 }
 
 interface SessionCreateParams {
-  client_ref?: string, 
+  client_reference_id?: string, 
   success_url: string, 
   cancel_url: string
 }
@@ -30,10 +30,12 @@ export class PlaidPayments {
     ctxt: HandlerContext, 
     @ArgRequired success_url: string, 
     @ArgRequired cancel_url: string, 
-    @ArgOptional client_ref?: string
+    @ArgOptional client_reference_id?: string
   ): Promise<{ session_id: string; url: string; payment_status: string; }> {
-    // BUG: even though client_ref parameter of PaymentSession is optional, it's failing a validation check in Operon
-    const handle = await ctxt.invoke(PlaidPayments).paymentSession(success_url, cancel_url, client_ref ?? "");
+    // BUG: when operon serializes WF input parameters, undefined is converted to null. 
+    // Data validation logic needs to be updated to allow optional args to be null or undefined
+    // TODO: remove the workaround of converting falsy ref id -> empty string
+    const handle = await ctxt.invoke(PlaidPayments).paymentSession(success_url, cancel_url, client_reference_id ?? '');
     // BUG: getWorkflowUUID should be a property not a get method
     const session_id = handle.getWorkflowUUID();
 

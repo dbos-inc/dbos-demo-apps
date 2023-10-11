@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { OperonTestingRuntime, createTestingRuntime } from "@dbos-inc/operon";
-import { PlaidPayments } from "./operations";
+import { PlaidPayments, Session } from "./operations";
 import request from "supertest";
 
 describe("operations", () => {
@@ -18,18 +19,26 @@ describe("operations", () => {
 
 
   test("foo", async () => {
-    const response = await request(testRuntime.getHandlersCallback())
+    const req = {
+      success_url: "http://fakehost/success",
+      cancel_url: "http://fakehost/cancel",
+      client_reference_id: "fake-client-ref"
+    };
+
+    const resp1 = await request(testRuntime.getHandlersCallback())
       .post("/api/create_payment_session")
-      .send({
-        success_url: "http://localhost:3000/success",
-        cancel_url: "http://localhost:3000/cancel",
-      });
+      .send(req);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      const session_id = response.body.session_id;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const session_id = resp1.body.session_id as string;
 
-      const response2 = await request(testRuntime.getHandlersCallback())
-        .get(`/api/session_status?session_id=${session_id}`);
-    
+    const resp2 = await request(testRuntime.getHandlersCallback())
+      .get(`/api/session_status?session_id=${session_id}`);
+    const body = resp2.body as Session;
+
+    expect(body.success_url).toBe(req.success_url);
+    expect(body.cancel_url).toBe(req.cancel_url);
+    expect(body.client_reference_id).toBe(req.client_reference_id);
+
   });
 });
