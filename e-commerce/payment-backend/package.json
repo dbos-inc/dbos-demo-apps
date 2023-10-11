@@ -4,6 +4,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix --ext .ts .",
+    "setup": "knex migrate:latest",
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {

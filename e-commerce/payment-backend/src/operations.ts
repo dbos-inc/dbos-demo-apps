@@ -26,9 +26,16 @@ interface SessionCreateParams {
 export class PlaidPayments {
 
   @PostApi('/api/create_payment_session')
-  static async createPaymentSession(ctxt: HandlerContext, @ArgRequired success_url: string, @ArgRequired cancel_url: string, @ArgOptional client_ref?: string) {
-    const session_id = uuidv4();
-    // await ctxt.invoke(PlaidPayments).paymentSession(session_id, client_ref, success_url, cancel_url);
+  static async createPaymentSession(
+    ctxt: HandlerContext, 
+    @ArgRequired success_url: string, 
+    @ArgRequired cancel_url: string, 
+    @ArgOptional client_ref?: string
+  ): Promise<{ session_id: string; url: string; payment_status: string; }> {
+    // BUG: even though client_ref parameter of PaymentSession is optional, it's failing a validation check in Operon
+    const handle = await ctxt.invoke(PlaidPayments).paymentSession(success_url, cancel_url, client_ref ?? "");
+    // BUG: getWorkflowUUID should be a property not a get method
+    const session_id = handle.getWorkflowUUID();
 
     const frontend_host = ctxt.getConfig("frontend_host") as string | undefined | null;
     if (!frontend_host) { throw new OperonResponseError("frontend_host not configured", 500); }
@@ -43,18 +50,21 @@ export class PlaidPayments {
   }
 
   @GetApi('/api/session_status')
-  static async getSessionStatus(ctxt: HandlerContext, session_id: string) {
-
+  @OperonTransaction({readOnly: true})
+  static async getSessionRecord(ctxt: KnexTransactionContext, session_id: string): Promise<Session | undefined> {
+    return await ctxt.client<Session>('session').where({ session_id }).first();
   }
 
   @PostApi('/api/submit_payment')
   static async submitPayment(ctxt: HandlerContext, session_id: string) {
+    await ctxt.send(session_id, "payment.submitted", "payment_complete_topic");
+
 
   }
 
   @PostApi('/api/cancel_payment')
   static async cancelPayment(ctxt: HandlerContext, session_id: string) {
-
+    await ctxt.send(session_id, "payment.cancelled", "payment_complete_topic");
   }
 
 
@@ -62,21 +72,17 @@ export class PlaidPayments {
 
 
   @OperonWorkflow()
-  static async paymentSession(ctxt: WorkflowContext, session_id: string, client_ref: string, success_url: string, cancel_url: string) {
+  static async paymentSession(ctxt: WorkflowContext, success_url: string, cancel_url: string, @ArgOptional client_ref?: string) {
+    const session_id = ctxt.workflowUUID;
+    await ctxt.invoke(PlaidPayments).insertNewSessionRecord(session_id, success_url, cancel_url, client_ref);
 
 
   }
 
   @OperonTransaction()
-  static async insertNewSessionRecord(ctxt: KnexTransactionContext, session_id: string, client_ref: string, success_url: string, cancel_url: string): Promise<void> {
-
+  static async insertNewSessionRecord(ctxt: KnexTransactionContext, session_id: string, success_url: string, cancel_url: string, @ArgOptional client_ref?: string): Promise<void> {
     await ctxt.client<Session>('session').insert({ session_id, client_reference_id: client_ref, success_url, cancel_url });
-
   }
-
-
-
-
 
 
 }
