@@ -1,5 +1,4 @@
-import { TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, GetApi, OrmEntities } from '@dbos-inc/operon';
-import { TypeORMEntityManager } from '@dbos-inc/operon/dist/src/user_database';
+import { TransactionContext, WorkflowContext, OperonTransaction, GetApi, OrmEntities } from '@dbos-inc/operon';
 import { Entity, EntityManager, PrimaryGeneratedColumn, Column } from "typeorm"
 
 @Entity("operonhello")
@@ -15,7 +14,7 @@ export class OperonHello {
 export class Hello {
 
   @OperonTransaction()
-  static async helloTransaction (txnCtxt: TransactionContext<TypeORMEntityManager>, name: string)  {
+  static async helloTransaction (txnCtxt: TransactionContext<EntityManager>, name: string)  {
     const greeting = `Hello, ${name}!`
 
     const p: EntityManager = txnCtxt.client as EntityManager;
