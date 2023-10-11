@@ -12,7 +12,7 @@ docker run --rm --name=operon-ecommerce --env=POSTGRES_PASSWORD=${PGPASSWORD} --
 # Wait for PostgreSQL to start
 echo "Waiting for PostgreSQL to start..."
 for i in {1..30}; do
-  if docker exec operon-shop pg_isready -U postgres > /dev/null; then
+  if docker exec operon-ecommerce pg_isready -U postgres > /dev/null; then
     echo "PostgreSQL started!"
     break
   fi
@@ -20,6 +20,6 @@ for i in {1..30}; do
 done
 
 # Create a database in Postgres.
-docker exec operon-shop psql -U postgres -c "CREATE DATABASE shop;"
-docker exec operon-shop psql -U postgres -c "CREATE DATABASE payment;"
+docker exec operon-ecommerce psql -U postgres -c "CREATE DATABASE shop;"
+docker exec operon-ecommerce psql -U postgres -c "CREATE DATABASE payment;"
 
