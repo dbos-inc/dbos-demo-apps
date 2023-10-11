@@ -39,7 +39,7 @@ export class PlaidPayments {
       session_id,
       url: url.href,
       payment_status: "pending"
-    }
+    };
   }
 
   @GetApi('/api/session_status')
