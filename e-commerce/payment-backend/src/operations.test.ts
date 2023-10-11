@@ -16,7 +16,7 @@ describe("operations", () => {
 
   afterAll(async () => {
     await testRuntime.destroy();
-    console.log("fpoo");
+    console.log("testRuntime.destroy complete");
   });
 
 

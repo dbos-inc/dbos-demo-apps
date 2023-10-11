@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
-  GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources, ArgRequired, ArgOptional
+  GetApi, PostApi, OperonResponseError, ArgRequired, ArgOptional
 } from '@dbos-inc/operon';
 import { Knex } from 'knex';
 import { v4 as uuidv4 } from 'uuid';
@@ -28,22 +26,24 @@ export interface IIItem {
 
 export type SessionItem = Pick<IIItem, 'description' | 'quantity' | 'price'>;
 
-interface SessionCreateParams {
-  client_reference_id?: string, 
-  success_url: string, 
-  cancel_url: string
-}
+// interface SessionCreateParams {
+//   client_reference_id?: string, 
+//   success_url: string, 
+//   cancel_url: string
+// }
 
 const payment_complete_topic = "payment_complete_topic";
 
 export class PlaidPayments {
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   @PostApi('/api/create_payment_session')
   static async createPaymentSession(
     ctxt: HandlerContext, 
     @ArgRequired success_url: string, 
     @ArgRequired cancel_url: string, 
     @ArgRequired items: SessionItem[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @ArgOptional client_reference_id?: string
   ): Promise<{ session_id: string; url: string; payment_status: string; }> {
 
@@ -91,7 +91,7 @@ export class PlaidPayments {
   static async paymentSession(ctxt: WorkflowContext, success_url: string, cancel_url: string, items: SessionItem[], @ArgOptional client_ref?: string) {
     const session_id = ctxt.workflowUUID;
     await ctxt.invoke(PlaidPayments).insertSession(session_id, success_url, cancel_url, items, client_ref);
-    const notification = await ctxt.recv<string>(payment_complete_topic, 60);
+    // const notification = await ctxt.recv<string>(payment_complete_topic, 60);
 
     // if (notification === "payment.submitted") {
     // }
@@ -100,8 +100,8 @@ export class PlaidPayments {
   @OperonTransaction()
   static async insertSession(ctxt: KnexTransactionContext, session_id: string, success_url: string, cancel_url: string, items: SessionItem[], @ArgOptional client_ref?: string): Promise<void> {
     await ctxt.client<Session>('session').insert({ session_id, client_reference_id: client_ref, success_url, cancel_url });
-    for (const item of items) {
-      await ctxt.client<IIItem>('items').insert({ ...item, session_id});
-    }
+    // for (const item of items) {
+    //   await ctxt.client<IIItem>('items').insert({ ...item, session_id});
+    // }
   }
 }
