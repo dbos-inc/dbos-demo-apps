@@ -8,9 +8,11 @@ npm install
 npm run build
 ```
 
-Initialize a database:
-```shell
-./init_database.sh
+In this quickstart, we use [knex.js](https://knexjs.org/) to manage database migrations.
+Run our provided migration to create a database table:
+
+```bash
+npx knex migrate:latest
 ```
 
 Start your Operon app:
