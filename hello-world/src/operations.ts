@@ -9,15 +9,19 @@ import {
 
 import { Knex } from 'knex';
 
+type KnexTransactionContext = TransactionContext<Knex>;
+
 interface operon_hello {
   name: string;
   greet_count: number;
 }
 
 export class Hello {
+
   @OperonTransaction()
-  static async helloFunction(txnCtxt: TransactionContext<Knex>, name: string) {
-    const greeting = `Hello, ${name}!`;
+  static async helloTransaction(txnCtxt: KnexTransactionContext, name: string) {
+    // Look up greet_count.
+    txnCtxt.logger.info("Calling knex");
     let greet_count = await txnCtxt.client<operon_hello>("operon_hello")
       .select("greet_count")
       .where({ name: name })
@@ -35,23 +39,11 @@ export class Hello {
       await txnCtxt.client<operon_hello>("operon_hello")
         .insert({ name: name, greet_count: 1 })
     }
-    
-    txnCtxt.logger.info(`Inserted greeting ${greet_count}: ${greeting}`);
-    return `Greeting ${greet_count}: ${greeting}`;
+    return `Hello, ${name}! You have been greeted ${greet_count} times.\n`;
   }
 
-  @OperonWorkflow()
-  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
-    wfCtxt.logger.info("Hello, workflow!");
-    return await wfCtxt.invoke(Hello).helloFunction(name);
-  }
-
-  @GetApi("/greeting/:name")
-  static async helloEndpoint(ctx: HandlerContext, name: string) {
-    ctx.logger.info("helloEndpoint");
-    return await ctx
-      .invoke(Hello)
-      .helloWorkflow(name)
-      .then((x) => x.getResult());
+  @GetApi('/greeting/:name')
+  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
+    return handlerCtxt.invoke(Hello).helloTransaction(name);
   }
 }
