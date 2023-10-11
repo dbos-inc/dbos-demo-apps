@@ -17,7 +17,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/operon": "0.0.10",
+    "@dbos-inc/operon": "0.5.22-preview",
     "@prisma/client": "^5.4.0"
   }
 }
