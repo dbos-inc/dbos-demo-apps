@@ -2,7 +2,6 @@ import {
   TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
   GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources
 } from '@dbos-inc/operon';
-// import Stripe from 'stripe';
 import bcrypt from 'bcrypt';
 import { Knex } from 'knex';
 
@@ -51,9 +50,6 @@ interface User {
   username: string,
   password: string,
 }
-
-// const stripe = new Stripe(process.env.STRIPE_API_KEY || 'error_no_stripe_key', { apiVersion: '2023-08-16' });
-// const endpointSecret: string = process.env.STRIPE_WEBHOOK_SECRET || 'error_no_webhook_secret';
 
 const paymentHost = process.env.PLAID_PAYMENT_HOST || 'http://localhost:8086';
 
