@@ -9,7 +9,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/operon": "^0.5.11-preview",
+    "@dbos-inc/operon": "0.5.22-preview",
     "axios": "^1.5.1",
     "ts-node": "^10.9.1"
   }
