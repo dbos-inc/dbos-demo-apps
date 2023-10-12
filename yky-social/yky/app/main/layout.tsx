@@ -9,7 +9,7 @@ export default function MainLayout({
     children: React.ReactNode
   }) {
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900">
+    <div className="h-screen flex flex-col bg-gray-100 text-gray-900">
       <YKYContextProviders>
         <YKYTopNav/>
         <main>

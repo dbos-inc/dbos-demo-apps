@@ -1,21 +1,14 @@
-import "reflect-metadata";
-
 import { kapp, YKY } from './app';
-import { userDataSource } from "./app";
 import { operon } from "./app";
 import { ykyInit } from "./app";
 import { Operations } from "./Operations";
 
-userDataSource.initialize()
+operon.init(YKY, Operations)
   .then(() => {
-    // Set operon DS to typeorm
-    operon.useTypeORM(userDataSource);
+    return operon.userDatabase.createSchema();
   })
   .then(() => {
-    return operon.init(YKY, Operations);
-  })
-  .then(() => {
-    console.log("User Data Source has been initialized!");
+    console.log("Operon has been initialized!");
     ykyInit();
     kapp.listen(3000, () => {
       console.log("Server started on port 3000");
@@ -24,3 +17,4 @@ userDataSource.initialize()
   .catch((err) => {
     console.error("Error during Data Source initialization", err);
   });
+

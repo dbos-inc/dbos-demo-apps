@@ -69,4 +69,5 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_DBNAME: socialts
           POSTGRES_USERNAME: socialts
+          PGPASSWORD: socialts
           POSTGRES_PASSWORD: socialts

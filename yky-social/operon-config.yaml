@@ -1,0 +1,12 @@
+database:
+  hostname: ${POSTGRES_HOST}
+  port: ${POSTGRES_PORT}
+  username: ${POSTGRES_USERNAME}
+  password: ${POSTGRES_PASSWORD}
+  user_database: ${POSTGRES_DATABASE}
+  system_database: 'opsys'
+  connectionTimeoutMillis: 3000
+  user_dbclient: 'typeorm'
+telemetryExporters:
+  - 'ConsoleExporter'
+

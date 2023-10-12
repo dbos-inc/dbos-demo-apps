@@ -13,9 +13,10 @@ import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
 
-import { getS3Client } from './app';
+import { getS3, getS3Client } from './app';
 
 import {
+ OperonContext,
  OperonCommunicator,
  CommunicatorContext,
  OperonTransaction,
@@ -26,8 +27,7 @@ import {
  OperonWorkflow,
  WorkflowContext,
 } from '@dbos-inc/operon';
-import { Traced } from '@dbos-inc/operon';
-import { MediaItem } from './entity/Media';
+import { MediaItem, MediaUsage } from './entity/Media';
 
 export interface ResponseError extends Error {
     status?: number;
@@ -55,10 +55,10 @@ export class Operations
 
 @OperonTransaction()
 @RequiredRole([])
-static async createUser(ctx: TransactionContext, first:string, last:string, uname:string, @SkipLogging pass:string) :
+static async createUser(ctx: TransactionContext<EntityManager>, first:string, last:string, uname:string, @SkipLogging pass:string) :
    Promise<UserLogin>
 {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
 
     if (!first || !last || !uname || !pass) {
         throw errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${pass}`, 400);
@@ -123,6 +123,22 @@ static async getMyProfile(manager:EntityManager, curUid:string) :
     return upRep.findOneBy({id: curUid});
 }
 
+@OperonTransaction({readOnly: true})
+@RequiredRole([])
+static async getMyProfilePhotoKey(ctx: TransactionContext<EntityManager>, curUid:string) :
+   Promise<string | null>
+{
+    const mRep = ctx.client.getRepository(MediaItem);
+    ctx.logger.debug(`Doing profile photo get for ${curUid}`);
+    const mi = await mRep.findOneBy({owner_id: curUid, media_usage: MediaUsage.PROFILE});
+    if (!mi) {
+        ctx.logger.debug(`Photo get for ${curUid} got nothing`);
+        return null;
+    }
+    ctx.logger.debug(`Photo get for ${curUid} got ${mi.media_url}`);
+    return mi.media_url;
+}
+
 static async getPost(manager:EntityManager, _curUid: string, post:string) :
    Promise<Post | null>
 {
@@ -137,11 +153,11 @@ static async getPost(manager:EntityManager, _curUid: string, post:string) :
 
 //
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
-@Traced
-static async findUser(ctx: TransactionContext, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
+@OperonTransaction({readOnly: true})
+static async findUser(ctx: TransactionContext<EntityManager>, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
    Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]> 
 {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
     const userRep = manager.getRepository(UserLogin);
     const otherUser = await userRep.findOneBy({
         user_name: uname,
@@ -223,9 +239,9 @@ static async setGraphStatus(manager: EntityManager, curUid : string, otherUid : 
 
 // Compose a post
 @OperonTransaction()
-static async makePost(ctx: TransactionContext, txt : string)
+static async makePost(ctx: TransactionContext<EntityManager>, txt : string)
 {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    const manager = ctx.client;
 
     // Create post
     const p = new Post();
@@ -257,8 +273,8 @@ static async makePost(ctx: TransactionContext, txt : string)
 
 // Send a post
 @OperonTransaction()
-static async distributePost(ctx: TransactionContext, p: Post) {
-    const manager = ctx.typeormEM as unknown as EntityManager;
+static async distributePost(ctx: TransactionContext<EntityManager>, p: Post) {
+    const manager = ctx.client;
 
     // Deliver post to followers - TODO cross shard; TODO block list
     const sgRep = manager.getRepository(SocialGraph);
@@ -367,14 +383,14 @@ static async readRecvTimeline(manager: EntityManager, curUser : string, type : R
 @OperonCommunicator()
 static async createS3UploadKey(_ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
     const postPresigned = await createPresignedPost(
-      getS3Client(),
+      getS3(),
       {
         Conditions: [
           ["content-length-range", 1, 10000000],
         ],
         Bucket: bucket,
         Key: key,
-        Expires: 3600,
+        Expires: 1200, // 20 minutes to do it, we'll abort the effort in 25 (see below)
         Fields: {
           'Content-Type': 'image/*',
         }
@@ -394,14 +410,50 @@ static async getS3DownloadKey(key: string, bucket: string) {
   return presignedUrl;
 }
 
+static async ensureS3FileDropped(ctx: OperonContext, key: string, bucket: string) {
+    try {
+        const params = {
+            Bucket: bucket,
+            Key: key,
+        };
+
+        const s3 = getS3();
+
+        await s3.deleteObject(params);
+        ctx.logger.debug(`S3 key ${key} was deleted successfully.`);
+    } catch (error) {
+        // Generally expected to occur sometimes
+        ctx.logger.info(`S3 key ${key} couldn't be deleted, or was already deleted.`);
+    }
+}
+
 @OperonTransaction()
-static async writeMediaPost(ctx: TransactionContext, mid: string, mkey: string) {
+static async writeMediaPost(ctx: TransactionContext<EntityManager>, mid: string, mkey: string) {
     const m = new MediaItem();
-    m.description = mkey;
+    m.media_url = mkey;
     m.media_id = mid;
     m.owner_id = ctx.authenticatedUser;
     //m.media_type = ? // This may not be important enough to deal with...
-    const manager = ctx.typeormEM as unknown as EntityManager;
+    m.media_usage = MediaUsage.POST;
+    const manager = ctx.client;
+    await manager.save(m);
+}
+
+@OperonTransaction()
+static async writeMediaProfilePhoto(ctx: TransactionContext<EntityManager>, mid: string, mkey: string) {
+    const m = new MediaItem();
+    m.media_url = mkey;
+    m.media_id = mid;
+    m.owner_id = ctx.authenticatedUser;
+    //m.media_type = ? // This may not be important enough to deal with...
+    m.media_usage = MediaUsage.PROFILE;
+    const manager = ctx.client;
+    // Should really delete the old keys from AWS...
+    const deleted = await manager.delete(MediaItem, {
+        owner_id: ctx.authenticatedUser,
+        media_usage: MediaUsage.PROFILE
+    });
+    ctx.logger.debug(`Deleted ${deleted.affected} old items`);
     await manager.save(m);
 }
 
@@ -414,18 +466,25 @@ static async writeMediaPost(ctx: TransactionContext, mid: string, mkey: string) 
  *     If it fails for any reason, the workflow can just terminate.  Its database record is the record.
  */
 @OperonWorkflow()
-static async mediaUpload(ctx: WorkflowContext, mediaId: string, mediaFile: string, bucket: string)
+static async mediaUpload(ctx: WorkflowContext, mtype: string, mediaId: string, mediaFile: string, bucket: string)
 {
     const mkey = await ctx.invoke(Operations).createS3UploadKey(mediaFile, bucket);
     await ctx.setEvent<PresignedPost>("uploadkey", mkey);
+
     try {
-        await ctx.recv("uploadfinish", 3600);
-        await ctx.invoke(Operations).writeMediaPost(mediaId, mediaFile);
+        await ctx.recv("uploadfinish", 1500); // No upload in 25 minutes, give up?
+        if (mtype === 'profile') {
+            await ctx.invoke(Operations).writeMediaProfilePhoto(mediaId, mediaFile);
+        }
+        else {
+            await ctx.invoke(Operations).writeMediaPost(mediaId, mediaFile);
+        }
     }
     catch (e) {
         // No need to make a database record, or, at this point, roll anything back.
-        // It might be a good idea to clobber the s3 key, but doing so wouldn't prevent it from appearing later.
-        //   (The access key does that though.)
+        // It might be a good idea to clobber the s3 key in case it arrived but we weren't told.
+        //   (The access key duration is less than the time we wait, so it can't be started.)
+        await this.ensureS3FileDropped(ctx, mediaFile, bucket);
     }
     return {};
 }
