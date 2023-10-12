@@ -43,11 +43,11 @@ describe("operations", () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const session_id = resp1.body.session_id as string;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const url = resp1.body.url as string;
-    expect(url).toBe(`http://localhost:8085/payment/${session_id}`);
+    const url = new URL(resp1.body.url as string);
+    expect(url.pathname).toBe(`/payment/${session_id}`);
 
     const resp2 = await request(testRuntime.getHandlersCallback())
-      .get(`/api/session_status?session_id=${session_id}`);
+      .get(`/api/session_status/${session_id}`);
     expect(resp2.status).toBe(200);
 
     expect(resp2.body).toBeDefined();

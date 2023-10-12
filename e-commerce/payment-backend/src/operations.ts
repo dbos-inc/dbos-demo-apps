@@ -44,10 +44,7 @@ export class PlaidPayments {
       throw new OperonResponseError("items must be non-empty", 404);
     }
 
-    // BUG: when operon serializes WF input parameters, undefined is converted to null. 
-    // Data validation logic needs to be updated to allow optional args to be null or undefined
-    // TODO: remove the workaround of converting falsy ref id -> empty string
-    const handle = await ctxt.invoke(PlaidPayments).paymentSession(success_url, cancel_url, items, client_reference_id ?? '');
+    const handle = await ctxt.invoke(PlaidPayments).paymentSession(success_url, cancel_url, items, client_reference_id);
 
     // BUG: getWorkflowUUID should be a property not a get method
     const session_id = handle.getWorkflowUUID();
@@ -64,9 +61,10 @@ export class PlaidPayments {
     };
   }
 
-  @GetApi('/api/session_status')
+  @GetApi('/api/session_status/:session_id')
   @OperonTransaction({readOnly: true})
   static async getSessionRecord(ctxt: KnexTransactionContext, session_id: string): Promise<PaymentSession | undefined> {
+    ctxt.logger.info(`getting session record ${session_id}`);
     const session = await ctxt.client<SessionTable>('session').where({ session_id }).first();
     if (!session) { return undefined; }
 

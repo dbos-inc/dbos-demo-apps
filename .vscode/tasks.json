@@ -11,6 +11,17 @@
 			],
 			"label": "npm: build shop backend",
 			"detail": "tsc"
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "e-commerce/payment-backend",
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"label": "npm: build payment backend",
+			"detail": "tsc"
 		}
 	]
 }

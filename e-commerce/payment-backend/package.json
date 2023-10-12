@@ -5,10 +5,11 @@
     "build": "tsc",
     "lint": "eslint --fix --ext .ts .",
     "setup": "knex migrate:latest",
+    "start": "npm run build && operon start",
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
-    "@dbos-inc/operon": "0.5.24-preview",
+    "@dbos-inc/operon": "0.5.28-preview",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
