@@ -1,4 +1,4 @@
-import { TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, GetApi } from '@dbos-inc/operon';
+import { TransactionContext, HandlerContext, OperonTransaction, GetApi } from '@dbos-inc/operon';
 import { PrismaClient } from "@prisma/client";
 
 export class Hello {
@@ -18,9 +18,8 @@ export class Hello {
 
 
   @GetApi('/greeting/:name')
-  static async helloWorkflow(workflowCtxt: WorkflowContext, name: string) {
-    console.log("Received request with name " + name );
-    return await workflowCtxt.invoke(Hello).helloTransaction(name);
-  };
+  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
+    return handlerCtxt.invoke(Hello).helloTransaction(name);
+  }
 
 }
