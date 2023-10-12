@@ -9,17 +9,17 @@ interface operon_hello {
 
 export class Hello {
 
-  @GetApi('/greeting/:name')
+  @GetApi('/greeting/:user')
   @OperonWorkflow()
-  static async helloWorkflow(ctxt: WorkflowContext, name: string) {
-    const greeting = await ctxt.invoke(Hello).helloTransaction(name);
+  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
     try {
       await ctxt.invoke(Hello).greetPostman(greeting);
       return greeting;
     } catch (e) {
       console.warn("Error sending request:", e);
-      await ctxt.invoke(Hello).rollbackHelloTransaction(name);
-      return `Greeting failed for ${name}\n`
+      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+      return `Greeting failed for ${user}\n`
     }
   }
 
