@@ -1,4 +1,4 @@
-import { TransactionContext, WorkflowContext, OperonTransaction, GetApi, OrmEntities } from '@dbos-inc/operon';
+import { TransactionContext, HandlerContext, OperonTransaction, GetApi, OrmEntities } from '@dbos-inc/operon';
 import { Entity, EntityManager, PrimaryGeneratedColumn, Column } from "typeorm"
 
 @Entity("operonhello")
@@ -25,8 +25,8 @@ export class Hello {
   };
 
   @GetApi('/greeting/:name')
-  static async helloWorkflow(workflowCtxt: WorkflowContext, name: string) {
-    return await workflowCtxt.invoke(Hello).helloTransaction(name);
-  };
+  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
+    return handlerCtxt.invoke(Hello).helloTransaction(name);
+  }
 
 }

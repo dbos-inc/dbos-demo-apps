@@ -44,6 +44,9 @@ const LoginPage: React.FC<Props> = ({ regurl }) => {
       // But we store it in an HTTP header and so no client script
       //  can actually access it.
       const ures = await res.json();
+      localStorage.setItem('ykyuid', ures.user.userid);
+      localStorage.setItem('ykyuname', ures.user.username);
+
       setCurrentUser({uid: ures.user.userid, uname: ures.user.username});
 
       router.push('/main');
@@ -59,7 +62,7 @@ const LoginPage: React.FC<Props> = ({ regurl }) => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
+    <div className="flex items-center justify-center flex-grow bg-gray-100 px-4">
       <div className="max-w-md w-full space-y-8">
         <div>
           <Image width={300} height={300} className="mx-auto h-12 w-auto" src="/YKY_Pixels.png" alt="logo" />

@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
@@ -9,22 +10,19 @@ import { Readable } from 'stream';
 import { describe, expect } from '@jest/globals';
 import request from 'supertest';
 import { kapp, YKY, ykyInit } from './app';
-import { userDataSource } from './app';
 import { operon } from './app';
 
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { Operations } from './Operations';
 
 beforeAll(async () => {
-  await userDataSource.initialize();
-  operon.useTypeORM(userDataSource);
   await operon.init(YKY, Operations);
+  await operon.userDatabase.createSchema();
   ykyInit();
 });
 
 afterAll(async () => {
-  await userDataSource.dropDatabase();
-  await userDataSource.destroy();
+  await operon.userDatabase.dropSchema();
   await operon.destroy();
 });
 
@@ -319,5 +317,11 @@ describe('Upload media in workflow', () => {
     const presignedGetUrl = (getkey.body.url || 'x') as string;
     const outputPath = '/tmp/YKY.png';
     await downloadFromS3(presignedGetUrl, outputPath);
+
+    // Delete
+    const dropres = await request(kapp.callback())
+    .get('/deleteMedia')
+    .query({filekey: postkey.body.file, userid:response.body.id});
+    expect(dropres.statusCode).toBe(200);
   });
 });
