@@ -57,7 +57,7 @@ export class PlaidPayments {
 
     const url = new URL(frontend_host);
     url.pathname = `/payment/${session_id}`;
-
+ 
     return {
       session_id,
       url: url.href
@@ -87,8 +87,10 @@ export class PlaidPayments {
   @OperonWorkflow()
   static async paymentSession(ctxt: WorkflowContext, success_url: string, cancel_url: string, items: PaymentItem[], @ArgOptional client_ref?: string) {
     const session_id = ctxt.workflowUUID;
+    ctxt.logger.info(`creating payment session ${session_id}`);
     await ctxt.invoke(PlaidPayments).insertSession(session_id, success_url, cancel_url, items, client_ref);
     const notification = await ctxt.recv<string>(payment_complete_topic, 60) ?? "payment.error";
+    ctxt.logger.info(`payment session ${session_id} new status ${notification}`);
     await ctxt.invoke(PlaidPayments).updateSessionStatus(session_id, notification);
     //TODO: send payment status update to shop
   }
