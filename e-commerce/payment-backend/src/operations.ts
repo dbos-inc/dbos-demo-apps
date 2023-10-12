@@ -27,9 +27,35 @@ export const payment_complete_topic = "payment_complete_topic";
 export const payment_submitted = "payment.submitted";
 export const payment_cancelled = "payment.cancelled";
 
-export type PaymentItem = Omit<ItemTable, 'item_id' | 'session_id'>;
-export type PaymentSession = SessionTable & { items: PaymentItem[]; };
-export type Session = { session_id: string; url?: string; payment_status: string };
+function getPaymentStatus(status?: string): "pending" | "paid" | "cancelled" {
+  if (!status) { return "pending"; }
+  return status === payment_submitted ? "paid" : "cancelled";
+}
+
+function getRedirectUrl(ctxt: OperonContext, session_id: string): string {
+  const frontend_host = ctxt.getConfig("frontend_host") as string | undefined | null;
+  if (!frontend_host) { throw new OperonResponseError("frontend_host not configured", 500); }
+
+  const url = new URL(frontend_host);
+  url.pathname = `/payment/${session_id}`;
+  return url.href;
+}
+
+export interface PaymentSession {
+  session_id: string;
+  url: string;
+  payment_status: "pending" | "paid" | "cancelled";
+}
+
+export type PaymentItem = Pick<ItemTable, "description" | "price" | "quantity">;
+
+export interface PaymentSessionInformation {
+  session_id: string;
+  success_url: string;
+  cancel_url: string;
+  status?: string | undefined;
+  items: PaymentItem[];
+}
 
 export class PlaidPayments {
 
@@ -41,7 +67,7 @@ export class PlaidPayments {
     @ArgRequired cancel_url: string,
     @ArgRequired items: PaymentItem[],
     @ArgOptional client_reference_id?: string
-  ): Promise<Session> {
+  ): Promise<PaymentSession> {
 
     if (items.length === 0) {
       throw new OperonResponseError("items must be non-empty", 404);
@@ -52,47 +78,37 @@ export class PlaidPayments {
 
     return {
       session_id,
-      url: PlaidPayments.getRedirectUrl(ctxt, session_id),
-      payment_status: "pending"
+      url: getRedirectUrl(ctxt, session_id),
+      payment_status: getPaymentStatus(),
     };
-  }
-
-  static getRedirectUrl(ctxt: OperonContext, session_id: string) {
-    const frontend_host = ctxt.getConfig("frontend_host") as string | undefined | null;
-    if (!frontend_host) { throw new OperonResponseError("frontend_host not configured", 500); }
-
-    const url = new URL(frontend_host);
-    url.pathname = `/payment/${session_id}`;
-    return url.href;
   }
 
   @GetApi('/api/session/:session_id')
   @OperonTransaction({ readOnly: true })
-  static async retrievePaymentSession(ctxt: KnexTransactionContext, session_id: string): Promise<Session | undefined> {
+  static async retrievePaymentSession(ctxt: KnexTransactionContext, session_id: string): Promise<PaymentSession | undefined> {
     const rows = await ctxt.client<SessionTable>('session').select('status').where({ session_id });
     if (rows.length === 0) { return undefined; }
 
     return {
       session_id,
-      url: PlaidPayments.getRedirectUrl(ctxt, session_id),
-      payment_status: rows[0].status ?? "pending"
+      url: getRedirectUrl(ctxt, session_id),
+      payment_status: getPaymentStatus(rows[0].status),
     }
   }
 
-
-
-
-
-
-
-  @GetApi('/api/session_status/:session_id')
+  @GetApi('/api/session_info/:session_id')
   @OperonTransaction({ readOnly: true })
-  static async getSessionRecord(ctxt: KnexTransactionContext, session_id: string): Promise<PaymentSession | undefined> {
+  static async getSessionInformation(ctxt: KnexTransactionContext, session_id: string): Promise<PaymentSessionInformation | undefined> {
     ctxt.logger.info(`getting session record ${session_id}`);
-    const session = await ctxt.client<SessionTable>('session').where({ session_id }).first();
+    const session = await ctxt.client<SessionTable>('session')
+      .select("session_id", "success_url", "cancel_url", "status")
+      .where({ session_id })
+      .first();
     if (!session) { return undefined; }
 
-    const items: PaymentItem[] = await ctxt.client<ItemTable>('items').select("description", "price", "quantity").where({ session_id });
+    const items = await ctxt.client<ItemTable>('items')
+      .select("description", "price", "quantity")
+      .where({ session_id });
     return { ...session, items };
   }
 
@@ -135,9 +151,9 @@ export class PlaidPayments {
     success_url: string,
     cancel_url: string,
     items: PaymentItem[],
-    @ArgOptional client_ref?: string
+    @ArgOptional client_reference_id?: string
   ): Promise<void> {
-    await ctxt.client<SessionTable>('session').insert({ session_id, client_reference_id: client_ref, webhook, success_url, cancel_url });
+    await ctxt.client<SessionTable>('session').insert({ session_id, client_reference_id, webhook, success_url, cancel_url });
     for (const item of items) {
       await ctxt.client<ItemTable>('items').insert({ ...item, session_id });
     }
@@ -153,8 +169,14 @@ export class PlaidPayments {
   }
 
   @OperonCommunicator()
-  static async paymentWebhook(ctxt: CommunicatorContext, webhook: string, session_id: string, payment_status: string, client_reference_id: string | undefined): Promise<void> {
-    const body = { session_id, payment_status, client_reference_id };
+  static async paymentWebhook(
+    _ctxt: CommunicatorContext, 
+    webhook: string, 
+    session_id: string, 
+    status: string | undefined, 
+    client_reference_id: string | undefined
+  ): Promise<void> {
+    const body = { session_id, payment_status: getPaymentStatus(status), client_reference_id };
 
     await fetch(webhook, {
       method: 'POST',

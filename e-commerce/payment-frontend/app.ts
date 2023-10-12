@@ -1,7 +1,7 @@
 import Koa from 'koa';
 import KoaRouter from 'koa-router';
 import KoaViews from 'koa-views';
-import { bodyParser } from '@koa/bodyparser';
+import { bodyParser as KoaBodyParser } from '@koa/bodyparser';
 
 
 const port = process.env.PORT || 8000;
@@ -9,30 +9,28 @@ const payment_backend = process.env.PLAID_BACKEND || 'http://localhost:8086';
 
 const app = new Koa();
 const router = new KoaRouter();
-app.use(bodyParser());
+app.use(KoaBodyParser());
 app.use(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }));
 
-export interface PaymentSession {
+export interface PaymentSessionInformation {
     session_id: string;
-    client_reference_id?: string;
     success_url: string;
     cancel_url: string;
-    status?: string;
-    items: PaymentSessionItem[];
-}
-
-export interface PaymentSessionItem {
+    status?: string | undefined;
+    items: PaymentItem[];
+  }
+export interface PaymentItem {
     description: string;
     quantity: number;
     price: number;
 }
 
-async function getPaymentSession(session_id: string): Promise<PaymentSession | undefined> {
-    const url = `${payment_backend}/api/session_status/${session_id}`;
+async function getPaymentSessionInfo(session_id: string): Promise<PaymentSessionInformation | undefined> {
+    const url = `${payment_backend}/api/session_info/${session_id}`;
     try {
         const resp = await fetch(url);
         if (resp.status !== 200) { return undefined; }
-        return await resp.json() as PaymentSession;
+        return await resp.json() as PaymentSessionInformation;
     } catch {
         return undefined;
     }
@@ -69,7 +67,7 @@ router.get('/', async (ctx, next) => {
 
 router.get('/payment/:session_id', async (ctx, next) => {
     const session_id = ctx.params['session_id'];
-    const session = await getPaymentSession(session_id);
+    const session = await getPaymentSessionInfo(session_id);
     if (!session) {
         ctx.body = `Invalid session id ${session_id}`;
         return;
@@ -80,7 +78,7 @@ router.get('/payment/:session_id', async (ctx, next) => {
 
 router.post('/payment/:session_id', async (ctx, next) => {
     const session_id = ctx.params['session_id'];
-    const session = await getPaymentSession(session_id);
+    const session = await getPaymentSessionInfo(session_id);
     if (!session) {
         ctx.body = `Invalid session id ${session_id}`;
         return;

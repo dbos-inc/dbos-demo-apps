@@ -171,7 +171,7 @@ export class Shop {
     await ctxt.setEvent(checkout_url_topic, paymentSession.url);
     const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
 
-    if (notification) {
+    if (notification && notification === 'paid') {
       // if the checkout complete notification arrived, the payment is successful so fulfull the order
       await ctxt.invoke(Shop).fulfillOrder(orderID);
       await ctxt.invoke(Shop).clearCart(username);
@@ -296,7 +296,7 @@ export class Shop {
       ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
     } else {
       ctxt.logger.info(`Received for ${payload.client_reference_id}`);
-      await ctxt.send(payload.client_reference_id, "checkout.session.completed", checkout_complete_topic);
+      await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
     }
   }
 }
