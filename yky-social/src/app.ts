@@ -36,7 +36,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client, S3 } from '@aws-sdk/client-s3';
-import { createLogger } from "winston";
 
 const s3ClientConfig = {
   region: process.env.AWS_REGION || 'us-east-2', // Replace with your AWS region
@@ -275,7 +274,6 @@ export const operon = new Operon({
     port: Number(process.env.POSTGRES_PORT),
     host: process.env.POSTGRES_HOST,
   },
-  logger: createLogger({silent: true}),
   userDbclient: 'typeorm',
   system_database: 'opsys',
 });
