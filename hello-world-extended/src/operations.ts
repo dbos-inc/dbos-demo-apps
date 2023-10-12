@@ -17,7 +17,7 @@ export class Hello {
       await ctxt.invoke(Hello).greetPostman(greeting);
       return greeting;
     } catch (e) {
-      console.warn("Error sending request:", e);
+      ctxt.logger.error(e);
       await ctxt.invoke(Hello).rollbackHelloTransaction(user);
       return `Greeting failed for ${user}\n`
     }
@@ -46,13 +46,13 @@ export class Hello {
   }
 
   @OperonCommunicator()
-  static async greetPostman(_ctxt: CommunicatorContext, greeting: string) {
+  static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
     await axios.get("https://postman-echo.com/get", {
       params: {
         greeting: greeting
       }
     });
-    console.log(`Greeting sent to postman!`);
+    ctxt.logger.info(`Greeting sent to postman!`);
   }
 
   @PostApi('/clear/:user')
