@@ -23,3 +23,6 @@ done
 docker exec operon-ecommerce psql -U postgres -c "CREATE DATABASE shop;"
 docker exec operon-ecommerce psql -U postgres -c "CREATE DATABASE payment;"
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+npm run --prefix $SCRIPT_DIR/shop-backend setup
+npm run --prefix $SCRIPT_DIR/payment-backend setup

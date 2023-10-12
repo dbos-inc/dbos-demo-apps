@@ -9,7 +9,7 @@
             "name": "Shop Frontend",
             "request": "launch",
             "type": "node-terminal",
-            "cwd": "${workspaceFolder}/e-commerce/shop-frontend"
+            "cwd": "${workspaceFolder}/e-commerce/shop-frontend",
         },
         {
             "command": "npx operon start",
@@ -18,7 +18,7 @@
             "request": "launch",
             "type": "node-terminal",
             "cwd": "${workspaceFolder}/e-commerce/shop-backend",
-            "envFile": "${workspaceFolder}/e-commerce/shop-backend/.env"
+            // "envFile": "${workspaceFolder}/e-commerce/shop-backend/.env"
         },
         {
             "command": "npm run start",
@@ -39,14 +39,30 @@
     ],
     "compounds": [
         {
-          "name": "Shop",
-          "configurations": ["Shop Frontend", "Shop Backend"],
-          "stopAll": true
+            "name": "E-Commerce",
+            "configurations": [
+                "Shop Frontend",
+                "Shop Backend",
+                "Payment Frontend",
+                "Payment Backend"
+            ],
+            "stopAll": true
+        },
+        {
+            "name": "Shop",
+            "configurations": [
+                "Shop Frontend",
+                "Shop Backend"
+            ],
+            "stopAll": true
         },
         {
             "name": "Payment",
-            "configurations": ["Payment Frontend", "Payment Backend"],
+            "configurations": [
+                "Payment Frontend",
+                "Payment Backend"
+            ],
             "stopAll": true
-          }
-      ]
+        }
+    ]
 }
