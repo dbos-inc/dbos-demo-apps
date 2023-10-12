@@ -49,13 +49,15 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
   return isMatch;
 }
 
+type ORMTC = TransactionContext<EntityManager>;
+
 @DefaultRequiredRole(['user'])
 export class Operations
 {
 
 @OperonTransaction()
 @RequiredRole([])
-static async createUser(ctx: TransactionContext<EntityManager>, first:string, last:string, uname:string, @SkipLogging pass:string) :
+static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @SkipLogging pass:string) :
    Promise<UserLogin>
 {
     const manager = ctx.client;
@@ -88,10 +90,10 @@ static async createUser(ctx: TransactionContext<EntityManager>, first:string, la
     return await manager.save(user);
 }
 
-static async logInUser(manager:EntityManager, uname:string, pass:string) :
+static async logInUser(ctx: ORMTC, uname:string, pass:string) :
    Promise<UserLogin>
 {
-    const userRep = manager.getRepository(UserLogin);
+    const userRep = ctx.client.getRepository(UserLogin);
     const existingUser = await userRep.findOneBy({
         user_name: uname,
     });
@@ -102,10 +104,10 @@ static async logInUser(manager:EntityManager, uname:string, pass:string) :
     return existingUser;
 }
 
-static async logInUserId(manager:EntityManager, uname:string, pass:string) :
+static async logInUserId(ctx: ORMTC, uname:string, pass:string) :
    Promise<string>
 {
-    const userRep = manager.getRepository(UserLogin);
+    const userRep = ctx.client.getRepository(UserLogin);
     const existingUser = await userRep.findOneBy({
         user_name: uname,
     });
@@ -116,16 +118,16 @@ static async logInUserId(manager:EntityManager, uname:string, pass:string) :
     return existingUser.id;
 }
 
-static async getMyProfile(manager:EntityManager, curUid:string) :
+static async getMyProfile(ctx: ORMTC, curUid:string) :
    Promise<UserProfile | null>
 {
-    const upRep = manager.getRepository(UserProfile);
+    const upRep = ctx.client.getRepository(UserProfile);
     return upRep.findOneBy({id: curUid});
 }
 
 @OperonTransaction({readOnly: true})
 @RequiredRole([])
-static async getMyProfilePhotoKey(ctx: TransactionContext<EntityManager>, curUid:string) :
+static async getMyProfilePhotoKey(ctx: ORMTC, curUid:string) :
    Promise<string | null>
 {
     const mRep = ctx.client.getRepository(MediaItem);
@@ -139,10 +141,10 @@ static async getMyProfilePhotoKey(ctx: TransactionContext<EntityManager>, curUid
     return mi.media_url;
 }
 
-static async getPost(manager:EntityManager, _curUid: string, post:string) :
+static async getPost(ctx: ORMTC, _curUid: string, post:string) :
    Promise<Post | null>
 {
-    const pRep = manager.getRepository(Post);
+    const pRep = ctx.client.getRepository(Post);
     const res = pRep.findOne({
         where: {id: post},
         relations: {
@@ -154,7 +156,7 @@ static async getPost(manager:EntityManager, _curUid: string, post:string) :
 //
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
 @OperonTransaction({readOnly: true})
-static async findUser(ctx: TransactionContext<EntityManager>, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
+static async findUser(ctx: ORMTC, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
    Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]> 
 {
     const manager = ctx.client;
@@ -205,10 +207,10 @@ static async findUser(ctx: TransactionContext<EntityManager>, curUid:string, una
     return [otherUser, profile, sgtype, tgtype];
 }
 
-static async getGraphStatus(manager: EntityManager, curUid : string, otherUid : string)
+static async getGraphStatus(ctx: ORMTC, curUid : string, otherUid : string)
     : Promise<GraphType>
 {
-    const sgRep = manager.getRepository(SocialGraph);
+    const sgRep = ctx.client.getRepository(SocialGraph);
     const rGraph = await sgRep.findOneBy({
         src_id: curUid, tgt_id: otherUid
     });
@@ -220,10 +222,10 @@ static async getGraphStatus(manager: EntityManager, curUid : string, otherUid : 
 }
 
 // Set graph status
-static async setGraphStatus(manager: EntityManager, curUid : string, otherUid : string, status : GraphType)
+static async setGraphStatus(ctx: ORMTC, curUid : string, otherUid : string, status : GraphType)
     : Promise<void>
 {
-    const sgRep = manager.getRepository(SocialGraph);
+    const sgRep = ctx.client.getRepository(SocialGraph);
     const ug = new SocialGraph();
     ug.link_type = status;
     ug.src_id = curUid;
@@ -239,7 +241,7 @@ static async setGraphStatus(manager: EntityManager, curUid : string, otherUid : 
 
 // Compose a post
 @OperonTransaction()
-static async makePost(ctx: TransactionContext<EntityManager>, txt : string)
+static async makePost(ctx: ORMTC, txt : string)
 {
     const manager = ctx.client;
 
@@ -273,7 +275,7 @@ static async makePost(ctx: TransactionContext<EntityManager>, txt : string)
 
 // Send a post
 @OperonTransaction()
-static async distributePost(ctx: TransactionContext<EntityManager>, p: Post) {
+static async distributePost(ctx: ORMTC, p: Post) {
     const manager = ctx.client;
 
     // Deliver post to followers - TODO cross shard; TODO block list
@@ -300,7 +302,7 @@ static async distributePost(ctx: TransactionContext<EntityManager>, p: Post) {
 }
 
 // TODO: Deliver a post
-static async makePM(manager: EntityManager, curUid : string, toUid : string, txt : string) :
+static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string) :
     Promise<void>
 {
     // Create post
@@ -313,7 +315,7 @@ static async makePM(manager: EntityManager, curUid : string, toUid : string, txt
     p.post_time = new Date();
     p.post_type = PostType.PM;
 
-    const postRep = manager.getRepository(Post);
+    const postRep = ctx.client.getRepository(Post);
     await postRep.insert(p);
 
     // TODO: Decompose to allow media upload
@@ -326,11 +328,11 @@ static async makePM(manager: EntityManager, curUid : string, toUid : string, txt
     st.send_date = p.post_time;
     st.user_id = curUid;
 
-    const sendRep = manager.getRepository(TimelineSend);
+    const sendRep = ctx.client.getRepository(TimelineSend);
     await sendRep.insert(st);
 
     // Deliver post to recipient - TODO cross shard; TODO block list
-    const recvRep = manager.getRepository(TimelineRecv);
+    const recvRep = ctx.client.getRepository(TimelineRecv);
     const rt = new TimelineRecv();
     rt.post = p;
     rt.post_id = p.id;
@@ -344,11 +346,11 @@ static async makePM(manager: EntityManager, curUid : string, toUid : string, txt
 }
 
 //  Read a send timeline
-static async readSendTimeline(manager: EntityManager, _curUser : string, timelineUser : string, type : SendType[], getPosts : boolean)
+static async readSendTimeline(ctx: ORMTC, _curUser : string, timelineUser : string, type : SendType[], getPosts : boolean)
     : Promise<TimelineSend []>
 {
     // TODO: Permissions
-    const tsRep = manager.getRepository(TimelineSend);
+    const tsRep = ctx.client.getRepository(TimelineSend);
     return tsRep.find({
         where: {
             user_id: timelineUser,
@@ -365,10 +367,10 @@ static async readSendTimeline(manager: EntityManager, _curUser : string, timelin
 
 // TODO: Read a recv timeline
 // TODO: other filters
-static async readRecvTimeline(manager: EntityManager, curUser : string, type : RecvType[], getPosts : boolean)
+static async readRecvTimeline(ctx: ORMTC, curUser : string, type : RecvType[], getPosts : boolean)
     : Promise<TimelineRecv []>
 {
-    const trRep = manager.getRepository(TimelineRecv);
+    const trRep = ctx.client.getRepository(TimelineRecv);
     return trRep.find({
         where: {
             user_id: curUser,
@@ -428,7 +430,7 @@ static async ensureS3FileDropped(ctx: OperonContext, key: string, bucket: string
 }
 
 @OperonTransaction()
-static async writeMediaPost(ctx: TransactionContext<EntityManager>, mid: string, mkey: string) {
+static async writeMediaPost(ctx: ORMTC, mid: string, mkey: string) {
     const m = new MediaItem();
     m.media_url = mkey;
     m.media_id = mid;
@@ -440,7 +442,7 @@ static async writeMediaPost(ctx: TransactionContext<EntityManager>, mid: string,
 }
 
 @OperonTransaction()
-static async writeMediaProfilePhoto(ctx: TransactionContext<EntityManager>, mid: string, mkey: string) {
+static async writeMediaProfilePhoto(ctx: ORMTC, mid: string, mkey: string) {
     const m = new MediaItem();
     m.media_url = mkey;
     m.media_id = mid;

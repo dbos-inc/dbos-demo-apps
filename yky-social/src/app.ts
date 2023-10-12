@@ -98,9 +98,7 @@ export class YKY
   @GetApi('/recvtimeline')
   static async receiveTimeline(ctx: TransactionContext<EntityManager>) 
   {
-    const manager = ctx.client;
-
-    const rtl = await Operations.readRecvTimeline(manager, ctx.authenticatedUser, [RecvType.POST], true);  // TODO #4 - Integrate typeORM into transaction context
+    const rtl = await Operations.readRecvTimeline(ctx, ctx.authenticatedUser, [RecvType.POST], true);
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
@@ -115,9 +113,8 @@ export class YKY
   {
     // TODO: User id and modes
     const userid = ctx.authenticatedUser;
-    const manager = ctx.client;
 
-    const rtl = await Operations.readSendTimeline(manager, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
+    const rtl = await Operations.readSendTimeline(ctx, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id,  fromUserId:tle.user_id, sendDate: tle.send_date, sendType:tle.send_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
@@ -143,8 +140,7 @@ export class YKY
   static async getPost(ctx: TransactionContext<EntityManager>, @ArgRequired @ArgSource(ArgSources.URL) id: string) {
     // TODO Validate user permissions
 
-    const manager = ctx.client;
-    const post = await Operations.getPost(manager, ctx.authenticatedUser, id);
+    const post = await Operations.getPost(ctx, ctx.authenticatedUser, id);
     if (post) {
       return { message: 'Retrieved.', post:post };
     } else {
@@ -156,8 +152,7 @@ export class YKY
   @PostApi("/login")
   @RequiredRole([]) // Don't need any roles to log in
   static async doLogin(ctx: TransactionContext<EntityManager>, @ArgRequired username: string, @ArgRequired @LogMask(LogMasks.HASH) password: string) {
-    const manager = ctx.client;
-    const user = await Operations.logInUser(manager, username, password);
+    const user = await Operations.logInUser(ctx, username, password);
     return { message: 'Successful login.', id:user.id };
   }
 
@@ -181,9 +176,8 @@ export class YKY
   @OperonTransaction()
   @PostApi("/follow")
   static async doFollow(ctx: TransactionContext<EntityManager>, followUid: string) {
-    const manager = ctx.client;
-    const curStatus = await Operations.getGraphStatus(manager, ctx.authenticatedUser, followUid);
-    await Operations.setGraphStatus(manager, ctx.authenticatedUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+    const curStatus = await Operations.getGraphStatus(ctx, ctx.authenticatedUser, followUid);
+    await Operations.setGraphStatus(ctx, ctx.authenticatedUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
     // TODO: That UID wasn't validated - maybe the DB should validate it
 
     return {message: "Followed."};
