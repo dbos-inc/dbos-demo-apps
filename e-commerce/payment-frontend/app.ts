@@ -1,6 +1,6 @@
 import Koa from 'koa';
 import KoaRouter from 'koa-router';
-import KoaViews from 'koa-views';
+import KoaViews from '@ladjs/koa-views';
 import { bodyParser as KoaBodyParser } from '@koa/bodyparser';
 
 

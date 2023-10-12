@@ -1,20 +1,13 @@
 import { OperonTestingRuntime, createTestingRuntime } from "@dbos-inc/operon";
 import { PlaidPayments, PaymentItem, PaymentSessionInformation, payment_complete_topic } from "./operations";
 import request from "supertest";
-import { parseConfigFile } from '@dbos-inc/operon/dist/src/operon-runtime/config';
-import { Client } from 'pg';
+
 describe("operations", () => {
 
   let testRuntime: OperonTestingRuntime;
 
   beforeAll(async () => {
-    const [operonConfig,] = parseConfigFile();
-    const pg = new Client({ ...operonConfig.poolConfig, database: 'postgres' });
-    await pg.connect();
-    await pg.query(`DROP DATABASE IF EXISTS ${operonConfig.system_database}`);
-    await pg.end();
-
-    testRuntime = await createTestingRuntime([PlaidPayments], undefined, "info");
+    testRuntime = await createTestingRuntime([PlaidPayments], undefined);
     await testRuntime.queryUserDB<void>(`delete from items;`);
     await testRuntime.queryUserDB<void>(`delete from session;`);
   });
