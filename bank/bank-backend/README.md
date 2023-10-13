@@ -37,7 +37,10 @@ npm ci
 
 If you just created a database, you can configure your database path in the `.env` file and create tables using Prisma:
 ```shell
-# .env sets default database url to: DATABASE_URL="postgresql://bank:bank@localhost:5432/bank?schema=prisma"
+# .env sets default database url to: DATABASE_URL="postgresql://bank:${PGPASSWORD}@localhost:5432/bank?schema=${BANK_SCHEMA}"
+# Please make sure you set these two environmental variables correctly.
+export PGPASSWORD=<your database password>
+export BANK_SCHEMA=<schema for this bank>
 npx prisma migrate dev --name init
 ```
 
