@@ -110,7 +110,6 @@ export class YKY
   @GetApi('/sendtimeline')
   static async sendTimeline(ctx: TransactionContext<EntityManager>)
   {
-    // TODO: User id and modes
     const userid = ctx.authenticatedUser;
 
     const rtl = await Operations.readSendTimeline(ctx, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
@@ -137,7 +136,7 @@ export class YKY
   @OperonTransaction({readOnly: true})
   @GetApi("/post/:id")
   static async getPost(ctx: TransactionContext<EntityManager>, @ArgRequired @ArgSource(ArgSources.URL) id: string) {
-    // TODO Validate user permissions
+    // Future: Validate user relationship to poster for non-public posts; not blocked from seeing the post
 
     const post = await Operations.getPost(ctx, ctx.authenticatedUser, id);
     if (post) {
@@ -226,7 +225,8 @@ export class YKY
     const mediaKey = uuidv4();
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
 
-    // TODO: Rate limit the user's requests as they start workflows... or we could give the existing workflow if any?
+    // Future: Rate limit the user's requests as they start workflows...
+    //   Or give the user the existing workflow, if any
 
     const fn = `photos/${mediaKey}-${Date.now()}`;
     const wfh = await ctx.invoke(Operations).mediaUpload('profile', mediaKey, fn, bucket);

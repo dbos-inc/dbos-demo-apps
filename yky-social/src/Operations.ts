@@ -80,7 +80,6 @@ static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @Sk
         throw errorWithStatus("Password hash failed", 400);
     }
 
-    // TODO: Validation of these things; do something if it is wrong
     const existingUser = await manager.findOneBy(UserLogin, {
         user_name: user.user_name,
     });
@@ -198,7 +197,7 @@ static async findUser(ctx: ORMTC, curUid:string, uname:string, getProfile:boolea
         const upRep = manager.getRepository(UserProfile);
         const up = await upRep.findOneBy({id: otherUser.id});
         
-        // TODO: If we're not friends, may strip part of this out based on preferences
+        // Future: If we're not friends, we could strip part of this out based on public/private preferences
         if (up) {
             profile = up;
         }
@@ -231,15 +230,11 @@ static async setGraphStatus(ctx: ORMTC, curUid : string, otherUid : string, stat
     ug.src_id = curUid;
     ug.tgt_id = otherUid;
 
-    // TODO: If we wanted to update; we might also do reverse logic
-    //const rGraph = await sgRep.findOneBy({
-    //    src_id: curUser, tgt_id: otherUser
-    //});
-
-    await sgRep.save(ug);  // Save is 2 round trips?  Investigate...
+    await sgRep.save(ug);
 }
 
 // Compose a post
+// Future: If this takes a long time, split it into a workflow
 @OperonTransaction()
 static async makePost(ctx: ORMTC, txt : string)
 {
@@ -258,7 +253,7 @@ static async makePost(ctx: ORMTC, txt : string)
     const postRep = manager.getRepository(Post);
     await postRep.insert(p);
 
-    // TODO: Decompose to allow media upload
+    // Future: Support images in posts
 
     // Save to write timeline
     const st = new TimelineSend();
@@ -278,13 +273,13 @@ static async makePost(ctx: ORMTC, txt : string)
 static async distributePost(ctx: ORMTC, p: Post) {
     const manager = ctx.client;
 
-    // Deliver post to followers - TODO cross shard; TODO block list
+    // Deliver post to followers
     const sgRep = manager.getRepository(SocialGraph);
     const followers : SocialGraph[] = await sgRep.find({
         where: {tgt_id: ctx.authenticatedUser, link_type: In([GraphType.FOLLOW, GraphType.FOLLOW_FRIEND])}
     });
     const recvRep = manager.getRepository(TimelineRecv);
-    // TODO: Cut round trips; could be messages, could be insert+select...
+
     for (const follower of followers) {
         const rt = new TimelineRecv();
         rt.post = p;
@@ -301,7 +296,6 @@ static async distributePost(ctx: ORMTC, p: Post) {
     return p;
 }
 
-// TODO: Deliver a post
 static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string) :
     Promise<void>
 {
@@ -318,7 +312,7 @@ static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string) :
     const postRep = ctx.client.getRepository(Post);
     await postRep.insert(p);
 
-    // TODO: Decompose to allow media upload
+    // Future: Allow media upload
 
     // Save to write timeline
     const st = new TimelineSend();
@@ -331,7 +325,7 @@ static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string) :
     const sendRep = ctx.client.getRepository(TimelineSend);
     await sendRep.insert(st);
 
-    // Deliver post to recipient - TODO cross shard; TODO block list
+    // Deliver post to recipient
     const recvRep = ctx.client.getRepository(TimelineRecv);
     const rt = new TimelineRecv();
     rt.post = p;
@@ -365,8 +359,8 @@ static async readSendTimeline(ctx: ORMTC, _curUser : string, timelineUser : stri
     });
 }
 
-// TODO: Read a recv timeline
-// TODO: other filters
+// Read a received-messages timeline
+// Future: Support filters / pagination
 static async readRecvTimeline(ctx: ORMTC, curUser : string, type : RecvType[], getPosts : boolean)
     : Promise<TimelineRecv []>
 {
@@ -447,10 +441,11 @@ static async writeMediaProfilePhoto(ctx: ORMTC, mid: string, mkey: string) {
     m.media_url = mkey;
     m.media_id = mid;
     m.owner_id = ctx.authenticatedUser;
-    //m.media_type = ? // This may not be important enough to deal with...
+
     m.media_usage = MediaUsage.PROFILE;
     const manager = ctx.client;
-    // Should really delete the old keys from AWS...
+
+    // TODO: Should really delete the old keys from AWS...
     const deleted = await manager.delete(MediaItem, {
         owner_id: ctx.authenticatedUser,
         media_usage: MediaUsage.PROFILE
@@ -460,7 +455,7 @@ static async writeMediaProfilePhoto(ctx: ORMTC, mid: string, mkey: string) {
 }
 
 /*
- * We are gonna trust workflow to remember to do things.
+ * We can entrust workflow to remember to do compensating actions.
  * Our steps:
  *   Give the client a workflow handle.  They will make a call that sends a message to this to bump it along
  *   With that, we will bundle a presigned upload URL
