@@ -1,66 +1,66 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "command": "npm run dev",
-            "name": "Shop Frontend",
-            "request": "launch",
-            "type": "node-terminal",
-            "cwd": "${workspaceFolder}/e-commerce/shop-frontend",
-        },
-        {
-            "command": "npx operon start",
-            "name": "Shop Backend",
-            "preLaunchTask": "npm: build shop backend",
-            "request": "launch",
-            "type": "node-terminal",
-            "cwd": "${workspaceFolder}/e-commerce/shop-backend",
-        },
-        {
-            "command": "npm run start",
-            "name": "Payment Frontend",
-            "request": "launch",
-            "type": "node-terminal",
-            "cwd": "${workspaceFolder}/e-commerce/payment-frontend"
-        },
-        {
-            "command": "npx operon start",
-            "name": "Payment Backend",
-            "preLaunchTask": "npm: build payment backend",
-            "request": "launch",
-            "type": "node-terminal",
-            "cwd": "${workspaceFolder}/e-commerce/payment-backend",
-        }
-    ],
-    "compounds": [
-        {
-            "name": "E-Commerce",
-            "configurations": [
-                "Shop Frontend",
-                "Shop Backend",
-                "Payment Frontend",
-                "Payment Backend"
-            ],
-            "stopAll": true
-        },
-        {
-            "name": "Shop",
-            "configurations": [
-                "Shop Frontend",
-                "Shop Backend"
-            ],
-            "stopAll": true
-        },
-        {
-            "name": "Payment",
-            "configurations": [
-                "Payment Frontend",
-                "Payment Backend"
-            ],
-            "stopAll": true
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "command": "npm run dev",
+      "name": "Shop Frontend",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/e-commerce/shop-frontend",
+    },
+    {
+      "command": "npx operon start",
+      "name": "Shop Backend",
+      "preLaunchTask": "npm: build shop backend",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/e-commerce/shop-backend",
+    },
+    {
+      "command": "npm run start",
+      "name": "Payment Frontend",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/e-commerce/payment-frontend"
+    },
+    {
+      "command": "npx operon start",
+      "name": "Payment Backend",
+      "preLaunchTask": "npm: build payment backend",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/e-commerce/payment-backend",
+    }
+  ],
+  "compounds": [
+    {
+      "name": "E-Commerce",
+      "configurations": [
+        "Shop Frontend",
+        "Shop Backend",
+        "Payment Frontend",
+        "Payment Backend"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Shop",
+      "configurations": [
+        "Shop Frontend",
+        "Shop Backend"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Payment",
+      "configurations": [
+        "Payment Frontend",
+        "Payment Backend"
+      ],
+      "stopAll": true
+    }
+  ]
 }
