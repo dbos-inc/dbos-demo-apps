@@ -150,8 +150,8 @@ export class Shop {
     if (typeof username !== 'string' || typeof origin !== 'string') {
       throw new OperonResponseError("Invalid request!", 400);
     }
-    const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
-    const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+  const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
+  const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 
     if (url === null) {
       ctxt.koaContext.redirect(`${origin}/checkout/cancel`);
@@ -165,6 +165,7 @@ export class Shop {
     const productDetails = await ctxt.invoke(Shop).getCart(username);
     if (productDetails.length === 0) {
       await ctxt.setEvent(checkout_url_topic, null);
+      return;
     }
 
     const orderID = await ctxt.invoke(Shop).createOrder(username, productDetails);
@@ -172,28 +173,29 @@ export class Shop {
     const valid: boolean = await ctxt.invoke(Shop).subtractInventory(productDetails);
     if (!valid) {
       await ctxt.setEvent(checkout_url_topic, null);
+      return;
     }
 
     const paymentSession = await ctxt.invoke(Shop).createPaymentSession(productDetails, origin);
     if (!paymentSession?.url) {
       await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
       await ctxt.setEvent(checkout_url_topic, null);
+      return;
     }
 
     await ctxt.setEvent(checkout_url_topic, paymentSession.url);
     const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
 
     if (notification && notification === 'paid') {
-      // if the checkout complete notification arrived, the payment is successful so fulfull the order
+      // if the checkout complete notification arrived, the payment is successful so fulfill the order
       await ctxt.invoke(Shop).fulfillOrder(orderID);
       await ctxt.invoke(Shop).clearCart(username);
     } else {
-      // if the checkout complete notification didn't arrive in time, retrive the session information 
+      // if the checkout complete notification didn't arrive in time, retrieve the session information 
       // in order to check the payment status explicitly 
       const updatedSession = await ctxt.invoke(Shop).retrievePaymentSession(paymentSession.session_id);
       if (!updatedSession) {
-        // TODO: should we do something more meaningful if we can't retrieve the stripe session?
-        ctxt.logger.error(`Recovering order #${orderID} failed: Stripe unreachable`);
+        ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
       }
 
       if (updatedSession.payment_status == 'paid') {
@@ -299,18 +301,18 @@ export class Shop {
     return session;
   }
 
-  @PostApi('/payment_webhook')
-  static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
-    const req = ctxt.koaContext.request;
+@PostApi('/payment_webhook')
+static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
+  const req = ctxt.koaContext.request;
 
-    type Session = { session_id: string; client_reference_id?: string; payment_status: string };
-    const payload = req.body as Session;
+  type Session = { session_id: string; client_reference_id?: string; payment_status: string };
+  const payload = req.body as Session;
 
-    if (!payload.client_reference_id) {
-      ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
-    } else {
-      ctxt.logger.info(`Received for ${payload.client_reference_id}`);
-      await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
-    }
+  if (!payload.client_reference_id) {
+    ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
+  } else {
+    ctxt.logger.info(`Received for ${payload.client_reference_id}`);
+    await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
   }
+}
 }
