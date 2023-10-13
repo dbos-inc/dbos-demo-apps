@@ -11,4 +11,7 @@ telemetryExporters:
   - 'ConsoleExporter'
 localRuntimeConfig:
   port: 8082
+application:
+  payment_host: 'http://localhost:8086'
+  local_host: 'http://localhost:8082'
 

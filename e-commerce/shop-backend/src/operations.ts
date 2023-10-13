@@ -1,6 +1,6 @@
 import {
   TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
-  GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources
+  GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources, OperonContext
 } from '@dbos-inc/operon';
 import bcrypt from 'bcrypt';
 import { Knex } from 'knex';
@@ -51,16 +51,32 @@ interface User {
   password: string,
 }
 
-const paymentHost = process.env.PLAID_PAYMENT_HOST || 'http://localhost:8086';
-
 interface PaymentSession {
   session_id: string,
   url?: string,
   payment_status: string,
 }
 
-const checkout_url_topic = "stripe_checkout_url";
-const checkout_complete_topic = "stripe_checkout_complete";
+const checkout_url_topic = "payment_checkout_url";
+const checkout_complete_topic = "payment_checkout_complete";
+
+function getHostConfig(ctxt: OperonContext) {
+  const paymentHost = ctxt.getConfig("payment_host") as string | undefined;
+  if (!paymentHost) {
+    ctxt.logger.crit("Missing payment_host configuration");
+  }
+  
+  const localHost = ctxt.getConfig("local_host") as string | undefined;
+  if (!localHost) {
+    ctxt.logger.crit("Missing local_host configuration");
+  }
+
+  if (!paymentHost || !localHost) {
+    throw new Error("Invalid Configuration");
+  }
+
+  return { paymentHost, localHost };
+}
 
 export class Shop {
 
@@ -244,8 +260,8 @@ export class Shop {
 
   @OperonCommunicator()
   static async createPaymentSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
-    // TODO: get this programmatically
-    const host = `http://localhost:8082`;
+    const { paymentHost, localHost } = getHostConfig(ctxt);
+
     const response = await fetch(`${paymentHost}/api/create_payment_session`, {
       method: 'POST',
       headers: {
@@ -253,14 +269,14 @@ export class Shop {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        webhook: `${host}/payment_webhook`,
+        webhook: `${localHost}/payment_webhook`,
         success_url: `${origin}/checkout/success`,
         cancel_url: `${origin}/checkout/cancel`,
         client_reference_id: ctxt.workflowUUID,
         items: productDetails.map(product => ({
           description: product.product,
           quantity: product.inventory,
-          price: product.price,
+          price: (product.price / 100).toFixed(2),
         }))
       })
     });
@@ -269,7 +285,9 @@ export class Shop {
   }
 
   @OperonCommunicator()
-  static async retrievePaymentSession(_ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
+  static async retrievePaymentSession(ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
+    const { paymentHost } = getHostConfig(ctxt);
+
     const response = await fetch(`${paymentHost}/api/session/${sessionID}`, {
       method: 'GET',
       headers: {
