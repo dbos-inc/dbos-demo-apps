@@ -13,8 +13,7 @@ telemetry:
     addContextMetadata: true
     silent: false
   traces:
-    enabled: true
-    endpoint: 'http://localhost:4318/v1/traces' # Jaeger tracing.
+    enabled: false
 localRuntimeConfig:
   port: 8081
 application:
