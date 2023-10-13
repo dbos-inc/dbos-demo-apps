@@ -1,6 +1,7 @@
 ## Bank of Operon -- Backend
 
-This backend re-implements functionalities [here](https://github.com/dbos-inc/reference-demo-apps/tree/main/bank/bank-koa-server) using Operon.
+The goal of this app is to show how we use Operon to construct transactions and workflows of a simple banking app.
+This app also demonstrates JWT-based authentication and Jaeger tracing with Operon.
 
 ### Initialize Postgres database
 You'll need to start a Postgres server, either through Docker, running locally, or using RDS. We provide a script to start a Postgres docker:
@@ -45,9 +46,14 @@ Then compile this app:
 npm run build
 ```
 
+You can run tests and make sure everything works properly:
+```shell
+npm test
+```
+
 Finally, start the simple HTTP server using Operon CLI:
 ```shell
 npx operon start
 ```
 
-Now by default, the bank backend should start at `http://localhost:8081`! You can now send HTTP requests to its REST endpoints, or connect it with the frontend.
+Now by default, the bank backend should start at `http://localhost:8081`! You can now send HTTP requests to its REST endpoints, or use it with the [frontend](../bank-frontend/).
