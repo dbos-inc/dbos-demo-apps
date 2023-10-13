@@ -17,13 +17,13 @@ The demo includes `npm-install.sh` script that will run `npm install` for each p
 ### Database Configuration (Docker)
 
 If you're using the docker configuration script, simply run the `start_postgres_docker.sh` script. 
-Before running the script, you must set the `PG_PASSWORD` environment variable to the superuser password that will be used.
+Before running the script, you must set the `PGPASSWORD` environment variable to the superuser password that will be used.
 This script will run a PostgreSQL 16.0 database container, create the shop and payment databases and configure the appropriate schemas.
 
 ### Database Configuration (local)
 
 If you're using your own PostgreSQL database, you need to configure the hostname, port, username and password for each of the backend packages.
-Each backend package needs it's own database, but they can be on the same PostgreSQL server.
+Each backend package needs its own database, but they can be on the same PostgreSQL server.
 There is an `operon-config.yaml` file in each of the backend package directories. 
 These config files must be updated to the appropriate settings for your PostgreSQL server.
 
@@ -40,14 +40,17 @@ database:
 ```
 
 Once the `operon-config.yaml` files have been updated, you also need to create the two demo databases `shop` and `payment`.
-Additionally, you need to configure the schema for those databases via the `npm run setup` command in each of the backend package folders.
+The `start_postgres_docker.sh` script does this by calling `CREATE DATABASE shop;` and `CREATE DATABASE payment;` 
+via [psql](https://www.postgresql.org/docs/current/app-psql.html) in the docker container.
+
+Additionally, you need to configure the schemas for those databases via the `npm run setup` command in each of the backend package folders.
 Both shop and payment use [knex.js](https://knexjs.org/) as a database access library.
 The npm setup command simply runs `knex migration` and `knex seed` to configure each database appropriately.
 
 ### Run the Demo
 
 Each of the four parts of the demo must run in its own terminal window. 
-For each of setup, each package has a single npm command that is used to build and launch the package
+For each setup, each package has a single npm command that is used to build and launch the package
 
 * For payment-backend and shop-backend, run `npm run start` to build and launch the app
 * For shop-frontend, run `npm run dev` to launch the app
@@ -114,7 +117,7 @@ Operon workflows must be decorated with `@OperonWorkflow()` and have a `Workflow
   }
 ```
 
-The workflow starts of with some basic database operations.
+The workflow starts off with some basic database operations.
 Each of these database operations is implemented via a [transaction function](https://docs.dbos.dev/tutorials/transaction-tutorial).
 The workflow retrieves the user's shopping cart, creates an order from cart items and subtracts the items from inventory. 
 If there are no items in the cart or there isn't sufficient inventory to fulfill the order, the workflow fails.
@@ -162,8 +165,8 @@ uses `getEvent` to wait for the `paymentWorkflow` to provide the payment redirec
 ```
 
 This code in `webCheckout` also explains the `await ctxt.setEvent(checkout_url_topic, null);` calls in the failure paths of `paymentWorkflow`.
-The HTTP handler function that called `paymentWorkflow` is blocked until it receives the `checkout_url_topic` event.
-So we need to send a `null` event on workflow failure so that the user can be notified about the payment status.
+The HTTP handler function that called `paymentWorkflow` is blocked waiting for payment session to be created.
+If the payment session doesn't get created, `paymentWorkflow` sends a null value for the `checkout_url_topic` event to unblock the HTTP handler function.
 
 Note that even though the `webCheckout` function will complete and return after receiving the event, the `paymentWorkflow` is still running. 
 It is waiting on a `checkout_complete_topic` message before continuing. 
@@ -204,13 +207,12 @@ If the notification is not received, the workflow attempts to reestablish the pa
 The code is written this way in case there is a hardware failure while waiting for the notification.
 The developer cannot depend on the workflow local variables being consistent for the entire workflow execution.
 If there is a hardware failure, the workflow will be restarted but transaction and communicator calls that have already occurred will *NOT* be executed again.
-This ensures workflow [determinism](https://docs.dbos.dev/tutorials/workflow-tutorial#determinism) and greatly simplifies the error code developers have to write.
 
 The only remaining aspect of this workflow is the source of the `checkout_complete_topic` message.
-When calling out to the payment system, the shop backend provided a webhook callback URL.
-This HTTP handler retrieves the workflow ID and payment status as provided by the payment system 
-and passes it to the specified workflow via the `send` method.
-
+When calling out to the payment system, the shop backend provided a webhook callback URL as well as the unique UUID of the workflow instance.
+When the payment system is done processing a payment, it calls back the HTTP handler listening on this path to provide the payment details.
+The HTTP handler forwards the payment details to the workflow instance via the `send` method. 
+ 
 ```ts
 @PostApi('/payment_webhook')
 static async paymentWebhook(ctxt: HandlerContext): Promise<void> {

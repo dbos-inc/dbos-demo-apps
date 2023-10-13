@@ -65,7 +65,7 @@ function getHostConfig(ctxt: OperonContext) {
   if (!paymentHost) {
     ctxt.logger.crit("Missing payment_host configuration");
   }
-  
+
   const localHost = ctxt.getConfig("local_host") as string | undefined;
   if (!localHost) {
     ctxt.logger.crit("Missing local_host configuration");
@@ -150,8 +150,8 @@ export class Shop {
     if (typeof username !== 'string' || typeof origin !== 'string') {
       throw new OperonResponseError("Invalid request!", 400);
     }
-  const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
-  const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
+    const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 
     if (url === null) {
       ctxt.koaContext.redirect(`${origin}/checkout/cancel`);
@@ -301,18 +301,18 @@ export class Shop {
     return session;
   }
 
-@PostApi('/payment_webhook')
-static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
-  const req = ctxt.koaContext.request;
+  @PostApi('/payment_webhook')
+  static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
+    const req = ctxt.koaContext.request;
 
-  type Session = { session_id: string; client_reference_id?: string; payment_status: string };
-  const payload = req.body as Session;
+    type Session = { session_id: string; client_reference_id?: string; payment_status: string };
+    const payload = req.body as Session;
 
-  if (!payload.client_reference_id) {
-    ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
-  } else {
-    ctxt.logger.info(`Received for ${payload.client_reference_id}`);
-    await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
+    if (!payload.client_reference_id) {
+      ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
+    } else {
+      ctxt.logger.info(`Received for ${payload.client_reference_id}`);
+      await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
+    }
   }
-}
 }
