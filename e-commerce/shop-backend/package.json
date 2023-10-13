@@ -1,13 +1,15 @@
 {
+  "name": "operon-demo-shop-backend",
+  "private": true,
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix --ext .ts .",
-    "setup": "knex migrate:latest && knex seed:run"
+    "setup": "knex migrate:latest && knex seed:run",
+    "start": "npm run build && operon start"
   },
   "dependencies": {
-    "@dbos-inc/operon": "0.5.22-preview",
-    "bcrypt": "^5.1.1",
-    "stripe": "^13.7.0"
+    "@dbos-inc/operon": "0.5.34-preview",
+    "bcrypt": "^5.1.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
