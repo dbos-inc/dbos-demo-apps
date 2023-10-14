@@ -24,7 +24,7 @@ jobs:
     # Service container for Postgres
     services:
       # Label used to access the service container.
-      postgres:
+      bankdb:
         image: postgres:15.4
         env:
           # Specify the password for Postgres superuser.
@@ -71,4 +71,3 @@ jobs:
           POSTGRES_PORT: 5432
           BANK_PORT: 8081
           BANK_SCHEMA: banktest
-          NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
