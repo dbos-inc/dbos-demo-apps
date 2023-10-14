@@ -42,10 +42,11 @@ jobs:
     steps:
       - name: "Setup postgres config"
         run: |
-          docker exec -i ${{ job.services.postgres.id }} apt update
-          docker exec -i ${{ job.services.postgres.id }} apt install -y postgresql-15-wal2json
-          docker exec ${{ job.services.postgres.id }} sh -c 'echo "wal_level=logical" >> /var/lib/postgresql/data/postgresql.conf'
-          docker restart ${{ job.services.postgres.id }}
+          docker exec bankdb psql -U postgres -c "CREATE USER bank WITH PASSWORD '${PGPASSWORD}';"
+          docker exec bankdb psql -U postgres -c "ALTER USER bank CREATEDB;"
+          docker exec bankdb psql -U postgres -c "CREATE DATABASE bank OWNER bank;"
+        env:
+          PGPASSWORD: bank
       - name: Checkout demo app
         uses: actions/checkout@v3
       - name: Use Node.js 18
@@ -54,21 +55,6 @@ jobs:
           node-version: 18
           cache: npm
           cache-dependency-path: 'bank/bank-backend/package-lock.json'
-
-      - name: Install psql
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client coreutils
-      - name: Setup Postgres
-        working-directory: bank/
-        run: scripts/init_postgres.sh
-        env:
-          # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: localhost
-          # The default PostgreSQL port
-          POSTGRES_PORT: 5432
-          POSTGRES_PASSWORD: dbos
-          BANK_PORT: 8081
       - name: Compile Bank Server
         working-directory: bank/bank-backend/
         run: |
@@ -84,4 +70,5 @@ jobs:
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
           BANK_PORT: 8081
+          BANK_SCHEMA: banktest
           NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
