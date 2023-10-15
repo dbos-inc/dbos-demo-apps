@@ -8,11 +8,10 @@ import logger from "koa-logger";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function bankAuthMiddleware(ctx: MiddlewareContext) {
+  // Only extract user and roles if the operation specifies required roles.
   if (ctx.requiredRole.length > 0) {
     console.log("required role: ", ctx.requiredRole);
-    if (!ctx.koaContext) {
-      throw new OperonResponseError("No Koa context!");
-    } else if (!ctx.koaContext.state.user) {
+    if (!ctx.koaContext.state.user) {
       throw new OperonResponseError("No authenticated user!", 401);
     }
 
@@ -46,14 +45,13 @@ export function customizeHandle(ctx: Koa.Context, next: Koa.Next) {
 
 export const bankJwt = jwt({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  // TODO: We have to read the config from env not from a file, because decorators are loaded before Operon, we must have the variables available during the loading time.
+  // Note: We have to read the config from env not from a file, because decorators are loaded before Operon, we must have the variables available during the loading time.
   secret: koaJwtSecret({
     jwksUri: `http://${process.env.BANK_HOST || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos/protocol/openid-connect/certs`,
     cache: true,
     cacheMaxEntries: 5,
     cacheMaxAge: 600000,
   }),
-  // audience: 'urn:api/',
   issuer: `http://${process.env.BANK_HOST || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`,
 });
 
