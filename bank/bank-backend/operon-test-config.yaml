@@ -17,5 +17,6 @@ telemetry:
 localRuntimeConfig:
   port: 8081
 application:
-  bankname: 'localbank'
-  bankport: '8081'
+  bankname: "testbank - ${BANK_SCHEMA}"
+  bankport: '8091'
+  bankschema: ${BANK_SCHEMA}

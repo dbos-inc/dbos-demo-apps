@@ -6,10 +6,15 @@ import { convertTransactionHistory } from "./router";
 
 describe("bank-tests", () => {
   let testRuntime: OperonTestingRuntime;
+  let bankSchema: string;
 
   beforeAll(async () => {
+    bankSchema = process.env.BANK_SCHEMA ?? "";
+    if (!bankSchema) {
+      throw new Error("Env 'BANK_SCHEMA' not set!");
+    }
     testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "operon-test-config.yaml");
-    await testRuntime.queryUserDB<void>(`delete from prisma."AccountInfo" where "ownerName"=$1;`, "alice");
+    await testRuntime.queryUserDB<void>(`delete from ${bankSchema}."AccountInfo" where "ownerName"=$1;`, "alice");
   });
 
   afterAll(async () => {
@@ -28,7 +33,7 @@ describe("bank-tests", () => {
       type: "saving",
     });
 
-    const res = await testRuntime.queryUserDB<AccountInfo>(`select * from prisma."AccountInfo" where "ownerName" = $1;`, "alice");
+    const res = await testRuntime.queryUserDB<AccountInfo>(`select * from ${bankSchema}."AccountInfo" where "ownerName" = $1;`, "alice");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(res[0].ownerName).toBe("alice");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
