@@ -131,7 +131,7 @@ export class BankTransactionHistory {
   }
 
   @OperonCommunicator()
-  static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory) {
+  static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory, workflowUUID: string) {
     const token = commCtxt.request?.headers!["authorization"];
     if (!token) {
       commCtxt.logger.error("Failed to extract valid token!");
@@ -142,6 +142,7 @@ export class BankTransactionHistory {
       const remoteRes = await axios.post(remoteUrl, data, {
         headers: {
           Authorization: token,
+          "operon-workflowuuid": workflowUUID,
         },
       });
       if (remoteRes.status != 200) {
@@ -205,7 +206,7 @@ export class BankTransactionHistory {
         toLocation: REMOTEDB_PREFIX + ctxt.getConfig("bankname") + ":" + ctxt.getConfig("bankport"),
       };
 
-      const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory);
+      const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory, ctxt.workflowUUID + '-withdraw');
       if (!remoteRes) {
         // Undo transaction is a withdrawal.
         const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, false, result);
@@ -241,7 +242,7 @@ export class BankTransactionHistory {
         toLocation: "local",
         fromLocation: REMOTEDB_PREFIX + ctxt.getConfig("bankname") + ":" + ctxt.getConfig("bankport"),
       };
-      const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory);
+      const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory, ctxt.workflowUUID + '-deposit');
       if (!remoteRes) {
         // Undo transaction is a deposit.
         const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, true, result);

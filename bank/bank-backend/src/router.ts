@@ -25,7 +25,9 @@ export class BankEndpoints {
     // Must to local.
     data.toLocation = "local";
 
-    return ctx.invoke(BankTransactionHistory).depositWorkflow(data).then(x => x.getResult());
+    // Check the header for a specific UUID for the workflow.
+    const txnUUID = ctx.koaContext.get("operon-workflowuuid");
+    return ctx.invoke(BankTransactionHistory, txnUUID).depositWorkflow(data).then(x => x.getResult());
   }
 
   // Withdraw.
@@ -39,7 +41,9 @@ export class BankEndpoints {
     // Must from local.
     data.fromLocation = "local";
 
-    return ctx.invoke(BankTransactionHistory).withdrawWorkflow(data).then(x => x.getResult());
+    // Check the header for a specific UUID for the workflow.
+    const txnUUID = ctx.koaContext.get("operon-workflowuuid");
+    return ctx.invoke(BankTransactionHistory, txnUUID).withdrawWorkflow(data).then(x => x.getResult());
   }
 
   // Internal transfer
