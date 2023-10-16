@@ -49,7 +49,7 @@ npx prisma migrate dev --name initbank1
 npx operon start -p 8081
 ```
 
-Then, in a second window, launch the second bank server, using an identical but differently-named schema:
+Then, in a second terminal window, launch the second bank server, using an identical but differently-named schema:
 
 ```bash
 export PGPASSWORD=<database password>
@@ -78,21 +78,19 @@ Once you finish all previous steps, navigate to http://localhost:8089/
 You will be presented with a welcome page.
 Press the `Login` button and the webpage should redirect to a login page from Keycloak.
 
-We pre-configured two example users in the dbos-realm so you can use the following emails and passwords to log in:
+You can use the following email and password to log in:
 ```
-john@test.com / 123    # This has an "appUser" role.
-mike@other.com / pass  # This has an "appAdmin" role
+mike@other.com / pass
 ```
 
 Once you successfully log in, the frontend should re-direct you to the home page of the bank user.
 The drop-down menu at the top allows you to switch between two bank servers (bank1 at port 8081 and bank2 at port 8082) we just started.
 There are three buttons in the middle:
 - "New Greeting Message" fetches a greeting message from the backend and displays it in the "Message from Bank" banner above.
-- "Create a New Account" creates a new checking account for the current user. If you logged in as `john@test.com`, pressing this button would fail because this user lacks the "appAdmin" permission to create a new account.
+- "Create a New Account" creates a new checking account for the current user. 
 - "Refresh Accounts" refreshes the list of accounts of the current user.
 
-Now, log in as `mike@other.com`.
-Once you click "Create a New Account" several times in both bank1 and bank2, you will see a list of accounts displayed with their `Account ID`, `Balance`, `Type`, and `Actions`. Initially, all accounts have zero balance.
+Now, once you click "Create a New Account" several times in both bank1 and bank2, you will see a list of accounts displayed with their `Account ID`, `Balance`, `Type`, and `Actions`. Initially, all accounts have zero balance.
 Select the "Choose an Action" drop-down menu next to each account, you will see several options:
 - "Transaction History" displays a list of past transactions from latest to oldest.
 - "Deposit" allows you to deposit either from cash or an account in another bank backend.
@@ -125,7 +123,7 @@ We use our [deposit workflow](./bank-backend/src/workflows/txnhistory.workflows.
 This workflow performs three steps:
 
 1. Record the deposit transaction locally.
-2. If the deposit comes from a remote bank, contact that bak to withdraw the same amount of moeny.
+2. If the deposit comes from a remote bank, contact that bank to withdraw the same amount of moeny.
 3. If the remote operation succeeds, complete the workflow, otherwise undo the local deposit transaction. 
 
 We obviously need to execute these steps reliably, otherwise a deposit could succeed without a corresponding withdrawal.
@@ -196,7 +194,11 @@ if (!remoteRes) {
 ### Authentication and Authorization
 
 In Bank, authentication is performed in the frontend via an external Keycloak service, and passed to the backend via JWT tokens and HTTP headers.
-Then, the bank backend verifies the JWT token with Keycloak, extracts user information from HTTP headers, and leverages Operon decorators to declaratively specify authorization rules.
+Especially, authentication and authorization in the backend contains three steps:
+1. Verify the JWT token with Keycloak using a Koa middleware.
+2. Use an Operon authentication middleware to extract user and role information set by the Koa middleware in step 1.
+3. Operon checks the authenticated user and roles against the required roles of the target operation.
+
 Please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial for more details.
 
 The bank backend leverages the `koa-jwt` middleware for JWT verification:
@@ -270,4 +272,5 @@ export class BankEndpoints {...}
 ```
 
 After running the authentication middleware, Operon uses its returned user and roles to decide whether the current request is authorized to invoke the target Operon operation.
-For example, `john@test.com` only has an "appUser" role and is not authorized to create a new account.
+For example, we configure another test user, email and password `john@test.com / 123`, to only have an "appUser" role and is not authorized to create a new account.
+If you logged in as `john@test.com`, pressing the "Create a New Account" button would fail.
