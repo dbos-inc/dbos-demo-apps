@@ -41,6 +41,10 @@ jobs:
           - 5432:5432
 
     steps:
+      - name: Setup Postgres
+        run: docker exec postgres psql -U postgres -c "CREATE DATABASE hello;"
+        env:
+          PGPASSWORD: dbos
       - name: Checkout demo app
         uses: actions/checkout@v3
         with:
@@ -49,10 +53,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Setup Postgres
-        run: docker exec postgres psql -U postgres -c "CREATE DATABASE hello;"
-        env:
-          PGPASSWORD: dbos
       - name: Compile Hello World
         working-directory: operon-demo-apps/hello-world-extended
         run: |
