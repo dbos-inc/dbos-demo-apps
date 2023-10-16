@@ -9,7 +9,7 @@ database:
   user_dbclient: 'knex'
 telemetryExporters:
   - 'ConsoleExporter'
-localRuntimeConfig:
+runtimeConfig:
   port: 8086
 application:
   frontend_host: 'http://localhost:8000'
