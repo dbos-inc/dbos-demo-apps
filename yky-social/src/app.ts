@@ -23,6 +23,7 @@ import {
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   HandlerContext,
   OperonWorkflow,
+  OperonContext,
   WorkflowContext,
   Authentication,
   OperonHttpServer,
@@ -37,18 +38,40 @@ import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client, S3 } from '@aws-sdk/client-s3';
 
-const s3ClientConfig = {
-  region: process.env.AWS_REGION || 'us-east-2', // Replace with your AWS region
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY || 'x',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'x',
+function getS3Config(ctx: OperonContext) {
+  let s3r = ctx.getConfig('aws_s3_region') as string;
+  if (!s3r) {
+    s3r = process.env.AWS_REGION || 'us-east-2';
   }
-};
+  let s3k = ctx.getConfig('aws_s3_access_key') as string;
+  if (!s3k) {
+    s3k = process.env.AWS_ACCESS_KEY || 'x';
+  }
+  let s3s = ctx.getConfig('aws_s3_access_secret') as string;
+  if (!s3s) {
+    s3s = process.env.AWS_SECRET_ACCESS_KEY || 'x';
+  }
+  return {
+    region: process.env.AWS_REGION || 'us-east-2',
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY || 'x',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'x',
+    }
+  };
+}
 
-const s3Client = new S3Client(s3ClientConfig);
-export function getS3Client() {return s3Client;}
-const awsS3 = new S3(s3ClientConfig);
-export function getS3() {return awsS3;}
+let s3Client: S3Client | undefined = undefined;
+let awsS3: S3 | undefined = undefined;
+export function getS3Client(ctx: OperonContext) {
+  if (s3Client) return s3Client;
+  s3Client = new S3Client(getS3Config(ctx));
+  return s3Client;
+}
+export function getS3(ctx: OperonContext) {
+  if (awsS3) return awsS3;
+  awsS3 = new S3(getS3Config(ctx));
+  return awsS3;
+}
 
 // eslint-disable-next-line @typescript-eslint/require-await
 async function authMiddleware (ctx: MiddlewareContext) {
@@ -201,11 +224,11 @@ export class YKY
   }
 
   @GetApi("/getMediaDownloadKey")
-  static async doKeyDownload(_ctx: HandlerContext, filekey: string) {
+  static async doKeyDownload(ctx: HandlerContext, filekey: string) {
     const key = filekey;
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
   
-    const presignedUrl = await Operations.getS3DownloadKey(key, bucket);
+    const presignedUrl = await Operations.getS3DownloadKey(ctx, key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
   }
 
@@ -259,7 +282,7 @@ export class YKY
 
     const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
   
-    const presignedUrl = await Operations.getS3DownloadKey(filekey, bucket);
+    const presignedUrl = await Operations.getS3DownloadKey(ctx, filekey, bucket);
     ctx.logger.debug("Giving URL "+presignedUrl);
     return { message: "Signed URL", url: presignedUrl, key: filekey };
   }

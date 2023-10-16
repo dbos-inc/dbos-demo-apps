@@ -377,9 +377,9 @@ static async readRecvTimeline(ctx: ORMTC, curUser : string, type : RecvType[], g
 }
 
 @OperonCommunicator()
-static async createS3UploadKey(_ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
+static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
     const postPresigned = await createPresignedPost(
-      getS3(),
+      getS3(ctx),
       {
         Conditions: [
           ["content-length-range", 1, 10000000],
@@ -395,13 +395,13 @@ static async createS3UploadKey(_ctx: CommunicatorContext, key: string, bucket: s
     return postPresigned;
 }
 
-static async getS3DownloadKey(key: string, bucket: string) {
+static async getS3DownloadKey(ctx: OperonContext, key: string, bucket: string) {
   const getObjectCommand = new GetObjectCommand({
     Bucket: bucket,
     Key: key,
   });
 
-  const presignedUrl = await getSignedUrl(getS3Client(), getObjectCommand, { expiresIn: 3600, });
+  const presignedUrl = await getSignedUrl(getS3Client(ctx), getObjectCommand, { expiresIn: 3600, });
 
   return presignedUrl;
 }
@@ -413,7 +413,7 @@ static async ensureS3FileDropped(ctx: OperonContext, key: string, bucket: string
             Key: key,
         };
 
-        const s3 = getS3();
+        const s3 = getS3(ctx);
 
         await s3.deleteObject(params);
         ctx.logger.debug(`S3 key ${key} was deleted successfully.`);
