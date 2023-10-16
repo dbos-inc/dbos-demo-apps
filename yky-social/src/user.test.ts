@@ -13,7 +13,7 @@ import { kapp, YKY, ykyInit } from './app';
 import { operon } from './app';
 
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
-import { Operations } from './Operations';
+import { Operations } from './YKYOperations';
 
 beforeAll(async () => {
   await operon.init(YKY, Operations);

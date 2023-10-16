@@ -9,4 +9,10 @@ database:
   user_dbclient: 'typeorm'
 telemetryExporters:
   - 'ConsoleExporter'
+localRuntimeConfig:
+  port: 3000
+application:
+  aws_s3_region: ${AWS_REGION}
+  aws_s3_access_key: ${AWS_ACCESS_KEY}
+  aws_s3_access_secret: ${AWS_SECRET_ACCESS_KEY}
 
