@@ -1,10 +1,10 @@
-name: CI for Hello world demo
+name: CI for Hello world (extended) demo
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - 'hello-world/**'
+      - 'hello-world-extended/**'
       - '.github/workflows/hello-world.yml'
   pull_request:
     types:
@@ -13,7 +13,7 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'hello-world/**'
+      - 'hello-world-extended/**'
       - '.github/workflows/hello-world.yml'
   workflow_dispatch:
 
@@ -25,12 +25,13 @@ jobs:
     services:
       # Label used to access the service container.
       postgres:
-        image: postgres:16
+        image: postgres:15.4
         env:
           # Specify the password for Postgres superuser.
           POSTGRES_PASSWORD: dbos
         # Set health checks to wait until postgres has started
         options: >-
+          --name postgres
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
@@ -40,12 +41,10 @@ jobs:
           - 5432:5432
 
     steps:
-      - name: "Setup postgres config"
-        run: |
-          docker exec -i ${{ job.services.postgres.id }} apt update
-          docker exec -i ${{ job.services.postgres.id }} apt install -y postgresql-15-wal2json
-          docker exec ${{ job.services.postgres.id }} sh -c 'echo "wal_level=logical" >> /var/lib/postgresql/data/postgresql.conf'
-          docker restart ${{ job.services.postgres.id }}
+      - name: Setup Postgres
+        run: docker exec postgres psql -U postgres -c "CREATE DATABASE hello;"
+        env:
+          PGPASSWORD: dbos
       - name: Checkout demo app
         uses: actions/checkout@v3
         with:
@@ -54,18 +53,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install psql
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client coreutils
-      - name: Setup Postgres
-        run: ./operon-demo-apps/hello-world/init_database.sh
-        env:
-          PGPASSWORD: dbos
       - name: Compile Hello World
-        working-directory: operon-demo-apps/hello-world
+        working-directory: operon-demo-apps/hello-world-extended
         run: |
           npm install
+          npx knex migrate:latest
           npm run build
         env:
+          PGPASSWORD: dbos
           NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

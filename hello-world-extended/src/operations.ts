@@ -2,7 +2,7 @@ import { TransactionContext, OperonTransaction, GetApi, PostApi, CommunicatorCon
 import { Knex } from 'knex';
 import axios from 'axios';
 
-interface operon_hello {
+export interface operon_hello {
   name: string;
   greet_count: number;
 }

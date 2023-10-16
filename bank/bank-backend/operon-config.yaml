@@ -15,7 +15,7 @@ telemetry:
   traces:
     enabled: true
     endpoint: 'http://localhost:4318/v1/traces' # Jaeger tracing.
-localRuntimeConfig:
+runtimeConfig:
   port: 8081
 application:
   bankname: "Operon Bank - ${BANK_SCHEMA}"

@@ -14,7 +14,7 @@ telemetry:
     silent: false
   traces:
     enabled: false
-localRuntimeConfig:
+runtimeConfig:
   port: 8081
 application:
   bankname: "testbank - ${BANK_SCHEMA}"
