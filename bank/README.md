@@ -16,7 +16,7 @@ This demo includes two packages: the web frontend and the backend.
 You need to run `npm install` under each of the [`bank-frontend/`](./bank-frontend/) and [`bank-backend/`](./bank-backend/) directories as a first step.
 
 #### Start PostgreSQL
-Now, let's set up a Postgres database. Please make sure you set the `PGPASSWORD` environmental variable to a password you choose before you start!
+Now, let's set up a Postgres database. Please make sure you set the `PGPASSWORD` environment variable to a password you choose before you start!
 
 We provide a convenient script to start a Postgres server in a docker container:
 ```shell
@@ -40,7 +40,7 @@ dbos-admin / dbos-pass
 For more information about Keycloak, please visit [Keycloak guides](https://www.keycloak.org/guides#server).
 
 ### Start two backend servers
-Each backend server must run in its own terminal window because we will configure different environmental variables for them.
+Each backend server must run in its own terminal window because we will configure different environment variables for them.
 Especially, you need to set `PGPASSWORD` to the one you used to create the `bank` database, and set `BANK_SCHEMA` to the namespace you wish to use for the specific bank server.
 In this tutorial, let's set `export BANK_SCHEMA=bank1` for the first server, and in a separate terminal, set `export BANK_SCHEMA=bank2` for the second server.
 
@@ -101,8 +101,8 @@ Now, log in as `mike@other.com`.
 Once you click "Create a New Account" several times in both bank1 and bank2, you will see a list of accounts displayed with their `Account ID`, `Balance`, `Type`, and `Actions`. Initially, all accounts have zero balance.
 Select the "Choose an Action" drop-down menu next to each account, you will see several options:
 - "Transaction History" displays a list of past transactions from latest to oldest.
-- "Deposit" allows you to deposite from either cash or from an account in another bank backend.
-- "Withdraw" allows you to withdraw to either cash or to an account in another bank backend.
+- "Deposit" allows you to deposit either from cash or an account in another bank backend.
+- "Withdraw" allows you to withdraw either to cash or an account in another bank backend.
 - "Internal Transfer" allows you to transfer between your own accounts within the same bank backend.
 
 Sometimes the JWT token would expire and cause failures. You can refresh the page and try again. Refreshing the webpage obtains a new token.
@@ -144,7 +144,7 @@ Operon guarantees that this workflow runs to completion and every operation exec
 
 We implement the first (deposit to local) and third (undo) operations in one function called [`updateAcctTransactionFunc`](./bank-backend/src/workflows/txnhistory.workflows.ts#L98). The workflow starts by invoking this transaction and specifying the transaction is a deposit and not an undo transaction:
 ```ts
-// Deposite locally first.
+// Deposit locally first.
 const result = await ctxt.invoke(BankTransactionHistory)
   .updateAcctTransactionFunc(
     data.toAccountId,
