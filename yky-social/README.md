@@ -1,8 +1,11 @@
 # Operon Social Demo App (YKY)
 
-Note, this demo requires two separate processes to run: the front end, and the back end.
-(And the PG database.)
+This demo shows an [Operon](https://github.com/dbos-inc/operon) backend system coupled with a next.js frontend.
 
+It simulates a simple social network, and demonstrates:
+* Use of Operon workflows, transactions, and communicators
+* [TypeORM](https://typeorm.io) integration
+* Amazon S3 integration (for profile photos)
 
 ## Configure database
 
@@ -27,7 +30,8 @@ The backend allows the following environment variables (as configured above):
 * POSTGRES\_PASSWORD=socialts
 * POSTGRES\_DATABASE=socialts
 
-Additionally, to allow media storage (work in progress), you need S3 access keys.
+Additionally, to allow media storage, you need S3 access keys.
+* AWS\_REGION
 * AWS\_ACCESS\_KEY
 * AWS\_SECRET\_ACCESS\_KEY
 
@@ -35,14 +39,10 @@ By default, the backend will run on port 3000.
 
 ### Build and Run Backend
 
-> At this time, the core Operon package has not been published to NPM. In order to run the Operon demos,
-> the core [Operon repo](https://github.com/dbos-inc/operon) needs to be cloned and built locally.
-
 Change to the `yky-social` directory and install dependencies:
 
 ```shell
 npm install
-npm link <path to local operon repo>
 ```
 
 Once the dependencies are installed, build and run the backend:
