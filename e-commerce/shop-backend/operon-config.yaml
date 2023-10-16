@@ -9,7 +9,7 @@ database:
   user_dbclient: 'knex'
 telemetryExporters:
   - 'ConsoleExporter'
-localRuntimeConfig:
+runtimeConfig:
   port: 8082
 application:
   payment_host: 'http://localhost:8086'
