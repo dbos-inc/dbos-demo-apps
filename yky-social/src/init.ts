@@ -1,7 +1,7 @@
 import { kapp, YKY } from './app';
 import { operon } from "./app";
 import { ykyInit } from "./app";
-import { Operations } from "./Operations";
+import { Operations } from "./YKYOperations";
 
 operon.init(YKY, Operations)
   .then(() => {

@@ -16,7 +16,7 @@ import { RecvType, SendType, TimelineRecv, TimelineSend } from "./entity/Timelin
 import { UserLogin } from "./entity/UserLogin";
 import { UserProfile } from "./entity/UserProfile";
 
-import { Operations, errorWithStatus } from "./Operations";
+import { Operations, errorWithStatus } from "./YKYOperations";
 import {
   Operon, ArgRequired, GetApi, RequiredRole,
   OperonTransaction, TransactionContext,
