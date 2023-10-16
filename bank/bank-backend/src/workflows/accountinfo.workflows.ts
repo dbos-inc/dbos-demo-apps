@@ -1,12 +1,12 @@
 import { ArgOptional, Authentication, DefaultRequiredRole, GetApi, KoaMiddleware, OperonTransaction, PostApi, RequiredRole, TransactionContext } from "@dbos-inc/operon";
 import { PrismaClient } from "@prisma/client";
-import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
+import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
 
 type PrismaContext = TransactionContext<PrismaClient>;
 
 @DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
-@KoaMiddleware(koaLogger, customizeHandle, bankJwt)
+@KoaMiddleware(koaLogger, bankJwt)
 export class BankAccountInfo {
   @OperonTransaction()
   @GetApi("/api/list_accounts/:ownerName")

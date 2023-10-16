@@ -14,14 +14,14 @@ import {
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";
-import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
+import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
 type PrismaContext = TransactionContext<PrismaClient>;
 
 @DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
-@KoaMiddleware(koaLogger, customizeHandle, bankJwt)
+@KoaMiddleware(koaLogger, bankJwt)
 export class BankTransactionHistory {
   @OperonTransaction()
   @GetApi("/api/transaction_history/:accountId")

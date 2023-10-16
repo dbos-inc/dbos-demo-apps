@@ -1,11 +1,11 @@
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
 import { OperonResponseError, GetApi, HandlerContext, PostApi, DefaultRequiredRole, Authentication, KoaMiddleware } from "@dbos-inc/operon";
-import { bankAuthMiddleware, koaLogger, customizeHandle, bankJwt } from "./middleware";
+import { bankAuthMiddleware, koaLogger, bankJwt } from "./middleware";
 
 @DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
-@KoaMiddleware(koaLogger, customizeHandle, bankJwt)
+@KoaMiddleware(koaLogger, bankJwt)
 export class BankEndpoints {
   // Can we have some class-wide default required roles?
   // eslint-disable-next-line @typescript-eslint/require-await

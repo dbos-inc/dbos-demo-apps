@@ -1,6 +1,5 @@
 import { MiddlewareContext, OperonResponseError } from "@dbos-inc/operon";
 import { koaJwtSecret } from "jwks-rsa";
-import Koa from "koa";
 import jwt from "koa-jwt";
 import logger from "koa-logger";
 
@@ -28,19 +27,6 @@ export async function bankAuthMiddleware(ctx: MiddlewareContext) {
     console.log("authenticated roles: ", authenticatedRoles);
     return { authenticatedUser: authenticatedUser, authenticatedRoles: authenticatedRoles };
   }
-}
-
-// Custom 401 handling if you don't want to expose koa-jwt errors to users
-export function customizeHandle(ctx: Koa.Context, next: Koa.Next) {
-  return next().catch((err) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (401 === err.status) {
-      ctx.status = 401;
-      ctx.body = "Protected resource, use Authorization header to get access\n";
-    } else {
-      throw err;
-    }
-  });
 }
 
 export const bankJwt = jwt({
