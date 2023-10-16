@@ -14,14 +14,14 @@ import {
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";
-import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
+import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
 type PrismaContext = TransactionContext<PrismaClient>;
 
 @DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
-@KoaMiddleware(koaLogger, customizeHandle, bankJwt)
+@KoaMiddleware(koaLogger, bankJwt)
 export class BankTransactionHistory {
   @OperonTransaction()
   @GetApi("/api/transaction_history/:accountId")
@@ -95,7 +95,7 @@ export class BankTransactionHistory {
   }
 
   @OperonTransaction()
-  static async updateAcctTransactionFunc(txnCtxt: PrismaContext, acctId: bigint, data: TransactionHistory, deposit: boolean, @ArgOptional undoTxn: bigint | null = null) {
+  static async updateAcctTransactionFunc(txnCtxt: PrismaContext, acctId: bigint, data: TransactionHistory, deposit: boolean, @ArgOptional undoTxn: bigint | null = null): Promise<bigint> {
     // First, make sure the account exists, and read the latest balance.
     const acct = await BankAccountInfo.findAccountFunc(txnCtxt, acctId);
     if (acct === null) {
@@ -131,7 +131,7 @@ export class BankTransactionHistory {
   }
 
   @OperonCommunicator()
-  static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory) {
+  static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory, workflowUUID: string): Promise<boolean> {
     const token = commCtxt.request?.headers!["authorization"];
     if (!token) {
       commCtxt.logger.error("Failed to extract valid token!");
@@ -142,6 +142,7 @@ export class BankTransactionHistory {
       const remoteRes = await axios.post(remoteUrl, data, {
         headers: {
           Authorization: token,
+          "operon-workflowuuid": workflowUUID,
         },
       });
       if (remoteRes.status != 200) {
@@ -149,7 +150,7 @@ export class BankTransactionHistory {
         return false;
       }
     } catch (err) {
-      console.error(err);
+      commCtxt.logger.error(err);
       return false;
     }
     return true;
@@ -189,9 +190,6 @@ export class BankTransactionHistory {
   static async depositWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
     // Deposite locally first.
     const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, true);
-    if (!result) {
-      throw new Error("Deposit failed!");
-    }
 
     // Then, Contact remote DB to withdraw.
     if (data.fromLocation && !(data.fromLocation === "cash") && !data.fromLocation.startsWith(REMOTEDB_PREFIX)) {
@@ -205,11 +203,11 @@ export class BankTransactionHistory {
         toLocation: REMOTEDB_PREFIX + ctxt.getConfig("bankname") + ":" + ctxt.getConfig("bankport"),
       };
 
-      const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory);
+      const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory, ctxt.workflowUUID + '-withdraw');
       if (!remoteRes) {
         // Undo transaction is a withdrawal.
         const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, false, result);
-        if (!undoRes || undoRes !== result) {
+        if (undoRes !== result) {
           ctxt.logger.error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
         }
@@ -226,9 +224,6 @@ export class BankTransactionHistory {
   static async withdrawWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
     // Withdraw first.
     const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, false);
-    if (!result) {
-      throw new Error("Withdraw failed!");
-    }
 
     // Then, contact remote DB to deposit.
     if (data.toLocation && !(data.toLocation === "cash") && !data.toLocation.startsWith(REMOTEDB_PREFIX)) {
@@ -241,11 +236,11 @@ export class BankTransactionHistory {
         toLocation: "local",
         fromLocation: REMOTEDB_PREFIX + ctxt.getConfig("bankname") + ":" + ctxt.getConfig("bankport"),
       };
-      const remoteRes: boolean | null = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory);
+      const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory, ctxt.workflowUUID + '-deposit');
       if (!remoteRes) {
         // Undo transaction is a deposit.
         const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, true, result);
-        if (!undoRes || undoRes !== result) {
+        if (undoRes !== result) {
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
         }
         throw new Error("Failed to deposit to remote bank.");

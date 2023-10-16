@@ -1,11 +1,11 @@
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
 import { OperonResponseError, GetApi, HandlerContext, PostApi, DefaultRequiredRole, Authentication, KoaMiddleware } from "@dbos-inc/operon";
-import { bankAuthMiddleware, koaLogger, customizeHandle, bankJwt } from "./middleware";
+import { bankAuthMiddleware, koaLogger, bankJwt } from "./middleware";
 
 @DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
-@KoaMiddleware(koaLogger, customizeHandle, bankJwt)
+@KoaMiddleware(koaLogger, bankJwt)
 export class BankEndpoints {
   // Can we have some class-wide default required roles?
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -25,7 +25,9 @@ export class BankEndpoints {
     // Must to local.
     data.toLocation = "local";
 
-    return ctx.invoke(BankTransactionHistory).depositWorkflow(data).then(x => x.getResult());
+    // Check the header for a specific UUID for the workflow.
+    const txnUUID = ctx.koaContext.get("operon-workflowuuid");
+    return ctx.invoke(BankTransactionHistory, txnUUID).depositWorkflow(data).then(x => x.getResult());
   }
 
   // Withdraw.
@@ -39,7 +41,9 @@ export class BankEndpoints {
     // Must from local.
     data.fromLocation = "local";
 
-    return ctx.invoke(BankTransactionHistory).withdrawWorkflow(data).then(x => x.getResult());
+    // Check the header for a specific UUID for the workflow.
+    const txnUUID = ctx.koaContext.get("operon-workflowuuid");
+    return ctx.invoke(BankTransactionHistory, txnUUID).withdrawWorkflow(data).then(x => x.getResult());
   }
 
   // Internal transfer
