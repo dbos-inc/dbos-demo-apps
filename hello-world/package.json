@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@dbos-inc/operon": "0.5.22-preview",
+    "@dbos-inc/operon": "^0.5.30-preview",
     "ts-node": "^10.9.1"
   },
   "devDependencies": {

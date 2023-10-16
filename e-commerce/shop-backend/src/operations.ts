@@ -1,8 +1,7 @@
 import {
   TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
-  GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources
+  GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources, OperonContext
 } from '@dbos-inc/operon';
-import Stripe from 'stripe';
 import bcrypt from 'bcrypt';
 import { Knex } from 'knex';
 
@@ -52,11 +51,32 @@ interface User {
   password: string,
 }
 
-const stripe = new Stripe(process.env.STRIPE_API_KEY || 'error_no_stripe_key', { apiVersion: '2023-08-16' });
-const endpointSecret: string = process.env.STRIPE_WEBHOOK_SECRET || 'error_no_webhook_secret';
+interface PaymentSession {
+  session_id: string,
+  url?: string,
+  payment_status: string,
+}
 
-const checkout_url_topic = "stripe_checkout_url";
-const checkout_complete_topic = "stripe_checkout_complete";
+const checkout_url_topic = "payment_checkout_url";
+const checkout_complete_topic = "payment_checkout_complete";
+
+function getHostConfig(ctxt: OperonContext) {
+  const paymentHost = ctxt.getConfig("payment_host") as string | undefined;
+  if (!paymentHost) {
+    ctxt.logger.crit("Missing payment_host configuration");
+  }
+
+  const localHost = ctxt.getConfig("local_host") as string | undefined;
+  if (!localHost) {
+    ctxt.logger.crit("Missing local_host configuration");
+  }
+
+  if (!paymentHost || !localHost) {
+    throw new Error("Invalid Configuration");
+  }
+
+  return { paymentHost, localHost };
+}
 
 export class Shop {
 
@@ -145,6 +165,7 @@ export class Shop {
     const productDetails = await ctxt.invoke(Shop).getCart(username);
     if (productDetails.length === 0) {
       await ctxt.setEvent(checkout_url_topic, null);
+      return;
     }
 
     const orderID = await ctxt.invoke(Shop).createOrder(username, productDetails);
@@ -152,28 +173,29 @@ export class Shop {
     const valid: boolean = await ctxt.invoke(Shop).subtractInventory(productDetails);
     if (!valid) {
       await ctxt.setEvent(checkout_url_topic, null);
+      return;
     }
 
-    const stripeSession = await ctxt.invoke(Shop).createStripeSession(productDetails, origin);
-    if (!stripeSession?.url) {
+    const paymentSession = await ctxt.invoke(Shop).createPaymentSession(productDetails, origin);
+    if (!paymentSession?.url) {
       await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
       await ctxt.setEvent(checkout_url_topic, null);
+      return;
     }
 
-    await ctxt.setEvent(checkout_url_topic, stripeSession.url);
+    await ctxt.setEvent(checkout_url_topic, paymentSession.url);
     const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
 
-    if (notification) {
-      // if the checkout complete notification arrived, the payment is successful so fulfull the order
+    if (notification && notification === 'paid') {
+      // if the checkout complete notification arrived, the payment is successful so fulfill the order
       await ctxt.invoke(Shop).fulfillOrder(orderID);
       await ctxt.invoke(Shop).clearCart(username);
     } else {
-      // if the checkout complete notification didn't arrive in time, retrive the session information 
+      // if the checkout complete notification didn't arrive in time, retrieve the session information 
       // in order to check the payment status explicitly 
-      const updatedSession = await ctxt.invoke(Shop).retrieveStripeSession(stripeSession.id);
+      const updatedSession = await ctxt.invoke(Shop).retrievePaymentSession(paymentSession.session_id);
       if (!updatedSession) {
-        // TODO: should we do something more meaningful if we can't retrieve the stripe session?
-        ctxt.logger.error(`Recovering order #${orderID} failed: Stripe unreachable`);
+        ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
       }
 
       if (updatedSession.payment_status == 'paid') {
@@ -239,57 +261,58 @@ export class Shop {
   }
 
   @OperonCommunicator()
-  static async createStripeSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
-    const lineItems = productDetails.map((item) => ({
-      quantity: item.inventory,
-      price_data: {
-        currency: "usd",
-        unit_amount: item.price,
-        product_data: {
-          name: item.product,
-        }
-      }
-    }));
-    return await stripe.checkout.sessions.create({
-      line_items: lineItems,
-      mode: 'payment',
-      client_reference_id: ctxt.workflowUUID,
-      success_url: `${origin}/checkout/success`,
-      cancel_url: `${origin}/checkout/cancel`,
-    });
-  }
+  static async createPaymentSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
+    const { paymentHost, localHost } = getHostConfig(ctxt);
 
-  @OperonCommunicator()
-  static async retrieveStripeSession(_ctxt: CommunicatorContext, sessionID: string): Promise<Stripe.Response<Stripe.Checkout.Session>> {
-    const session = await stripe.checkout.sessions.retrieve(sessionID);
-    try {
-      await stripe.checkout.sessions.expire(sessionID); // Ensure nothing changes in the session.
-    } catch (err) {
-      // Session was already expired.
-    }
+    const response = await fetch(`${paymentHost}/api/create_payment_session`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        webhook: `${localHost}/payment_webhook`,
+        success_url: `${origin}/checkout/success`,
+        cancel_url: `${origin}/checkout/cancel`,
+        client_reference_id: ctxt.workflowUUID,
+        items: productDetails.map(product => ({
+          description: product.product,
+          quantity: product.inventory,
+          price: (product.price / 100).toFixed(2),
+        }))
+      })
+    });
+    const session = await response.json() as PaymentSession;
     return session;
   }
 
-  @PostApi('/stripe_webhook')
-  static async stripeWebhook(ctxt: HandlerContext): Promise<void> {
-    const req = ctxt.koaContext.request;
-    const sigHeader = req.headers['stripe-signature'];
-    if (typeof sigHeader !== 'string') {
-      throw new OperonResponseError("Invalid Header", 400);
-    }
-    const payload: string = req.rawBody;
-    try {
-      const event = stripe.webhooks.constructEvent(payload, sigHeader, endpointSecret);
-      if (event.type === 'checkout.session.completed') {
-        const session = await stripe.checkout.sessions.retrieve((event.data.object as Stripe.Response<Stripe.Checkout.Session>).id);
-        if (session.client_reference_id !== null) {
-          const uuid: string = session.client_reference_id;
-          await ctxt.send(uuid, "checkout.session.completed", checkout_complete_topic);
-        }
+  @OperonCommunicator()
+  static async retrievePaymentSession(ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
+    const { paymentHost } = getHostConfig(ctxt);
+
+    const response = await fetch(`${paymentHost}/api/session/${sessionID}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       }
-    } catch (err) {
-      ctxt.logger.error(err);
-      throw new OperonResponseError("Webhook Error", 400);
+    });
+    const session = await response.json() as PaymentSession;
+    return session;
+  }
+
+  @PostApi('/payment_webhook')
+  static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
+    const req = ctxt.koaContext.request;
+
+    type Session = { session_id: string; client_reference_id?: string; payment_status: string };
+    const payload = req.body as Session;
+
+    if (!payload.client_reference_id) {
+      ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
+    } else {
+      ctxt.logger.info(`Received for ${payload.client_reference_id}`);
+      await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
     }
   }
 }

@@ -1,15 +1,20 @@
 import { OperonTestingRuntime, createTestingRuntime } from "@dbos-inc/operon";
-import { BankEndpoints, BankAccountInfo, BankTransactionHistory } from "./userFunctions";
+import { BankEndpoints, BankAccountInfo, BankTransactionHistory } from "./operations";
 import request from "supertest";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { convertTransactionHistory } from "./router";
 
 describe("bank-tests", () => {
   let testRuntime: OperonTestingRuntime;
+  let bankSchema: string;
 
   beforeAll(async () => {
-    testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], undefined, "info");
-    await testRuntime.queryUserDB<void>(`delete from prisma."AccountInfo" where "ownerName"=$1;`, "alice");
+    bankSchema = process.env.BANK_SCHEMA ?? "";
+    if (!bankSchema) {
+      throw new Error("Env 'BANK_SCHEMA' not set!");
+    }
+    testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "operon-test-config.yaml");
+    await testRuntime.queryUserDB<void>(`delete from ${bankSchema}."AccountInfo" where "ownerName"=$1;`, "alice");
   });
 
   afterAll(async () => {
@@ -28,7 +33,7 @@ describe("bank-tests", () => {
       type: "saving",
     });
 
-    const res = await testRuntime.queryUserDB<AccountInfo>(`select * from prisma."AccountInfo" where "ownerName" = $1;`, "alice");
+    const res = await testRuntime.queryUserDB<AccountInfo>(`select * from ${bankSchema}."AccountInfo" where "ownerName" = $1;`, "alice");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(res[0].ownerName).toBe("alice");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -56,9 +61,11 @@ describe("bank-tests", () => {
     expect(res).toBe("Withdraw succeeded!");
 
     // Try to overdraw.
-    await expect(testRuntime
-      .invoke(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
-      .withdrawWorkflow(convertTransactionHistory({ toLocation: "cash", fromAccountId: acctId, fromLocation: "local", amount: 100 } as TransactionHistory))
-      .then((x) => x.getResult())).rejects.toThrow("Not enough balance!");
+    await expect(
+      testRuntime
+        .invoke(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
+        .withdrawWorkflow(convertTransactionHistory({ toLocation: "cash", fromAccountId: acctId, fromLocation: "local", amount: 100 } as TransactionHistory))
+        .then((x) => x.getResult())
+    ).rejects.toThrow("Not enough balance!");
   });
 });

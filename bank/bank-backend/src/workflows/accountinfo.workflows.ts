@@ -1,4 +1,4 @@
-import { Authentication, DefaultRequiredRole, GetApi, KoaMiddleware, OperonTransaction, PostApi, RequiredRole, TransactionContext } from "@dbos-inc/operon";
+import { ArgOptional, Authentication, DefaultRequiredRole, GetApi, KoaMiddleware, OperonTransaction, PostApi, RequiredRole, TransactionContext } from "@dbos-inc/operon";
 import { PrismaClient } from "@prisma/client";
 import { bankAuthMiddleware, bankJwt, customizeHandle, koaLogger } from "../middleware";
 
@@ -26,7 +26,7 @@ export class BankAccountInfo {
   @OperonTransaction()
   @PostApi("/api/create_account")
   @RequiredRole(["appAdmin"]) // Only an admin can create a new account.
-  static async createAccountFunc(txnCtxt: PrismaContext, ownerName: string, type: string, balance?: number) {
+  static async createAccountFunc(txnCtxt: PrismaContext, ownerName: string, type: string, @ArgOptional balance?: number) {
     return txnCtxt.client.accountInfo.create({
       data: {
         ownerName: ownerName,
