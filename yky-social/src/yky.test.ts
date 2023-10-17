@@ -9,26 +9,28 @@ import { Readable } from 'stream';
 
 import { describe, expect } from '@jest/globals';
 import request from 'supertest';
-import { kapp, YKY, ykyInit } from './app';
-import { operon } from './app';
+import { YKY } from './app';
 
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { Operations } from './YKYOperations';
 
+import { OperonTestingRuntime, createTestingRuntime } from '@dbos-inc/operon';
+
+let testRuntime: OperonTestingRuntime;
+
 beforeAll(async () => {
-  await operon.init(YKY, Operations);
-  await operon.userDatabase.createSchema();
-  ykyInit();
+  testRuntime = await createTestingRuntime([YKY, Operations], "operon-config.yaml");
+  await testRuntime.createUserSchema();
 });
 
 afterAll(async () => {
-  await operon.userDatabase.dropSchema();
-  await operon.destroy();
+  await testRuntime.dropUserSchema();
 });
+
 
 describe('GET (request-like)', () => {
   it('should get', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
       .get('/');
     expect(response.statusCode).toBe(200);
     expect(response.body.message).toBe("Welcome to YKY (Yakky not Yucky)!");
@@ -37,7 +39,7 @@ describe('GET (request-like)', () => {
 
 describe('GET (koa-like)', () => {
   it('should get - from koa directly', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
       .get('/koa');
     expect(response.statusCode).toBe(200);
     expect(response.body.message).toBe("Welcome to YKY (Yakky not Yucky)!");
@@ -46,7 +48,7 @@ describe('GET (koa-like)', () => {
 
 describe('POST /register new user wo/ password', () => {
   it('should fail to create a new user with no password', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
       .post('/register')
       .send({ firstName: 'Jane', lastName: 'Deer', username: "jdeer" });
     expect(response.statusCode).toBe(400);
@@ -56,7 +58,7 @@ describe('POST /register new user wo/ password', () => {
 
 describe('POST /register new user', () => {
   it('should create a new user and return 200 status code', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
       .post('/register')
       .send({ firstName: 'Jane', lastName: 'Deer', username: "jdeer", password: "yyy" });
     expect(response.statusCode).toBe(200);
@@ -66,7 +68,7 @@ describe('POST /register new user', () => {
 
 describe('POST /register new user that already exists', () => {
   it('should fail because user exists and return 400 status code', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
       .post('/register')
       .send({ firstName: 'Jane', lastName: 'Deer', username: "jdeer", password: "wowowow" });
     expect(response.statusCode).toBe(400);
@@ -76,7 +78,7 @@ describe('POST /register new user that already exists', () => {
 
 describe('POST /register second new user', () => {
   it('should create a new user and return 200 status code', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
       .post('/register')
       .send({ firstName: 'Jim', lastName: 'Smith', username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
@@ -86,7 +88,7 @@ describe('POST /register second new user', () => {
 
 describe('POST /login no such user', () => {
   it('should return 400 for wrong user', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
       .post('/login')
       .send({ username: "apalmer", password: "jjj" });
     expect(response.statusCode).toBe(401);
@@ -96,7 +98,7 @@ describe('POST /login no such user', () => {
 
 describe('POST /login wrong password', () => {
   it('should return 400 for wrong password', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
       .post('/login')
       .send({ username: "jsmith", password: "jjjj" });
     expect(response.statusCode).toBe(401);
@@ -106,7 +108,7 @@ describe('POST /login wrong password', () => {
 
 describe('POST /login success', () => {
   it('should return 200 for booyah', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
       .post('/login')
       .send({ username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
@@ -117,32 +119,32 @@ describe('POST /login success', () => {
 // A more interesting test - part 1 follow someone
 describe('Go find a friend, follow', () => {
   it('should log us in', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
     .post('/login')
     .send({ username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
 
     // Should fail if user name is not specified
-    const nounameres = await request(kapp.callback())
+    const nounameres = await request(testRuntime.getHandlersCallback())
     .get('/finduser')
     .query({userid:response.body.id});
     expect(nounameres.statusCode).toBe(400);
 
-    const nofindres = await request(kapp.callback())
+    const nofindres = await request(testRuntime.getHandlersCallback())
     .get('/finduser')
     .query({userid:response.body.id,
             findUserName: "dollythesheep" });
     expect(nofindres.statusCode).toBe(200);
     expect(nofindres.body.message).toBe("No user by that name.");
 
-    const findres = await request(kapp.callback())
+    const findres = await request(testRuntime.getHandlersCallback())
     .get('/finduser')
     .query({userid:response.body.id,
             findUserName: "jdeer" });
     expect(findres.body.message).toBe("User Found.");
     expect(findres.statusCode).toBe(200);
 
-    const followres = await request(kapp.callback())
+    const followres = await request(testRuntime.getHandlersCallback())
     .post('/follow')
     .query({userid:response.body.id})
     .send({ followUid: findres.body.uid });
@@ -150,7 +152,7 @@ describe('Go find a friend, follow', () => {
     expect(followres.body.message).toBe("Followed.");
 
     // See empty timeline
-    const readtimeline = await request(kapp.callback())
+    const readtimeline = await request(testRuntime.getHandlersCallback())
     .get('/recvtimeline')
     .query({userid:response.body.id});
     expect(readtimeline.statusCode).toBe(200);
@@ -161,19 +163,19 @@ describe('Go find a friend, follow', () => {
 // Part 2 - Other makes a post - check send timeline
 describe('Go do a post', () => {
   it('should log us in and make a post; check if sent', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
     .post('/login')
     .send({ username: "jdeer", password: "yyy" });
     expect(response.statusCode).toBe(200);
 
     // See empty timeline
-    const sendtimeline = await request(kapp.callback())
+    const sendtimeline = await request(testRuntime.getHandlersCallback())
     .get('/sendtimeline')
     .query({userid:response.body.id});
     expect(sendtimeline.statusCode).toBe(200);
     expect(sendtimeline.body.timeline).toHaveLength(0);
 
-    const nofindres = await request(kapp.callback())
+    const nofindres = await request(testRuntime.getHandlersCallback())
     .post('/composepost')
     .query({userid:response.body.id})
     .send({postText: "Venison for sale..." });
@@ -181,7 +183,7 @@ describe('Go do a post', () => {
     expect(nofindres.body.message).toBe("Posted.");
 
     // See post in timeline
-    const readtimeline = await request(kapp.callback())
+    const readtimeline = await request(testRuntime.getHandlersCallback())
     .get('/sendtimeline')
     .query({userid:response.body.id});
     expect(readtimeline.statusCode).toBe(200);
@@ -192,13 +194,13 @@ describe('Go do a post', () => {
 // Part 3 - Receive followed post
 describe('Go read posts', () => {
   it('should log us in and read posts', async () => {
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
     .post('/login')
     .send({ username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
 
     // See one post
-    const readtimeline = await request(kapp.callback())
+    const readtimeline = await request(testRuntime.getHandlersCallback())
     .get('/recvtimeline')
     .query({userid:response.body.id});
     expect(readtimeline.statusCode).toBe(200);
@@ -206,7 +208,7 @@ describe('Go read posts', () => {
     expect(readtimeline.body.timeline[0].postText).toBe('Venison for sale...');
 
     // Retrieve post by id
-    const post = await request(kapp.callback())
+    const post = await request(testRuntime.getHandlersCallback())
     .get(`/post/${readtimeline.body.timeline[0].postId}`)
     .query({userid:response.body.id});
     expect(post.statusCode).toBe(200);
@@ -253,12 +255,12 @@ describe('Upload and download media', () => {
       return; // Ideally, we do a mock.  For now, we're testing real AWS if the env is set...
     }
 
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
     .post('/login')
     .send({ username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
 
-    const postkey = await request(kapp.callback())
+    const postkey = await request(testRuntime.getHandlersCallback())
     .get('/getMediaUploadKey')
     .query({filename: 'YKY.png', userid:response.body.id});
     expect(postkey.statusCode).toBe(200);
@@ -268,7 +270,7 @@ describe('Upload and download media', () => {
     await uploadToS3(postkey.body as PresignedPost, filePath);
 
     // Request the download key
-    const getkey = await request(kapp.callback())
+    const getkey = await request(testRuntime.getHandlersCallback())
     .get('/getMediaDownloadKey')
     .query({filekey: postkey.body.key, userid:response.body.id});
     expect(getkey.statusCode).toBe(200);
@@ -287,12 +289,12 @@ describe('Upload media in workflow', () => {
       return; // Ideally, we do a mock.  For now, we're testing real AWS if the env is set...
     }
 
-    const response = await request(kapp.callback())
+    const response = await request(testRuntime.getHandlersCallback())
     .post('/login')
     .send({ username: "jsmith", password: "jjj" });
     expect(response.statusCode).toBe(200);
 
-    const postkey = await request(kapp.callback())
+    const postkey = await request(testRuntime.getHandlersCallback())
     .get('/startMediaUpload')
     .query({userid:response.body.id});
     expect(postkey.statusCode).toBe(200);
@@ -302,13 +304,13 @@ describe('Upload media in workflow', () => {
     await uploadToS3(postkey.body.key as PresignedPost, filePath);
 
     // Complete the workflow
-    const _finishkey = await request(kapp.callback())
+    const _finishkey = await request(testRuntime.getHandlersCallback())
     .get('/finishMediaUpload')
     .query({userid:response.body.id, wfid: postkey.body.wfHandle});
     expect(postkey.statusCode).toBe(200);
 
     // Request the download key
-    const getkey = await request(kapp.callback())
+    const getkey = await request(testRuntime.getHandlersCallback())
     .get('/getMediaDownloadKey')
     .query({filekey: postkey.body.file, userid:response.body.id});
     expect(getkey.statusCode).toBe(200);
@@ -319,7 +321,7 @@ describe('Upload media in workflow', () => {
     await downloadFromS3(presignedGetUrl, outputPath);
 
     // Delete
-    const dropres = await request(kapp.callback())
+    const dropres = await request(testRuntime.getHandlersCallback())
     .get('/deleteMedia')
     .query({filekey: postkey.body.file, userid:response.body.id});
     expect(dropres.statusCode).toBe(200);
