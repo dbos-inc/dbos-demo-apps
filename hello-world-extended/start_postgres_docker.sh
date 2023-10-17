@@ -12,7 +12,7 @@ docker run --rm --name=operon-db --env=POSTGRES_PASSWORD=${PGPASSWORD} --env=PGD
 # Wait for PostgreSQL to start
 echo "Waiting for PostgreSQL to start..."
 for i in {1..30}; do
-  if docker exec operon-db pg_isready -U postgres > /dev/null; then
+  if docker exec operon-db pg_isready -U postgres | grep -q "accepting connections"; then
     echo "PostgreSQL started!"
     break
   fi
