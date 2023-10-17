@@ -19,7 +19,7 @@ This script will ask you multiple times for the PostgreSQL password, unless it i
 
 Alternatively, set up the database with Docker:
 ```
-sudo sh -c "POSTGRES_HOST=localhost POSTGRES_PORT=5444 POSTGRES_USERNAME=socialts POSTGRES_PASSWORD=socialts POSTGRES_DATABASE=socialts scripts/start_postgres_docker.sh"
+POSTGRES_HOST=localhost POSTGRES_PORT=5444 POSTGRES_USERNAME=socialts POSTGRES_PASSWORD=socialts POSTGRES_DATABASE=socialts scripts/start_postgres_docker.sh
 ```
 
 ## Compile and Run the Backend
