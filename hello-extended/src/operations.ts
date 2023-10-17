@@ -23,14 +23,12 @@ export class Hello {
     }
   }
 
-  @OperonTransaction()  // Declare this function to be a transaction.
+  @OperonTransaction()
   static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Retrieve and increment the number of times this user has been greeted.
-    const rows = await ctxt.client<operon_hello>("operon_hello")
-      .insert({ name: user, greet_count: 1 })
-      .onConflict("name") // If user is already present, increment greet_count.
-        .merge({ greet_count: ctxt.client.raw('operon_hello.greet_count + 1') })
-      .returning("greet_count");
+    const query = `INSERT INTO operon_hello (name, greet_count) VALUES (?, 1)
+      ON CONFLICT (name) DO UPDATE SET greet_count = operon_hello.greet_count + 1 RETURNING greet_count;`
+    const { rows } = await ctxt.client.raw(query, [user]) as { rows: operon_hello[] };
     const greet_count = rows[0].greet_count;
     return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
   }
@@ -57,9 +55,7 @@ export class Hello {
   @OperonTransaction()
   static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Delete greet_count for a user.
-    await ctxt.client<operon_hello>("operon_hello")
-      .where({ name: user })
-      .delete()
+    await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
     return `Cleared greet_count for ${user}!\n`
   }
 }
