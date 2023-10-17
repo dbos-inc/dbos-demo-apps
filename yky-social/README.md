@@ -11,12 +11,17 @@ It simulates a simple social network, and demonstrates:
 ## Create Database
 
 This demo assumes there is a PostgreSQL database running on localhost on port 5432 (configurable, see below).
-To set up Postgres (creating a `socialts` user and database), run:
-
+To set up Postgres (creating a `socialts` user and database) with a local database, run:
 ```shell
 yky-social/scripts/init_pgdb.sh
 ```
 This script will ask you multiple times for the PostgreSQL password, unless it is already stored in the PGPASSWORD environment variable.
+
+
+Alternatively, set up the database with Docker:
+```
+sudo sh -c "POSTGRES_HOST=localhost POSTGRES_PORT=5444 POSTGRES_USERNAME=socialts POSTGRES_PASSWORD=socialts POSTGRES_DATABASE=socialts scripts/start_postgres_docker.sh"
+```
 
 ## Compile and Run the Backend
 
@@ -26,7 +31,7 @@ Launch a window to run the YKY backend.
 The backend allows the following environment variables (as configured above):
 
 * POSTGRES\_HOST=localhost
-* POSTGRES\_PORT=5432
+* POSTGRES\_PORT=5444
 * POSTGRES\_USERNAME=socialts
 * POSTGRES\_PASSWORD=socialts
 * POSTGRES\_DATABASE=socialts
