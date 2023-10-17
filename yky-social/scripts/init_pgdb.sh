@@ -2,6 +2,8 @@
 
 # Create the new user 'socialts'
 psql -U postgres -h localhost -c "CREATE USER socialts WITH PASSWORD 'socialts';"
+# Not production...
+psql -U postgres -h localhost -c "alter user socialts CREATEDB;"
 
 # Drop the DB if it already exists, then create it again
 psql -U postgres -h localhost -c "DROP DATABASE IF EXISTS socialts;"

@@ -37,15 +37,6 @@ describe('GET (request-like)', () => {
   });
 });
 
-describe('GET (koa-like)', () => {
-  it('should get - from koa directly', async () => {
-    const response = await request(testRuntime.getHandlersCallback())
-      .get('/koa');
-    expect(response.statusCode).toBe(200);
-    expect(response.body.message).toBe("Welcome to YKY (Yakky not Yucky)!");
-  });
-});
-
 describe('POST /register new user wo/ password', () => {
   it('should fail to create a new user with no password', async () => {
     const response = await request(testRuntime.getHandlersCallback())

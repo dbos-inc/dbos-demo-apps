@@ -8,8 +8,15 @@ database:
   connectionTimeoutMillis: 3000
   user_dbclient: 'typeorm'
 telemetryExporters:
-  - 'ConsoleExporter'
+  logs:
+    logLevel: 'debug'
+    addContextMetadata: true
+    silent: false
+  traces:
+    enabled: false
 localRuntimeConfig:
+  port: 3000
+runtimeConfig:
   port: 3000
 application:
   aws_s3_region: ${AWS_REGION}
