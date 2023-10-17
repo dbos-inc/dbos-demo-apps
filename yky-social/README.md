@@ -67,4 +67,4 @@ To launch the frontend server, open a third terminal window and run:
     npm run dev
 ```
 
-The YKY front end website is hosted on `localhost:3001` by default.
+The YKY front end website is hosted on `localhost:3001` by default, so open a browser to http://localhost:3001 to see the app.
