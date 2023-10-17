@@ -17,7 +17,6 @@ yky-social/scripts/init_pgdb.sh
 ```
 This script will ask you multiple times for the PostgreSQL password, unless it is already stored in the PGPASSWORD environment variable.
 
-
 Alternatively, set up the database with Docker:
 ```
 sudo sh -c "POSTGRES_HOST=localhost POSTGRES_PORT=5444 POSTGRES_USERNAME=socialts POSTGRES_PASSWORD=socialts POSTGRES_DATABASE=socialts scripts/start_postgres_docker.sh"
@@ -28,7 +27,7 @@ sudo sh -c "POSTGRES_HOST=localhost POSTGRES_PORT=5444 POSTGRES_USERNAME=socialt
 ### Backend Environment Variables 
 
 Launch a window to run the YKY backend.
-The backend allows the following environment variables (as configured above):
+The backend allows the following environment variables (which should match the database configured above):
 
 * POSTGRES\_HOST=localhost
 * POSTGRES\_PORT=5444
@@ -41,7 +40,7 @@ Additionally, to allow media storage, S3 access keys must be placed in the envir
 * AWS\_ACCESS\_KEY
 * AWS\_SECRET\_ACCESS\_KEY
 
-By default, the backend will run on port 3000, but this can be changed with 
+By default, the backend will run on port 3000, but this can be changed with the `-p` option or in the `operon-config.yaml` file.
 
 ### Build and Run Backend
 
@@ -55,8 +54,8 @@ npm run build
 Once the backend code is ready, create the database schema, and start the backend:
 
 ```shell
-npm run createschema
-npx operon start -p 3000
+POSTGRES_HOST=localhost POSTGRES_PORT=5444 POSTGRES_USERNAME=socialts POSTGRES_PASSWORD=socialts POSTGRES_DATABASE=socialts npm run createschema
+AWS_REGION=us-east-2 AWS_ACCESS_KEY=<key> AWS_SECRET_ACCESS_KEY=<secret> POSTGRES_HOST=localhost POSTGRES_PORT=5444 POSTGRES_USERNAME=socialts POSTGRES_PASSWORD=socialts POSTGRES_DATABASE=socialts npx operon start -p 3000
 ```
 
 ## Run YKY FrontEnd
@@ -68,4 +67,4 @@ To launch the frontend server, open a third terminal window and run:
     npm run dev
 ```
 
-The YKY front end website is hosted on `localhost:3001` by default. 
+The YKY front end website is hosted on `localhost:3001` by default.
