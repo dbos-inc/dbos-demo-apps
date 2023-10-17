@@ -54,8 +54,17 @@ npm run build
 Once the backend code is ready, create the database schema, and start the backend:
 
 ```shell
-POSTGRES_HOST=localhost POSTGRES_PORT=5444 POSTGRES_USERNAME=socialts POSTGRES_PASSWORD=socialts POSTGRES_DATABASE=socialts npm run createschema
-AWS_REGION=us-east-2 AWS_ACCESS_KEY=<key> AWS_SECRET_ACCESS_KEY=<secret> POSTGRES_HOST=localhost POSTGRES_PORT=5444 POSTGRES_USERNAME=socialts POSTGRES_PASSWORD=socialts POSTGRES_DATABASE=socialts npx operon start -p 3000
+export POSTGRES_HOST=localhost
+export POSTGRES_PORT=5444
+export POSTGRES_USERNAME=socialts
+export POSTGRES_PASSWORD=socialts
+export POSTGRES_DATABASE=socialts
+npm run createschema
+
+export AWS_REGION=us-east-2
+export AWS_ACCESS_KEY=<key>
+export AWS_SECRET_ACCESS_KEY=<secret>
+npx operon start -p 3000
 ```
 
 ## Run YKY FrontEnd
@@ -64,6 +73,7 @@ To launch the frontend server, open a third terminal window and run:
 
 ```shell
     cd yky-social/yky
+    npm install
     npm run dev
 ```
 
