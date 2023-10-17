@@ -39,6 +39,7 @@ Additionally, to allow media storage, S3 access keys must be placed in the envir
 * AWS\_REGION
 * AWS\_ACCESS\_KEY
 * AWS\_SECRET\_ACCESS\_KEY
+* S3\_BUCKET\_NAME (Unkless your bucket is called `yky-social-photos`)
 
 By default, the backend will run on port 3000, but this can be changed with the `-p` option or in the `operon-config.yaml` file.
 
@@ -62,6 +63,7 @@ export POSTGRES_DATABASE=socialts
 npm run createschema
 
 export AWS_REGION=us-east-2
+export S3_BUCKET_NAME=<bucket>
 export AWS_ACCESS_KEY=<key>
 export AWS_SECRET_ACCESS_KEY=<secret>
 npx operon start -p 3000
