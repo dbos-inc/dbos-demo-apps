@@ -18,7 +18,7 @@ import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, errorWithStatus } from "./YKYOperations";
 import {
-  Operon, ArgRequired, GetApi, RequiredRole,
+  ArgRequired, GetApi, RequiredRole,
   OperonTransaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   HandlerContext,
@@ -32,6 +32,8 @@ import {
   Error,
   OrmEntities,
 } from "@dbos-inc/operon";
+
+import { Operon } from "@dbos-inc/operon/dist/src/operon";
 
 import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
