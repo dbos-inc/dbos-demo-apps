@@ -42,7 +42,7 @@ jobs:
       - name: Set up node 
         uses: actions/setup-node@v3
         with:
-          node-version: 'latest'
+          node-version: 20
           # cache: 'npm'
       - name: Change directory and install dependencies
         run: |
