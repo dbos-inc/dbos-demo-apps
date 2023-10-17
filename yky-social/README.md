@@ -6,8 +6,9 @@ It simulates a simple social network, and demonstrates:
 * Use of Operon workflows, transactions, and communicators
 * [TypeORM](https://typeorm.io) integration
 * Amazon S3 integration (for profile photos)
+* Authentication and authorization using an app-managed database table
 
-## Configure database
+## Create Database
 
 This demo assumes there is a PostgreSQL database running on localhost on port 5432 (configurable, see below).
 To set up Postgres (creating a `socialts` user and database), run:
@@ -15,7 +16,6 @@ To set up Postgres (creating a `socialts` user and database), run:
 ```shell
 yky-social/scripts/init_pgdb.sh
 ```
-
 This script will ask you multiple times for the PostgreSQL password, unless it is already stored in the PGPASSWORD environment variable.
 
 ## Compile and Run the Backend
@@ -26,30 +26,32 @@ Launch a window to run the YKY backend.
 The backend allows the following environment variables (as configured above):
 
 * POSTGRES\_HOST=localhost
-* POSTGRES\_PORT=5432 POSTGRES\_USERNAME=socialts
+* POSTGRES\_PORT=5432
+* POSTGRES\_USERNAME=socialts
 * POSTGRES\_PASSWORD=socialts
 * POSTGRES\_DATABASE=socialts
 
-Additionally, to allow media storage, you need S3 access keys.
+Additionally, to allow media storage, S3 access keys must be placed in the environment or in `operon-config.yaml`:
 * AWS\_REGION
 * AWS\_ACCESS\_KEY
 * AWS\_SECRET\_ACCESS\_KEY
 
-By default, the backend will run on port 3000.
+By default, the backend will run on port 3000, but this can be changed with 
 
 ### Build and Run Backend
 
-Change to the `yky-social` directory and install dependencies:
+Change to the `yky-social` directory, install dependencies, and build the backend:
 
 ```shell
 npm install
+npm run build
 ```
 
-Once the dependencies are installed, build and run the backend:
+Once the backend code is ready, create the database schema, and start the backend:
 
 ```shell
-npm run build
-npm run dev
+npm run createschema
+npx operon start -p 3000
 ```
 
 ## Run YKY FrontEnd

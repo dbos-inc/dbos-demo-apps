@@ -11,7 +11,8 @@
     "lint": "eslint --fix --ext .ts .",
     "tsc": "tsc",
     "clean": "rm -rf dist",
-    "start": "node dist/init.js"
+    "start": "node dist/init.js",
+    "createschema": "node dist/initdb.js"
   },
   "keywords": [],
   "author": "",
