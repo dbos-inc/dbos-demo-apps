@@ -212,7 +212,7 @@ export class YKY
   @OperonWorkflow()
   static async doKeyUpload(ctx: WorkflowContext, filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
-    const bucket = ctx.getConfig('S3_BUCKET_NAME') || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME') as string || 'yky-social-photos';
     const postPresigned = await ctx.invoke(Operations).createS3UploadKey(key, bucket);
 
     return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
@@ -221,7 +221,7 @@ export class YKY
   @GetApi("/getMediaDownloadKey")
   static async doKeyDownload(ctx: HandlerContext, filekey: string) {
     const key = filekey;
-    const bucket = ctx.getConfig('S3_BUCKET_NAME') || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME') as string || 'yky-social-photos';
   
     const presignedUrl = await Operations.getS3DownloadKey(ctx, key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
@@ -230,7 +230,7 @@ export class YKY
   @GetApi("/deleteMedia")
   static async doMediaDelete(ctx: HandlerContext, filekey: string) {
     const key = filekey;
-    const bucket = ctx.getConfig('S3_BUCKET_NAME') || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME') as string || 'yky-social-photos';
 
     // TODO: Validate user and drop from table
 
@@ -241,7 +241,7 @@ export class YKY
   @GetApi("/startMediaUpload")
   static async doStartMediaUpload(ctx: HandlerContext) {
     const mediaKey = uuidv4();
-    const bucket = ctx.getConfig('S3_BUCKET_NAME') || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME') as string || 'yky-social-photos';
 
     // Future: Rate limit the user's requests as they start workflows...
     //   Or give the user the existing workflow, if any
@@ -275,7 +275,7 @@ export class YKY
     const filekey = await ctx.invoke(Operations).getMyProfilePhotoKey(ctx.authenticatedUser);
     if (filekey === null) return {};
 
-    const bucket = ctx.getConfig('S3_BUCKET_NAME') || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME') as string || 'yky-social-photos';
   
     const presignedUrl = await Operations.getS3DownloadKey(ctx, filekey, bucket);
     ctx.logger.debug("Giving URL "+presignedUrl);
