@@ -1,6 +1,7 @@
 # Operon Hello
 
-This is an [Operon app](https://dbos-inc.github.io/operon-docs/) bootstrapped with `operon init`.
+This is the final code from the [Operon quickstart](https://docs.dbos.dev/category/getting-started).
+If you follow the quickstart all the way, you should get something that looks like this.
 
 ## Getting Started
 
@@ -33,8 +34,8 @@ Finally, curl the server to see that it's working!
  curl http://localhost:3000/greeting/operon
 ```
 
-You can add more functionality to the app by modifying `src/userFunctions.ts`, then re-building and re-starting it.
+You can add more functionality to the app by modifying `src/operations.ts`, then re-building and re-starting it.
 
 ## Learn More
 
-To learn more about Operon, take a look at [our documentation](https://dbos-inc.github.io/operon-docs/) or our [source code](https://github.com/dbos-inc/operon).
+To learn more about Operon, take a look at [our documentation](https://docs.dbos.dev/) or our [source code](https://github.com/dbos-inc/operon).
