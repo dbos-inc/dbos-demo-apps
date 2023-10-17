@@ -35,9 +35,7 @@ export class Hello {
   @OperonTransaction()
   static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Decrement greet_count.
-    await ctxt.client<operon_hello>("operon_hello")
-      .where({ name: user })
-      .decrement('greet_count', 1);
+    await ctxt.client.raw("UPDATE operon_hello SET greet_count = greet_count - 1 WHERE name = ?", [user]);
   }
 
   @OperonCommunicator()
