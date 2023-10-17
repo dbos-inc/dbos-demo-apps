@@ -13,8 +13,6 @@ export const config = {
 */
 
 export async function POST(request: Request) {
-  console.log("Submitted!");
-
   const res = await fetch(getAPIServer() + '/register', {
     method: 'POST',
     headers: {

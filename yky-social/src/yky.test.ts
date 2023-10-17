@@ -25,7 +25,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await testRuntime.dropUserSchema();
-  testRuntime.destroy();
+  await testRuntime.destroy();
 });
 
 
@@ -220,8 +220,7 @@ async function uploadToS3(presignedPostData: PresignedPost, filePath: string) {
   const fileStream = fs.createReadStream(filePath);
   formData.append('file', fileStream);
 
-  const response = await axios.post(presignedPostData.url, formData);
-  console.log("Upload successful:", response.status);
+  const _response = await axios.post(presignedPostData.url, formData);
 }
 
 async function downloadFromS3(presignedGetUrl: string, outputPath: string) {

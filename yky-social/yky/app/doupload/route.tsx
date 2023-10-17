@@ -3,8 +3,6 @@ import { getuserid } from '@/app/components/userid';
 import { getAPIServer } from '@/app/components/backend';
 
 export async function GET(_request: Request) {
-  console.log("Post!");
-
   const userid = getuserid();
 
   const res = await fetch(getAPIServer() + '/startMediaUpload'+'?' + new URLSearchParams({
@@ -19,7 +17,6 @@ export async function GET(_request: Request) {
  
   if (res.ok) {
     const data = await res.json();
-    console.log(data);
     return NextResponse.json(data);
   }
   else {

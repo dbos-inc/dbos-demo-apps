@@ -9,8 +9,6 @@ export async function GET(request: NextRequest) {
       rquserid = userid;
     }
 
-    console.log("Fetch timeline for "+rquserid);
-
     const res = await fetch(getAPIServer()+'/sendtimeline'+'?' + new URLSearchParams({
         userid: userid,
         rqtimeline: rquserid,
@@ -29,7 +27,6 @@ export async function GET(request: NextRequest) {
     }
     else {
       // TODO Better message?
-      console.log(" ... bad");
       return NextResponse.json({ error: "Error" }, { status:res.status });
     }
 }
