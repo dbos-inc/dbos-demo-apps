@@ -28,8 +28,6 @@ export function getuserid() : string
         }
         const userid = (udata as any).userid;
     
-        //console.log(userid);
-    
         return userid;
     }
     catch (e) {

@@ -3,9 +3,6 @@
 import React from 'react';
 import useSWR from 'swr';
 
-//{postId: tle.post_id,  fromUserId:tle.user_id, sendDate: tle.send_date, sendType:tle.send_type,
-//    postText: tle.post?.text, postMentions: tle.post?.mentions}
- 
 interface SendItem {
     postId: string;
     postText: string;
@@ -32,8 +29,6 @@ const SendTimelineCR: React.FC<Props> = ({ userid }) => {
 
 
   const messageList = data.timeline as SendItem[];
-  //console.log (data);
-  //console.log (messageList);
 
   return (
     <div className="container mx-auto px-4 py-8">

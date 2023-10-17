@@ -16,24 +16,6 @@ interface Props {
 }
 
 const SendTimeline: React.FC<Props> = async ({ userid }) => {
-    //const [messageList, setMessageList] = useState<SendItem[]>([]);
-
-    /*
-    useEffect(() => {
-        const fetchMessages = async () => {
-          try {
-            const response = await fetch(`/fetchstl?userid=${userid}`);
-            const data = await response.json();
-            setMessageList(data);
-          } catch (error) {
-            console.error('Error fetching messages:', error);
-          }
-        };
-    
-        fetchMessages();
-      }, [userid]);
-    */
-
     const luserid = getuserid();
     let rquserid = userid;
     if (!rquserid || rquserid === 'default') {
@@ -45,7 +27,7 @@ const SendTimeline: React.FC<Props> = async ({ userid }) => {
             userid: luserid,
             rqtimeline: rquserid,
           }),
-        { // TODO Should  be HTTPS obvs
+        {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -55,8 +37,6 @@ const SendTimeline: React.FC<Props> = async ({ userid }) => {
         const data = await response.json();
 
         const messageList = data.timeline as SendItem[];
-        //console.log (data);
-        //console.log (messageList);
 
         return (
           <div className="container mx-auto px-4 py-8">

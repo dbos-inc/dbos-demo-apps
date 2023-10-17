@@ -4,8 +4,6 @@ import { getuserid } from '@/app/components/userid';
 import { getAPIServer } from '@/app/components/backend';
 
 export async function POST(request: Request) {
-  console.log("Graph");
-
   const userid = getuserid();
 
   const { action,  targetuser} = (await request.json()) as {action: string, targetuser: string};

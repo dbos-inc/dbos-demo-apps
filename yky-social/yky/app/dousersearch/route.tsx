@@ -10,8 +10,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({error: "Search term not specified"}, {status:400});
     }
 
-    console.log("Fetch user for "+rqusername);
-
     const res = await fetch(getAPIServer()+'/finduser'+'?' + new URLSearchParams({
         userid: userid,
         findUserName: rqusername,
@@ -25,7 +23,6 @@ export async function GET(request: NextRequest) {
    
     if (res.ok) {
       const data = await res.json();
-      console.log(data);
       if (data.message === "User Found.") {
           const nres = NextResponse.json([data]); // Currently server returns 0 or 1
           return nres;
@@ -34,7 +31,6 @@ export async function GET(request: NextRequest) {
     }
     else {
       // TODO Better message?
-      console.log(" ... bad");
       return NextResponse.json({ error: "Error" }, { status:res.status });
     }
 }

@@ -47,7 +47,6 @@ const PostForm: React.FC = () => {
       setIsButtonDisabled(false); // Re-enable the button after form submission
     }
 
-    console.log(`Post content: ${postContent}`);
     setPostContent('');
   };
 

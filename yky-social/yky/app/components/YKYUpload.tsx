@@ -26,11 +26,7 @@ const YKYUpload: React.FC<ULProps> = (props) => {
 
     // 1. Get the pre-signed URL from the Next.js API route.
     const response = await fetch(`/doupload`);
-    console.log("Getting the wfhandle and key");
     const { wfHandle, key, file: _fpath} = await response.json();
-    console.log("Got the wfhandle and key");
-    console.log(JSON.stringify(key));
-    console.log(JSON.stringify(wfHandle));
 
     // 2. Use the pre-signed URL to upload the file to S3.
     // Construct form data
@@ -46,8 +42,6 @@ const YKYUpload: React.FC<ULProps> = (props) => {
       method: 'POST',
       body: formData,
     });
-
-    console.log("Post complete");
 
     setUploading(false);
 

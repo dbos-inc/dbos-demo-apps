@@ -9,12 +9,6 @@ interface User {
     userid: string;
 }
 
-/*
-interface Props {
-    user?: User;
-}
-*/
-
 // You should really not use the fallback and perhaps
 // throw an error if this value is not set!
 const JWT_TOKEN_KEY = process.env.JWT_TOKEN_KEY || "super duper secret key";
@@ -59,7 +53,6 @@ function clearUser(res: NextResponse): void {
 
 export async function POST(request: NextRequest) {
   const rqdata = await request.json();
-  console.log("Login Request: "+rqdata.username+'-'+rqdata.password);
 
   const res = await fetch(getAPIServer() + '/login', {
     method: 'POST',
@@ -74,18 +67,15 @@ export async function POST(request: NextRequest) {
     const user = {userid: data.id, username: rqdata.username};
     const nres = NextResponse.json({ user : user}, {status: res.status});
     authenticateUser(nres, user);
-    console.log(" ... good");
     return nres;
   }
   else {
     // TODO Better message?
-    console.log(" ... bad");
     return NextResponse.json({ error: "Error" }, { status:res.status });
   }
 }
 
 export function DELETE(_request: NextRequest) {
-    console.log("Logout Request");
     const res = NextResponse.json("");
     clearUser(res);
     return res;

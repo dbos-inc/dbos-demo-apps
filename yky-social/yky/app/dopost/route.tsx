@@ -3,8 +3,6 @@ import { getuserid } from '@/app/components/userid';
 import { getAPIServer } from '@/app/components/backend';
 
 export async function POST(request: Request) {
-  console.log("Post!");
-
   const userid = getuserid();
 
   const res = await fetch(getAPIServer() + '/composepost'+'?' + new URLSearchParams({

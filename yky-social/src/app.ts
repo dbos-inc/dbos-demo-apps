@@ -1,11 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import "reflect-metadata";
-import Koa from 'koa';
 import { Context, Next } from 'koa';
-import Router from "@koa/router";
-import logger from "koa-logger";
-import { bodyParser } from "@koa/bodyparser";
 
 import { EntityManager } from "typeorm";
 
@@ -18,7 +14,7 @@ import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, errorWithStatus } from "./YKYOperations";
 import {
-  Operon, ArgRequired, GetApi, RequiredRole,
+  ArgRequired, GetApi, RequiredRole,
   OperonTransaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   HandlerContext,
@@ -26,7 +22,6 @@ import {
   OperonContext,
   WorkflowContext,
   Authentication,
-  OperonHttpServer,
   MiddlewareContext,
   DefaultRequiredRole,
   Error,
@@ -39,23 +34,14 @@ import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { S3Client, S3 } from '@aws-sdk/client-s3';
 
 function getS3Config(ctx: OperonContext) {
-  let s3r = ctx.getConfig('aws_s3_region') as string;
-  if (!s3r) {
-    s3r = process.env.AWS_REGION || 'us-east-2';
-  }
-  let s3k = ctx.getConfig('aws_s3_access_key') as string;
-  if (!s3k) {
-    s3k = process.env.AWS_ACCESS_KEY || 'x';
-  }
-  let s3s = ctx.getConfig('aws_s3_access_secret') as string;
-  if (!s3s) {
-    s3s = process.env.AWS_SECRET_ACCESS_KEY || 'x';
-  }
+  const s3r = ctx.getConfig('aws_s3_region','us-east-2');
+  const s3k = ctx.getConfig('aws_s3_access_key', 'x');
+  const s3s = ctx.getConfig('aws_s3_access_secret', 'x');
   return {
-    region: process.env.AWS_REGION || 'us-east-2',
+    region: s3r,
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY || 'x',
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'x',
+      accessKeyId: s3k,
+      secretAccessKey: s3s,
     }
   };
 }
@@ -217,7 +203,7 @@ export class YKY
   @OperonWorkflow()
   static async doKeyUpload(ctx: WorkflowContext, filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
-    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME', 'yky-social-photos');
     const postPresigned = await ctx.invoke(Operations).createS3UploadKey(key, bucket);
 
     return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
@@ -226,7 +212,7 @@ export class YKY
   @GetApi("/getMediaDownloadKey")
   static async doKeyDownload(ctx: HandlerContext, filekey: string) {
     const key = filekey;
-    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME', 'yky-social-photos');
   
     const presignedUrl = await Operations.getS3DownloadKey(ctx, key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
@@ -235,7 +221,7 @@ export class YKY
   @GetApi("/deleteMedia")
   static async doMediaDelete(ctx: HandlerContext, filekey: string) {
     const key = filekey;
-    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME', 'yky-social-photos');
 
     // TODO: Validate user and drop from table
 
@@ -246,7 +232,7 @@ export class YKY
   @GetApi("/startMediaUpload")
   static async doStartMediaUpload(ctx: HandlerContext) {
     const mediaKey = uuidv4();
-    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME', 'yky-social-photos');
 
     // Future: Rate limit the user's requests as they start workflows...
     //   Or give the user the existing workflow, if any
@@ -280,7 +266,7 @@ export class YKY
     const filekey = await ctx.invoke(Operations).getMyProfilePhotoKey(ctx.authenticatedUser);
     if (filekey === null) return {};
 
-    const bucket = process.env.S3_BUCKET_NAME || 'yky-social-photos';
+    const bucket = ctx.getConfig('S3_BUCKET_NAME', 'yky-social-photos');
   
     const presignedUrl = await Operations.getS3DownloadKey(ctx, filekey, bucket);
     ctx.logger.debug("Giving URL "+presignedUrl);
@@ -288,36 +274,3 @@ export class YKY
   }
 }
 
-// Initialize Operon.
-export const operon = new Operon({
-  poolConfig: {
-    user: process.env.POSTGRES_USERNAME,
-    database: process.env.POSTGRES_DBNAME,
-    password: process.env.POSTGRES_PASSWORD,
-    port: Number(process.env.POSTGRES_PORT),
-    host: process.env.POSTGRES_HOST,
-  },
-  userDbclient: 'typeorm',
-  system_database: 'opsys',
-});
-
-export const kapp = new Koa();
-
-// Start Koa server.
-kapp.use(logger());
-kapp.use(bodyParser());
-//kapp.use(cors());
-
-const router = new Router();
-
-export function ykyInit()
-{
-  OperonHttpServer.registerDecoratedEndpoints(operon, router);
-}
-
-// Example of how to do a route directly in Koa
-router.get("/koa", async (ctx, next) => {
-  return YKY.helloctx(ctx, next);
-});
-
-kapp.use(router.routes()).use(router.allowedMethods());

@@ -32,9 +32,6 @@ const RecvTimelineCR: React.FC<Props> = ({ userid }) => {
 
 
   const messageList = data.timeline as RecvItem[];
-  //console.log (data);
-  //console.log (messageList);
-
   return (
     <div className="flex flex-col flex-grow items-center justify-center px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Received Messages and Posts</h1>
