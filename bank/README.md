@@ -250,7 +250,6 @@ export async function bankAuthMiddleware(ctx: MiddlewareContext) {
 
 We decorate all classes with `@Authentication(bankAuthMiddleware)` to use this middleware:
 ```ts
-@DefaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
 @KoaMiddleware(koaLogger, customizeHandle, bankJwt)
 export class BankEndpoints {...}
@@ -261,6 +260,7 @@ We specify two roles in Bank: "appAdmin" and "appUser".
 All classes are decorated with a default required role "appUser" (`@DefaultRequiredRole(["appUser"])`):
 ```ts
 @DefaultRequiredRole(["appUser"])
+@Authentication(bankAuthMiddleware)
 @KoaMiddleware(koaLogger, customizeHandle, bankJwt)
 export class BankEndpoints {...}
 ```
