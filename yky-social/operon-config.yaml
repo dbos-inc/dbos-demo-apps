@@ -14,8 +14,6 @@ telemetryExporters:
     silent: false
   traces:
     enabled: false
-localRuntimeConfig:
-  port: 3000
 runtimeConfig:
   port: 3000
 application:
