@@ -25,6 +25,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await testRuntime.dropUserSchema();
+  testRuntime.destroy();
 });
 
 
