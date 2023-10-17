@@ -18,7 +18,7 @@ export class Hello {
     } catch (e) {
       ctxt.logger.error(e);
       await ctxt.invoke(Hello).rollbackHelloTransaction(user);
-      return `Greeting failed for ${user}\n`
+      return `Greeting failed for ${user}\n`;
     }
   }
 
