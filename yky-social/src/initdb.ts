@@ -21,6 +21,11 @@ operon.init(YKY, Operations)
     return operon.userDatabase.createSchema();
   }).then(() => {
     console.log("Schema created");
-    operon.destroy();
+    return operon.destroy();
+  }).then(() => {
+    console.log("End.");
+  }).catch((e: Error) => {
+    console.log("Failed to create database schema.");
+    console.log(e);
   });
 
