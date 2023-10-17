@@ -35,13 +35,74 @@ The backend allows the following environment variables (which should match the d
 * POSTGRES\_PASSWORD=socialts
 * POSTGRES\_DATABASE=socialts
 
+By default, the backend will run on port 3000, but this can be changed with the `-p` option or in the `operon-config.yaml` file.
+
 Additionally, to allow media storage, S3 access keys must be placed in the environment or in `operon-config.yaml`:
 * AWS\_REGION
 * AWS\_ACCESS\_KEY
 * AWS\_SECRET\_ACCESS\_KEY
 * S3\_BUCKET\_NAME (Unkless your bucket is called `yky-social-photos`)
 
-By default, the backend will run on port 3000, but this can be changed with the `-p` option or in the `operon-config.yaml` file.
+There are manu ways to set up the S3 bucket, including the following:
+
+Block all public access.
+
+Create an IAM user with access keys.
+
+Grant that user the following permissions (replace `yky-social-photos` with your bucket name):
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "VisualEditor0",
+			"Effect": "Allow",
+			"Action": [
+				"s3:ListStorageLensConfigurations",
+				"s3:ListAccessPointsForObjectLambda",
+				"s3:GetAccessPoint",
+				"s3:PutAccountPublicAccessBlock",
+				"s3:GetAccountPublicAccessBlock",
+				"s3:ListAllMyBuckets",
+				"s3:ListAccessPoints",
+				"s3:PutAccessPointPublicAccessBlock",
+				"s3:ListJobs",
+				"s3:PutStorageLensConfiguration",
+				"s3:ListMultiRegionAccessPoints",
+				"s3:CreateJob"
+			],
+			"Resource": "*"
+		},
+		{
+			"Sid": "VisualEditor1",
+			"Effect": "Allow",
+			"Action": "s3:*",
+			"Resource": [
+				"arn:aws:s3:::yky-social-photos",
+				"arn:aws:s3:::yky-social-photos/*"
+			]
+		}
+	]
+}```
+
+Use the following CORS policy:
+```json
+[
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "PUT",
+            "POST",
+            "GET"
+        ],
+        "AllowedOrigins": [
+            "*"
+        ],
+        "ExposeHeaders": []
+    }
+]```
 
 ### Build and Run Backend
 
