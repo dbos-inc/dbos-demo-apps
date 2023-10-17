@@ -1,6 +1,5 @@
 import { TransactionContext, OperonTransaction, GetApi, PostApi, CommunicatorContext, OperonCommunicator, OperonWorkflow, WorkflowContext } from '@dbos-inc/operon'
 import { Knex } from 'knex';
-import axios from 'axios';
 
 export interface operon_hello {
   name: string;
@@ -43,11 +42,7 @@ export class Hello {
 
   @OperonCommunicator()
   static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
-    await axios.get("https://postman-echo.com/get", {
-      params: {
-        greeting: greeting
-      }
-    });
+    await fetch("https://postman-echo.com/get?greeting=" + encodeURIComponent(greeting));
     ctxt.logger.info(`Greeting sent to postman!`);
   }
 
