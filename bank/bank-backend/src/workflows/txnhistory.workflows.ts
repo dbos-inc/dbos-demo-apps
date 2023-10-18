@@ -200,7 +200,7 @@ export class BankTransactionHistory {
         toAccountId: data.toAccountId,
         amount: data.amount,
         fromLocation: "local",
-        toLocation: REMOTEDB_PREFIX + ctxt.getConfig("bankname") + ":" + ctxt.getConfig("bankport"),
+        toLocation: REMOTEDB_PREFIX + ctxt.getConfig<string>("bankname") + ":" + ctxt.getConfig<string>("bankport"),
       };
 
       const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory, ctxt.workflowUUID + '-withdraw');
@@ -234,7 +234,7 @@ export class BankTransactionHistory {
         toAccountId: data.toAccountId,
         amount: data.amount,
         toLocation: "local",
-        fromLocation: REMOTEDB_PREFIX + ctxt.getConfig("bankname") + ":" + ctxt.getConfig("bankport"),
+        fromLocation: REMOTEDB_PREFIX + ctxt.getConfig<string>("bankname") + ":" + ctxt.getConfig<string>("bankport"),
       };
       const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory, ctxt.workflowUUID + '-deposit');
       if (!remoteRes) {
