@@ -13,10 +13,11 @@ Then compile this app:
 npm run build
 ```
 
-Update operon-config.yaml to point to your database which must
-be create prior to running the app
-Run this command in the database to create table:
+Update operon-config.yaml to specify your database name. It must have been created prior to running this app.
+Run this command to create the database schema:
+```shell
 npx prisma migrate dev --name init
+```
 
 
 Finally, start the simple HTTP server:
