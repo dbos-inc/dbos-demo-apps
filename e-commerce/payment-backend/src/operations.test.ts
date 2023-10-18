@@ -52,7 +52,7 @@ describe("operations", () => {
     expect(body.items.length).toBe(req.items.length);
 
     // send a payment_complete_topic message to complete the workflow
-    testRuntime.send(session_id, null, payment_complete_topic);
+    await testRuntime.send(session_id, null, payment_complete_topic);
     await testRuntime.retrieveWorkflow(session_id).getResult();
   });
 });

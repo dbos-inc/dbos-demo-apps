@@ -162,7 +162,7 @@ const thReq = {
   toAccountId: data.toAccountId,
   amount: data.amount,
   fromLocation: "local",
-  toLocation: REMOTEDB_PREFIX + ctxt.getConfig("bankname") + ":" + ctxt.getConfig("bankport"),
+  toLocation: REMOTEDB_PREFIX + ctxt.getConfig<string>("bankname") + ":" + ctxt.getConfig<string>("bankport"),
 };
 
 const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory)

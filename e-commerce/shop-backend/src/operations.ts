@@ -61,12 +61,12 @@ const checkout_url_topic = "payment_checkout_url";
 const checkout_complete_topic = "payment_checkout_complete";
 
 function getHostConfig(ctxt: OperonContext) {
-  const paymentHost = ctxt.getConfig("payment_host") as string | undefined;
+  const paymentHost = ctxt.getConfig<string>("payment_host");
   if (!paymentHost) {
     ctxt.logger.crit("Missing payment_host configuration");
   }
 
-  const localHost = ctxt.getConfig("local_host") as string | undefined;
+  const localHost = ctxt.getConfig<string>("local_host");
   if (!localHost) {
     ctxt.logger.crit("Missing local_host configuration");
   }

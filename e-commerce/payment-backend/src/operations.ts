@@ -33,7 +33,7 @@ function getPaymentStatus(status?: string): "pending" | "paid" | "cancelled" {
 }
 
 function getRedirectUrl(ctxt: OperonContext, session_id: string): string {
-  const frontend_host = ctxt.getConfig("frontend_host") as string | undefined | null;
+  const frontend_host = ctxt.getConfig<string>("frontend_host");
   if (!frontend_host) { throw new OperonResponseError("frontend_host not configured", 500); }
 
   const url = new URL(frontend_host);
@@ -93,7 +93,7 @@ export class PlaidPayments {
       session_id,
       url: getRedirectUrl(ctxt, session_id),
       payment_status: getPaymentStatus(rows[0].status),
-    }
+    };
   }
 
   @GetApi('/api/session_info/:session_id')
@@ -185,6 +185,6 @@ export class PlaidPayments {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)  
-    })
+    });
   }
 }
