@@ -93,7 +93,7 @@ export class PlaidPayments {
       session_id,
       url: getRedirectUrl(ctxt, session_id),
       payment_status: getPaymentStatus(rows[0].status),
-    }
+    };
   }
 
   @GetApi('/api/session_info/:session_id')
@@ -185,6 +185,6 @@ export class PlaidPayments {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)  
-    })
+    });
   }
 }
