@@ -48,6 +48,6 @@ export class Hello {
   static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Delete greet_count for a user.
     await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
-    return `Cleared greet_count for ${user}!\n`
+    return `Cleared greet_count for ${user}!\n`;
   }
 }
