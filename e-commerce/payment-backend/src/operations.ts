@@ -33,7 +33,7 @@ function getPaymentStatus(status?: string): "pending" | "paid" | "cancelled" {
 }
 
 function getRedirectUrl(ctxt: OperonContext, session_id: string): string {
-  const frontend_host = ctxt.getConfig("frontend_host") as string | undefined | null;
+  const frontend_host = ctxt.getConfig<string>("frontend_host");
   if (!frontend_host) { throw new OperonResponseError("frontend_host not configured", 500); }
 
   const url = new URL(frontend_host);
