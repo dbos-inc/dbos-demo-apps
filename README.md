@@ -1,2 +1,4 @@
 # operon-demo-apps
-Demo applications using the Operon FaaS framework
+This repository hosts demo applications for the [Operon](https://github.com/dbos-inc/operon) framework.
+
+For more information, see our [demo docs](https://docs.dbos.dev/tutorials/demo-apps).

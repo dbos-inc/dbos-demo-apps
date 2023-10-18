@@ -1,6 +1,5 @@
 import { TransactionContext, OperonTransaction, GetApi, PostApi, CommunicatorContext, OperonCommunicator, OperonWorkflow, WorkflowContext } from '@dbos-inc/operon'
 import { Knex } from 'knex';
-import axios from 'axios';
 
 export interface operon_hello {
   name: string;
@@ -19,20 +18,15 @@ export class Hello {
     } catch (e) {
       ctxt.logger.error(e);
       await ctxt.invoke(Hello).rollbackHelloTransaction(user);
-      return `Greeting failed for ${user}\n`
+      return `Greeting failed for ${user}\n`;
     }
   }
 
-  @OperonTransaction()  // Declare this function to be a transaction.
+  @OperonTransaction()
   static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Retrieve and increment the number of times this user has been greeted.
-    const rows = await ctxt.client<operon_hello>("operon_hello")
-      // Insert greet_count for this user.
-      .insert({ name: user, greet_count: 1 })
-      // If already present, increment it instead.
-      .onConflict("name").merge({ greet_count: ctxt.client.raw('operon_hello.greet_count + 1') })
-      // Return the inserted or incremented value.
-      .returning("greet_count");
+    const query = "INSERT INTO operon_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = operon_hello.greet_count + 1 RETURNING greet_count;"
+    const { rows } = await ctxt.client.raw(query, [user]) as { rows: operon_hello[] };
     const greet_count = rows[0].greet_count;
     return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
   }
@@ -40,18 +34,12 @@ export class Hello {
   @OperonTransaction()
   static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Decrement greet_count.
-    await ctxt.client<operon_hello>("operon_hello")
-      .where({ name: user })
-      .decrement('greet_count', 1);
+    await ctxt.client.raw("UPDATE operon_hello SET greet_count = greet_count - 1 WHERE name = ?", [user]);
   }
 
   @OperonCommunicator()
   static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
-    await axios.get("https://postman-echo.com/get", {
-      params: {
-        greeting: greeting
-      }
-    });
+    await fetch("https://postman-echo.com/get?greeting=" + encodeURIComponent(greeting));
     ctxt.logger.info(`Greeting sent to postman!`);
   }
 
@@ -59,9 +47,7 @@ export class Hello {
   @OperonTransaction()
   static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Delete greet_count for a user.
-    await ctxt.client<operon_hello>("operon_hello")
-      .where({ name: user })
-      .delete()
-    return `Cleared greet_count for ${user}!\n`
+    await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
+    return `Cleared greet_count for ${user}!\n`;
   }
 }
