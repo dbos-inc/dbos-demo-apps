@@ -113,7 +113,7 @@ npm install
 npm run build
 ```
 
-Once the backend code is ready, create the database schema, and start the backend:
+Once the backend code is ready, start the backend (this will automatically create the database schema in the dev environment):
 
 ```shell
 export POSTGRES_HOST=localhost
@@ -121,12 +121,12 @@ export POSTGRES_PORT=5444
 export POSTGRES_USERNAME=socialts
 export POSTGRES_PASSWORD=socialts
 export POSTGRES_DATABASE=socialts
-npm run createschema
 
 export AWS_REGION=us-east-2
 export S3_BUCKET_NAME=<bucket>
 export AWS_ACCESS_KEY=<key>
 export AWS_SECRET_ACCESS_KEY=<secret>
+
 npx operon start -p 3000
 ```
 

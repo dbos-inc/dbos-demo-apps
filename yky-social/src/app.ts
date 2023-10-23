@@ -26,6 +26,8 @@ import {
   DefaultRequiredRole,
   Error,
   OrmEntities,
+  OperonDeploy,
+  InitContext,
 } from "@dbos-inc/operon";
 
 import { v4 as uuidv4 } from 'uuid';
@@ -272,5 +274,9 @@ export class YKY
     ctx.logger.debug("Giving URL "+presignedUrl);
     return { message: "Signed URL", url: presignedUrl, key: filekey };
   }
-}
 
+  @OperonDeploy()
+  static async setUpSchema(ctx: InitContext) {
+    await ctx.createUserSchema();
+  }
+}
