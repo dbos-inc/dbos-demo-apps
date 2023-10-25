@@ -2,63 +2,33 @@ import Koa from 'koa';
 import KoaRouter from 'koa-router';
 import KoaViews from '@ladjs/koa-views';
 import { bodyParser as KoaBodyParser } from '@koa/bodyparser';
-
+import { DefaultApi, GetSessionInformation200Response as PaymentSessionInformation } from './client/api';
 
 const port = process.env.PORT || 8000;
-const payment_backend = process.env.PLAID_BACKEND || 'http://localhost:8086';
+const basePath = process.env.PLAID_BACKEND || 'http://localhost:8086';
+
+const api = new DefaultApi(basePath);
 
 const app = new Koa();
 const router = new KoaRouter();
 app.use(KoaBodyParser());
 app.use(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }));
 
-export interface PaymentSessionInformation {
-    session_id: string;
-    success_url: string;
-    cancel_url: string;
-    status?: string | undefined;
-    items: PaymentItem[];
-  }
-export interface PaymentItem {
-    description: string;
-    quantity: number;
-    price: number;
-}
-
-async function getPaymentSessionInfo(session_id: string): Promise<PaymentSessionInformation | undefined> {
-    const url = `${payment_backend}/api/session_info/${session_id}`;
+async function getPaymentSessionInfo(sessionId: string): Promise<PaymentSessionInformation | undefined> {
     try {
-        const resp = await fetch(url);
-        if (resp.status !== 200) { return undefined; }
-        return await resp.json() as PaymentSessionInformation;
+        const result = await api.getSessionInformation(sessionId);
+        return result.body;
     } catch {
         return undefined;
     }
 }
 
-async function submitPayment(session_id: string): Promise<void> {
-    const url = `${payment_backend}/api/submit_payment`;
-    await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ session_id })
-    })
+async function submitPayment(sessionId: string): Promise<void> {
+    await api.submitPayment({ sessionId });
 }
 
-
-async function cancelPayment(session_id: string): Promise<void> {
-    const url = `${payment_backend}/api/cancel_payment`;
-    await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ session_id })
-    })
+async function cancelPayment(sessionId: string): Promise<void> {
+    await api.cancelPayment({ sessionId });
 }
 
 router.get('/', async (ctx, next) => {
@@ -87,10 +57,10 @@ router.post('/payment/:session_id', async (ctx, next) => {
     const submit = 'submit' in ctx.request.body;
     if (submit) {
         await submitPayment(session_id);
-        ctx.redirect(session.success_url);
+        ctx.redirect(session.successUrl);
     } else {
         await cancelPayment(session_id);
-        ctx.redirect(session.cancel_url);
+        ctx.redirect(session.cancelUrl);
     }
 });
 

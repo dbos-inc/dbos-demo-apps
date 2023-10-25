@@ -1,6 +1,6 @@
 import {
   TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
-  GetApi, PostApi, OperonResponseError, ArgRequired, ArgOptional, OperonContext, OperonCommunicator, CommunicatorContext
+  GetApi, PostApi, OperonResponseError, ArgRequired, ArgOptional, OperonContext, OperonCommunicator, CommunicatorContext, ArgSource, ArgSources
 } from '@dbos-inc/operon';
 import { Knex } from 'knex';
 
@@ -85,7 +85,7 @@ export class PlaidPayments {
 
   @GetApi('/api/session/:session_id')
   @OperonTransaction({ readOnly: true })
-  static async retrievePaymentSession(ctxt: KnexTransactionContext, session_id: string): Promise<PaymentSession | undefined> {
+  static async retrievePaymentSession(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSession | undefined> {
     const rows = await ctxt.client<SessionTable>('session').select('status').where({ session_id });
     if (rows.length === 0) { return undefined; }
 
@@ -98,7 +98,7 @@ export class PlaidPayments {
 
   @GetApi('/api/session_info/:session_id')
   @OperonTransaction({ readOnly: true })
-  static async getSessionInformation(ctxt: KnexTransactionContext, session_id: string): Promise<PaymentSessionInformation | undefined> {
+  static async getSessionInformation(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
     ctxt.logger.info(`getting session record ${session_id}`);
     const session = await ctxt.client<SessionTable>('session')
       .select("session_id", "success_url", "cancel_url", "status")
