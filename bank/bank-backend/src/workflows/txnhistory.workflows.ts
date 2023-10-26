@@ -10,6 +10,8 @@ import {
   Authentication,
   KoaMiddleware,
   ArgOptional,
+  ArgSource,
+  ArgSources,
 } from "@dbos-inc/operon";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { BankAccountInfo } from "./accountinfo.workflows";
@@ -25,7 +27,7 @@ type PrismaContext = TransactionContext<PrismaClient>;
 export class BankTransactionHistory {
   @OperonTransaction()
   @GetApi("/api/transaction_history/:accountId")
-  static async listTxnForAccountFunc(txnCtxt: PrismaContext, accountId: number) {
+  static async listTxnForAccountFunc(txnCtxt: PrismaContext, @ArgSource(ArgSources.URL) accountId: number) {
     const acctId = BigInt(accountId);
     return txnCtxt.client.transactionHistory.findMany({
       where: {
