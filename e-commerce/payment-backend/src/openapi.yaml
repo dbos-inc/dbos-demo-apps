@@ -3,7 +3,7 @@
 openapi: 3.0.3
 info:
   title: operon-demo-payment-backend
-  version: 0.5.0
+  version: private
 paths:
   /api/create_payment_session:
     post:
