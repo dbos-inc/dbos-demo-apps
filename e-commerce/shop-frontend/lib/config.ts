@@ -1,1 +1,0 @@
-export const backendAddress: String = "http://localhost:8082";

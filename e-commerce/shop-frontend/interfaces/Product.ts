@@ -1,11 +1,4 @@
-interface Product {
-    product_id: number;
-    product: string;
-    description: string;
-    image_name: string;
-    price: number;
-    inventory: number;
-    display_price: number;
-}
+import { GetCart200ResponseInner, GetProducts200ResponseInner } from '@/client'
 
-export default Product;
+export type CartProduct = GetCart200ResponseInner;
+export type Product = GetProducts200ResponseInner

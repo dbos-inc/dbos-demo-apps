@@ -1,17 +1,20 @@
 import Home from './home-client'
-import axios from 'axios';
-import Product from '@/interfaces/Product';
+import { Product } from '@/interfaces/Product';
 import { cookies } from "next/headers";
 import { getRequestCookie } from "@/lib/session";
-import { backendAddress } from "@/lib/config";
+import { api } from '@/lib/backend';
+import { ResponseError } from '@/client';
 
 
 const getProducts = async (): Promise<Product[]> => {
     try {
-      const response = await axios.get(`${backendAddress}/api/products`);
-      return response.data;
+      return await api.getProducts();
     } catch (error) {
-      console.error(error);
+      if (error instanceof ResponseError) {
+          console.error(error.message);
+      } else {
+          console.error(error);
+      }
       return [];
     }
   }

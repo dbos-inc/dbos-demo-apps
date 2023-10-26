@@ -1,15 +1,15 @@
 'use client'
 import { Container, Row, Col, Card, Navbar, Nav, Button } from 'react-bootstrap';
-import Product from '@/interfaces/Product';
+import { Product } from '@/interfaces/Product';
 import Image from 'next/image'
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import {backendAddress} from '@/lib/config';
+import { api } from '@/lib/backend';
 
 interface HomeProps {
   products: Product[];
-  user: String | null;
+  user: string | null;
 }
 
 const Home: React.FC<HomeProps> = ({ products, user }) => {
@@ -27,14 +27,9 @@ const Home: React.FC<HomeProps> = ({ products, user }) => {
       router.push('/login');
       return;
     }
-  
-    const bodyParams = {
-      username: user,
-      product_id: productId
-    };
-    
+
     try {
-      await axios.post(`${backendAddress}/api/add_to_cart`, bodyParams);
+      await api.addToCart({ addToCartRequest: { username: user, productId } });
     } catch (error) {
       console.error(error);
     }
@@ -65,10 +60,10 @@ const Home: React.FC<HomeProps> = ({ products, user }) => {
       <Container>
         <Row>
           {products.map((product: Product) => (
-            <Col sm={12} md={6} lg={4} key={product.product_id}>
+            <Col sm={12} md={6} lg={4} key={product.productId}>
               <Card>
                 <Image 
-                  src={"/" + product.image_name}
+                  src={"/" + product.imageName}
                   width={1000}
                   height={300}
                   className="card-img-top" alt="..." />
@@ -78,9 +73,9 @@ const Home: React.FC<HomeProps> = ({ products, user }) => {
                     {product.description}
                   </Card.Text>
                   <Card.Text>
-                    ${product.display_price}
+                    ${product.displayPrice}
                   </Card.Text>
-                  <Button variant="primary" onClick={() => handleAddToCart(product.product_id)}>Add to Cart</Button>
+                  <Button variant="primary" onClick={() => handleAddToCart(product.productId)}>Add to Cart</Button>
                 </Card.Body>
               </Card>
             </Col>

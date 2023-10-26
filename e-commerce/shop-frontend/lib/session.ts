@@ -15,7 +15,7 @@ export const sessionOptions: IronSessionOptions = {
 // This is where we specify the typings of req.session.*
 declare module "iron-session" {
   interface IronSessionData {
-    user?: String;
+    user?: string;
   }
 }
 
@@ -26,7 +26,7 @@ declare module "iron-session" {
  */
 export async function getRequestCookie(
   cookies: ReadonlyRequestCookies
-): Promise<String | null> {
+): Promise<string | null> {
   const cookieName = process.env.SESSION_COOKIE_NAME as string || "dbos-cookie";
   const found = cookies.get(cookieName);
 
@@ -36,5 +36,5 @@ export async function getRequestCookie(
     password: process.env.SESSION_COOKIE_PASSWORD as string || "dbos-secure-password-is-very-long-and-secure",
   });
 
-  return user as unknown as String;
+  return user as string;
 }
