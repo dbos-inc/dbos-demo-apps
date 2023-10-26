@@ -5,4 +5,5 @@ docker run --rm \
   -o /local/client
 
 sudo chown -R $USER:$USER client
+rm -rf ../payment-frontend/client
 mv ./client ../payment-frontend
