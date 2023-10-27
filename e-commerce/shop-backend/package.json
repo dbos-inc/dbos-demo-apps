@@ -8,7 +8,7 @@
     "start": "npm run build && operon start"
   },
   "dependencies": {
-    "@dbos-inc/operon": "~0.5.43",
+    "@dbos-inc/operon": "0.6.14-preview",
     "bcrypt": "^5.1.1"
   },
   "devDependencies": {

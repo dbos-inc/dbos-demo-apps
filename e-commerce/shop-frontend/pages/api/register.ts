@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import axios from 'axios';
-import { backendAddress } from "@/lib/config";
+import { api } from '@/lib/backend';
+import { ResponseError } from '@/client';
 
 export default async function register(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -14,14 +14,12 @@ export default async function register(req: NextApiRequest, res: NextApiResponse
   }
 
   try {
-    const bodyParams = { username, password };
-    await axios.post(`${backendAddress}/api/register`, bodyParams);
+    await api.register({ loginRequest: { username, password } });
     return res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const message = error.response?.data?.message || error.message;
-      console.error(message);
-      return res.status(error.response?.status || 500).json({ message });
+    if (error instanceof ResponseError) {
+      console.error(error.message);
+      return res.status(error.response.status).json({ message: error.message })
     } else {
       console.error(error);
       throw error;

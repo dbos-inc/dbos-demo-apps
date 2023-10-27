@@ -114,7 +114,7 @@ export class Shop {
 
   @GetApi('/api/products/:id')
   @OperonTransaction({ readOnly: true })
-  static async getProduct(ctxt: KnexTransactionContext, id: number): Promise<DisplayProduct | null> {
+  static async getProduct(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) id: number): Promise<DisplayProduct | null> {
 
     const rows = await ctxt.client<Product>('products').select("product_id", "product", "description", "image_name", "price").where({ product_id: id });
     if (rows.length === 0) {

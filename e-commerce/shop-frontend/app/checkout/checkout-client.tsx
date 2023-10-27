@@ -1,22 +1,27 @@
 'use client'
-import Product from '@/interfaces/Product';
+import { CartProduct } from '@/interfaces/Product';
 import { Container, Table, Button, Row } from 'react-bootstrap';
 import Link from 'next/link';
-import {backendAddress} from '@/lib/config';
+import { api, backendAddress } from '@/lib/backend';
 
 
 interface CheckoutProps {
-    cart: Product[];
-    username: String;
+    cart: CartProduct[];
+    username: string;
 }
 
 const Checkout: React.FC<CheckoutProps> = ({ cart, username }) => {
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
+        // await api.webCheckout({ username });
         console.log("Checkout!");
       };
 
     const subtotal = (cart.reduce((total, product) => total + product.price * product.inventory, 0) / 100).toFixed(2);
+
+    // this form redirects directly to the backend which then sends a redirect to the payment page.
+    // Need to rework this to do return the payment URL from the handler and do the redirect on the client side
+
     const session_endpoint = `${backendAddress}/api/checkout_session?username=${username}`
 
     return (
@@ -31,10 +36,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, username }) => {
                 </tr>
             </thead>
             <tbody>
-                {cart.map((product: Product) => (
-                <tr key={product.product_id}>
+                {cart.map((product: CartProduct) => (
+                <tr key={product.productId}>
                     <td>{product.product}</td>
-                    <td>${product.display_price}</td>
+                    <td>${product.displayPrice}</td>
                     <td>{product.inventory}</td>
                 </tr>
                 ))}

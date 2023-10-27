@@ -1,0 +1,11 @@
+.openapi-generator-ignore
+apis/DefaultApi.ts
+apis/index.ts
+index.ts
+models/AddToCartRequest.ts
+models/GetCart200ResponseInner.ts
+models/GetCartRequest.ts
+models/GetProducts200ResponseInner.ts
+models/LoginRequest.ts
+models/index.ts
+runtime.ts

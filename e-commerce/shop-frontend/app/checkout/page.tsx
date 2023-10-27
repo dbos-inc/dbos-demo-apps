@@ -1,20 +1,20 @@
 import Checkout from './checkout-client'
-import axios from 'axios';
-import Product from '@/interfaces/Product';
+import { CartProduct } from '@/interfaces/Product';
 import { cookies } from "next/headers";
 import { getRequestCookie } from "@/lib/session";
-import { backendAddress } from "@/lib/config";
+import { api } from '@/lib/backend';
 import { redirect } from "next/navigation";
+import { ResponseError } from '@/client';
 
-const getCart = async (username: String): Promise<Product[]> => {
+const getCart = async (username: string): Promise<CartProduct[]> => {
     try {
-        const bodyParams = {
-            username: username
-        }
-        const response = await axios.post(`${backendAddress}/api/get_cart`, bodyParams);
-        return response.data;
+        return await api.getCart({ getCartRequest: { username }});
     } catch (error) {
-        console.error(error);
+        if (error instanceof ResponseError) {
+            console.error(error.message);
+        } else {
+            console.error(error);
+        }
         return [];
     }
   }
