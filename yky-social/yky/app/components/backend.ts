@@ -1,4 +1,6 @@
-import { Configuration, DefaultApi } from '@/app/components/client'
+import { Configuration, DefaultApi } from '@/app/components/client';
+
+export { ResponseError } from '@/app/components/client';
 
 const DBOS_SERVER_URL = process.env.DBOS_SERVER_URL || "http://localhost:3000";
 
@@ -9,3 +11,4 @@ const config = new Configuration({
 })
 
 export const api = new DefaultApi(config);
+

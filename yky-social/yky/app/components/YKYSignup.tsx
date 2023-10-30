@@ -1,5 +1,6 @@
 "use client";
 
+import { DoRegisterRequest } from '@/app/components/client/models'
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -19,7 +20,7 @@ const YKYSignup: React.FC = () => {
       e.preventDefault();
       setIsButtonDisabled(true); // Disable the button during form submission
       try {
-        const body = { firstName, lastName, username: userName, password };
+        const body: DoRegisterRequest = { firstName, lastName, username: userName, password };
         const res = await fetch(`/doregister`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -29,7 +30,9 @@ const YKYSignup: React.FC = () => {
           router.push('/main/login');
         }
         else {
-          setMessage(res.text.toString());
+          // TODO
+          setMessage("Registration failed: "+res.statusText);
+          console.log(res);
         }
         return;
       } catch (error) {
