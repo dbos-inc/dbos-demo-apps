@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getAPIServer } from '@/app/components/backend';
+import { api } from '@/app/components/backend';
 
 /*
 export const config = {
@@ -13,19 +13,7 @@ export const config = {
 */
 
 export async function POST(request: Request) {
-  const res = await fetch(getAPIServer() + '/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(await request.json()),
-  });
- 
-  if (res.ok) {
-    const data = res.json();
-    return NextResponse.json(data);
-  }
-  else {
-    return NextResponse.json({error: "Error", status:res.status});
-  }
+  // TODO:  1. What if it throws?  I assume I get an error coming to the client, we'll see
+  // TODO:  2. Can I use the type of the request / return in the front end?
+  return NextResponse.json(await api.doRegister({doRegisterRequest: await request.json()}));
 }
