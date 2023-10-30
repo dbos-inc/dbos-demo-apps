@@ -238,8 +238,8 @@ export class YKY
 
     // TODO: Validate user and drop from table
 
-    const presignedUrl = await Operations.ensureS3FileDropped(ctx, key, bucket);
-    return { message: "Dropped", url: presignedUrl, key: key };
+    await Operations.ensureS3FileDropped(ctx, key, bucket);
+    return { message: "Dropped", key: key };
   }
 
   @GetApi("/startMediaUpload")
