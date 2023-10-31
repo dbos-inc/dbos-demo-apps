@@ -1,0 +1,10 @@
+.openapi-generator-ignore
+apis/DefaultApi.ts
+apis/index.ts
+index.ts
+models/CreateAccountFuncRequest.ts
+models/Greeting200Response.ts
+models/ListAccountsFunc200ResponseInner.ts
+models/ListTxnForAccountFunc200ResponseInner.ts
+models/index.ts
+runtime.ts
