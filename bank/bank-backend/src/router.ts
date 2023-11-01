@@ -16,6 +16,7 @@ type TxHistory = {
 }
 
 @DefaultRequiredRole(["appUser"])
+// TODO: add { type: 'http', scheme: 'bearer' } for OpenAPI generation
 @Authentication(bankAuthMiddleware)
 @KoaMiddleware(koaLogger, bankJwt)
 export class BankEndpoints {

@@ -22,6 +22,7 @@ const REMOTEDB_PREFIX: string = "remoteDB-";
 type PrismaContext = TransactionContext<PrismaClient>;
 
 @DefaultRequiredRole(["appUser"])
+// TODO: add { type: 'http', scheme: 'bearer' } for OpenAPI generation
 @Authentication(bankAuthMiddleware)
 @KoaMiddleware(koaLogger, bankJwt)
 export class BankTransactionHistory {
