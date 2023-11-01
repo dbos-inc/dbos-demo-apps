@@ -63,37 +63,39 @@ export function getS3(ctx: OperonContext) {
 
 // eslint-disable-next-line @typescript-eslint/require-await
 async function authMiddleware (ctx: MiddlewareContext) {
-  if (ctx.requiredRole.length > 0) {
-    const { userid } = ctx.koaContext.request.query;
-    let uid = userid;
-    if (!uid) {
-        uid = ctx.koaContext.headers['userid'];
-    }
-    const suid = uid?.toString();
-
-    if (!suid) {
-      const err = new Error.OperonNotAuthorizedError("Not logged in.", 401);
-      throw err;
-    }
-
-    // We could do additional validation, such as a token.
-    //  Currently the backend is trusting that the front end did that.
-    //  But we will check that the database hasn't changed in a way
-    //    that invalidates the frontend credentials. 
-    const u = await ctx.query((dbclient: EntityManager) => {
-       return dbclient.getRepository(UserLogin).findOneBy({id: suid});
-    });
-
-    if (!u || !u.active) {
-      const err = new Error.OperonNotAuthorizedError("Invalid user.", 403);
-      throw err;
-    }
-
-    return {
-      authenticatedUser: suid,
-      authenticatedRoles: ['user']
-    };
+  if (ctx.requiredRole.length == 0) {
+    return;
   }
+
+  const { userid } = ctx.koaContext.request.query;
+  let uid = userid;
+  if (!uid) {
+      uid = ctx.koaContext.headers['userid'];
+  }
+  const suid = uid?.toString();
+
+  if (!suid) {
+    const err = new Error.OperonNotAuthorizedError("Not logged in.", 401);
+    throw err;
+  }
+
+  // We could do additional validation, such as a token.
+  //  Currently the backend is trusting that the front end did that.
+  //  But we will check that the database hasn't changed in a way
+  //    that invalidates the frontend credentials.
+  const u = await ctx.query((dbclient: EntityManager) => {
+      return dbclient.getRepository(UserLogin).findOneBy({id: suid});
+  });
+
+  if (!u || !u.active) {
+    const err = new Error.OperonNotAuthorizedError("Invalid user.", 403);
+    throw err;
+  }
+
+  return {
+    authenticatedUser: suid,
+    authenticatedRoles: ['user']
+  };
 }
 
 @Authentication(authMiddleware)
