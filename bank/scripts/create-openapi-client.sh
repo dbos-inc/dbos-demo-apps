@@ -12,7 +12,7 @@ cd ../bank-frontend
 docker run --rm \
   -v ${PWD}:/local openapitools/openapi-generator-cli generate \
   -i /local/openapi.yaml \
-  -g typescript-fetch \
+  -g typescript-angular \
   -o /local/src/client
 
 sudo chown -R $USER:$USER src/client
