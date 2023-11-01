@@ -1,12 +1,9 @@
-import { NextResponse, NextRequest } from 'next/server';
-import { getuserid } from '@/app/components/userid';
+import { NextRequest } from 'next/server';
 
 import { placeApiRequest } from '@/app/components/backend';
 
 export async function GET(request: NextRequest) {
-  const userid = getuserid();
-
-  return await placeApiRequest(request, async (api, req, hdrs) => {
+  return await placeApiRequest(request, async (api, _req, hdrs) => {
     return await api.getProfilePhoto(hdrs);
   })
 }

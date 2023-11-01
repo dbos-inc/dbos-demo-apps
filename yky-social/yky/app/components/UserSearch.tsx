@@ -23,7 +23,7 @@ const FollowButton : React.FC<FBProps> = ({uid, children }) => {
     const router = useRouter();
 
     const followClick = async () => {
-        const body = { action: "follow",  targetuser: uid };
+        const body = { action: "follow",  followUid: uid };
         const res = await fetch(`/dograph`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

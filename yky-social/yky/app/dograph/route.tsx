@@ -1,33 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { getuserid } from '@/app/components/userid';
-import { getAPIServer } from '@/app/components/backend';
+import { placeApiRequest } from '@/app/components/backend';
 
-export async function POST(request: Request) {
-  const userid = getuserid();
-
-  const { action,  targetuser} = (await request.json()) as {action: string, targetuser: string};
-
-  if (action !== 'follow') {
-    return NextResponse.json({error: "Invalid graph operation", status: 400});
-  }
-
-  const res = await fetch(getAPIServer()+'/follow'+'?' + new URLSearchParams({
-    userid: userid,
-  }),
-  {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({followUid: targetuser}),
-  });
- 
-  if (res.ok) {
-    const data = res.json();
-    return NextResponse.json(data);
-  }
-  else {
-    return NextResponse.json({error: "Error", status:res.status});
-  }
+export async function POST(request: NextRequest) {
+  return await placeApiRequest(request, async (api, req, hdrs) => {
+    return await api.doFollow({doFollowRequest: await req.json()}, hdrs);
+  })
 }
