@@ -156,6 +156,46 @@ paths:
             application/json:
               schema:
                 type: string
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                history:
+                  type: object
+                  required:
+                    - txnId
+                    - fromAccountId
+                    - fromLocation
+                    - toAccountId
+                    - toLocation
+                    - amount
+                    - timestamp
+                  properties:
+                    txnId:
+                      type: integer
+                      description: bigint
+                    fromAccountId:
+                      type: integer
+                      description: bigint
+                    fromLocation:
+                      type: string
+                    toAccountId:
+                      type: integer
+                      description: bigint
+                    toLocation:
+                      type: string
+                    amount:
+                      type: number
+                    timestamp:
+                      type: string
+                      format: date-time
+                  additionalProperties: false
+              required:
+                - history
   /api/withdraw:
     post:
       operationId: withdraw
@@ -166,6 +206,46 @@ paths:
             application/json:
               schema:
                 type: string
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                history:
+                  type: object
+                  required:
+                    - txnId
+                    - fromAccountId
+                    - fromLocation
+                    - toAccountId
+                    - toLocation
+                    - amount
+                    - timestamp
+                  properties:
+                    txnId:
+                      type: integer
+                      description: bigint
+                    fromAccountId:
+                      type: integer
+                      description: bigint
+                    fromLocation:
+                      type: string
+                    toAccountId:
+                      type: integer
+                      description: bigint
+                    toLocation:
+                      type: string
+                    amount:
+                      type: number
+                    timestamp:
+                      type: string
+                      format: date-time
+                  additionalProperties: false
+              required:
+                - history
   /api/transfer:
     post:
       operationId: internalTransfer
@@ -176,5 +256,51 @@ paths:
             application/json:
               schema:
                 type: string
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                history:
+                  type: object
+                  required:
+                    - txnId
+                    - fromAccountId
+                    - fromLocation
+                    - toAccountId
+                    - toLocation
+                    - amount
+                    - timestamp
+                  properties:
+                    txnId:
+                      type: integer
+                      description: bigint
+                    fromAccountId:
+                      type: integer
+                      description: bigint
+                    fromLocation:
+                      type: string
+                    toAccountId:
+                      type: integer
+                      description: bigint
+                    toLocation:
+                      type: string
+                    amount:
+                      type: number
+                    timestamp:
+                      type: string
+                      format: date-time
+                  additionalProperties: false
+              required:
+                - history
 components:
   schemas: {}
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - bearerAuth: []

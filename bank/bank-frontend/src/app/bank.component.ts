@@ -295,60 +295,49 @@ export class BankComponent {
       }
 
       getMsg(){
-        let url = '/api/greeting';
-        this._service.getResource(this.bankUrl + url)
-          .subscribe(
-            {
-              next: (data: any) => this.bankmsg = data.toString(),
-              error: (err: any) => { this.bankmsg = 'Error' }
-            });
+        this._service.api.greeting()
+          .then((data: any) => { this.bankmsg = data.toString(); })
+          .catch((err: any) => { this.bankmsg = 'Error' })
       }
 
       createNewAccount(): void {
-        const newAcct = {
+        this._service.api.createAccountFunc({ createAccountFuncRequest: {
           ownerName: this.ownerName,
           type: 'checking',
-          balance: 0.0,
-          uuid: 'angulartest123'
-        }
-        this._service.postResource(this.bankUrl + "/api/create_account",
-          JSON.stringify(newAcct))
-          .subscribe({
-            next: (data: any) => {this.bankmsg = 'Successfully created an account! Account ID: ' + data;
-            this.getAccounts();},
-            error: (err: any) => { this.bankmsg = 'Failed to create a new account' }
-          });
+          balance: 0.0
+        }})
+          .then((data: any) => {
+            this.bankmsg = 'Successfully created an account! Account ID: ' + data;
+            this.getAccounts();
+          })
+          .catch((err: any) => { this.bankmsg = 'Failed to create a new account' })
       }
 
       // List all accounts list_accounts
       getAccounts(){
-        this._service.getResource(this.bankUrl + "/api/list_accounts/" + this.ownerName)
-          .subscribe({
-            next: (data: any) => {
-              // this.bankmsg = 'Fetched accounts!'
-              const jsonArray = JSON.parse(data);
-              this.accounts = jsonArray.map((item: any) => new BankAccountInfo(item.accountId, item.balance, item.type, item.ownerName));
-            },
-            error: (err: any) => {this.bankmsg = 'Error fetching accounts!';
-              this._service.logoutOnError();
-              window.location.href = 'http://localhost:8083/realms/dbos/protocol/openid-connect/auth?response_type=code&&scope=openid&client_id=' +
-                  this._service.clientId + '&redirect_uri='+ this._service.redirectUri;
-            }
+        this._service.api.listAccountsFunc({ ownerName: this.ownerName })
+          .then((data: any) => {
+            // this.bankmsg = 'Fetched accounts!'
+            const jsonArray = JSON.parse(data);
+            this.accounts = jsonArray.map((item: any) => new BankAccountInfo(item.accountId, item.balance, item.type, item.ownerName));
+          })
+          .catch((err: any) => {this.bankmsg = 'Error fetching accounts!';
+            this._service.logoutOnError();
+            window.location.href = 'http://localhost:8083/realms/dbos/protocol/openid-connect/auth?response_type=code&&scope=openid&client_id=' +
+              this._service.clientId + '&redirect_uri='+ this._service.redirectUri;
           });
       }
 
       // Get transaction history for an account
       getTransactions(accountId: number) {
         this.txnHistoryAccount = accountId;
-        this._service.getResource(this.bankUrl + "/api/transaction_history/" + accountId)
-          .subscribe({
-            next: (data: any) => {this.bankmsg = 'Fetched transaction history!'
-              const jsonArray = JSON.parse(data);
-              this.txnHistory = jsonArray.map((item: any) => new TransactionHistory(item.txnId, item.fromAccountId,
-                item.fromLocation, item.toAccountId, item.toLocation, item.amount, item.timestamp));
-            },
-            error: (err: any) => { this.bankmsg = 'Error fetching accounts!' }
-          });
+        this._service.api.listTxnForAccountFunc({ accountId })
+          .then((data: any) => {this.bankmsg = 'Fetched transaction history!'
+            const jsonArray = JSON.parse(data);
+            this.txnHistory = jsonArray.map((item: any) => new TransactionHistory(item.txnId, item.fromAccountId,
+              item.fromLocation, item.toAccountId, item.toLocation, item.amount, item.timestamp));
+          })
+          .catch((err: any) => { this.bankmsg = 'Error fetching accounts!' })
       }
 
       setAccountId(accountId: number) {
@@ -369,6 +358,8 @@ export class BankComponent {
           amount: this.amount * 100.0,
           uuid: 'depositAngular' + accountId
         }
+
+        // Cant convert this to use API client because /api/deposit doesn't specify parameters in a way OpenAPI can handle
         this._service.postResource(this.bankUrl + "/api/deposit", JSON.stringify(inputData))
           .subscribe({
             next: (data: any) => {this.bankmsg = 'Successfully made a deposit to Account ID: ' + accountId;
@@ -392,6 +383,8 @@ export class BankComponent {
           amount: this.amount * 100.0,
           uuid: 'withdrawAngular' + accountId
         }
+
+        // Cant convert this to use API client because /api/withdraw doesn't specify parameters in a way OpenAPI can handle
         this._service.postResource(this.bankUrl + "/api/withdraw", JSON.stringify(inputData))
           .subscribe({
             next: (data: any) => {this.bankmsg = 'Successfully withdraw from Account ID: ' + accountId;

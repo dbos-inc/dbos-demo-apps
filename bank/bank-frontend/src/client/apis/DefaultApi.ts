@@ -16,6 +16,7 @@
 import * as runtime from '../runtime';
 import type {
   CreateAccountFuncRequest,
+  DepositRequest,
   Greeting200Response,
   ListAccountsFunc200ResponseInner,
   ListTxnForAccountFunc200ResponseInner,
@@ -23,6 +24,8 @@ import type {
 import {
     CreateAccountFuncRequestFromJSON,
     CreateAccountFuncRequestToJSON,
+    DepositRequestFromJSON,
+    DepositRequestToJSON,
     Greeting200ResponseFromJSON,
     Greeting200ResponseToJSON,
     ListAccountsFunc200ResponseInnerFromJSON,
@@ -35,12 +38,24 @@ export interface CreateAccountFuncOperationRequest {
     createAccountFuncRequest: CreateAccountFuncRequest;
 }
 
+export interface DepositOperationRequest {
+    depositRequest: DepositRequest;
+}
+
+export interface InternalTransferRequest {
+    depositRequest: DepositRequest;
+}
+
 export interface ListAccountsFuncRequest {
     ownerName: string;
 }
 
 export interface ListTxnForAccountFuncRequest {
     accountId: number;
+}
+
+export interface WithdrawRequest {
+    depositRequest: DepositRequest;
 }
 
 /**
@@ -89,10 +104,16 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async depositRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+    async depositRaw(requestParameters: DepositOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        if (requestParameters.depositRequest === null || requestParameters.depositRequest === undefined) {
+            throw new runtime.RequiredError('depositRequest','Required parameter requestParameters.depositRequest was null or undefined when calling deposit.');
+        }
+
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -107,6 +128,7 @@ export class DefaultApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
+            body: DepositRequestToJSON(requestParameters.depositRequest),
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
@@ -118,8 +140,8 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async deposit(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
-        const response = await this.depositRaw(initOverrides);
+    async deposit(requestParameters: DepositOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.depositRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -157,10 +179,16 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async internalTransferRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+    async internalTransferRaw(requestParameters: InternalTransferRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        if (requestParameters.depositRequest === null || requestParameters.depositRequest === undefined) {
+            throw new runtime.RequiredError('depositRequest','Required parameter requestParameters.depositRequest was null or undefined when calling internalTransfer.');
+        }
+
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -175,6 +203,7 @@ export class DefaultApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
+            body: DepositRequestToJSON(requestParameters.depositRequest),
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
@@ -186,8 +215,8 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async internalTransfer(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
-        const response = await this.internalTransferRaw(initOverrides);
+    async internalTransfer(requestParameters: InternalTransferRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.internalTransferRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -265,10 +294,16 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async withdrawRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+    async withdrawRaw(requestParameters: WithdrawRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        if (requestParameters.depositRequest === null || requestParameters.depositRequest === undefined) {
+            throw new runtime.RequiredError('depositRequest','Required parameter requestParameters.depositRequest was null or undefined when calling withdraw.');
+        }
+
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -283,6 +318,7 @@ export class DefaultApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
+            body: DepositRequestToJSON(requestParameters.depositRequest),
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
@@ -294,8 +330,8 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async withdraw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
-        const response = await this.withdrawRaw(initOverrides);
+    async withdraw(requestParameters: WithdrawRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.withdrawRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

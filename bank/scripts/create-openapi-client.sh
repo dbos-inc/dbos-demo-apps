@@ -13,8 +13,8 @@ docker run --rm \
   -v ${PWD}:/local openapitools/openapi-generator-cli generate \
   -i /local/openapi.yaml \
   -g typescript-fetch \
-  -o /local/client
+  -o /local/src/client
 
-sudo chown -R $USER:$USER client
+sudo chown -R $USER:$USER src/client
 
 cd $cur_dir

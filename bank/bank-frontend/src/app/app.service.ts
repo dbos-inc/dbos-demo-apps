@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 import { JwtHelperService } from "@auth0/angular-jwt";
 import {environment} from "../environments/environment";
+import { Configuration, DefaultApi } from "../client";
 
 export class BankAccountInfo {
   constructor(public account_id: number,
@@ -29,9 +30,16 @@ export class AppService {
   public clientId = 'newClient';
   public redirectUri = environment.redirectUrl;
   public bankHosts: string[] = environment.bankHosts;
+  public api: DefaultApi;
 
   constructor(
-    private _http: HttpClient){}
+    private _http: HttpClient){
+    const config = new Configuration({
+      basePath: environment.bankHosts[0],
+      accessToken() { return Cookie.get('access_token'); },
+    });
+    this.api = new DefaultApi(config);
+  }
 
   retrieveToken(code: string){
     const params = new URLSearchParams();
@@ -56,19 +64,19 @@ export class AppService {
     window.location.href = this.redirectUri;
   }
 
-  getResource(resourceUrl: string) : Observable<any>{
-    const headers = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8', 'Authorization': 'Bearer '+Cookie.get('access_token')});
-    return this._http.get(resourceUrl, { headers: headers, responseType: 'text' as 'json' }).pipe(
-      catchError((error) => { return throwError(() => {return error.json().error || 'Server error'})})
-    );
-  }
+  // getResource(resourceUrl: string) : Observable<any>{
+  //   const headers = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8', 'Authorization': 'Bearer '+Cookie.get('access_token')});
+  //   return this._http.get(resourceUrl, { headers: headers, responseType: 'text' as 'json' }).pipe(
+  //     catchError((error) => { return throwError(() => {return error.json().error || 'Server error'})})
+  //   );
+  // }
 
-  postResource(resourceUrl: string, inputData: any) : Observable<any>{
-    const headers = new HttpHeaders({'Content-type': 'application/json; charset=utf-8', 'Accept': 'application/json', 'Authorization': 'Bearer '+Cookie.get('access_token')});
-    return this._http.post(resourceUrl, inputData, { headers: headers, responseType: 'text' as 'json' }).pipe(
-      catchError((error) => { return throwError(() => {return error.json().error || 'Server error'})})
-    );
-  }
+  // postResource(resourceUrl: string, inputData: any) : Observable<any>{
+  //   const headers = new HttpHeaders({'Content-type': 'application/json; charset=utf-8', 'Accept': 'application/json', 'Authorization': 'Bearer '+Cookie.get('access_token')});
+  //   return this._http.post(resourceUrl, inputData, { headers: headers, responseType: 'text' as 'json' }).pipe(
+  //     catchError((error) => { return throwError(() => {return error.json().error || 'Server error'})})
+  //   );
+  // }
 
   checkCredentials(){
     return Cookie.check('access_token');
