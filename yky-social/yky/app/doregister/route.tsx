@@ -13,7 +13,7 @@ export const config = {
 */
 
 export async function POST(request: NextRequest) {
-  return await placeApiRequest(request, async (api, req) => {
-    return await api.doRegister({doRegisterRequest: await req.json()});
+  return await placeApiRequest(request, async (api, req, hdrs) => {
+    return await api.doRegister({doRegisterRequest: await req.json()}, hdrs);
   })
 }

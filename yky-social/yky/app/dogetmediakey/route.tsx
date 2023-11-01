@@ -1,18 +1,12 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { getuserid } from '@/app/components/userid';
 
-import { api, ResponseError } from '@/app/components/backend';
+import { placeApiRequest } from '@/app/components/backend';
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   const userid = getuserid();
 
-  try {
-    return NextResponse.json(await api.getProfilePhoto({
-      headers: {'userid': userid}
-    }));
-  }
-  catch (err) {
-    const e = err as ResponseError;
-    return NextResponse.json({}, e.response);
-  }
+  return await placeApiRequest(request, async (api, req, hdrs) => {
+    return await api.getProfilePhoto(hdrs);
+  })
 }
