@@ -3,6 +3,7 @@ apis/index.ts
 index.ts
 models/CreateAccountFuncRequest.ts
 models/DepositRequest.ts
+models/DepositRequestHistory.ts
 models/Greeting200Response.ts
 models/ListAccountsFunc200ResponseInner.ts
 models/ListTxnForAccountFunc200ResponseInner.ts

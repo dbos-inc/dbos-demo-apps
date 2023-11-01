@@ -13,12 +13,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
-import type { ListTxnForAccountFunc200ResponseInner } from './ListTxnForAccountFunc200ResponseInner';
+import type { DepositRequestHistory } from './DepositRequestHistory';
 import {
-    ListTxnForAccountFunc200ResponseInnerFromJSON,
-    ListTxnForAccountFunc200ResponseInnerFromJSONTyped,
-    ListTxnForAccountFunc200ResponseInnerToJSON,
-} from './ListTxnForAccountFunc200ResponseInner';
+    DepositRequestHistoryFromJSON,
+    DepositRequestHistoryFromJSONTyped,
+    DepositRequestHistoryToJSON,
+} from './DepositRequestHistory';
 
 /**
  * 
@@ -28,10 +28,10 @@ import {
 export interface DepositRequest {
     /**
      * 
-     * @type {ListTxnForAccountFunc200ResponseInner}
+     * @type {DepositRequestHistory}
      * @memberof DepositRequest
      */
-    history: ListTxnForAccountFunc200ResponseInner;
+    history: DepositRequestHistory;
 }
 
 /**
@@ -54,7 +54,7 @@ export function DepositRequestFromJSONTyped(json: any, ignoreDiscriminator: bool
     }
     return {
         
-        'history': ListTxnForAccountFunc200ResponseInnerFromJSON(json['history']),
+        'history': DepositRequestHistoryFromJSON(json['history']),
     };
 }
 
@@ -67,7 +67,7 @@ export function DepositRequestToJSON(value?: DepositRequest | null): any {
     }
     return {
         
-        'history': ListTxnForAccountFunc200ResponseInnerToJSON(value.history),
+        'history': DepositRequestHistoryToJSON(value.history),
     };
 }
 

@@ -167,13 +167,11 @@ paths:
                 history:
                   type: object
                   required:
-                    - txnId
                     - fromAccountId
                     - fromLocation
                     - toAccountId
                     - toLocation
                     - amount
-                    - timestamp
                   properties:
                     txnId:
                       type: integer
@@ -217,13 +215,11 @@ paths:
                 history:
                   type: object
                   required:
-                    - txnId
                     - fromAccountId
                     - fromLocation
                     - toAccountId
                     - toLocation
                     - amount
-                    - timestamp
                   properties:
                     txnId:
                       type: integer
@@ -267,13 +263,11 @@ paths:
                 history:
                   type: object
                   required:
-                    - txnId
                     - fromAccountId
                     - fromLocation
                     - toAccountId
                     - toLocation
                     - amount
-                    - timestamp
                   properties:
                     txnId:
                       type: integer
