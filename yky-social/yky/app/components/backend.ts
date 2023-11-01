@@ -14,7 +14,7 @@ const config = new Configuration({
 
 export const api = new DefaultApi(config);
 
-export async function placeApiRequest(request: NextRequest, func: (bapi: DefaultApi, req: NextRequest) => unknown ) {
+export async function placeApiRequest<T>(request: NextRequest, func: (bapi: DefaultApi, req: NextRequest) => Promise<T> ) {
   try {
     return NextResponse.json(await func(api, request));
   }

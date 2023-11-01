@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { api, ResponseError } from '@/app/components/backend';
+import { placeApiRequest } from '@/app/components/backend';
 
 /*
 export const config = {
@@ -12,12 +12,8 @@ export const config = {
 }
 */
 
-export async function POST(request: Request) {
-  try {
-    return NextResponse.json(await api.doRegister({doRegisterRequest: await request.json()}));
-  }
-  catch (err) {
-    const e = err as ResponseError;
-    return NextResponse.json({}, e.response);
-  }
+export async function POST(request: NextRequest) {
+  return await placeApiRequest(request, async (api, req) => {
+    return await api.doRegister({doRegisterRequest: await req.json()});
+  })
 }
