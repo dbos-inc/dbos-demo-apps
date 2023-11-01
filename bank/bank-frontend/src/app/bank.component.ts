@@ -350,7 +350,7 @@ export class BankComponent {
         }
 
         // TODO: input validation
-        const inputData = {
+        const history = {
           fromAccountId: this.externalAccountId,
           fromLocation: this.selectedTransferSource,
           toAccountId: accountId,
@@ -359,14 +359,10 @@ export class BankComponent {
           uuid: 'depositAngular' + accountId
         }
 
-        // Cant convert this to use API client because /api/deposit doesn't specify parameters in a way OpenAPI can handle
-        this._service.postResource(this.bankUrl + "/api/deposit", JSON.stringify(inputData))
-          .subscribe({
-            next: (data: any) => {this.bankmsg = 'Successfully made a deposit to Account ID: ' + accountId;
-              this.getAccounts();
-            },
-            error: (err: any) => { this.bankmsg = 'Failed to make a deposit!' }
-          });
+        this._service.api.deposit({depositRequest: { history }})
+          .then((data: any) => {this.bankmsg = 'Successfully made a deposit to Account ID: ' + accountId;
+            this.getAccounts();
+          }).catch((err: any) => { this.bankmsg = 'Failed to make a deposit!' })
       }
 
       withdraw(accountId: number) {
@@ -375,7 +371,7 @@ export class BankComponent {
         }
 
         // TODO: input validation
-        const inputData = {
+        const history = {
           fromAccountId: accountId,
           fromLocation: 'local',
           toAccountId: this.externalAccountId,
@@ -384,19 +380,15 @@ export class BankComponent {
           uuid: 'withdrawAngular' + accountId
         }
 
-        // Cant convert this to use API client because /api/withdraw doesn't specify parameters in a way OpenAPI can handle
-        this._service.postResource(this.bankUrl + "/api/withdraw", JSON.stringify(inputData))
-          .subscribe({
-            next: (data: any) => {this.bankmsg = 'Successfully withdraw from Account ID: ' + accountId;
-              this.getAccounts();
-            },
-            error: (err: any) => { this.bankmsg = 'Failed to withdraw! '; }
-          });
+        this._service.api.withdraw({depositRequest: { history }})
+        .then((data: any) => {this.bankmsg = 'Successfully withdraw from Account ID: ' + accountId;
+          this.getAccounts();
+        }).catch((err: any) => { this.bankmsg = 'Failed to withdraw!' })
       }
 
       transfer(accountId: number, toAccountId: number) {
         // TODO: input validation
-        const inputData = {
+        const history = {
           fromAccountId: accountId,
           fromLocation: 'local',
           toAccountId: toAccountId,
@@ -404,12 +396,10 @@ export class BankComponent {
           amount: this.amount * 100.0,
           uuid: 'transferAngular' + accountId
         }
-        this._service.postResource(this.bankUrl + "/api/transfer", JSON.stringify(inputData))
-          .subscribe({
-            next: (data: any) => {this.bankmsg = 'Successfully transfered from Account: ' + accountId + ' to Account: ' + toAccountId;
-              this.getAccounts();
-            },
-            error: (err: any) => { this.bankmsg = 'Failed to transfer! '; }
-          });
+
+        this._service.api.withdraw({depositRequest: { history }})
+        .then((data: any) => {this.bankmsg = 'Successfully transfered from Account: ' + accountId + ' to Account: ' + toAccountId;
+          this.getAccounts();
+        }).catch((err: any) => { this.bankmsg = 'Failed to transfer! '; });
       }
 }

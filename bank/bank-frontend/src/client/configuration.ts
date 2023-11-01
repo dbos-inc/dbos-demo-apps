@@ -87,9 +87,27 @@ export class Configuration {
             this.credentials = {};
         }
 
-        // init default bearerAuth credential
-        if (!this.credentials['bearerAuth']) {
-            this.credentials['bearerAuth'] = () => {
+        // init default BankAccountInfoAuth credential
+        if (!this.credentials['BankAccountInfoAuth']) {
+            this.credentials['BankAccountInfoAuth'] = () => {
+                return typeof this.accessToken === 'function'
+                    ? this.accessToken()
+                    : this.accessToken;
+            };
+        }
+
+        // init default BankTransactionHistoryAuth credential
+        if (!this.credentials['BankTransactionHistoryAuth']) {
+            this.credentials['BankTransactionHistoryAuth'] = () => {
+                return typeof this.accessToken === 'function'
+                    ? this.accessToken()
+                    : this.accessToken;
+            };
+        }
+
+        // init default BankEndpointsAuth credential
+        if (!this.credentials['BankEndpointsAuth']) {
+            this.credentials['BankEndpointsAuth'] = () => {
                 return typeof this.accessToken === 'function'
                     ? this.accessToken()
                     : this.accessToken;

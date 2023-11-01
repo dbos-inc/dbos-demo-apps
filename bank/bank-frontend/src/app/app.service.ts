@@ -1,10 +1,8 @@
 import {Injectable} from '@angular/core';
 import { Cookie } from 'ng2-cookies';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
 import { JwtHelperService } from "@auth0/angular-jwt";
 import {environment} from "../environments/environment";
-import { Configuration, DefaultApi } from "../client";
 
 export class BankAccountInfo {
   constructor(public account_id: number,
@@ -30,16 +28,9 @@ export class AppService {
   public clientId = 'newClient';
   public redirectUri = environment.redirectUrl;
   public bankHosts: string[] = environment.bankHosts;
-  public api: DefaultApi;
 
   constructor(
-    private _http: HttpClient){
-    const config = new Configuration({
-      basePath: environment.bankHosts[0],
-      accessToken() { return Cookie.get('access_token'); },
-    });
-    this.api = new DefaultApi(config);
-  }
+    private _http: HttpClient){}
 
   retrieveToken(code: string){
     const params = new URLSearchParams();

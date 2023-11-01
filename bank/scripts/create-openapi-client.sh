@@ -3,17 +3,17 @@ cur_dir=$(pwd)
 
 # generate the openapi definition document
 cd $bank_root/bank-backend
-npx operon openapi src/operations.ts
+# npx operon openapi src/operations.ts
 
-# temporarily append security info to end of openapi file
-echo "  securitySchemes:" >> src/openapi.yaml
-echo "    bearerAuth:" >> src/openapi.yaml
-echo "      type: http" >> src/openapi.yaml
-echo "      scheme: bearer" >> src/openapi.yaml
-echo "security:" >> src/openapi.yaml
-echo "  - bearerAuth: []" >> src/openapi.yaml
+# # temporarily append security info to end of openapi file
+# echo "  securitySchemes:" >> src/openapi.yaml
+# echo "    bearerAuth:" >> src/openapi.yaml
+# echo "      type: http" >> src/openapi.yaml
+# echo "      scheme: bearer" >> src/openapi.yaml
+# echo "security:" >> src/openapi.yaml
+# echo "  - bearerAuth: []" >> src/openapi.yaml
 
-mv -f src/openapi.yaml ../bank-frontend
+# mv -f src/openapi.yaml ../bank-frontend
 cd ../bank-frontend
 
 # generate the typescript-fetch client

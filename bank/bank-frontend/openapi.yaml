@@ -40,6 +40,8 @@ paths:
           required: true
           schema:
             type: string
+      security:
+        - BankAccountInfoAuth: []
   /api/create_account:
     post:
       operationId: createAccountFunc
@@ -84,6 +86,8 @@ paths:
               required:
                 - ownerName
                 - type
+      security:
+        - BankAccountInfoAuth: []
   /api/transaction_history/{accountId}:
     get:
       operationId: listTxnForAccountFunc
@@ -130,6 +134,8 @@ paths:
           required: true
           schema:
             type: number
+      security:
+        - BankTransactionHistoryAuth: []
   /api/greeting:
     get:
       operationId: greeting
@@ -146,6 +152,8 @@ paths:
                   msg:
                     type: string
                 additionalProperties: false
+      security:
+        - BankEndpointsAuth: []
   /api/deposit:
     post:
       operationId: deposit
@@ -194,6 +202,8 @@ paths:
                   additionalProperties: false
               required:
                 - history
+      security:
+        - BankEndpointsAuth: []
   /api/withdraw:
     post:
       operationId: withdraw
@@ -242,6 +252,8 @@ paths:
                   additionalProperties: false
               required:
                 - history
+      security:
+        - BankEndpointsAuth: []
   /api/transfer:
     post:
       operationId: internalTransfer
@@ -290,11 +302,17 @@ paths:
                   additionalProperties: false
               required:
                 - history
+      security:
+        - BankEndpointsAuth: []
 components:
   schemas: {}
   securitySchemes:
-    bearerAuth:
+    BankAccountInfoAuth:
       type: http
       scheme: bearer
-security:
-  - bearerAuth: []
+    BankTransactionHistoryAuth:
+      type: http
+      scheme: bearer
+    BankEndpointsAuth:
+      type: http
+      scheme: bearer

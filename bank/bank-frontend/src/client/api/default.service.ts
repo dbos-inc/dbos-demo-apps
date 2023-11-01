@@ -115,8 +115,8 @@ export class DefaultService {
         let localVarHeaders = this.defaultHeaders;
 
         let localVarCredential: string | undefined;
-        // authentication (bearerAuth) required
-        localVarCredential = this.configuration.lookupCredential('bearerAuth');
+        // authentication (BankAccountInfoAuth) required
+        localVarCredential = this.configuration.lookupCredential('BankAccountInfoAuth');
         if (localVarCredential) {
             localVarHeaders = localVarHeaders.set('Authorization', 'Bearer ' + localVarCredential);
         }
@@ -189,8 +189,8 @@ export class DefaultService {
         let localVarHeaders = this.defaultHeaders;
 
         let localVarCredential: string | undefined;
-        // authentication (bearerAuth) required
-        localVarCredential = this.configuration.lookupCredential('bearerAuth');
+        // authentication (BankEndpointsAuth) required
+        localVarCredential = this.configuration.lookupCredential('BankEndpointsAuth');
         if (localVarCredential) {
             localVarHeaders = localVarHeaders.set('Authorization', 'Bearer ' + localVarCredential);
         }
@@ -259,8 +259,8 @@ export class DefaultService {
         let localVarHeaders = this.defaultHeaders;
 
         let localVarCredential: string | undefined;
-        // authentication (bearerAuth) required
-        localVarCredential = this.configuration.lookupCredential('bearerAuth');
+        // authentication (BankEndpointsAuth) required
+        localVarCredential = this.configuration.lookupCredential('BankEndpointsAuth');
         if (localVarCredential) {
             localVarHeaders = localVarHeaders.set('Authorization', 'Bearer ' + localVarCredential);
         }
@@ -323,8 +323,8 @@ export class DefaultService {
         let localVarHeaders = this.defaultHeaders;
 
         let localVarCredential: string | undefined;
-        // authentication (bearerAuth) required
-        localVarCredential = this.configuration.lookupCredential('bearerAuth');
+        // authentication (BankEndpointsAuth) required
+        localVarCredential = this.configuration.lookupCredential('BankEndpointsAuth');
         if (localVarCredential) {
             localVarHeaders = localVarHeaders.set('Authorization', 'Bearer ' + localVarCredential);
         }
@@ -397,8 +397,8 @@ export class DefaultService {
         let localVarHeaders = this.defaultHeaders;
 
         let localVarCredential: string | undefined;
-        // authentication (bearerAuth) required
-        localVarCredential = this.configuration.lookupCredential('bearerAuth');
+        // authentication (BankAccountInfoAuth) required
+        localVarCredential = this.configuration.lookupCredential('BankAccountInfoAuth');
         if (localVarCredential) {
             localVarHeaders = localVarHeaders.set('Authorization', 'Bearer ' + localVarCredential);
         }
@@ -461,8 +461,8 @@ export class DefaultService {
         let localVarHeaders = this.defaultHeaders;
 
         let localVarCredential: string | undefined;
-        // authentication (bearerAuth) required
-        localVarCredential = this.configuration.lookupCredential('bearerAuth');
+        // authentication (BankTransactionHistoryAuth) required
+        localVarCredential = this.configuration.lookupCredential('BankTransactionHistoryAuth');
         if (localVarCredential) {
             localVarHeaders = localVarHeaders.set('Authorization', 'Bearer ' + localVarCredential);
         }
@@ -525,8 +525,8 @@ export class DefaultService {
         let localVarHeaders = this.defaultHeaders;
 
         let localVarCredential: string | undefined;
-        // authentication (bearerAuth) required
-        localVarCredential = this.configuration.lookupCredential('bearerAuth');
+        // authentication (BankEndpointsAuth) required
+        localVarCredential = this.configuration.lookupCredential('BankEndpointsAuth');
         if (localVarCredential) {
             localVarHeaders = localVarHeaders.set('Authorization', 'Bearer ' + localVarCredential);
         }
