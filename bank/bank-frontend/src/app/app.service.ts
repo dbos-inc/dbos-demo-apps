@@ -3,6 +3,7 @@ import { Cookie } from 'ng2-cookies';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { JwtHelperService } from "@auth0/angular-jwt";
 import {environment} from "../environments/environment";
+import { DefaultService } from '../client';
 
 export class BankAccountInfo {
   constructor(public account_id: number,
@@ -30,7 +31,8 @@ export class AppService {
   public bankHosts: string[] = environment.bankHosts;
 
   constructor(
-    private _http: HttpClient){}
+    private _http: HttpClient,
+    readonly api: DefaultService){}
 
   retrieveToken(code: string){
     const params = new URLSearchParams();

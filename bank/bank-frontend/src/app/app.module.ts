@@ -13,8 +13,12 @@ import { Cookie } from 'ng2-cookies';
 
 export function apiConfigFactory (): Configuration {
   const params: ConfigurationParameters = {
-    basePath: 'http://localhost:8080', // TODO
-    // credentials: () => Cookie.get('access_token')
+    basePath: 'http://localhost:8081', // TODO: need to support multiple backends.
+    credentials: {
+      BankAccountInfoAuth: () => Cookie.get('access_token'),
+      BankTransactionHistoryAuth: () => Cookie.get('access_token'),
+      BankEndpointsAuth: () => Cookie.get('access_token'),
+    },
     // set configuration parameters here.
   };
   return new Configuration(params);
@@ -34,7 +38,7 @@ export function apiConfigFactory (): Configuration {
     RouterModule.forRoot([
       {path: '', component: HomeComponent, pathMatch: 'full'}], {onSameUrlNavigation: 'reload'}),
     FormsModule,
-    ApiModule
+    ApiModule.forRoot(apiConfigFactory)
   ],
   providers: [],
   bootstrap: [AppComponent]
