@@ -1,10 +1,11 @@
-import { AsyncReturnType } from "oazapfts";
 import * as $api from "./client";
 
-// Utility types to extract the return type of the oazapfts generated function
+// utility type to return the data field of a type
 type DataFieldType<T> = T extends { data: infer U } ? U : never
+// utility type to return an array's item type
 type ArrayItemType<T> = T extends ReadonlyArray<infer U> ? U : never
-type OazapftsReturn<T extends (...args: any) => any> = DataFieldType<AsyncReturnType<T>>
+// utility type to return the data type of an Oazapfts api function return type
+type OazapftsReturn<T extends (...args: any) => any> = DataFieldType<Awaited<ReturnType<T>>>
 
 export const backendAddress = "http://localhost:8082";
 $api.defaults.baseUrl = backendAddress;
