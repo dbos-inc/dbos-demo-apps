@@ -1,6 +1,5 @@
 import { AsyncReturnType } from "oazapfts";
 import * as $api from "./client";
-import { RequestOpts } from "oazapfts/lib/runtime";
 
 // Utility types to extract the return type of the oazapfts generated function
 type DataFieldType<T> = T extends { data: infer U } ? U : never
