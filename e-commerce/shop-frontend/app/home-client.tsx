@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { api } from '@/lib/backend';
+import { ok } from 'oazapfts';
 
 interface HomeProps {
   products: Product[];
@@ -22,14 +23,14 @@ const Home: React.FC<HomeProps> = ({ products, user }) => {
   };
 
   
-  const handleAddToCart = async (productId: number) => {
+  const handleAddToCart = async (product_id: number) => {
     if (user == null) {
       router.push('/login');
       return;
     }
 
     try {
-      await api.addToCart({ addToCartRequest: { username: user, productId } });
+      await ok(api.addToCart({ username: user, product_id}));
     } catch (error) {
       console.error(error);
     }
@@ -60,10 +61,10 @@ const Home: React.FC<HomeProps> = ({ products, user }) => {
       <Container>
         <Row>
           {products.map((product: Product) => (
-            <Col sm={12} md={6} lg={4} key={product.productId}>
+            <Col sm={12} md={6} lg={4} key={product.product_id}>
               <Card>
                 <Image 
-                  src={"/" + product.imageName}
+                  src={"/" + product.image_name}
                   width={1000}
                   height={300}
                   className="card-img-top" alt="..." />
@@ -73,9 +74,9 @@ const Home: React.FC<HomeProps> = ({ products, user }) => {
                     {product.description}
                   </Card.Text>
                   <Card.Text>
-                    ${product.displayPrice}
+                    ${product.display_price}
                   </Card.Text>
-                  <Button variant="primary" onClick={() => handleAddToCart(product.productId)}>Add to Cart</Button>
+                  <Button variant="primary" onClick={() => handleAddToCart(product.product_id)}>Add to Cart</Button>
                 </Card.Body>
               </Card>
             </Col>

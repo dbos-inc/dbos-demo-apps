@@ -37,9 +37,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, username }) => {
             </thead>
             <tbody>
                 {cart.map((product: CartProduct) => (
-                <tr key={product.productId}>
+                <tr key={product.product_id}>
                     <td>{product.product}</td>
-                    <td>${product.displayPrice}</td>
+                    <td>${product.display_price}</td>
                     <td>{product.inventory}</td>
                 </tr>
                 ))}

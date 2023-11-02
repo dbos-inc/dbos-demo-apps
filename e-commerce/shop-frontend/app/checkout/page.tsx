@@ -4,13 +4,13 @@ import { cookies } from "next/headers";
 import { getRequestCookie } from "@/lib/session";
 import { api } from '@/lib/backend';
 import { redirect } from "next/navigation";
-import { ResponseError } from '@/client';
+import { HttpError, ok } from 'oazapfts';
 
 const getCart = async (username: string): Promise<CartProduct[]> => {
     try {
-        return await api.getCart({ getCartRequest: { username }});
+        return await ok(api.getCart({ username }));
     } catch (error) {
-        if (error instanceof ResponseError) {
+        if (error instanceof HttpError) {
             console.error(error.message);
         } else {
             console.error(error);
