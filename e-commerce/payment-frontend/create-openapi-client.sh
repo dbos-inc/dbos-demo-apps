@@ -6,6 +6,7 @@ cd $fe_dir/../payment-backend
 npx operon openapi src/operations.ts
 
 cd $fe_dir
-npx oazapfts ../payment-backend/src/openapi.yaml  ./client.ts
+rm -rf client
+npx openapi -i ../payment-backend/src/openapi.yaml -o client --name PaymentClient -c fetch
 
 cd $cur_dir
