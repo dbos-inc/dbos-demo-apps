@@ -1,25 +1,9 @@
-import { NextResponse } from 'next/server';
-import { getuserid } from '@/app/components/userid';
-import { getAPIServer } from '@/app/components/backend';
+import { NextRequest } from 'next/server';
 
-export async function GET(_request: Request) {
-  const userid = getuserid();
+import { placeApiRequest } from '@/app/components/backend';
 
-  const res = await fetch(getAPIServer() + '/startMediaUpload'+'?' + new URLSearchParams({
-    userid: userid,
-  }),
-  {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
- 
-  if (res.ok) {
-    const data = await res.json();
-    return NextResponse.json(data);
-  }
-  else {
-    return NextResponse.json({error: "Error", status:res.status});
-  }
+export async function GET(request: NextRequest) {
+  return await placeApiRequest(request, async (api, _req, hdrs) => {
+    return await api.doStartMediaUpload(hdrs);
+  })
 }
