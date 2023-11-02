@@ -3,6 +3,7 @@
 import React from 'react';
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { DoFollowRequest } from './client';
 //import useSWR from 'swr';
 
 interface UserSearchRes
@@ -23,7 +24,7 @@ const FollowButton : React.FC<FBProps> = ({uid, children }) => {
     const router = useRouter();
 
     const followClick = async () => {
-        const body = { action: "follow",  followUid: uid };
+        const body : DoFollowRequest = { followUid: uid };
         const res = await fetch(`/dograph`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
