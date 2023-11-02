@@ -1,11 +1,10 @@
 'use client'
 import { Container, Row, Col, Card, Navbar, Nav, Button } from 'react-bootstrap';
-import { Product } from '@/interfaces/Product';
 import Image from 'next/image'
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { api } from '@/lib/backend';
+import { api, Product } from '@/lib/backend';
 import { ok } from 'oazapfts';
 
 interface HomeProps {

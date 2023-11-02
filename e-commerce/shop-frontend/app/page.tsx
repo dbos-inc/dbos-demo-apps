@@ -1,8 +1,7 @@
 import Home from './home-client'
-import { Product } from '@/interfaces/Product';
 import { cookies } from "next/headers";
 import { getRequestCookie } from "@/lib/session";
-import { api } from '@/lib/backend';
+import { api, Product } from '@/lib/backend';
 import { HttpError, ok } from 'oazapfts';
 
 

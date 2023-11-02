@@ -1,8 +1,7 @@
 'use client'
-import { CartProduct } from '@/interfaces/Product';
 import { Container, Table, Button, Row } from 'react-bootstrap';
 import Link from 'next/link';
-import { api, backendAddress } from '@/lib/backend';
+import { CartProduct, backendAddress } from '@/lib/backend';
 
 
 interface CheckoutProps {
