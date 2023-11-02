@@ -92,8 +92,9 @@ export class DefaultApi {
     /**
      * 
      * @param submitPaymentRequest 
+     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      */
-    public async cancelPayment (submitPaymentRequest: SubmitPaymentRequest, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body?: any;  }> {
+    public async cancelPayment (submitPaymentRequest: SubmitPaymentRequest, operonWorkflowuuid?: string, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body?: any;  }> {
         const localVarPath = this.basePath + '/api/cancel_payment';
         let localVarQueryParameters: any = {};
         let localVarHeaderParams: any = (<any>Object).assign({}, this._defaultHeaders);
@@ -104,6 +105,7 @@ export class DefaultApi {
             throw new Error('Required parameter submitPaymentRequest was null or undefined when calling cancelPayment.');
         }
 
+        localVarHeaderParams['operon-workflowuuid'] = ObjectSerializer.serialize(operonWorkflowuuid, "string");
         (<any>Object).assign(localVarHeaderParams, options.headers);
 
         let localVarUseFormData = false;
@@ -152,8 +154,9 @@ export class DefaultApi {
     /**
      * 
      * @param createPaymentSessionRequest 
+     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      */
-    public async createPaymentSession (createPaymentSessionRequest: CreatePaymentSessionRequest, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body: CreatePaymentSession200Response;  }> {
+    public async createPaymentSession (createPaymentSessionRequest: CreatePaymentSessionRequest, operonWorkflowuuid?: string, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body: CreatePaymentSession200Response;  }> {
         const localVarPath = this.basePath + '/api/create_payment_session';
         let localVarQueryParameters: any = {};
         let localVarHeaderParams: any = (<any>Object).assign({}, this._defaultHeaders);
@@ -171,6 +174,7 @@ export class DefaultApi {
             throw new Error('Required parameter createPaymentSessionRequest was null or undefined when calling createPaymentSession.');
         }
 
+        localVarHeaderParams['operon-workflowuuid'] = ObjectSerializer.serialize(operonWorkflowuuid, "string");
         (<any>Object).assign(localVarHeaderParams, options.headers);
 
         let localVarUseFormData = false;
@@ -220,8 +224,9 @@ export class DefaultApi {
     /**
      * 
      * @param sessionId 
+     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      */
-    public async getSessionInformation (sessionId: string, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body: GetSessionInformation200Response;  }> {
+    public async getSessionInformation (sessionId: string, operonWorkflowuuid?: string, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body: GetSessionInformation200Response;  }> {
         const localVarPath = this.basePath + '/api/session_info/{session_id}'
             .replace('{' + 'session_id' + '}', encodeURIComponent(String(sessionId)));
         let localVarQueryParameters: any = {};
@@ -240,6 +245,7 @@ export class DefaultApi {
             throw new Error('Required parameter sessionId was null or undefined when calling getSessionInformation.');
         }
 
+        localVarHeaderParams['operon-workflowuuid'] = ObjectSerializer.serialize(operonWorkflowuuid, "string");
         (<any>Object).assign(localVarHeaderParams, options.headers);
 
         let localVarUseFormData = false;
@@ -288,8 +294,9 @@ export class DefaultApi {
     /**
      * 
      * @param sessionId 
+     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      */
-    public async retrievePaymentSession (sessionId: string, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body: CreatePaymentSession200Response;  }> {
+    public async retrievePaymentSession (sessionId: string, operonWorkflowuuid?: string, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body: CreatePaymentSession200Response;  }> {
         const localVarPath = this.basePath + '/api/session/{session_id}'
             .replace('{' + 'session_id' + '}', encodeURIComponent(String(sessionId)));
         let localVarQueryParameters: any = {};
@@ -308,6 +315,7 @@ export class DefaultApi {
             throw new Error('Required parameter sessionId was null or undefined when calling retrievePaymentSession.');
         }
 
+        localVarHeaderParams['operon-workflowuuid'] = ObjectSerializer.serialize(operonWorkflowuuid, "string");
         (<any>Object).assign(localVarHeaderParams, options.headers);
 
         let localVarUseFormData = false;
@@ -356,8 +364,9 @@ export class DefaultApi {
     /**
      * 
      * @param submitPaymentRequest 
+     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      */
-    public async submitPayment (submitPaymentRequest: SubmitPaymentRequest, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body?: any;  }> {
+    public async submitPayment (submitPaymentRequest: SubmitPaymentRequest, operonWorkflowuuid?: string, options: {headers: {[name: string]: string}} = {headers: {}}) : Promise<{ response: http.IncomingMessage; body?: any;  }> {
         const localVarPath = this.basePath + '/api/submit_payment';
         let localVarQueryParameters: any = {};
         let localVarHeaderParams: any = (<any>Object).assign({}, this._defaultHeaders);
@@ -368,6 +377,7 @@ export class DefaultApi {
             throw new Error('Required parameter submitPaymentRequest was null or undefined when calling submitPayment.');
         }
 
+        localVarHeaderParams['operon-workflowuuid'] = ObjectSerializer.serialize(operonWorkflowuuid, "string");
         (<any>Object).assign(localVarHeaderParams, options.headers);
 
         let localVarUseFormData = false;

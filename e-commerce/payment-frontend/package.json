@@ -20,6 +20,7 @@
     "@types/koa": "^2.13.9",
     "@types/koa-router": "^7.4.5",
     "@types/request": "^2.48.11",
+    "openapi-typescript-codegen": "^0.25.0",
     "typescript": "^5.2.2"
   }
 }
