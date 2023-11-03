@@ -33,9 +33,10 @@ const LoginPage: React.FC<Props> = ({ regurl }) => {
       body: JSON.stringify(payload),
     });
 
-    // TODO error handling
+    console.log(res);
+
     if (!res.ok) {
-       alert("Login failed.");
+       alert("Login failed: "+res.statusText);
     }
     else {
       // Now you can use the JWT to authenticate further requests

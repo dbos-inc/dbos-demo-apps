@@ -7,5 +7,5 @@ export async function POST(request: NextRequest) {
   return await placeApiRequest(request, async (api, req, hdrs) => {
     const dfr : DoFollowRequest = await req.json();
     return await api.doFollow({doFollowRequest: dfr}, hdrs);
-  })
+  });
 }

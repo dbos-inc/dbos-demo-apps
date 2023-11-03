@@ -30,6 +30,6 @@ export async function placeApiRequest<T>(request: NextRequest, func: (bapi: Defa
   }
   catch (err) {
     const e = err as ResponseError;
-    return NextResponse.json({}, await e.response);
+    return NextResponse.json({}, e.response);
   }
 }
