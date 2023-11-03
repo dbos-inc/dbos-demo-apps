@@ -16,15 +16,20 @@ const config = new Configuration({
 export const api = new DefaultApi(config);
 
 export async function placeApiRequest<T>(request: NextRequest, func: (bapi: DefaultApi, req: NextRequest, headers: RequestInit) => Promise<T> ) {
-  const hdrs: RequestInit = {};
+  const hdrs = {}
+
+  Object.assign(hdrs, {'Content-Type': 'application/json'});
+
   if (hasuserid()) {
-    hdrs['headers'] = {'userid' : getuserid()};
+    Object.assign(hdrs, {'userid' : getuserid()});
   }
+  const ri: RequestInit = {headers: hdrs};
+
   try {
-    return NextResponse.json(await func(api, request, hdrs));
+    return NextResponse.json(await func(api, request, ri));
   }
   catch (err) {
     const e = err as ResponseError;
-    return NextResponse.json({}, e.response);
+    return NextResponse.json({}, await e.response);
   }
 }

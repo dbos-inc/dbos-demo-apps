@@ -4,7 +4,6 @@ import React from 'react';
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { DoFollowRequest } from './client';
-//import useSWR from 'swr';
 
 interface UserSearchRes
 {
@@ -38,7 +37,7 @@ const FollowButton : React.FC<FBProps> = ({uid, children }) => {
           router.push('/main/userhome');
         }
     };
-        
+
     return (
       <button className="bg-cyan-700 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onClick={followClick}>
         {children}
