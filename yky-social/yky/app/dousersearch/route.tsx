@@ -1,36 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getuserid } from '@/app/components/userid';
-import { getAPIServer } from '@/app/components/backend';
+import { placeApiRequest } from '@/app/components/backend';
 
 export async function GET(request: NextRequest) {
-    const userid = getuserid();
     const rqusername = request.nextUrl.searchParams.get('findUserName');
     if (!rqusername) {
-        return NextResponse.json({error: "Search term not specified"}, {status:400});
+      return NextResponse.json({}, {status:400, statusText: "Search term not specified"});
     }
 
-    const res = await fetch(getAPIServer()+'/finduser'+'?' + new URLSearchParams({
-        userid: userid,
-        findUserName: rqusername,
-      }),
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-   
-    if (res.ok) {
-      const data = await res.json();
+    return placeApiRequest(request, async (api, req, hdrs) => {
+      const data = await api.doFindUser({findUserName: rqusername}, hdrs);
       if (data.message === "User Found.") {
-          const nres = NextResponse.json([data]); // Currently server returns 0 or 1
-          return nres;
+        return [data]; // Currently server returns 0 or 1
       }
-      else return NextResponse.json([]);
-    }
-    else {
-      // TODO Better message?
-      return NextResponse.json({ error: "Error" }, { status:res.status });
-    }
-}
+      else {
+        return [];
+      }
+    });
+  }

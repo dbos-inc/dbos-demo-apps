@@ -12,8 +12,6 @@ interface UserSearchRes
     name ?: string
 }
 
-//const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
 interface FBProps {
     uid: string;
     children?: React.ReactNode;
@@ -31,7 +29,7 @@ const FollowButton : React.FC<FBProps> = ({uid, children }) => {
         });
 
         if (!res.ok) {
-          alert("Follow failed");
+          alert("Follow failed: "+res.statusText);
         }
         else {
           router.push('/main/userhome');
