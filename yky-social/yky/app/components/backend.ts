@@ -29,7 +29,12 @@ export async function placeApiRequest<T>(request: NextRequest, func: (bapi: Defa
     return NextResponse.json(await func(api, request, ri));
   }
   catch (err) {
-    const e = err as ResponseError;
-    return NextResponse.json({}, e.response);
+    if (err instanceof ResponseError) {
+      const e = err as ResponseError;
+      return NextResponse.json({}, e.response);  
+    }
+    else {
+      return NextResponse.json({}, {status: 500, statusText: (err as Error).message});
+    }
   }
 }

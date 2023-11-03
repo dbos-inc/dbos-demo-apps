@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
     return nres;
   }
   catch (err) {
-    console.log(err);
     if (err instanceof ResponseError) {
       const e = err as ResponseError;
       return NextResponse.json({}, e.response);  
