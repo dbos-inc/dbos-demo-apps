@@ -11,7 +11,8 @@ paths:
       responses:
         "204":
           description: No Content
-      parameters: []
+      parameters:
+        - $ref: "#/components/parameters/operonWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -32,7 +33,8 @@ paths:
       responses:
         "204":
           description: No Content
-      parameters: []
+      parameters:
+        - $ref: "#/components/parameters/operonWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -80,6 +82,8 @@ paths:
                     price:
                       type: number
                   additionalProperties: false
+      parameters:
+        - $ref: "#/components/parameters/operonWorkflowUUID"
   /api/products/{id}:
     get:
       operationId: getProduct
@@ -117,13 +121,15 @@ paths:
           required: true
           schema:
             type: number
+        - $ref: "#/components/parameters/operonWorkflowUUID"
   /api/add_to_cart:
     post:
       operationId: addToCart
       responses:
         "204":
           description: No Content
-      parameters: []
+      parameters:
+        - $ref: "#/components/parameters/operonWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -174,7 +180,8 @@ paths:
                     inventory:
                       type: number
                   additionalProperties: false
-      parameters: []
+      parameters:
+        - $ref: "#/components/parameters/operonWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -198,11 +205,23 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: "#/components/parameters/operonWorkflowUUID"
   /payment_webhook:
     post:
       operationId: paymentWebhook
       responses:
         "204":
           description: No Content
+      parameters:
+        - $ref: "#/components/parameters/operonWorkflowUUID"
 components:
   schemas: {}
+  parameters:
+    operonWorkflowUUID:
+      name: operon-workflowuuid
+      in: header
+      required: false
+      description: Caller specified [Operon idempotency
+        key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
+      schema:
+        type: string

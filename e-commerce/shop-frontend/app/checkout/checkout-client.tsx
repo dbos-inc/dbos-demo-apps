@@ -1,8 +1,7 @@
 'use client'
-import { CartProduct } from '@/interfaces/Product';
 import { Container, Table, Button, Row } from 'react-bootstrap';
 import Link from 'next/link';
-import { api, backendAddress } from '@/lib/backend';
+import { CartProduct, backendAddress } from '@/lib/backend';
 
 
 interface CheckoutProps {
@@ -37,9 +36,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, username }) => {
             </thead>
             <tbody>
                 {cart.map((product: CartProduct) => (
-                <tr key={product.productId}>
+                <tr key={product.product_id}>
                     <td>{product.product}</td>
-                    <td>${product.displayPrice}</td>
+                    <td>${product.display_price}</td>
                     <td>{product.inventory}</td>
                 </tr>
                 ))}

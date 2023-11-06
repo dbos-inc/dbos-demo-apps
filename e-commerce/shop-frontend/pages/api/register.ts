@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { api } from '@/lib/backend';
-import { ResponseError } from '@/client';
+import { HttpError, ok } from 'oazapfts';
 
 export default async function register(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -14,12 +14,12 @@ export default async function register(req: NextApiRequest, res: NextApiResponse
   }
 
   try {
-    await api.register({ loginRequest: { username, password } });
+    await ok(api.register( { username, password } ));
     return res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
-    if (error instanceof ResponseError) {
+    if (error instanceof HttpError) {
       console.error(error.message);
-      return res.status(error.response.status).json({ message: error.message })
+      return res.status(error.status).json({ message: error.message })
     } else {
       console.error(error);
       throw error;

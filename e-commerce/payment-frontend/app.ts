@@ -2,33 +2,35 @@ import Koa from 'koa';
 import KoaRouter from 'koa-router';
 import KoaViews from '@ladjs/koa-views';
 import { bodyParser as KoaBodyParser } from '@koa/bodyparser';
-import { DefaultApi, GetSessionInformation200Response as PaymentSessionInformation } from './client/api';
+import { PaymentClient } from './client';
 
 const port = process.env.PORT || 8000;
 const basePath = process.env.PLAID_BACKEND || 'http://localhost:8086';
 
-const api = new DefaultApi(basePath);
+const client = new PaymentClient({ BASE: basePath});
+const api = client.default;
 
 const app = new Koa();
 const router = new KoaRouter();
 app.use(KoaBodyParser());
 app.use(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }));
 
+type PaymentSessionInformation = Awaited<ReturnType<typeof api.getSessionInformation>>
+
 async function getPaymentSessionInfo(sessionId: string): Promise<PaymentSessionInformation | undefined> {
     try {
-        const result = await api.getSessionInformation(sessionId);
-        return result.body;
+        return await api.getSessionInformation(sessionId);
     } catch {
         return undefined;
     }
 }
 
-async function submitPayment(sessionId: string): Promise<void> {
-    await api.submitPayment({ sessionId });
+async function submitPayment(session_id: string): Promise<void> {
+    await api.submitPayment({ session_id });
 }
 
-async function cancelPayment(sessionId: string): Promise<void> {
-    await api.cancelPayment({ sessionId });
+async function cancelPayment(session_id: string): Promise<void> {
+    await api.cancelPayment({ session_id });
 }
 
 router.get('/', async (ctx, next) => {
@@ -57,10 +59,10 @@ router.post('/payment/:session_id', async (ctx, next) => {
     const submit = 'submit' in ctx.request.body;
     if (submit) {
         await submitPayment(session_id);
-        ctx.redirect(session.successUrl);
+        ctx.redirect(session.success_url);
     } else {
         await cancelPayment(session_id);
-        ctx.redirect(session.cancelUrl);
+        ctx.redirect(session.cancel_url);
     }
 });
 

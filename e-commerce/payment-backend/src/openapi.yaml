@@ -31,7 +31,8 @@ paths:
                       - paid
                       - cancelled
                 additionalProperties: false
-      parameters: []
+      parameters:
+        - $ref: "#/components/parameters/operonWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -88,6 +89,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: "#/components/parameters/operonWorkflowUUID"
   /api/session_info/{session_id}:
     get:
       operationId: getSessionInformation
@@ -123,13 +125,15 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: "#/components/parameters/operonWorkflowUUID"
   /api/submit_payment:
     post:
       operationId: submitPayment
       responses:
         "204":
           description: No Content
-      parameters: []
+      parameters:
+        - $ref: "#/components/parameters/operonWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -147,7 +151,8 @@ paths:
       responses:
         "204":
           description: No Content
-      parameters: []
+      parameters:
+        - $ref: "#/components/parameters/operonWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -175,3 +180,12 @@ components:
         quantity:
           type: number
       additionalProperties: false
+  parameters:
+    operonWorkflowUUID:
+      name: operon-workflowuuid
+      in: header
+      required: false
+      description: Caller specified [Operon idempotency
+        key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
+      schema:
+        type: string

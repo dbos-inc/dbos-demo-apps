@@ -1,16 +1,15 @@
 import Home from './home-client'
-import { Product } from '@/interfaces/Product';
 import { cookies } from "next/headers";
 import { getRequestCookie } from "@/lib/session";
-import { api } from '@/lib/backend';
-import { ResponseError } from '@/client';
+import { api, Product } from '@/lib/backend';
+import { HttpError, ok } from 'oazapfts';
 
 
 const getProducts = async (): Promise<Product[]> => {
     try {
-      return await api.getProducts();
+      return await ok(api.getProducts());
     } catch (error) {
-      if (error instanceof ResponseError) {
+      if (error instanceof HttpError) {
           console.error(error.message);
       } else {
           console.error(error);
