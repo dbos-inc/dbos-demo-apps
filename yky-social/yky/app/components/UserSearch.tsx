@@ -3,7 +3,7 @@
 import React from 'react';
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-//import useSWR from 'swr';
+import { DoFollowRequest } from './client';
 
 interface UserSearchRes
 {
@@ -11,8 +11,6 @@ interface UserSearchRes
     uid ?: string,
     name ?: string
 }
-
-//const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface FBProps {
     uid: string;
@@ -23,7 +21,7 @@ const FollowButton : React.FC<FBProps> = ({uid, children }) => {
     const router = useRouter();
 
     const followClick = async () => {
-        const body = { action: "follow",  targetuser: uid };
+        const body : DoFollowRequest = { followUid: uid };
         const res = await fetch(`/dograph`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -31,13 +29,13 @@ const FollowButton : React.FC<FBProps> = ({uid, children }) => {
         });
 
         if (!res.ok) {
-          alert("Follow failed");
+          alert("Follow failed: "+res.statusText);
         }
         else {
           router.push('/main/userhome');
         }
     };
-        
+
     return (
       <button className="bg-cyan-700 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onClick={followClick}>
         {children}

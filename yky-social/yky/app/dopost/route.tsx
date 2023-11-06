@@ -1,26 +1,9 @@
-import { NextResponse } from 'next/server';
-import { getuserid } from '@/app/components/userid';
-import { getAPIServer } from '@/app/components/backend';
+import { NextRequest } from 'next/server';
 
-export async function POST(request: Request) {
-  const userid = getuserid();
+import { placeApiRequest } from '@/app/components/backend';
 
-  const res = await fetch(getAPIServer() + '/composepost'+'?' + new URLSearchParams({
-    userid: userid,
-  }),
-  {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(await request.json()),
-  });
- 
-  if (res.ok) {
-    const data = res.json();
-    return NextResponse.json(data);
-  }
-  else {
-    return NextResponse.json({error: "Error", status:res.status});
-  }
+export async function POST(request: NextRequest) {
+  return await placeApiRequest(request, async (api, req, hdrs) => {
+    return await api.doCompose({doComposeRequest: await req.json()}, hdrs);
+  })
 }

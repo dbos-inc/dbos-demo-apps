@@ -63,21 +63,39 @@ export function getS3(ctx: OperonContext) {
 
 // eslint-disable-next-line @typescript-eslint/require-await
 async function authMiddleware (ctx: MiddlewareContext) {
-  if (ctx.requiredRole.length > 0) {
-    // TODO: We really need to validate something, generally it would be a token
-    //  Currently the backend is "taking the front-end's word for it"
-    const { userid } = ctx.koaContext.request.query;
-    const uid = userid?.toString();
-
-    if (!uid) {
-      const err = new Error.OperonNotAuthorizedError("Not logged in.", 401);
-      throw err;
-    }
-    return {
-      authenticatedUser: uid,
-      authenticatedRoles: ['user']
-    };
+  if (ctx.requiredRole.length == 0) {
+    return;
   }
+
+  const { userid } = ctx.koaContext.request.query;
+  let uid = userid;
+  if (!uid) {
+      uid = ctx.koaContext.headers['userid'];
+  }
+  const suid = uid?.toString();
+
+  if (!suid) {
+    const err = new Error.OperonNotAuthorizedError("Not logged in.", 401);
+    throw err;
+  }
+
+  // We could do additional validation, such as a token.
+  //  Currently the backend is trusting that the front end did that.
+  //  But we will check that the database hasn't changed in a way
+  //    that invalidates the frontend credentials.
+  const u = await ctx.query((dbclient: EntityManager) => {
+      return dbclient.getRepository(UserLogin).findOneBy({id: suid});
+  });
+
+  if (!u || !u.active) {
+    const err = new Error.OperonNotAuthorizedError("Invalid user.", 403);
+    throw err;
+  }
+
+  return {
+    authenticatedUser: suid,
+    authenticatedRoles: ['user']
+  };
 }
 
 @Authentication(authMiddleware)
@@ -227,8 +245,8 @@ export class YKY
 
     // TODO: Validate user and drop from table
 
-    const presignedUrl = await Operations.ensureS3FileDropped(ctx, key, bucket);
-    return { message: "Dropped", url: presignedUrl, key: key };
+    await Operations.ensureS3FileDropped(ctx, key, bucket);
+    return { message: "Dropped", key: key };
   }
 
   @GetApi("/startMediaUpload")

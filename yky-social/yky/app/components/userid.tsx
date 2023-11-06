@@ -8,6 +8,11 @@ interface ErrorStatus {
     status ?: number;
 }
 
+export function hasuserid() : boolean
+{
+    return cookies().get("auth") ? true : false;
+}
+
 export function getuserid() : string
 {
     const auth = cookies().get("auth");

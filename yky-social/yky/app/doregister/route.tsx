@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { getAPIServer } from '@/app/components/backend';
+import { placeApiRequest } from '@/app/components/backend';
 
 /*
 export const config = {
@@ -12,20 +12,8 @@ export const config = {
 }
 */
 
-export async function POST(request: Request) {
-  const res = await fetch(getAPIServer() + '/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(await request.json()),
-  });
- 
-  if (res.ok) {
-    const data = res.json();
-    return NextResponse.json(data);
-  }
-  else {
-    return NextResponse.json({error: "Error", status:res.status});
-  }
+export async function POST(request: NextRequest) {
+  return await placeApiRequest(request, async (api, req, hdrs) => {
+    return await api.doRegister({doRegisterRequest: await req.json()}, hdrs);
+  })
 }

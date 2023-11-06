@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import jwt from "jsonwebtoken";
 
-import { getAPIServer } from '@/app/components/backend';
+import { api, ResponseError } from '@/app/components/backend';
 
 interface User {
     username: string;
@@ -54,24 +54,23 @@ function clearUser(res: NextResponse): void {
 export async function POST(request: NextRequest) {
   const rqdata = await request.json();
 
-  const res = await fetch(getAPIServer() + '/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(rqdata),
-  });
- 
-  if (res.ok) {
-    const data = await res.json();
+  try
+  {
+    const data = await api.doLogin({doLoginRequest: rqdata});
+
     const user = {userid: data.id, username: rqdata.username};
-    const nres = NextResponse.json({ user : user}, {status: res.status});
+    const nres = NextResponse.json({ user : user}, {status: 200});
     authenticateUser(nres, user);
     return nres;
   }
-  else {
-    // TODO Better message?
-    return NextResponse.json({ error: "Error" }, { status:res.status });
+  catch (err) {
+    if (err instanceof ResponseError) {
+      const e = err as ResponseError;
+      return NextResponse.json({}, e.response);  
+    }
+    else {
+      return NextResponse.json({}, {status: 500, statusText: (err as Error).message});
+    }
   }
 }
 

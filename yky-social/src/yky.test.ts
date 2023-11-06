@@ -149,6 +149,12 @@ describe('Go find a friend, follow', () => {
     .query({userid:response.body.id});
     expect(readtimeline.statusCode).toBe(200);
     expect(readtimeline.body.timeline).toHaveLength(0);
+
+    // Lie about user id
+    const readtimelinefail = await request(testRuntime.getHandlersCallback())
+    .get('/recvtimeline')
+    .query({userid:'73d7d75e-0758-4093-8613-d7b73a8199e4'});
+    expect(readtimelinefail.statusCode).toBe(403);
   });
 });
 
