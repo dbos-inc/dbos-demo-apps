@@ -15,7 +15,7 @@ const config = new Configuration({
 
 export const api = new DefaultApi(config);
 
-export async function placeApiRequest<T>(request: NextRequest, func: (bapi: DefaultApi, req: NextRequest, headers: RequestInit) => Promise<T> ) {
+export function getHeaders() {
   const hdrs = {}
 
   Object.assign(hdrs, {'Content-Type': 'application/json'});
@@ -23,6 +23,13 @@ export async function placeApiRequest<T>(request: NextRequest, func: (bapi: Defa
   if (hasuserid()) {
     Object.assign(hdrs, {'userid' : getuserid()});
   }
+
+  return hdrs;
+}
+
+export async function placeApiRequest<T>(request: NextRequest, func: (bapi: DefaultApi, req: NextRequest, headers: RequestInit) => Promise<T> ) {
+  const hdrs = getHeaders();
+
   const ri: RequestInit = {headers: hdrs};
 
   try {
