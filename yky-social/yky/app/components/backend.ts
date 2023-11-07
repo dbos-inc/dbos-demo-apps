@@ -45,3 +45,9 @@ export async function placeApiRequest<T>(request: NextRequest, func: (bapi: Defa
     }
   }
 }
+
+export async function getPageData<T>(func: (bapi: DefaultApi, headers: RequestInit) => Promise<T> ) {
+  const hdrs = getHeaders();
+  const ri: RequestInit = {headers: hdrs};
+  return await func(api, ri);
+}

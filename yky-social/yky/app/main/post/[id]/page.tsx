@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { api, getHeaders } from '@/app/components/backend';
+import { getPageData } from '@/app/components/backend';
 
 export default async function Page({
     params,
@@ -9,8 +9,7 @@ export default async function Page({
   })
 {
   try {
-    const hdrs = getHeaders();
-    const data = await api.getPost({id: params.id}, {headers: hdrs});
+    const data = await getPageData((api, headers) => {return api.getPost({id: params.id}, headers);});
 
     return (
       <div className="p-4 bg-white shadow-lg rounded-md">
