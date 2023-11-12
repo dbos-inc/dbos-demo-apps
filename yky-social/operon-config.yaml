@@ -7,7 +7,7 @@ database:
   system_database: 'opsys'
   connectionTimeoutMillis: 3000
   user_dbclient: 'typeorm'
-telemetryExporters:
+telemetry:
   logs:
     logLevel: 'debug'
     addContextMetadata: true
