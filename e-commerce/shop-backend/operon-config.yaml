@@ -7,8 +7,6 @@ database:
   system_database: 'shop_systemdb'
   connectionTimeoutMillis: 3000
   user_dbclient: 'knex'
-telemetryExporters:
-  - 'ConsoleExporter'
 runtimeConfig:
   port: 8082
 application:
