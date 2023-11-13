@@ -17,7 +17,7 @@ export class Hello {
       return greeting;
     } catch (e) {
       ctxt.logger.error(e);
-      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+      await ctxt.invoke(Hello).undoHelloTransaction(user);
       return `Greeting failed for ${user}\n`;
     }
   }
@@ -32,7 +32,7 @@ export class Hello {
   }
 
   @OperonTransaction()
-  static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+  static async undoHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Decrement greet_count.
     await ctxt.client.raw("UPDATE operon_hello SET greet_count = greet_count - 1 WHERE name = ?", [user]);
   }
