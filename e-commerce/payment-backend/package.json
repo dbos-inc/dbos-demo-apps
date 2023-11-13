@@ -4,7 +4,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix --ext .ts .",
-    "setup": "knex migrate:latest",
+    "migrate": "knex migrate:latest",
     "start": "npm run build && operon start",
     "test": "jest --detectOpenHandles"
   },

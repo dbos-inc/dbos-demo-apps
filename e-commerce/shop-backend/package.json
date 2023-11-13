@@ -4,7 +4,8 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix --ext .ts .",
-    "setup": "knex migrate:latest && knex seed:run",
+    "migrate": "knex migrate:latest",
+    "seed": "knex seed:run",
     "start": "npm run build && operon start"
   },
   "dependencies": {
