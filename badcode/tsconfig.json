@@ -17,8 +17,7 @@
   },
   "include": [                                           /* Specifies an array of filenames or patterns to include in the program. */
     "src",
+    "migrations",
+    "knexfile.ts",
   ],
-  "exclude": [
-    "**/*.test.ts"
-  ]
 }
