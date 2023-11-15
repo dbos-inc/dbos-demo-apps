@@ -30,7 +30,7 @@ export interface operon_hello {
   greet_count: number;
 }
 
-type KnexTransactionContext = TransactionContext<Knex>
+type KnexTransactionContext = TransactionContext<Knex>;
 
 export class Hello {
 
