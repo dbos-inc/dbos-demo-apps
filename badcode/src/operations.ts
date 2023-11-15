@@ -1,4 +1,12 @@
-import { TransactionContext, OperonTransaction, GetApi, ArgSource, ArgSources } from '@dbos-inc/operon';
+import {
+   TransactionContext,
+   HandlerContext,
+   OperonTransaction,
+   GetApi,
+   ArgSource,
+   ArgSources
+} from '@dbos-inc/operon';
+
 import { Knex } from 'knex';
 
 
@@ -8,7 +16,7 @@ export const settings = {
     language: 'en'
 };
 
-function getUserSetting(setting): string {
+function getUserSetting(setting: string): string {
     return eval('settings.' + setting) as string;
 }
 
@@ -22,11 +30,13 @@ export interface operon_hello {
   greet_count: number;
 }
 
+type KnexTransactionContext = TransactionContext<Knex>
+
 export class Hello {
 
   @GetApi('/greeting/:user') // Serve this function from HTTP GET requests to the /greeting endpoint with 'user' as a path parameter
   @OperonTransaction()  // Run this function as a database transaction
-  static async helloTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
+  static async helloTransaction(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) user: string) {
     // Retrieve and increment the number of times this user has been greeted.
     const query = "INSERT INTO operon_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = operon_hello.greet_count + 1 RETURNING greet_count;";
     const { rows } = await ctxt.client.raw(query, [user]) as { rows: operon_hello[] };
