@@ -4,7 +4,8 @@
   "scripts": {
     "build": "tsc",
     "test": "npx knex migrate:rollback && npx knex migrate:up && jest",
-    "lint": "eslint --fix --ext .ts .",
+    "lint": "eslint --ext .ts .",
+    "lint-fix": "eslint --fix --ext .ts .",
     "secaudit": "eslint --fix --ext .ts ."
   },
   "devDependencies": {
