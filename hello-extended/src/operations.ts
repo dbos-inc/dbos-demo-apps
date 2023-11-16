@@ -1,4 +1,4 @@
-import { TransactionContext, OperonTransaction, GetApi, PostApi, CommunicatorContext, OperonCommunicator, OperonWorkflow, WorkflowContext } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, PostApi, CommunicatorContext, OperonCommunicator, OperonWorkflow, WorkflowContext, ArgSource, ArgSources } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
 export interface operon_hello {
@@ -10,14 +10,14 @@ export class Hello {
 
   @GetApi('/greeting/:user')
   @OperonWorkflow()
-  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+  static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
     const greeting = await ctxt.invoke(Hello).helloTransaction(user);
     try {
       await ctxt.invoke(Hello).greetPostman(greeting);
       return greeting;
     } catch (e) {
       ctxt.logger.error(e);
-      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+      await ctxt.invoke(Hello).undoHelloTransaction(user);
       return `Greeting failed for ${user}\n`;
     }
   }
@@ -32,7 +32,7 @@ export class Hello {
   }
 
   @OperonTransaction()
-  static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+  static async undoHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Decrement greet_count.
     await ctxt.client.raw("UPDATE operon_hello SET greet_count = greet_count - 1 WHERE name = ?", [user]);
   }
@@ -45,7 +45,7 @@ export class Hello {
 
   @PostApi('/clear/:user')
   @OperonTransaction()
-  static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
+  static async clearTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
     // Delete greet_count for a user.
     await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
     return `Cleared greet_count for ${user}!\n`;
