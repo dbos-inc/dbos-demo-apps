@@ -22,8 +22,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/operon": "^0.6.31",
-    "knex": "^2.5.1",
+    "@dbos-inc/operon": "^0.7.11-preview",
+    "knex": "^3.0.1",
     "ts-node": "^10.9.1"
   }
 }
