@@ -102,7 +102,7 @@ export class Shop {
   }
 
   @GetApi('/api/products')
-  @OperonTransaction()
+  @OperonTransaction({ readOnly: true })
   static async getProducts(ctxt: KnexTransactionContext): Promise<DisplayProduct[]> {
     const rows = await ctxt.client<Product>('products').select("product_id", "product", "description", "image_name", "price");
     const formattedRows: DisplayProduct[] = rows.map((row) => ({
