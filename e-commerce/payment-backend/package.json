@@ -9,7 +9,7 @@
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
-    "@dbos-inc/operon": "^0.7.6-preview",
+    "@dbos-inc/operon": "^0.7.11-preview",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
