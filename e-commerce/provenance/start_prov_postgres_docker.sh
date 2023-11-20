@@ -37,6 +37,9 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 npm run --prefix $SCRIPT_DIR/../shop-backend migrate
 npm run --prefix $SCRIPT_DIR/../payment-backend migrate
 
+# Configure provenance capture triggers
+docker exec -i operon-ecommerce psql -U postgres -d shop -t < ${SCRIPT_DIR}/config_user_tables.sql
+
 # Add Seed Data
 npm run --prefix $SCRIPT_DIR/../shop-backend seed
 
@@ -44,5 +47,4 @@ npm run --prefix $SCRIPT_DIR/../shop-backend seed
 # create a database in Postgres for the shop provenance data
 docker exec operon-ecommerce psql -U postgres -c "CREATE DATABASE shop_prov;"
 
-docker exec -i operon-ecommerce psql -U postgres -d shop -t < ${SCRIPT_DIR}/init_user_tables.sql
 docker exec -i operon-ecommerce psql -U postgres -d shop_prov -t < ${SCRIPT_DIR}/init_prov_tables.sql
