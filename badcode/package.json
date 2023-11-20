@@ -6,7 +6,8 @@
     "test": "npx knex migrate:rollback && npx knex migrate:up && jest",
     "lint": "eslint --ext .ts .",
     "lint-fix": "eslint --fix --ext .ts .",
-    "secaudit": "eslint --fix --ext .ts ."
+    "secaudit": "eslint --fix --ext .ts .",
+    "sqlaudit": "tsc scan/findSQL.ts && node scan/findSQL.js src"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",
