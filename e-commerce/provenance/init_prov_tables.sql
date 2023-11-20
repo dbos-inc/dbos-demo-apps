@@ -14,7 +14,9 @@ CREATE TABLE cart(
     product_id integer NOT NULL,
     quantity integer NOT NULL,
     begin_xid xid8 NOT NULL,
-    end_xid xid8 NULL);
+    end_xid xid8 NOT NULL,
+    begin_seq integer NOT NULL,
+    end_seq integer NOT NULL);
 
 CREATE TABLE order_items(
     order_id integer NOT NULL,
@@ -22,7 +24,9 @@ CREATE TABLE order_items(
     price integer NOT NULL,
     quantity integer NOT NULL,
     begin_xid xid8 NOT NULL,
-    end_xid xid8 NULL);
+    end_xid xid8 NOT NULL,
+    begin_seq integer NOT NULL,
+    end_seq integer NOT NULL);
 
 CREATE TABLE orders(
     order_id integer NOT NULL,
@@ -31,7 +35,9 @@ CREATE TABLE orders(
     stripe_session_id character varying(255) NOT NULL,
     last_update_time bigint NOT NULL,
     begin_xid xid8 NOT NULL,
-    end_xid xid8 NULL);
+    end_xid xid8 NOT NULL,
+    begin_seq integer NOT NULL,
+    end_seq integer NOT NULL);
 
 CREATE TABLE products(
     product_id integer NOT NULL,
@@ -41,10 +47,14 @@ CREATE TABLE products(
     price integer NOT NULL,
     inventory integer NOT NULL,
     begin_xid xid8 NOT NULL,
-    end_xid xid8 NULL);
+    end_xid xid8 NOT NULL,
+    begin_seq integer NOT NULL,
+    end_seq integer NOT NULL);
 
 CREATE TABLE users(
     username character varying(255) NOT NULL,
     password character varying(255) NOT NULL,
     begin_xid xid8 NOT NULL,
-    end_xid xid8 NULL);
+    end_xid xid8 NOT NULL,
+    begin_seq integer NOT NULL,
+    end_seq integer NOT NULL);
