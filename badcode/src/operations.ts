@@ -48,11 +48,20 @@ export class Hello {
     return getUserSetting(setting);
   }
 
-  @GetApi('/query/:user')
+  @GetApi('/query1/:user')
   @OperonTransaction({readOnly: true})
   static async sqlInjectTransaction1(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) user: string) {
     // Retrieve and increment the number of times this user has been greeted.
     const query = "SELECT * FROM operon_hello WHERE user='"+user+"'";
+    const { rows } = await ctxt.client.raw(query) as { rows: operon_hello[] };
+    return rows;
+  }
+
+  @GetApi('/query2/:user')
+  @OperonTransaction({readOnly: true})
+  static async sqlInjectTransaction2(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) user: string) {
+    // Retrieve and increment the number of times this user has been greeted.
+    const query = `SELECT * FROM operon_hello WHERE user='${user}'`;
     const { rows } = await ctxt.client.raw(query) as { rows: operon_hello[] };
     return rows;
   }
