@@ -1,4 +1,5 @@
 "use strict";
+/* eslint-disable no-console */
 Object.defineProperty(exports, "__esModule", { value: true });
 var ts = require("typescript");
 var fs = require("fs");
@@ -36,7 +37,7 @@ function isComplex(node, depth) {
     });
     return isComplexNode;
 }
-function analyzeDatabaseCall(node, fileName) {
+function analyzeDatabaseCall(node, _fileName) {
     // Example logic to determine the nature of the database call
     if (isParameterizedQuery(node)) {
         return 'safe';
@@ -62,12 +63,17 @@ function analyzeFunction(node, fileName) {
             }
         }
     });
+    ts.forEachChild(node, function (child) {
+        if (ts.isCallExpression(child)) {
+            analyzeFunctionCall(child, fileName);
+        }
+    });
     console.log("Function in ".concat(fileName, " is: ").concat(functionStatus));
 }
-function analyzeFunctionCall(node, fileName) {
+function analyzeFunctionCall(node, _fileName) {
     // Example logic to analyze a function call
     if (node.expression && ts.isIdentifier(node.expression)) {
-        var functionName = node.expression.text;
+        var _functionName = node.expression.text;
         // Analyze the function based on its name, arguments, etc.
     }
     node.arguments.forEach(function (arg) {

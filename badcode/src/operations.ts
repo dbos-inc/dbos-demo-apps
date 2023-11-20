@@ -48,6 +48,15 @@ export class Hello {
     return getUserSetting(setting);
   }
 
+  @GetApi('/query/:user')
+  @OperonTransaction({readOnly: true})
+  static async sqlInjectTransaction1(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) user: string) {
+    // Retrieve and increment the number of times this user has been greeted.
+    const query = "SELECT * FROM operon_hello WHERE user='"+user+"'";
+    const { rows } = await ctxt.client.raw(query) as { rows: operon_hello[] };
+    return rows;
+  }
+
   @GetApi('/register')
   static async createAcct(_ctx: HandlerContext, username: string, password: string) {
     //const complexityregex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;

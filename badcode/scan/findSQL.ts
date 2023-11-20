@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -40,7 +42,7 @@ function isComplex(node: ts.Node, depth = 0): boolean {
   return isComplexNode;
 }
 
-function analyzeDatabaseCall(node: ts.Node, fileName: string): string {
+function analyzeDatabaseCall(node: ts.Node, _fileName: string): string {
   // Example logic to determine the nature of the database call
   if (isParameterizedQuery(node)) {
     return 'safe';
@@ -66,13 +68,19 @@ function analyzeFunction(node: ts.Node, fileName: string) {
     }
   });
 
+  ts.forEachChild(node, child => {
+    if (ts.isCallExpression(child)) {
+      analyzeFunctionCall(child, fileName);
+    }
+  });
+
   console.log(`Function in ${fileName} is: ${functionStatus}`);
 }
 
-function analyzeFunctionCall(node: ts.CallExpression, fileName: string) {
+function analyzeFunctionCall(node: ts.CallExpression, _fileName: string) {
   // Example logic to analyze a function call
   if (node.expression && ts.isIdentifier(node.expression)) {
-    const functionName = node.expression.text;
+    const _functionName = node.expression.text;
     // Analyze the function based on its name, arguments, etc.
   }
 
