@@ -5,7 +5,7 @@ DECLARE
 BEGIN
     SELECT count(*) from affected_rows INTO num_rows;
     IF num_rows > 1 THEN
-        SELECT FORMAT('schema=%s, table=%s, count=%s, op=%s', TG_TABLE_SCHEMA, TG_TABLE_NAME, num_rows, TG_OP) INTO msg;
+        SELECT FORMAT('{"schema":"%s", "table":"%s", "count":%s, "op":"%s"}', TG_TABLE_SCHEMA, TG_TABLE_NAME, num_rows, TG_OP) INTO msg;
         PERFORM pg_logical_emit_message(true, 'wal2json', msg);
     END IF;
     RETURN NULL;
