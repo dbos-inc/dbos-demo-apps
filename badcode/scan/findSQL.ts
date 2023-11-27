@@ -141,7 +141,13 @@ function analyzeDirectory(directory: string) {
   });
 }
 
+function analyzeProgram(entrypoints: string[]) {
+  const program = ts.createProgram(entrypoints);
+}
+
 //const directoryToAnalyze = '/home/chuck/dbos/operon-demo-apps/badcode'; // Update this path
-const directoryToAnalyze = process.argv[2]; // The first argument passed to the script
-analyzeDirectory(directoryToAnalyze);
+//const directoryToAnalyze = process.argv[2]; // The first argument passed to the script
+//analyzeDirectory(directoryToAnalyze);
+
+analyzeProgram([process.argv[2]]);
 
