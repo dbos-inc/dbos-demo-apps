@@ -31,7 +31,6 @@ export interface operon_hello {
 type KnexTransactionContext = TransactionContext<Knex>;
 
 export class Hello {
-
   @GetApi('/greeting/:user') // Serve this function from HTTP GET requests to the /greeting endpoint with 'user' as a path parameter
   @OperonTransaction()  // Run this function as a database transaction
   static async helloTransaction(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) user: string) {

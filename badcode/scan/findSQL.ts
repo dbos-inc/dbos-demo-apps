@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import { readFileSync } from "fs";
+//import { readFileSync } from "fs";
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -9,7 +9,7 @@ import {
   DiagnosticsCollector,
   diagResult,
   logDiagnostics,
-} from '@dbos-inc/operon/dist/src/operon-runtime/tsDiagUtil'
+} from '@dbos-inc/operon/dist/src/operon-runtime/tsDiagUtil';
 
 const libraryNames = ['pg', 'typeorm', 'knex', 'prisma'];
 
@@ -139,7 +139,7 @@ function analyzeFile(fileName: string) {
   });
 }
 
-function analyzeDirectory(directory: string) {
+export function analyzeDirectory(directory: string) {
   fs.readdirSync(directory).forEach(file => {
     const fullPath = path.join(directory, file);
     if (fullPath.endsWith('.ts')) {
@@ -199,7 +199,6 @@ export class TypeParser {
       if (file.isDeclarationFile) continue;
       for (const stmt of file.statements) {
         if (ts.isClassDeclaration(stmt)) {
-
           const staticMethods = stmt.members
             .filter(ts.isMethodDeclaration)
             // Operon only supports static methods, so filter out instance methods by default
@@ -219,6 +218,10 @@ export class TypeParser {
 
     if (classes.length === 0) {
       this.diagc.warn(`no classes found in ${JSON.stringify(this.program.getRootFileNames())}`);
+    }
+    else {
+      //this.diagc.warn(`Found ${classes.length} classes`);
+      console.log(`Found ${classes.length} classes`);
     }
 
     return diagResult(classes, this.diags);
