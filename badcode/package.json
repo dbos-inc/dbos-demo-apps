@@ -7,7 +7,7 @@
     "lint": "eslint --ext .ts .",
     "lint-fix": "eslint --fix --ext .ts .",
     "secaudit": "eslint --fix --ext .ts .",
-    "sqlaudit": "tsc scan/findSQL.ts && node scan/findSQL.js src"
+    "sqlaudit": "tsc && node dist/scan/findSQL.js src/operations.ts"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",
