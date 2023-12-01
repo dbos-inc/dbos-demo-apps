@@ -31,7 +31,7 @@ export async function bankAuthMiddleware(ctx: MiddlewareContext) {
 
 export const bankJwt = jwt({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  // Note: We have to read the config from env not from a file, because decorators are loaded before Operon, we must have the variables available during the loading time.
+  // Note: We have to read the config from env not from a file, because decorators are loaded before the DBOS executor, we must have the variables available during the loading time.
   secret: koaJwtSecret({
     jwksUri: `http://${process.env.BANK_HOST || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos/protocol/openid-connect/certs`,
     cache: true,
