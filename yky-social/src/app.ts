@@ -19,14 +19,14 @@ import {
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   HandlerContext,
   Workflow,
-  OperonContext,
+  DBOSContext,
   WorkflowContext,
   Authentication,
   MiddlewareContext,
   DefaultRequiredRole,
   Error,
   OrmEntities,
-  OperonDeploy,
+  DBOSDeploy,
   InitContext,
 } from "@dbos-inc/dbos-sdk";
 
@@ -35,7 +35,7 @@ import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client, S3 } from '@aws-sdk/client-s3';
 
-function getS3Config(ctx: OperonContext) {
+function getS3Config(ctx: DBOSContext) {
   const s3r = ctx.getConfig('aws_s3_region','us-east-2');
   const s3k = ctx.getConfig('aws_s3_access_key', 'x');
   const s3s = ctx.getConfig('aws_s3_access_secret', 'x');
@@ -50,12 +50,12 @@ function getS3Config(ctx: OperonContext) {
 
 let s3Client: S3Client | undefined = undefined;
 let awsS3: S3 | undefined = undefined;
-export function getS3Client(ctx: OperonContext) {
+export function getS3Client(ctx: DBOSContext) {
   if (s3Client) return s3Client;
   s3Client = new S3Client(getS3Config(ctx));
   return s3Client;
 }
-export function getS3(ctx: OperonContext) {
+export function getS3(ctx: DBOSContext) {
   if (awsS3) return awsS3;
   awsS3 = new S3(getS3Config(ctx));
   return awsS3;
@@ -75,7 +75,7 @@ async function authMiddleware (ctx: MiddlewareContext) {
   const suid = uid?.toString();
 
   if (!suid) {
-    const err = new Error.OperonNotAuthorizedError("Not logged in.", 401);
+    const err = new Error.DBOSNotAuthorizedError("Not logged in.", 401);
     throw err;
   }
 
@@ -88,7 +88,7 @@ async function authMiddleware (ctx: MiddlewareContext) {
   });
 
   if (!u || !u.active) {
-    const err = new Error.OperonNotAuthorizedError("Invalid user.", 403);
+    const err = new Error.DBOSNotAuthorizedError("Invalid user.", 403);
     throw err;
   }
 
@@ -293,7 +293,7 @@ export class YKY
     return { message: "Signed URL", url: presignedUrl, key: filekey };
   }
 
-  @OperonDeploy()
+  @DBOSDeploy()
   static async setUpSchema(ctx: InitContext) {
     await ctx.createUserSchema();
   }

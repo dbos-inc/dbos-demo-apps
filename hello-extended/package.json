@@ -1,5 +1,5 @@
 {
-  "name": "operon-hello-extended",
+  "name": "dbos-hello-extended",
   "version": "0.0.1",
   "scripts": {
     "build": "tsc"

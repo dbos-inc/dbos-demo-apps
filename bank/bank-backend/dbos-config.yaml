@@ -5,7 +5,7 @@ database:
   connectionTimeoutMillis: 3000
   user_database: 'bank'
   password: ${PGPASSWORD}
-  system_database: 'operon_bank_systemdb'
+  system_database: 'dbos_bank_systemdb'
   user_dbclient: "prisma"
 telemetry:
   logs:
@@ -18,6 +18,6 @@ telemetry:
 runtimeConfig:
   port: 8081
 application:
-  bankname: "Operon Bank - ${BANK_SCHEMA}"
+  bankname: "DBOS Bank - ${BANK_SCHEMA}"
   bankport: '8081'
   bankschema: ${BANK_SCHEMA}

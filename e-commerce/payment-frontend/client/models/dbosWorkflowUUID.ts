@@ -4,6 +4,6 @@
 /* eslint-disable */
 
 /**
- * Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
+ * Caller specified [workflow idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
  */
-export type operonWorkflowUUID = string;
+export type dbosWorkflowUUID = string;

@@ -1,7 +1,7 @@
 {
   "name": "bank-backend",
   "version": "0.0.1",
-  "description": "Bank backend built with Operon",
+  "description": "Bank backend built with DBOS",
   "main": "dist/main.js",
   "types": "dist/main.d.js",
   "scripts": {

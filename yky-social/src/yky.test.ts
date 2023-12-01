@@ -14,9 +14,9 @@ import { YKY } from './app';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { Operations } from './YKYOperations';
 
-import { OperonTestingRuntime, createTestingRuntime } from '@dbos-inc/dbos-sdk';
+import { DBOSTestingRuntime, createTestingRuntime } from '@dbos-inc/dbos-sdk';
 
-let testRuntime: OperonTestingRuntime;
+let testRuntime: DBOSTestingRuntime;
 
 beforeAll(async () => {
   testRuntime = await createTestingRuntime([YKY, Operations], "dbos-config.yaml");

@@ -8,7 +8,7 @@ export class Hello {
     const greeting = `Hello, ${name}!`;
     console.log(greeting);
     const p: PrismaClient = txnCtxt.client as PrismaClient;
-    const res = await p.operonHello.create({
+    const res = await p.dbosHello.create({
         data: {
         greeting: greeting,
         },

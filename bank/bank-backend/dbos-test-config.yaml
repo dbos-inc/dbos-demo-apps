@@ -5,7 +5,7 @@ database:
   connectionTimeoutMillis: 3000
   user_database: 'bank'
   password: ${PGPASSWORD}
-  system_database: 'operon_bank_test_systemdb'
+  system_database: 'dbos_bank_test_systemdb'
   user_dbclient: "prisma"
 telemetry:
   logs:

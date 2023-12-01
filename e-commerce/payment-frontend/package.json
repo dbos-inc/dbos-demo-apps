@@ -1,5 +1,5 @@
 {
-  "name": "operon-payment-shop-frontend",
+  "name": "dbos-payment-shop-frontend",
   "private": true,
   "main": "dist/app.js",
   "scripts": {

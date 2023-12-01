@@ -1,6 +1,6 @@
 import {
   TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
-  GetApi, PostApi, Communicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources, OperonContext
+  GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
 } from '@dbos-inc/dbos-sdk';
 import bcrypt from 'bcrypt';
 import { Knex } from 'knex';
@@ -60,7 +60,7 @@ interface PaymentSession {
 const checkout_url_topic = "payment_checkout_url";
 const checkout_complete_topic = "payment_checkout_complete";
 
-function getHostConfig(ctxt: OperonContext) {
+function getHostConfig(ctxt: DBOSContext) {
   const paymentHost = ctxt.getConfig<string>("payment_host");
   if (!paymentHost) {
     ctxt.logger.crit("Missing payment_host configuration");
@@ -85,7 +85,7 @@ export class Shop {
   static async login(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctxt.client<User>('users').select("password").where({ username }).first();
     if (!(user && await bcrypt.compare(password, user.password))) {
-      throw new OperonResponseError("Invalid username or password", 400);
+      throw new DBOSResponseError("Invalid username or password", 400);
     }
   }
 
@@ -94,7 +94,7 @@ export class Shop {
   static async register(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctxt.client<User>('users').select().where({ username }).first();
     if (user) {
-      throw new OperonResponseError("Username already exists", 400);
+      throw new DBOSResponseError("Username already exists", 400);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -148,7 +148,7 @@ export class Shop {
   static async webCheckout(ctxt: HandlerContext, @ArgSource(ArgSources.QUERY) username: string): Promise<void> {
     const origin = ctxt.koaContext.request?.headers.origin as string;
     if (typeof username !== 'string' || typeof origin !== 'string') {
-      throw new OperonResponseError("Invalid request!", 400);
+      throw new DBOSResponseError("Invalid request!", 400);
     }
     const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
     const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);

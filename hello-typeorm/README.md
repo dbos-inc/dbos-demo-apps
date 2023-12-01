@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS DBOSHello (greeting_id SERIAL PRIMARY KEY, greeting T
 
 Finally, start the simple HTTP server:
 ```shell
-npx operon start
+npx dbos start
 ```
 
 It should print the output:

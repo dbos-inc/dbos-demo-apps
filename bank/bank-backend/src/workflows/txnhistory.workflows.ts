@@ -144,7 +144,7 @@ export class BankTransactionHistory {
       const remoteRes = await axios.post(remoteUrl, data, {
         headers: {
           Authorization: token,
-          "operon-workflowuuid": workflowUUID,
+          "dbos-workflowuuid": workflowUUID,
         },
       });
       if (remoteRes.status != 200) {

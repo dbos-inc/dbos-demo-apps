@@ -77,7 +77,7 @@ To generate an OpenAPI definition for an Operon project, run the `operon openapi
 
 ``` shell
 # run this in the <root>/e-commerce/payment-backend and <root>/e-commerce/shop-backend folders
-npx operon openapi src/operations.ts
+npx dbos openapi src/operations.ts
 ```
 
 This will generate the OpenAPI definition file for the project and save it to the `src/openapi.yaml` path.

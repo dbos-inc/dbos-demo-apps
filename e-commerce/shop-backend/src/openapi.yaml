@@ -2,7 +2,7 @@
 
 openapi: 3.0.3
 info:
-  title: operon-demo-shop-backend
+  title: dbos-demo-shop-backend
   version: private
 paths:
   /api/login:
@@ -12,7 +12,7 @@ paths:
         "204":
           description: No Content
       parameters:
-        - $ref: "#/components/parameters/operonWorkflowUUID"
+        - $ref: "#/components/parameters/dbosWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -34,7 +34,7 @@ paths:
         "204":
           description: No Content
       parameters:
-        - $ref: "#/components/parameters/operonWorkflowUUID"
+        - $ref: "#/components/parameters/dbosWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -83,7 +83,7 @@ paths:
                       type: number
                   additionalProperties: false
       parameters:
-        - $ref: "#/components/parameters/operonWorkflowUUID"
+        - $ref: "#/components/parameters/dbosWorkflowUUID"
   /api/products/{id}:
     get:
       operationId: getProduct
@@ -121,7 +121,7 @@ paths:
           required: true
           schema:
             type: number
-        - $ref: "#/components/parameters/operonWorkflowUUID"
+        - $ref: "#/components/parameters/dbosWorkflowUUID"
   /api/add_to_cart:
     post:
       operationId: addToCart
@@ -129,7 +129,7 @@ paths:
         "204":
           description: No Content
       parameters:
-        - $ref: "#/components/parameters/operonWorkflowUUID"
+        - $ref: "#/components/parameters/dbosWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -181,7 +181,7 @@ paths:
                       type: number
                   additionalProperties: false
       parameters:
-        - $ref: "#/components/parameters/operonWorkflowUUID"
+        - $ref: "#/components/parameters/dbosWorkflowUUID"
       requestBody:
         required: true
         content:
@@ -205,7 +205,7 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: "#/components/parameters/operonWorkflowUUID"
+        - $ref: "#/components/parameters/dbosWorkflowUUID"
   /payment_webhook:
     post:
       operationId: paymentWebhook
@@ -213,15 +213,15 @@ paths:
         "204":
           description: No Content
       parameters:
-        - $ref: "#/components/parameters/operonWorkflowUUID"
+        - $ref: "#/components/parameters/dbosWorkflowUUID"
 components:
   schemas: {}
   parameters:
-    operonWorkflowUUID:
-      name: operon-workflowuuid
+    dbosWorkflowUUID:
+      name: dbos-workflowuuid
       in: header
       required: false
-      description: Caller specified [Operon idempotency
+      description: Caller specified [workflow idempotency
         key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
       schema:
         type: string

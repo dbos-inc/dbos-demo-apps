@@ -1,11 +1,11 @@
 {
-  "name": "operon-demo-payment-backend",
+  "name": "dbos-demo-payment-backend",
   "private": true,
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix --ext .ts .",
     "migrate": "knex migrate:latest",
-    "start": "npm run build && operon start",
+    "start": "npm run build && dbos start",
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {

@@ -1,11 +1,11 @@
-import { OperonTestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
+import { DBOSTestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { BankEndpoints, BankAccountInfo, BankTransactionHistory } from "./operations";
 import request from "supertest";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { convertTransactionHistory } from "./router";
 
 describe("bank-tests", () => {
-  let testRuntime: OperonTestingRuntime;
+  let testRuntime: DBOSTestingRuntime;
   let bankSchema: string;
 
   beforeAll(async () => {

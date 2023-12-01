@@ -1,4 +1,4 @@
-import { MiddlewareContext, OperonResponseError } from "@dbos-inc/dbos-sdk";
+import { MiddlewareContext, DBOSResponseError } from "@dbos-inc/dbos-sdk";
 import { koaJwtSecret } from "jwks-rsa";
 import jwt from "koa-jwt";
 import logger from "koa-logger";
@@ -11,7 +11,7 @@ export async function bankAuthMiddleware(ctx: MiddlewareContext) {
   if (ctx.requiredRole.length > 0) {
     console.log("required role: ", ctx.requiredRole);
     if (!ctx.koaContext.state.user) {
-      throw new OperonResponseError("No authenticated user!", 401);
+      throw new DBOSResponseError("No authenticated user!", 401);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access

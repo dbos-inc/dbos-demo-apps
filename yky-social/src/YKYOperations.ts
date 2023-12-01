@@ -16,7 +16,7 @@ import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { getS3, getS3Client } from './app';
 
 import {
- OperonContext,
+ DBOSContext,
  Communicator,
  CommunicatorContext,
  Transaction,
@@ -395,7 +395,7 @@ static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: st
     return postPresigned;
 }
 
-static async getS3DownloadKey(ctx: OperonContext, key: string, bucket: string) {
+static async getS3DownloadKey(ctx: DBOSContext, key: string, bucket: string) {
   const getObjectCommand = new GetObjectCommand({
     Bucket: bucket,
     Key: key,
@@ -406,7 +406,7 @@ static async getS3DownloadKey(ctx: OperonContext, key: string, bucket: string) {
   return presignedUrl;
 }
 
-static async ensureS3FileDropped(ctx: OperonContext, key: string, bucket: string) {
+static async ensureS3FileDropped(ctx: DBOSContext, key: string, bucket: string) {
     try {
         const params = {
             Bucket: bucket,

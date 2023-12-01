@@ -22,7 +22,7 @@ npx prisma migrate dev --name init
 
 Finally, start the simple HTTP server:
 ```shell
-npx operon start
+npx dbos start
 ```
 
 It should print the output:

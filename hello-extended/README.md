@@ -25,7 +25,7 @@ Next, build and run the app:
 
 ```bash
 npm run build
-npx operon start
+npx dbos start
 ```
 
 Finally, curl the server to see that it's working!

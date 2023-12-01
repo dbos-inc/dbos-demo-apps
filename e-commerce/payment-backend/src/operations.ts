@@ -1,6 +1,6 @@
 import {
   TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
-  GetApi, PostApi, OperonResponseError, ArgRequired, ArgOptional, OperonContext, Communicator, CommunicatorContext, ArgSource, ArgSources
+  GetApi, PostApi, DBOSResponseError, ArgRequired, ArgOptional, DBOSContext, Communicator, CommunicatorContext, ArgSource, ArgSources
 } from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
@@ -32,9 +32,9 @@ function getPaymentStatus(status?: string): "pending" | "paid" | "cancelled" {
   return status === payment_submitted ? "paid" : "cancelled";
 }
 
-function getRedirectUrl(ctxt: OperonContext, session_id: string): string {
+function getRedirectUrl(ctxt: DBOSContext, session_id: string): string {
   const frontend_host = ctxt.getConfig<string>("frontend_host");
-  if (!frontend_host) { throw new OperonResponseError("frontend_host not configured", 500); }
+  if (!frontend_host) { throw new DBOSResponseError("frontend_host not configured", 500); }
 
   const url = new URL(frontend_host);
   url.pathname = `/payment/${session_id}`;
@@ -70,7 +70,7 @@ export class PlaidPayments {
   ): Promise<PaymentSession> {
 
     if (items.length === 0) {
-      throw new OperonResponseError("items must be non-empty", 404);
+      throw new DBOSResponseError("items must be non-empty", 404);
     }
 
     const handle = await ctxt.invoke(PlaidPayments).paymentSession(webhook, success_url, cancel_url, items, client_reference_id);

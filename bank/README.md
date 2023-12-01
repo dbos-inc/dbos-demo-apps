@@ -46,7 +46,7 @@ export BANK_SCHEMA=bank1
 # Create tables under the bank1 schema.
 npx prisma migrate dev --name initbank1
 
-npx operon start -p 8081
+npx dbos start -p 8081
 ```
 
 Then, in a second terminal window, launch the second bank server, using an identical but differently-named schema:
@@ -58,7 +58,7 @@ export BANK_SCHEMA=bank2
 # Create tables under the bank2 schema.
 npx prisma migrate dev --name initbank2
 
-npx operon start -p 8082
+npx dbos start -p 8082
 ```
 
 ### Start the frontend
@@ -173,7 +173,7 @@ const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory)
   );
 ```
 
-Note that we pass in `"ctxt.workflowUUID + '-withdraw'"` as the identity UUID for the remote workflow. The communicator function sets an HTTP header "operon-workflowuuid" with this UUID, so Operon can guarantee that the remote workflow runs exactly once even if the communicator is retried.
+Note that we pass in `"ctxt.workflowUUID + '-withdraw'"` as the identity UUID for the remote workflow. The communicator function sets an HTTP header "dbos-workflowuuid" with this UUID, so Operon can guarantee that the remote workflow runs exactly once even if the communicator is retried.
 
 Finally, if the communicator returns `false` or fails, it means the remote withdrawal failed and we must undo the previous deposit transaction.
 This undo transaction subtracts the user balance and removes the entry from the bank transaction history (we added it in the first step).
@@ -231,7 +231,7 @@ export async function bankAuthMiddleware(ctx: MiddlewareContext) {
   // Only extract user and roles if the operation specifies required roles.
   if (ctx.requiredRole.length > 0) {
     if (!ctx.koaContext.state.user) {
-      throw new OperonResponseError("No authenticated user!", 401);
+      throw new DBOSResponseError("No authenticated user!", 401);
     }
 
     const authenticatedUser: string = ctx.koaContext.state.user["preferred_username"] ?? "";
