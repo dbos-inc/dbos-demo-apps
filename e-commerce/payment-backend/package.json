@@ -9,7 +9,7 @@
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.7.11-preview",
+    "@dbos-inc/dbos-sdk": "^0.7.18-preview",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
