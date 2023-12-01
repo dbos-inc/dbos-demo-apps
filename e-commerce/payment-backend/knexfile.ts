@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
-import { parseConfigFile } from '@dbos-inc/operon/dist/src/operon-runtime/config'
-import { OperonConfig } from '@dbos-inc/operon/dist/src/operon';
+import { parseConfigFile } from '@dbos-inc/dbos-sdk/dist/src/operon-runtime/config'
+import { OperonConfig } from '@dbos-inc/dbos-sdk/dist/src/operon';
 
 const [operonConfig, ]: [OperonConfig, unknown] = parseConfigFile();
 

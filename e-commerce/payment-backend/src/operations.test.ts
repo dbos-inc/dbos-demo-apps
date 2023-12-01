@@ -1,4 +1,4 @@
-import { OperonTestingRuntime, createTestingRuntime } from "@dbos-inc/operon";
+import { OperonTestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { PlaidPayments, PaymentItem, PaymentSessionInformation, payment_complete_topic } from "./operations";
 import request from "supertest";
 

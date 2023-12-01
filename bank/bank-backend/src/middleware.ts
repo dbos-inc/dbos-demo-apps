@@ -1,4 +1,4 @@
-import { MiddlewareContext, OperonResponseError } from "@dbos-inc/operon";
+import { MiddlewareContext, OperonResponseError } from "@dbos-inc/dbos-sdk";
 import { koaJwtSecret } from "jwks-rsa";
 import jwt from "koa-jwt";
 import logger from "koa-logger";

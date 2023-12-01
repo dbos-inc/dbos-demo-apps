@@ -1,6 +1,6 @@
 # Operon E-Commerce Demo Apps
 
-This demo is a pair of [Operon](https://github.com/dbos-inc/operon) based systems demonstrating an 
+This demo is a pair of [Operon](https://github.com/dbos-inc/dbos-sdk) based systems demonstrating an 
 e-commerce scenario with separate apps for the online shop and the payment provider.
 
 ## Demo Setup
@@ -24,12 +24,12 @@ This script will run a PostgreSQL 16.0 database container, create the shop and p
 
 If you're using your own PostgreSQL database, you need to configure the hostname, port, username and password for each of the backend packages.
 Each backend package needs its own database, but they can be on the same PostgreSQL server.
-There is an `operon-config.yaml` file in each of the backend package directories. 
+There is an `dbos-config.yaml` file in each of the backend package directories. 
 These config files must be updated to the appropriate settings for your PostgreSQL server.
 
 > Note, the PostgreSQL user specified for both backend packages *MUST* have database creation permissions.
 
-Here is a snippet of a `operon-config.yaml` file showing the database connection settings that must be updated:
+Here is a snippet of a `dbos-config.yaml` file showing the database connection settings that must be updated:
 
 ```yaml
 database:
@@ -39,7 +39,7 @@ database:
   password: ${PGPASSWORD}
 ```
 
-Once the `operon-config.yaml` files have been updated, you also need to create the two demo databases `shop` and `payment`.
+Once the `dbos-config.yaml` files have been updated, you also need to create the two demo databases `shop` and `payment`.
 The `start_postgres_docker.sh` script does this by calling `CREATE DATABASE shop;` and `CREATE DATABASE payment;` 
 via [psql](https://www.postgresql.org/docs/current/app-psql.html) in the docker container.
 

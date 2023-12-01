@@ -14,12 +14,12 @@ import { YKY } from './app';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { Operations } from './YKYOperations';
 
-import { OperonTestingRuntime, createTestingRuntime } from '@dbos-inc/operon';
+import { OperonTestingRuntime, createTestingRuntime } from '@dbos-inc/dbos-sdk';
 
 let testRuntime: OperonTestingRuntime;
 
 beforeAll(async () => {
-  testRuntime = await createTestingRuntime([YKY, Operations], "operon-config.yaml");
+  testRuntime = await createTestingRuntime([YKY, Operations], "dbos-config.yaml");
   await testRuntime.createUserSchema();
 });
 

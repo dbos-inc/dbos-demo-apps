@@ -12,7 +12,7 @@ import {
   ArgOptional,
   ArgSource,
   ArgSources,
-} from "@dbos-inc/operon";
+} from "@dbos-inc/dbos-sdk";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";

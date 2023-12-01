@@ -1,4 +1,4 @@
-import { ArgOptional, ArgSource, ArgSources, Authentication, DefaultRequiredRole, GetApi, KoaMiddleware, OperonTransaction, PostApi, RequiredRole, TransactionContext } from "@dbos-inc/operon";
+import { ArgOptional, ArgSource, ArgSources, Authentication, DefaultRequiredRole, GetApi, KoaMiddleware, OperonTransaction, PostApi, RequiredRole, TransactionContext } from "@dbos-inc/dbos-sdk";
 import { PrismaClient } from "@prisma/client";
 import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
 

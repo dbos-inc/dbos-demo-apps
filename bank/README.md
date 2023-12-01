@@ -1,6 +1,6 @@
 # Operon Bank Demo App
 
-This is a simplified bank application that uses [Operon](https://github.com/dbos-inc/operon) as the backend framework.
+This is a simplified bank application that uses [Operon](https://github.com/dbos-inc/dbos-sdk) as the backend framework.
 It requires Node 18.x or later and Docker.
 
 ## Run the Demo

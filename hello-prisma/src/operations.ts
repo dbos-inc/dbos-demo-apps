@@ -1,4 +1,4 @@
-import { TransactionContext, HandlerContext, OperonTransaction, GetApi } from '@dbos-inc/operon';
+import { TransactionContext, HandlerContext, OperonTransaction, GetApi } from '@dbos-inc/dbos-sdk';
 import { PrismaClient } from "@prisma/client";
 
 export class Hello {

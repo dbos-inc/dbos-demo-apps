@@ -1,4 +1,4 @@
-import { OperonTestingRuntime, createTestingRuntime } from "@dbos-inc/operon";
+import { OperonTestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { BankEndpoints, BankAccountInfo, BankTransactionHistory } from "./operations";
 import request from "supertest";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
@@ -13,7 +13,7 @@ describe("bank-tests", () => {
     if (!bankSchema) {
       throw new Error("Env 'BANK_SCHEMA' not set!");
     }
-    testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "operon-test-config.yaml");
+    testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "dbos-test-config.yaml");
     await testRuntime.queryUserDB<void>(`delete from ${bankSchema}."AccountInfo" where "ownerName"=$1;`, "alice");
   });
 

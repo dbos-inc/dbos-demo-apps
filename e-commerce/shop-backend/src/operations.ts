@@ -1,7 +1,7 @@
 import {
   TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
   GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources, OperonContext
-} from '@dbos-inc/operon';
+} from '@dbos-inc/dbos-sdk';
 import bcrypt from 'bcrypt';
 import { Knex } from 'knex';
 

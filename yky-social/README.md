@@ -1,6 +1,6 @@
 # Operon Social Demo App (YKY)
 
-This demo shows an [Operon](https://github.com/dbos-inc/operon) backend system coupled with a next.js frontend.
+This demo shows an [Operon](https://github.com/dbos-inc/dbos-sdk) backend system coupled with a next.js frontend.
 
 It simulates a simple social network, and demonstrates:
 * Use of Operon workflows, transactions, and communicators
@@ -35,9 +35,9 @@ The backend allows the following environment variables (which should match the d
 * POSTGRES\_PASSWORD=socialts
 * POSTGRES\_DATABASE=socialts
 
-By default, the backend will run on port 3000, but this can be changed with the `-p` option or in the `operon-config.yaml` file.
+By default, the backend will run on port 3000, but this can be changed with the `-p` option or in the `dbos-config.yaml` file.
 
-Additionally, to allow media storage, S3 access keys must be placed in the environment or in `operon-config.yaml`:
+Additionally, to allow media storage, S3 access keys must be placed in the environment or in `dbos-config.yaml`:
 * AWS\_REGION
 * AWS\_ACCESS\_KEY
 * AWS\_SECRET\_ACCESS\_KEY

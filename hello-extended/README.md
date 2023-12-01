@@ -38,4 +38,4 @@ You can add more functionality to the app by modifying `src/operations.ts`, then
 
 ## Learn More
 
-To learn more about Operon, take a look at [our documentation](https://docs.dbos.dev/) or our [source code](https://github.com/dbos-inc/operon).
+To learn more about Operon, take a look at [our documentation](https://docs.dbos.dev/) or our [source code](https://github.com/dbos-inc/dbos-sdk).

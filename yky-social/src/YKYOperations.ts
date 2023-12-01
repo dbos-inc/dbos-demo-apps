@@ -26,7 +26,7 @@ import {
  DefaultRequiredRole,
  OperonWorkflow,
  WorkflowContext,
-} from '@dbos-inc/operon';
+} from '@dbos-inc/dbos-sdk';
 import { MediaItem, MediaUsage } from './entity/Media';
 
 export interface ResponseError extends Error {

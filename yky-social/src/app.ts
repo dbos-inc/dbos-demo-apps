@@ -28,7 +28,7 @@ import {
   OrmEntities,
   OperonDeploy,
   InitContext,
-} from "@dbos-inc/operon";
+} from "@dbos-inc/dbos-sdk";
 
 import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';

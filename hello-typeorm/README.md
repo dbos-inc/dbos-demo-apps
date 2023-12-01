@@ -13,11 +13,11 @@ Then compile this app:
 npm run build
 ```
 
-Update operon-config.yaml to specify your database name. It must have been created prior to running this app.
+Update dbos-config.yaml to specify your database name. It must have been created prior to running this app.
 Create the table this app requires with the following SQL query:
 
 ```sql
-CREATE TABLE IF NOT EXISTS OperonHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);
+CREATE TABLE IF NOT EXISTS DBOSHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);
 ```
 
 

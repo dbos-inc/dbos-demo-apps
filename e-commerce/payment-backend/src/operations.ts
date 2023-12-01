@@ -1,7 +1,7 @@
 import {
   TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
   GetApi, PostApi, OperonResponseError, ArgRequired, ArgOptional, OperonContext, OperonCommunicator, CommunicatorContext, ArgSource, ArgSources
-} from '@dbos-inc/operon';
+} from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
