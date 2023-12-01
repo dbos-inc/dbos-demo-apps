@@ -1,4 +1,4 @@
-import { TransactionContext, HandlerContext, OperonTransaction, GetApi, OrmEntities } from '@dbos-inc/dbos-sdk';
+import { TransactionContext, HandlerContext, Transaction, GetApi, OrmEntities } from '@dbos-inc/dbos-sdk';
 import { Entity, EntityManager, PrimaryGeneratedColumn, Column } from "typeorm"
 
 @Entity("dboshello")
@@ -13,7 +13,7 @@ export class DBOSHello {
 @OrmEntities([DBOSHello])
 export class Hello {
 
-  @OperonTransaction()
+  @Transaction()
   static async helloTransaction (txnCtxt: TransactionContext<EntityManager>, name: string)  {
     const greeting = `Hello, ${name}!`
 

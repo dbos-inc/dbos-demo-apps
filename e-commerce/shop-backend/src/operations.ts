@@ -1,6 +1,6 @@
 import {
-  TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
-  GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources, OperonContext
+  TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
+  GetApi, PostApi, Communicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources, OperonContext
 } from '@dbos-inc/dbos-sdk';
 import bcrypt from 'bcrypt';
 import { Knex } from 'knex';
@@ -81,7 +81,7 @@ function getHostConfig(ctxt: OperonContext) {
 export class Shop {
 
   @PostApi('/api/login')
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async login(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctxt.client<User>('users').select("password").where({ username }).first();
     if (!(user && await bcrypt.compare(password, user.password))) {
@@ -90,7 +90,7 @@ export class Shop {
   }
 
   @PostApi('/api/register')
-  @OperonTransaction()
+  @Transaction()
   static async register(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctxt.client<User>('users').select().where({ username }).first();
     if (user) {
@@ -102,7 +102,7 @@ export class Shop {
   }
 
   @GetApi('/api/products')
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async getProducts(ctxt: KnexTransactionContext): Promise<DisplayProduct[]> {
     const rows = await ctxt.client<Product>('products').select("product_id", "product", "description", "image_name", "price");
     const formattedRows: DisplayProduct[] = rows.map((row) => ({
@@ -113,7 +113,7 @@ export class Shop {
   }
 
   @GetApi('/api/products/:id')
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async getProduct(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) id: number): Promise<DisplayProduct | null> {
 
     const rows = await ctxt.client<Product>('products').select("product_id", "product", "description", "image_name", "price").where({ product_id: id });
@@ -128,13 +128,13 @@ export class Shop {
   }
 
   @PostApi('/api/add_to_cart')
-  @OperonTransaction()
+  @Transaction()
   static async addToCart(ctxt: KnexTransactionContext, username: string, product_id: number): Promise<void> {
     await ctxt.client<Cart>('cart').insert({ username, product_id, quantity: 1 }).onConflict(['username', 'product_id']).merge({ quantity: ctxt.client.raw('cart.quantity + 1') });
   }
 
   @PostApi('/api/get_cart')
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async getCart(ctxt: KnexTransactionContext, username: string): Promise<CartProduct[]> {
     const rows = await ctxt.client<Cart>('cart').select("product_id", "quantity").where({ username });
     const products = rows.map(async (row) => {
@@ -160,7 +160,7 @@ export class Shop {
     }
   }
 
-  @OperonWorkflow()
+  @Workflow()
   static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
     const productDetails = await ctxt.invoke(Shop).getCart(username);
     if (productDetails.length === 0) {
@@ -208,7 +208,7 @@ export class Shop {
     }
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async createOrder(ctxt: KnexTransactionContext, username: string, products: Product[]): Promise<number> {
     const orders = await ctxt.client<Order>('orders').insert({ username, order_status: OrderStatus.PENDING, last_update_time: 0n }).returning('order_id');
     const orderID = orders[0].order_id;
@@ -220,7 +220,7 @@ export class Shop {
     return orderID;
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async subtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<boolean> {
     for (const product of products) {
       const row = await ctxt.client<Product>('products').where({ product_id: product.product_id }).select('inventory').first();
@@ -238,29 +238,29 @@ export class Shop {
     return true;
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async undoSubtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<void> {
     for (const product of products) {
       await ctxt.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctxt.client.raw('inventory + ?', [product.inventory]) });
     }
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async fulfillOrder(ctxt: KnexTransactionContext, orderID: number): Promise<void> {
     await ctxt.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.FULFILLED });
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async errorOrder(ctxt: KnexTransactionContext, orderID: number): Promise<void> {
     await ctxt.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.CANCELLED });
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async clearCart(ctxt: KnexTransactionContext, username: string): Promise<void> {
     await ctxt.client<Cart>('cart').where({ username }).del();
   }
 
-  @OperonCommunicator()
+  @Communicator()
   static async createPaymentSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
     const { paymentHost, localHost } = getHostConfig(ctxt);
 
@@ -286,7 +286,7 @@ export class Shop {
     return session;
   }
 
-  @OperonCommunicator()
+  @Communicator()
   static async retrievePaymentSession(ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
     const { paymentHost } = getHostConfig(ctxt);
 

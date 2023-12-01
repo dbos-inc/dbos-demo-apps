@@ -1,6 +1,6 @@
 import {
-  TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
-  GetApi, PostApi, OperonResponseError, ArgRequired, ArgOptional, OperonContext, OperonCommunicator, CommunicatorContext, ArgSource, ArgSources
+  TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
+  GetApi, PostApi, OperonResponseError, ArgRequired, ArgOptional, OperonContext, Communicator, CommunicatorContext, ArgSource, ArgSources
 } from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
@@ -84,7 +84,7 @@ export class PlaidPayments {
   }
 
   @GetApi('/api/session/:session_id')
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async retrievePaymentSession(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSession | undefined> {
     const rows = await ctxt.client<SessionTable>('session').select('status').where({ session_id });
     if (rows.length === 0) { return undefined; }
@@ -97,7 +97,7 @@ export class PlaidPayments {
   }
 
   @GetApi('/api/session_info/:session_id')
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async getSessionInformation(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
     ctxt.logger.info(`getting session record ${session_id}`);
     const session = await ctxt.client<SessionTable>('session')
@@ -122,7 +122,7 @@ export class PlaidPayments {
     await ctxt.send(session_id, payment_cancelled, payment_complete_topic);
   }
 
-  @OperonWorkflow()
+  @Workflow()
   static async paymentSession(
     ctxt: WorkflowContext,
     webhook: string,
@@ -143,7 +143,7 @@ export class PlaidPayments {
     await ctxt.invoke(PlaidPayments).paymentWebhook(webhook, session_id, notification, client_ref);
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async insertSession(
     ctxt: KnexTransactionContext,
     session_id: string,
@@ -159,7 +159,7 @@ export class PlaidPayments {
     }
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async updateSessionStatus(
     ctxt: KnexTransactionContext,
     session_id: string,
@@ -168,7 +168,7 @@ export class PlaidPayments {
     await ctxt.client<SessionTable>('session').where({ session_id }).update({ status });
   }
 
-  @OperonCommunicator()
+  @Communicator()
   static async paymentWebhook(
     _ctxt: CommunicatorContext, 
     webhook: string, 

@@ -2,9 +2,9 @@ import {
   WorkflowContext,
   TransactionContext,
   CommunicatorContext,
-  OperonTransaction,
-  OperonCommunicator,
-  OperonWorkflow,
+  Transaction,
+  Communicator,
+  Workflow,
   GetApi,
   DefaultRequiredRole,
   Authentication,
@@ -25,7 +25,7 @@ type PrismaContext = TransactionContext<PrismaClient>;
 @Authentication(bankAuthMiddleware)
 @KoaMiddleware(koaLogger, bankJwt)
 export class BankTransactionHistory {
-  @OperonTransaction()
+  @Transaction()
   @GetApi("/api/transaction_history/:accountId")
   static async listTxnForAccountFunc(txnCtxt: PrismaContext, @ArgSource(ArgSources.URL) accountId: number) {
     const acctId = BigInt(accountId);
@@ -48,7 +48,7 @@ export class BankTransactionHistory {
     });
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async insertTxnHistoryFunc(txnCtxt: PrismaContext, data: TransactionHistory) {
     return txnCtxt.client.transactionHistory
       .create({
@@ -67,7 +67,7 @@ export class BankTransactionHistory {
       });
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async deleteTxnHistoryFunc(txnCtxt: PrismaContext, txnId: bigint) {
     return txnCtxt.client.transactionHistory
       .delete({
@@ -81,7 +81,7 @@ export class BankTransactionHistory {
       });
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async updateAccountBalanceFunc(txnCtxt: PrismaContext, acctId: bigint, balance: bigint) {
     return txnCtxt.client.accountInfo
       .update({
@@ -96,7 +96,7 @@ export class BankTransactionHistory {
       });
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async updateAcctTransactionFunc(txnCtxt: PrismaContext, acctId: bigint, data: TransactionHistory, deposit: boolean, @ArgOptional undoTxn: bigint | null = null): Promise<bigint> {
     // First, make sure the account exists, and read the latest balance.
     const acct = await BankAccountInfo.findAccountFunc(txnCtxt, acctId);
@@ -132,7 +132,7 @@ export class BankTransactionHistory {
     return txnId;
   }
 
-  @OperonCommunicator()
+  @Communicator()
   static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory, workflowUUID: string): Promise<boolean> {
     const token = commCtxt.request?.headers!["authorization"];
     if (!token) {
@@ -158,7 +158,7 @@ export class BankTransactionHistory {
     return true;
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async internalTransferFunc(txnCtxt: PrismaContext, data: TransactionHistory): Promise<string> {
     // Check if the fromAccount has enough balance.
     const fromAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(txnCtxt, data.fromAccountId);
@@ -188,7 +188,7 @@ export class BankTransactionHistory {
     return "Internal transfer succeeded!";
   }
 
-  @OperonWorkflow()
+  @Workflow()
   static async depositWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
     // Deposite locally first.
     const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, true);
@@ -222,7 +222,7 @@ export class BankTransactionHistory {
     return "Deposit succeeded!";
   }
 
-  @OperonWorkflow()
+  @Workflow()
   static async withdrawWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
     // Withdraw first.
     const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, false);

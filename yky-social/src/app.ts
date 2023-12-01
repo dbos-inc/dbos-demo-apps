@@ -15,10 +15,10 @@ import { UserProfile } from "./entity/UserProfile";
 import { Operations, errorWithStatus } from "./YKYOperations";
 import {
   ArgRequired, GetApi, RequiredRole,
-  OperonTransaction, TransactionContext,
+  Transaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   HandlerContext,
-  OperonWorkflow,
+  Workflow,
   OperonContext,
   WorkflowContext,
   Authentication,
@@ -122,7 +122,7 @@ export class YKY
     return next();
   }
 
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   @GetApi('/recvtimeline')
   static async receiveTimeline(ctx: TransactionContext<EntityManager>) 
   {
@@ -135,7 +135,7 @@ export class YKY
     return {message: "Read.", timeline:tl};
   }
 
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   @GetApi('/sendtimeline')
   static async sendTimeline(ctx: TransactionContext<EntityManager>)
   {
@@ -162,7 +162,7 @@ export class YKY
     }
   }
 
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   @GetApi("/post/:id")
   static async getPost(ctx: TransactionContext<EntityManager>, @ArgRequired @ArgSource(ArgSources.URL) id: string) {
     // Future: Validate user relationship to poster for non-public posts; not blocked from seeing the post
@@ -175,7 +175,7 @@ export class YKY
     }
   }
 
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   @PostApi("/login")
   @RequiredRole([]) // Don't need any roles to log in
   static async doLogin(ctx: TransactionContext<EntityManager>, @ArgRequired username: string, @ArgRequired @LogMask(LogMasks.HASH) password: string) {
@@ -200,7 +200,7 @@ export class YKY
     return { message: 'User created.', id:user.id };
   }
 
-  @OperonTransaction()
+  @Transaction()
   @PostApi("/follow")
   static async doFollow(ctx: TransactionContext<EntityManager>, followUid: string) {
     const curStatus = await Operations.getGraphStatus(ctx, ctx.authenticatedUser, followUid);
@@ -210,7 +210,7 @@ export class YKY
     return {message: "Followed."};
   }
 
-  @OperonWorkflow()
+  @Workflow()
   @PostApi("/composepost")
   static async doCompose(ctx: WorkflowContext, @ArgRequired postText: string) {
     const post = await ctx.invoke(Operations).makePost(postText);
@@ -220,7 +220,7 @@ export class YKY
   }
 
   @GetApi("/getMediaUploadKey")
-  @OperonWorkflow()
+  @Workflow()
   static async doKeyUpload(ctx: WorkflowContext, filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
     const bucket = ctx.getConfig('S3_BUCKET_NAME', 'yky-social-photos');

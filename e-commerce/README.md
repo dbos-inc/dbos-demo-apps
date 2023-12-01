@@ -131,12 +131,12 @@ These functions are fairly straightforward, please see the source code for more 
 ### Shop paymentWorkflow
 
 ```ts
-@OperonWorkflow()
+@Workflow()
 static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
 ```
 
 Like all Operon functions, `paymentWorkflow` is a static method on a class, in this case named `Shop`.
-Operon workflows must be decorated with `@OperonWorkflow()` and have a `WorkflowContext` as the first parameter.
+Operon workflows must be decorated with `@Workflow()` and have a `WorkflowContext` as the first parameter.
 
 ```ts
   const productDetails = await ctxt.invoke(Shop).getCart(username);

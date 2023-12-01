@@ -1,9 +1,9 @@
-import { TransactionContext, HandlerContext, OperonTransaction, GetApi } from '@dbos-inc/dbos-sdk';
+import { TransactionContext, HandlerContext, Transaction, GetApi } from '@dbos-inc/dbos-sdk';
 import { PrismaClient } from "@prisma/client";
 
 export class Hello {
 
-  @OperonTransaction()
+  @Transaction()
   static async helloTransaction(txnCtxt: TransactionContext<PrismaClient>, name: string)  {
     const greeting = `Hello, ${name}!`;
     console.log(greeting);
