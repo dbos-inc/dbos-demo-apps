@@ -1,10 +1,10 @@
-import { DBOSTestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
+import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { PlaidPayments, PaymentItem, PaymentSessionInformation, payment_complete_topic } from "./operations";
 import request from "supertest";
 
 describe("operations", () => {
 
-  let testRuntime: DBOSTestingRuntime;
+  let testRuntime: TestingRuntime;
 
   beforeAll(async () => {
     testRuntime = await createTestingRuntime([PlaidPayments], undefined);

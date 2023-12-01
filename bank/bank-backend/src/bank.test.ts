@@ -1,11 +1,11 @@
-import { DBOSTestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
+import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { BankEndpoints, BankAccountInfo, BankTransactionHistory } from "./operations";
 import request from "supertest";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { convertTransactionHistory } from "./router";
 
 describe("bank-tests", () => {
-  let testRuntime: DBOSTestingRuntime;
+  let testRuntime: TestingRuntime;
   let bankSchema: string;
 
   beforeAll(async () => {
