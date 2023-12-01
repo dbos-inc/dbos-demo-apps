@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
 import { parseConfigFile } from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/config'
-import { DBOSConfig } from '@dbos-inc/dbos-sdk/dist/src/dbos-sdk';
+import { DBOSConfig } from '@dbos-inc/dbos-sdk/dist/src/dbos-executor';
 
 const [dbosConfig, ]: [DBOSConfig, unknown] = parseConfigFile();
 
