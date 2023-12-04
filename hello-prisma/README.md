@@ -22,7 +22,7 @@ npx prisma migrate dev --name init
 
 Finally, start the simple HTTP server:
 ```shell
-npx dbos start
+npx dbos-sdk start
 ```
 
 It should print the output:

@@ -46,7 +46,7 @@ export BANK_SCHEMA=bank1
 # Create tables under the bank1 schema.
 npx prisma migrate dev --name initbank1
 
-npx dbos start -p 8081
+npx dbos-sdk start -p 8081
 ```
 
 Then, in a second terminal window, launch the second bank server, using an identical but differently-named schema:
@@ -58,7 +58,7 @@ export BANK_SCHEMA=bank2
 # Create tables under the bank2 schema.
 npx prisma migrate dev --name initbank2
 
-npx dbos start -p 8082
+npx dbos-sdk start -p 8082
 ```
 
 ### Start the frontend

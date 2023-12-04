@@ -9,7 +9,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.7.18-preview",
+    "@dbos-inc/dbos-sdk": "^0.7.25-preview",
     "axios": "^1.5.1",
     "ts-node": "^10.9.1"
   }

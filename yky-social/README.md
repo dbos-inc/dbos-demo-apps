@@ -127,7 +127,7 @@ export S3_BUCKET_NAME=<bucket>
 export AWS_ACCESS_KEY=<key>
 export AWS_SECRET_ACCESS_KEY=<secret>
 
-npx dbos start -p 3000
+npx dbos-sdk start -p 3000
 ```
 
 ## Run YKY FrontEnd
