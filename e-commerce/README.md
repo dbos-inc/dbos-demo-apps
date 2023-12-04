@@ -73,11 +73,11 @@ The E-Commerce app demonstrates this approach.
 ### Generate OpenAPI Definition
 
 Both the shop and payment backend projects are DBOS projects that have `src/operations.ts` as their operations entrypoint file.
-To generate an OpenAPI definition for a DBOS project, run the `dbos openapi` command from a terminal like this:
+To generate an OpenAPI definition for a DBOS project, run the `dbos-sdk openapi` command from a terminal like this:
 
 ``` shell
 # run this in the <root>/e-commerce/payment-backend and <root>/e-commerce/shop-backend folders
-npx dbos openapi src/operations.ts
+npx dbos-sdk openapi src/operations.ts
 ```
 
 This will generate the OpenAPI definition file for the project and save it to the `src/openapi.yaml` path.

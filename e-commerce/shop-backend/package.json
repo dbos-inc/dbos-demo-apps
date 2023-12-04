@@ -9,7 +9,7 @@
     "start": "npm run build && dbos start"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.7.18-preview",
+    "@dbos-inc/dbos-sdk": "^0.7.25-preview",
     "bcrypt": "^5.1.1"
   },
   "devDependencies": {
