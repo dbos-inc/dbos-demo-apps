@@ -13,7 +13,7 @@ export class DefaultService {
 
     /**
      * @param requestBody
-     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
+     * @param dbosWorkflowuuid Caller specified [workflow idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      * @returns any Ok
      * @throws ApiError
      */
@@ -25,7 +25,7 @@ export class DefaultService {
             items: Array<PaymentItem>;
             client_reference_id?: string;
         },
-        operonWorkflowuuid?: string,
+        dbosWorkflowuuid?: string,
     ): CancelablePromise<{
         session_id: string;
         url: string;
@@ -35,7 +35,7 @@ export class DefaultService {
             method: 'POST',
             url: '/api/create_payment_session',
             headers: {
-                'operon-workflowuuid': operonWorkflowuuid,
+                'dbos-workflowuuid': dbosWorkflowuuid,
             },
             body: requestBody,
             mediaType: 'application/json',
@@ -44,13 +44,13 @@ export class DefaultService {
 
     /**
      * @param sessionId
-     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
+     * @param dbosWorkflowuuid Caller specified [workflow idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      * @returns any Ok
      * @throws ApiError
      */
     public retrievePaymentSession(
         sessionId: string,
-        operonWorkflowuuid?: string,
+        dbosWorkflowuuid?: string,
     ): CancelablePromise<{
         session_id: string;
         url: string;
@@ -63,20 +63,20 @@ export class DefaultService {
                 'session_id': sessionId,
             },
             headers: {
-                'operon-workflowuuid': operonWorkflowuuid,
+                'dbos-workflowuuid': dbosWorkflowuuid,
             },
         });
     }
 
     /**
      * @param sessionId
-     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
+     * @param dbosWorkflowuuid Caller specified [workflow idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      * @returns any Ok
      * @throws ApiError
      */
     public getSessionInformation(
         sessionId: string,
-        operonWorkflowuuid?: string,
+        dbosWorkflowuuid?: string,
     ): CancelablePromise<{
         session_id: string;
         success_url: string;
@@ -91,14 +91,14 @@ export class DefaultService {
                 'session_id': sessionId,
             },
             headers: {
-                'operon-workflowuuid': operonWorkflowuuid,
+                'dbos-workflowuuid': dbosWorkflowuuid,
             },
         });
     }
 
     /**
      * @param requestBody
-     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
+     * @param dbosWorkflowuuid Caller specified [workflow idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      * @returns void
      * @throws ApiError
      */
@@ -106,13 +106,13 @@ export class DefaultService {
         requestBody: {
             session_id: string;
         },
-        operonWorkflowuuid?: string,
+        dbosWorkflowuuid?: string,
     ): CancelablePromise<void> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/submit_payment',
             headers: {
-                'operon-workflowuuid': operonWorkflowuuid,
+                'dbos-workflowuuid': dbosWorkflowuuid,
             },
             body: requestBody,
             mediaType: 'application/json',
@@ -121,7 +121,7 @@ export class DefaultService {
 
     /**
      * @param requestBody
-     * @param operonWorkflowuuid Caller specified [Operon idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
+     * @param dbosWorkflowuuid Caller specified [workflow idempotency key](https://docs.dbos.dev/tutorials/idempotency-tutorial#setting-idempotency-keys)
      * @returns void
      * @throws ApiError
      */
@@ -129,13 +129,13 @@ export class DefaultService {
         requestBody: {
             session_id: string;
         },
-        operonWorkflowuuid?: string,
+        dbosWorkflowuuid?: string,
     ): CancelablePromise<void> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/cancel_payment',
             headers: {
-                'operon-workflowuuid': operonWorkflowuuid,
+                'dbos-workflowuuid': dbosWorkflowuuid,
             },
             body: requestBody,
             mediaType: 'application/json',

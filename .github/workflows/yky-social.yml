@@ -38,7 +38,7 @@ jobs:
       - name: Checkout demo app
         uses: actions/checkout@v3
         with:
-          path: operon-demo-apps
+          path: dbos-demo-apps
       - name: Set up node 
         uses: actions/setup-node@v3
         with:
@@ -46,19 +46,19 @@ jobs:
           # cache: 'npm'
       - name: Change directory and install dependencies
         run: |
-          cd ./operon-demo-apps/yky-social
+          cd ./dbos-demo-apps/yky-social
           npm ci --no-audit
         env:
           NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Create new PG DB and User
         run: |
-          cd ./operon-demo-apps/yky-social
+          cd ./dbos-demo-apps/yky-social
           scripts/init_pgdb.sh
         env:
           # The postgres superuser password we set above
           PGPASSWORD: dbos
       - name: Build Test yky-social
-        working-directory: ./operon-demo-apps/yky-social
+        working-directory: ./dbos-demo-apps/yky-social
         run: |
           npm run build
           npm run lint

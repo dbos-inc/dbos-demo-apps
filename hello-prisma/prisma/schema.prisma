@@ -10,8 +10,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model OperonHello {
-  @@map("operonhello")
+model DBOSHello {
+  @@map("dboshello")
   greeting_id Int @id @default(autoincrement())
   greeting String
 }

@@ -16,17 +16,17 @@ import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { getS3, getS3Client } from './app';
 
 import {
- OperonContext,
- OperonCommunicator,
+ DBOSContext,
+ Communicator,
  CommunicatorContext,
- OperonTransaction,
+ Transaction,
  TransactionContext,
  SkipLogging,
  RequiredRole,
  DefaultRequiredRole,
- OperonWorkflow,
+ Workflow,
  WorkflowContext,
-} from '@dbos-inc/operon';
+} from '@dbos-inc/dbos-sdk';
 import { MediaItem, MediaUsage } from './entity/Media';
 
 export interface ResponseError extends Error {
@@ -55,7 +55,7 @@ type ORMTC = TransactionContext<EntityManager>;
 export class Operations
 {
 
-@OperonTransaction()
+@Transaction()
 @RequiredRole([])
 static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @SkipLogging pass:string) :
    Promise<UserLogin>
@@ -124,7 +124,7 @@ static async getMyProfile(ctx: ORMTC, curUid:string) :
     return upRep.findOneBy({id: curUid});
 }
 
-@OperonTransaction({readOnly: true})
+@Transaction({readOnly: true})
 @RequiredRole([])
 static async getMyProfilePhotoKey(ctx: ORMTC, curUid:string) :
    Promise<string | null>
@@ -154,7 +154,7 @@ static async getPost(ctx: ORMTC, _curUid: string, post:string) :
 
 //
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
-@OperonTransaction({readOnly: true})
+@Transaction({readOnly: true})
 static async findUser(ctx: ORMTC, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
    Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]> 
 {
@@ -235,7 +235,7 @@ static async setGraphStatus(ctx: ORMTC, curUid : string, otherUid : string, stat
 
 // Compose a post
 // Future: If this takes a long time, split it into a workflow
-@OperonTransaction()
+@Transaction()
 static async makePost(ctx: ORMTC, txt : string)
 {
     const manager = ctx.client;
@@ -269,7 +269,7 @@ static async makePost(ctx: ORMTC, txt : string)
 }
 
 // Send a post
-@OperonTransaction()
+@Transaction()
 static async distributePost(ctx: ORMTC, p: Post) {
     const manager = ctx.client;
 
@@ -376,7 +376,7 @@ static async readRecvTimeline(ctx: ORMTC, curUser : string, type : RecvType[], g
     });
 }
 
-@OperonCommunicator()
+@Communicator()
 static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
     const postPresigned = await createPresignedPost(
       getS3(ctx),
@@ -395,7 +395,7 @@ static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: st
     return postPresigned;
 }
 
-static async getS3DownloadKey(ctx: OperonContext, key: string, bucket: string) {
+static async getS3DownloadKey(ctx: DBOSContext, key: string, bucket: string) {
   const getObjectCommand = new GetObjectCommand({
     Bucket: bucket,
     Key: key,
@@ -406,7 +406,7 @@ static async getS3DownloadKey(ctx: OperonContext, key: string, bucket: string) {
   return presignedUrl;
 }
 
-static async ensureS3FileDropped(ctx: OperonContext, key: string, bucket: string) {
+static async ensureS3FileDropped(ctx: DBOSContext, key: string, bucket: string) {
     try {
         const params = {
             Bucket: bucket,
@@ -423,7 +423,7 @@ static async ensureS3FileDropped(ctx: OperonContext, key: string, bucket: string
     }
 }
 
-@OperonTransaction()
+@Transaction()
 static async writeMediaPost(ctx: ORMTC, mid: string, mkey: string) {
     const m = new MediaItem();
     m.media_url = mkey;
@@ -435,7 +435,7 @@ static async writeMediaPost(ctx: ORMTC, mid: string, mkey: string) {
     await manager.save(m);
 }
 
-@OperonTransaction()
+@Transaction()
 static async writeMediaProfilePhoto(ctx: ORMTC, mid: string, mkey: string) {
     const m = new MediaItem();
     m.media_url = mkey;
@@ -462,7 +462,7 @@ static async writeMediaProfilePhoto(ctx: ORMTC, mid: string, mkey: string) {
  *   We then wait for notification that this was accomplished.
  *     If it fails for any reason, the workflow can just terminate.  Its database record is the record.
  */
-@OperonWorkflow()
+@Workflow()
 static async mediaUpload(ctx: WorkflowContext, mtype: string, mediaId: string, mediaFile: string, bucket: string)
 {
     const mkey = await ctx.invoke(Operations).createS3UploadKey(mediaFile, bucket);

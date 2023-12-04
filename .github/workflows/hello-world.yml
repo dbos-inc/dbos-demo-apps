@@ -48,13 +48,13 @@ jobs:
       - name: Checkout demo app
         uses: actions/checkout@v3
         with:
-          path: operon-demo-apps
+          path: dbos-demo-apps
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
           node-version: 18
       - name: Compile Hello World
-        working-directory: operon-demo-apps/hello-extended
+        working-directory: dbos-demo-apps/hello-extended
         run: |
           npm install
           npx knex migrate:latest

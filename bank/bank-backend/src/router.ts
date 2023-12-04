@@ -1,6 +1,6 @@
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
-import { OperonResponseError, GetApi, HandlerContext, PostApi, DefaultRequiredRole, Authentication, KoaMiddleware } from "@dbos-inc/operon";
+import { DBOSResponseError, GetApi, HandlerContext, PostApi, DefaultRequiredRole, Authentication, KoaMiddleware } from "@dbos-inc/dbos-sdk";
 import { bankAuthMiddleware, koaLogger, bankJwt } from "./middleware";
 
 @DefaultRequiredRole(["appUser"])
@@ -19,14 +19,14 @@ export class BankEndpoints {
   static async deposit(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
     if (!data.fromLocation) {
-      throw new OperonResponseError("fromLocation must not be empty!", 400);
+      throw new DBOSResponseError("fromLocation must not be empty!", 400);
     }
 
     // Must to local.
     data.toLocation = "local";
 
     // Check the header for a specific UUID for the workflow.
-    const txnUUID = ctx.koaContext.get("operon-workflowuuid");
+    const txnUUID = ctx.koaContext.get("dbos-workflowuuid");
     return ctx.invoke(BankTransactionHistory, txnUUID).depositWorkflow(data).then(x => x.getResult());
   }
 
@@ -35,14 +35,14 @@ export class BankEndpoints {
   static async withdraw(ctx: HandlerContext) {
     const data = convertTransactionHistory(ctx.koaContext.request.body as TransactionHistory);
     if (!data.toLocation) {
-      throw new OperonResponseError("toLocation must not be empty!", 400);
+      throw new DBOSResponseError("toLocation must not be empty!", 400);
     }
 
     // Must from local.
     data.fromLocation = "local";
 
     // Check the header for a specific UUID for the workflow.
-    const txnUUID = ctx.koaContext.get("operon-workflowuuid");
+    const txnUUID = ctx.koaContext.get("dbos-workflowuuid");
     return ctx.invoke(BankTransactionHistory, txnUUID).withdrawWorkflow(data).then(x => x.getResult());
   }
 
@@ -68,7 +68,7 @@ export class BankEndpoints {
 // Especially convert the bigint.
 export function convertTransactionHistory(data: TransactionHistory): TransactionHistory {
   if (!data.amount || data.amount <= 0.0) {
-    throw new OperonResponseError("Invalid amount! " + data.amount, 400);
+    throw new DBOSResponseError("Invalid amount! " + data.amount, 400);
   }
   return {
     txnId: BigInt(data.txnId ?? -1n),

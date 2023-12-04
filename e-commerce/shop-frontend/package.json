@@ -1,5 +1,5 @@
 {
-  "name": "operon-demo-shop-frontend",
+  "name": "dbos-demo-shop-frontend",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,6 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dbos-inc/dbos-sdk": "^0.7.18-preview",
     "@types/bcrypt": "^5.0.0",
     "@types/node": "20.3.3",
     "@types/pg": "^8.10.2",

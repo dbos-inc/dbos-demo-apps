@@ -1,8 +1,8 @@
-import { TransactionContext, HandlerContext, OperonTransaction, GetApi, OrmEntities } from '@dbos-inc/operon';
+import { TransactionContext, HandlerContext, Transaction, GetApi, OrmEntities } from '@dbos-inc/dbos-sdk';
 import { Entity, EntityManager, PrimaryGeneratedColumn, Column } from "typeorm"
 
-@Entity("operonhello")
-export class OperonHello {
+@Entity("dboshello")
+export class DBOSHello {
     @PrimaryGeneratedColumn()
     greeting_id: number = 0
 
@@ -10,15 +10,15 @@ export class OperonHello {
     greeting: string = "greeting"
 } 
 
-@OrmEntities([OperonHello])
+@OrmEntities([DBOSHello])
 export class Hello {
 
-  @OperonTransaction()
+  @Transaction()
   static async helloTransaction (txnCtxt: TransactionContext<EntityManager>, name: string)  {
     const greeting = `Hello, ${name}!`
 
     const p: EntityManager = txnCtxt.client as EntityManager;
-    const g: OperonHello = new OperonHello();
+    const g: DBOSHello = new DBOSHello();
     g.greeting = greeting;
     const res = await p.save(g);
     return `Greeting ${res.greeting_id}: ${greeting}`;
