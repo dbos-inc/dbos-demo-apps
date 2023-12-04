@@ -1,9 +1,9 @@
-# Operon Social Demo App (YKY)
+# DBOS Social Demo App (YKY)
 
-This demo shows an [Operon](https://github.com/dbos-inc/dbos-sdk) backend system coupled with a next.js frontend.
+This demo shows a [DBOS](https://github.com/dbos-inc/dbos-sdk) backend system coupled with a next.js frontend.
 
 It simulates a simple social network, and demonstrates:
-* Use of Operon workflows, transactions, and communicators
+* Use of DBOS workflows, transactions, and communicators
 * [TypeORM](https://typeorm.io) integration
 * Amazon S3 integration (for profile photos)
 * Authentication and authorization using an app-managed database table

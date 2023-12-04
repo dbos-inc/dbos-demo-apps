@@ -1,8 +1,8 @@
 ## Serverless Hello World Using TypeOrm
 
-A demo app for Operon.
+A demo app for DBOS.
 
-You need to use `npm install` to install the Operon package.
+You need to use `npm install` to install the DBOS SDK package.
 
 ```shell
 npm install
@@ -29,7 +29,7 @@ npx dbos start
 It should print the output:
 ```shell
 
-[Operon Server]: Server is running at http://localhost:3000
+[DBOS Server]: Server is running at http://localhost:3000
 ```
 
 Now you can open your browser and type `http://localhost:3000/greeting/{name}` and see the output!
