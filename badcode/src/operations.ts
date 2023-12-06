@@ -1,11 +1,11 @@
 import {
    TransactionContext,
    HandlerContext,
-   OperonTransaction,
+   Transaction,
    GetApi,
    ArgSource,
    ArgSources
-} from '@dbos-inc/operon';
+} from '@dbos-inc/dbos-sdk';
 
 import { Knex } from 'knex';
 
@@ -23,7 +23,7 @@ function getUserSetting(setting: string): string {
 }
 
 // The schema of the database table used in this example.
-export interface operon_hello {
+export interface dbos_hello {
   name: string;
   greet_count: number;
 }
@@ -32,11 +32,11 @@ type KnexTransactionContext = TransactionContext<Knex>;
 
 export class Hello {
   @GetApi('/greeting/:user') // Serve this function from HTTP GET requests to the /greeting endpoint with 'user' as a path parameter
-  @OperonTransaction()  // Run this function as a database transaction
+  @Transaction()  // Run this function as a database transaction
   static async helloTransaction(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) user: string) {
     // Retrieve and increment the number of times this user has been greeted.
-    const query = "INSERT INTO operon_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = operon_hello.greet_count + 1 RETURNING greet_count;";
-    const { rows } = await ctxt.client.raw(query, [user]) as { rows: operon_hello[] };
+    const query = "INSERT INTO dbos_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = dbos_hello.greet_count + 1 RETURNING greet_count;";
+    const { rows } = await ctxt.client.raw(query, [user]) as { rows: dbos_hello[] };
     const greet_count = rows[0].greet_count;
     console.log(`Hello, ${user}! You have been greeted ${greet_count} times.`); // Even worse if we give this side-effects
     return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
@@ -48,20 +48,20 @@ export class Hello {
   }
 
   @GetApi('/query1/:user')
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   static async sqlInjectTransaction1(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) user: string) {
     // Retrieve and increment the number of times this user has been greeted.
-    const query = "SELECT * FROM operon_hello WHERE user='"+user+"'";
-    const { rows } = await ctxt.client.raw(query) as { rows: operon_hello[] };
+    const query = "SELECT * FROM dbos_hello WHERE user='"+user+"'";
+    const { rows } = await ctxt.client.raw(query) as { rows: dbos_hello[] };
     return rows;
   }
 
   @GetApi('/query2/:user')
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   static async sqlInjectTransaction2(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) user: string) {
     // Retrieve and increment the number of times this user has been greeted.
-    const query = `SELECT * FROM operon_hello WHERE user='${user}'`;
-    const { rows } = await ctxt.client.raw(query) as { rows: operon_hello[] };
+    const query = `SELECT * FROM dbos_hello WHERE user='${user}'`;
+    const { rows } = await ctxt.client.raw(query) as { rows: dbos_hello[] };
     return rows;
   }
 

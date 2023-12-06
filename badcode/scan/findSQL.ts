@@ -9,7 +9,7 @@ import {
   DiagnosticsCollector,
   diagResult,
   logDiagnostics,
-} from '@dbos-inc/operon/dist/src/operon-runtime/tsDiagUtil';
+} from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/tsDiagUtil';
 
 const libraryNames = ['pg', 'typeorm', 'knex', 'prisma'];
 
@@ -201,7 +201,7 @@ export class TypeParser {
         if (ts.isClassDeclaration(stmt)) {
           const staticMethods = stmt.members
             .filter(ts.isMethodDeclaration)
-            // Operon only supports static methods, so filter out instance methods by default
+            // DBOS only supports static methods, so filter out instance methods by default
             .filter(isStaticMethod)
             .map(m => this.getMethod(m));
 
@@ -366,7 +366,7 @@ fileNames.forEach(fileName => {
 });
 */
 
-//const directoryToAnalyze = '/home/chuck/dbos/operon-demo-apps/badcode'; // Update this path
+//const directoryToAnalyze = '/home/chuck/dbos/dbos-demo-apps/badcode'; // Update this path
 //const directoryToAnalyze = process.argv[2]; // The first argument passed to the script
 //analyzeDirectory(directoryToAnalyze);
 

@@ -1,5 +1,5 @@
 {
-  "name": "operon-hello-bad",
+  "name": "dbos-hello-bad",
   "version": "0.0.1",
   "scripts": {
     "build": "tsc",
@@ -23,7 +23,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/operon": "^0.7.11-preview",
+    "@dbos-inc/dbos-sdk": "^0.7.25-preview",
     "knex": "^3.0.1",
     "ts-node": "^10.9.1"
   }

@@ -8,9 +8,9 @@ package-lock.json
 # TypeScript build
 dist/
 
-# Operon directories
-.operon/
-operon_deploy
+# DBOS directories
+.dbos/
+dbos_deploy
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
