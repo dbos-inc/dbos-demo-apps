@@ -1,7 +1,7 @@
 {
   "name": "bank-backend",
   "version": "0.0.1",
-  "description": "Bank backend built with Operon",
+  "description": "Bank backend built with DBOS",
   "main": "dist/main.js",
   "types": "dist/main.d.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@dbos-inc/operon": "~0.6.31",
+    "@dbos-inc/dbos-sdk": "^0.7.25-preview",
     "@koa/bodyparser": "^5.0.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",

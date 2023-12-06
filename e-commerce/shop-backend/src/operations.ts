@@ -1,7 +1,7 @@
 import {
-  TransactionContext, WorkflowContext, OperonTransaction, OperonWorkflow, HandlerContext,
-  GetApi, PostApi, OperonCommunicator, CommunicatorContext, OperonResponseError, ArgSource, ArgSources, OperonContext
-} from '@dbos-inc/operon';
+  TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
+  GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
+} from '@dbos-inc/dbos-sdk';
 import bcrypt from 'bcrypt';
 import { Knex } from 'knex';
 
@@ -60,7 +60,7 @@ interface PaymentSession {
 const checkout_url_topic = "payment_checkout_url";
 const checkout_complete_topic = "payment_checkout_complete";
 
-function getHostConfig(ctxt: OperonContext) {
+function getHostConfig(ctxt: DBOSContext) {
   const paymentHost = ctxt.getConfig<string>("payment_host");
   if (!paymentHost) {
     ctxt.logger.crit("Missing payment_host configuration");
@@ -81,20 +81,20 @@ function getHostConfig(ctxt: OperonContext) {
 export class Shop {
 
   @PostApi('/api/login')
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async login(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctxt.client<User>('users').select("password").where({ username }).first();
     if (!(user && await bcrypt.compare(password, user.password))) {
-      throw new OperonResponseError("Invalid username or password", 400);
+      throw new DBOSResponseError("Invalid username or password", 400);
     }
   }
 
   @PostApi('/api/register')
-  @OperonTransaction()
+  @Transaction()
   static async register(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctxt.client<User>('users').select().where({ username }).first();
     if (user) {
-      throw new OperonResponseError("Username already exists", 400);
+      throw new DBOSResponseError("Username already exists", 400);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -102,7 +102,7 @@ export class Shop {
   }
 
   @GetApi('/api/products')
-  @OperonTransaction()
+  @Transaction({ readOnly: true })
   static async getProducts(ctxt: KnexTransactionContext): Promise<DisplayProduct[]> {
     const rows = await ctxt.client<Product>('products').select("product_id", "product", "description", "image_name", "price");
     const formattedRows: DisplayProduct[] = rows.map((row) => ({
@@ -113,7 +113,7 @@ export class Shop {
   }
 
   @GetApi('/api/products/:id')
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async getProduct(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) id: number): Promise<DisplayProduct | null> {
 
     const rows = await ctxt.client<Product>('products').select("product_id", "product", "description", "image_name", "price").where({ product_id: id });
@@ -128,13 +128,13 @@ export class Shop {
   }
 
   @PostApi('/api/add_to_cart')
-  @OperonTransaction()
+  @Transaction()
   static async addToCart(ctxt: KnexTransactionContext, username: string, product_id: number): Promise<void> {
     await ctxt.client<Cart>('cart').insert({ username, product_id, quantity: 1 }).onConflict(['username', 'product_id']).merge({ quantity: ctxt.client.raw('cart.quantity + 1') });
   }
 
   @PostApi('/api/get_cart')
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async getCart(ctxt: KnexTransactionContext, username: string): Promise<CartProduct[]> {
     const rows = await ctxt.client<Cart>('cart').select("product_id", "quantity").where({ username });
     const products = rows.map(async (row) => {
@@ -148,7 +148,7 @@ export class Shop {
   static async webCheckout(ctxt: HandlerContext, @ArgSource(ArgSources.QUERY) username: string): Promise<void> {
     const origin = ctxt.koaContext.request?.headers.origin as string;
     if (typeof username !== 'string' || typeof origin !== 'string') {
-      throw new OperonResponseError("Invalid request!", 400);
+      throw new DBOSResponseError("Invalid request!", 400);
     }
     const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
     const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
@@ -160,7 +160,7 @@ export class Shop {
     }
   }
 
-  @OperonWorkflow()
+  @Workflow()
   static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
     const productDetails = await ctxt.invoke(Shop).getCart(username);
     if (productDetails.length === 0) {
@@ -208,7 +208,7 @@ export class Shop {
     }
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async createOrder(ctxt: KnexTransactionContext, username: string, products: Product[]): Promise<number> {
     const orders = await ctxt.client<Order>('orders').insert({ username, order_status: OrderStatus.PENDING, last_update_time: 0n }).returning('order_id');
     const orderID = orders[0].order_id;
@@ -220,7 +220,7 @@ export class Shop {
     return orderID;
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async subtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<boolean> {
     for (const product of products) {
       const row = await ctxt.client<Product>('products').where({ product_id: product.product_id }).select('inventory').first();
@@ -238,29 +238,29 @@ export class Shop {
     return true;
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async undoSubtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<void> {
     for (const product of products) {
       await ctxt.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctxt.client.raw('inventory + ?', [product.inventory]) });
     }
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async fulfillOrder(ctxt: KnexTransactionContext, orderID: number): Promise<void> {
     await ctxt.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.FULFILLED });
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async errorOrder(ctxt: KnexTransactionContext, orderID: number): Promise<void> {
     await ctxt.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.CANCELLED });
   }
 
-  @OperonTransaction()
+  @Transaction()
   static async clearCart(ctxt: KnexTransactionContext, username: string): Promise<void> {
     await ctxt.client<Cart>('cart').where({ username }).del();
   }
 
-  @OperonCommunicator()
+  @Communicator()
   static async createPaymentSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
     const { paymentHost, localHost } = getHostConfig(ctxt);
 
@@ -286,7 +286,7 @@ export class Shop {
     return session;
   }
 
-  @OperonCommunicator()
+  @Communicator()
   static async retrievePaymentSession(ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
     const { paymentHost } = getHostConfig(ctxt);
 

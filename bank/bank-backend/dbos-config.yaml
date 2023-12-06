@@ -5,18 +5,19 @@ database:
   connectionTimeoutMillis: 3000
   user_database: 'bank'
   password: ${PGPASSWORD}
-  system_database: 'operon_bank_test_systemdb'
+  system_database: 'dbos_bank_systemdb'
   user_dbclient: "prisma"
 telemetry:
   logs:
-    logLevel: 'debug'
+    logLevel: 'info'
     addContextMetadata: true
     silent: false
   traces:
-    enabled: false
+    enabled: true
+    endpoint: 'http://localhost:4318/v1/traces' # Jaeger tracing.
 runtimeConfig:
   port: 8081
 application:
-  bankname: "testbank - ${BANK_SCHEMA}"
-  bankport: '8091'
+  bankname: "DBOS Bank - ${BANK_SCHEMA}"
+  bankport: '8081'
   bankschema: ${BANK_SCHEMA}

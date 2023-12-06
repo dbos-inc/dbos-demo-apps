@@ -1,15 +1,15 @@
 {
-  "name": "operon-demo-shop-backend",
+  "name": "dbos-demo-shop-backend",
   "private": true,
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix --ext .ts .",
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run",
-    "start": "npm run build && operon start"
+    "start": "dbos-sdk start"
   },
   "dependencies": {
-    "@dbos-inc/operon": "^0.7.6-preview",
+    "@dbos-inc/dbos-sdk": "^0.7.25-preview",
     "bcrypt": "^5.1.1"
   },
   "devDependencies": {

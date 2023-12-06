@@ -1,6 +1,6 @@
-## Serverless Hello World Using Prisma
+## Serverless Hello World Using TypeOrm
 
-A demo app for DBOS using the Prisma ORM.
+A demo app for DBOS.
 
 You need to use `npm install` to install the DBOS SDK package.
 
@@ -14,9 +14,10 @@ npm run build
 ```
 
 Update dbos-config.yaml to specify your database name. It must have been created prior to running this app.
-Run this command to create the database schema:
-```shell
-npx prisma migrate dev --name init
+Create the table this app requires with the following SQL query:
+
+```sql
+CREATE TABLE IF NOT EXISTS DBOSHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);
 ```
 
 

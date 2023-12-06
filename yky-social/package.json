@@ -9,7 +9,7 @@
     "lint": "eslint --fix --ext .ts .",
     "tsc": "tsc",
     "clean": "rm -rf dist",
-    "start": "npm run build && operon start"
+    "start": "npm run build && dbos start"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +18,7 @@
     "@aws-sdk/client-s3": "^3.408.0",
     "@aws-sdk/s3-presigned-post": "^3.408.0",
     "@aws-sdk/s3-request-presigner": "^3.408.0",
-    "@dbos-inc/operon": "~0.6.31",
+    "@dbos-inc/dbos-sdk": "^0.7.25-preview",
     "@koa/bodyparser": "^5.0.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",

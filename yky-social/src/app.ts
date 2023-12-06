@@ -15,27 +15,27 @@ import { UserProfile } from "./entity/UserProfile";
 import { Operations, errorWithStatus } from "./YKYOperations";
 import {
   ArgRequired, GetApi, RequiredRole,
-  OperonTransaction, TransactionContext,
+  Transaction, TransactionContext,
   ArgSource, ArgSources, LogMask, LogMasks, PostApi,
   HandlerContext,
-  OperonWorkflow,
-  OperonContext,
+  Workflow,
+  DBOSContext,
   WorkflowContext,
   Authentication,
   MiddlewareContext,
   DefaultRequiredRole,
   Error,
   OrmEntities,
-  OperonDeploy,
+  DBOSDeploy,
   InitContext,
-} from "@dbos-inc/operon";
+} from "@dbos-inc/dbos-sdk";
 
 import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client, S3 } from '@aws-sdk/client-s3';
 
-function getS3Config(ctx: OperonContext) {
+function getS3Config(ctx: DBOSContext) {
   const s3r = ctx.getConfig('aws_s3_region','us-east-2');
   const s3k = ctx.getConfig('aws_s3_access_key', 'x');
   const s3s = ctx.getConfig('aws_s3_access_secret', 'x');
@@ -50,12 +50,12 @@ function getS3Config(ctx: OperonContext) {
 
 let s3Client: S3Client | undefined = undefined;
 let awsS3: S3 | undefined = undefined;
-export function getS3Client(ctx: OperonContext) {
+export function getS3Client(ctx: DBOSContext) {
   if (s3Client) return s3Client;
   s3Client = new S3Client(getS3Config(ctx));
   return s3Client;
 }
-export function getS3(ctx: OperonContext) {
+export function getS3(ctx: DBOSContext) {
   if (awsS3) return awsS3;
   awsS3 = new S3(getS3Config(ctx));
   return awsS3;
@@ -75,7 +75,7 @@ async function authMiddleware (ctx: MiddlewareContext) {
   const suid = uid?.toString();
 
   if (!suid) {
-    const err = new Error.OperonNotAuthorizedError("Not logged in.", 401);
+    const err = new Error.DBOSNotAuthorizedError("Not logged in.", 401);
     throw err;
   }
 
@@ -88,7 +88,7 @@ async function authMiddleware (ctx: MiddlewareContext) {
   });
 
   if (!u || !u.active) {
-    const err = new Error.OperonNotAuthorizedError("Invalid user.", 403);
+    const err = new Error.DBOSNotAuthorizedError("Invalid user.", 403);
     throw err;
   }
 
@@ -122,7 +122,7 @@ export class YKY
     return next();
   }
 
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   @GetApi('/recvtimeline')
   static async receiveTimeline(ctx: TransactionContext<EntityManager>) 
   {
@@ -135,7 +135,7 @@ export class YKY
     return {message: "Read.", timeline:tl};
   }
 
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   @GetApi('/sendtimeline')
   static async sendTimeline(ctx: TransactionContext<EntityManager>)
   {
@@ -162,7 +162,7 @@ export class YKY
     }
   }
 
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   @GetApi("/post/:id")
   static async getPost(ctx: TransactionContext<EntityManager>, @ArgRequired @ArgSource(ArgSources.URL) id: string) {
     // Future: Validate user relationship to poster for non-public posts; not blocked from seeing the post
@@ -175,7 +175,7 @@ export class YKY
     }
   }
 
-  @OperonTransaction({readOnly: true})
+  @Transaction({readOnly: true})
   @PostApi("/login")
   @RequiredRole([]) // Don't need any roles to log in
   static async doLogin(ctx: TransactionContext<EntityManager>, @ArgRequired username: string, @ArgRequired @LogMask(LogMasks.HASH) password: string) {
@@ -200,7 +200,7 @@ export class YKY
     return { message: 'User created.', id:user.id };
   }
 
-  @OperonTransaction()
+  @Transaction()
   @PostApi("/follow")
   static async doFollow(ctx: TransactionContext<EntityManager>, followUid: string) {
     const curStatus = await Operations.getGraphStatus(ctx, ctx.authenticatedUser, followUid);
@@ -210,7 +210,7 @@ export class YKY
     return {message: "Followed."};
   }
 
-  @OperonWorkflow()
+  @Workflow()
   @PostApi("/composepost")
   static async doCompose(ctx: WorkflowContext, @ArgRequired postText: string) {
     const post = await ctx.invoke(Operations).makePost(postText);
@@ -220,7 +220,7 @@ export class YKY
   }
 
   @GetApi("/getMediaUploadKey")
-  @OperonWorkflow()
+  @Workflow()
   static async doKeyUpload(ctx: WorkflowContext, filename: string) {
     const key = `photos/${filename}-${Date.now()}`;
     const bucket = ctx.getConfig('S3_BUCKET_NAME', 'yky-social-photos');
@@ -293,7 +293,7 @@ export class YKY
     return { message: "Signed URL", url: presignedUrl, key: filekey };
   }
 
-  @OperonDeploy()
+  @DBOSDeploy()
   static async setUpSchema(ctx: InitContext) {
     await ctx.createUserSchema();
   }

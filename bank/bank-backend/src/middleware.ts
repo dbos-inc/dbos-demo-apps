@@ -1,4 +1,4 @@
-import { MiddlewareContext, OperonResponseError } from "@dbos-inc/operon";
+import { MiddlewareContext, DBOSResponseError } from "@dbos-inc/dbos-sdk";
 import { koaJwtSecret } from "jwks-rsa";
 import jwt from "koa-jwt";
 import logger from "koa-logger";
@@ -11,7 +11,7 @@ export async function bankAuthMiddleware(ctx: MiddlewareContext) {
   if (ctx.requiredRole.length > 0) {
     console.log("required role: ", ctx.requiredRole);
     if (!ctx.koaContext.state.user) {
-      throw new OperonResponseError("No authenticated user!", 401);
+      throw new DBOSResponseError("No authenticated user!", 401);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -31,7 +31,7 @@ export async function bankAuthMiddleware(ctx: MiddlewareContext) {
 
 export const bankJwt = jwt({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  // Note: We have to read the config from env not from a file, because decorators are loaded before Operon, we must have the variables available during the loading time.
+  // Note: We have to read the config from env not from a file, because decorators are loaded before the DBOS executor, we must have the variables available during the loading time.
   secret: koaJwtSecret({
     jwksUri: `http://${process.env.BANK_HOST || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos/protocol/openid-connect/certs`,
     cache: true,

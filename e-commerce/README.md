@@ -1,6 +1,6 @@
-# Operon E-Commerce Demo Apps
+# DBOS E-Commerce Demo Apps
 
-This demo is a pair of [Operon](https://github.com/dbos-inc/operon) based systems demonstrating an 
+This demo is a pair of [DBOS](https://github.com/dbos-inc/dbos-sdk) based systems demonstrating an 
 e-commerce scenario with separate apps for the online shop and the payment provider.
 
 ## Demo Setup
@@ -24,12 +24,12 @@ This script will run a PostgreSQL 16.0 database container, create the shop and p
 
 If you're using your own PostgreSQL database, you need to configure the hostname, port, username and password for each of the backend packages.
 Each backend package needs its own database, but they can be on the same PostgreSQL server.
-There is an `operon-config.yaml` file in each of the backend package directories. 
+There is an `dbos-config.yaml` file in each of the backend package directories. 
 These config files must be updated to the appropriate settings for your PostgreSQL server.
 
 > Note, the PostgreSQL user specified for both backend packages *MUST* have database creation permissions.
 
-Here is a snippet of a `operon-config.yaml` file showing the database connection settings that must be updated:
+Here is a snippet of a `dbos-config.yaml` file showing the database connection settings that must be updated:
 
 ```yaml
 database:
@@ -39,7 +39,7 @@ database:
   password: ${PGPASSWORD}
 ```
 
-Once the `operon-config.yaml` files have been updated, you also need to create the two demo databases `shop` and `payment`.
+Once the `dbos-config.yaml` files have been updated, you also need to create the two demo databases `shop` and `payment`.
 The `start_postgres_docker.sh` script does this by calling `CREATE DATABASE shop;` and `CREATE DATABASE payment;` 
 via [psql](https://www.postgresql.org/docs/current/app-psql.html) in the docker container.
 
@@ -60,10 +60,10 @@ For each setup, each package has a single npm command that is used to build and 
 > Additionally, there are compound configurations for launching the front and backend of shop or payment
 > as well as a compound configuration for launching all four packages in the E-Commerce demo
 
-## OpenAPI-based Operon clients
+## OpenAPI-based DBOS clients
 
-Operon CLI 0.6 adds the `openapi` command that generates an [OpenAPI 3.0.3](https://www.openapis.org/) definition for a Operon project.
-This specification can be used to automatically generate strongly typed client code to invoke Operon endpoints.
+DBOS CLI 0.6 adds the `openapi` command that generates an [OpenAPI 3.0.3](https://www.openapis.org/) definition for a DBOS project.
+This specification can be used to automatically generate strongly typed client code to invoke DBOS HTTP endpoints.
 The E-Commerce app demonstrates this approach.
 
 > Note: Typically, assets such as the generated OpenAPI definition and client code would be generated during the build process instead of checked into the source code repository.
@@ -72,12 +72,12 @@ The E-Commerce app demonstrates this approach.
 
 ### Generate OpenAPI Definition
 
-Both the shop and payment backend projects are Operon projects that have `src/operations.ts` as their operations entrypoint file.
-To generate an OpenAPI definition for an Operon project, run the `operon openapi` command from a terminal like this:
+Both the shop and payment backend projects are DBOS projects that have `src/operations.ts` as their operations entrypoint file.
+To generate an OpenAPI definition for a DBOS project, run the `dbos-sdk openapi` command from a terminal like this:
 
 ``` shell
 # run this in the <root>/e-commerce/payment-backend and <root>/e-commerce/shop-backend folders
-npx operon openapi src/operations.ts
+npx dbos-sdk openapi src/operations.ts
 ```
 
 This will generate the OpenAPI definition file for the project and save it to the `src/openapi.yaml` path.
@@ -119,7 +119,7 @@ When a payment is submitted, your shopping cart is cleared automatically.
 
 ## Under the Covers
 
-> Note, this section assumes you have read at least the [Operon Getting Started docs](https://docs.dbos.dev/category/getting-started).
+> Note, this section assumes you have read at least the [DBOS Getting Started docs](https://docs.dbos.dev/category/getting-started).
 
 Each backend package in this demo has a single [reliable workflow](https://docs.dbos.dev/tutorials/workflow-tutorial) at its core.
 The following sections show the code for that workflow, along with detailed notes regarding how it works.
@@ -131,12 +131,12 @@ These functions are fairly straightforward, please see the source code for more 
 ### Shop paymentWorkflow
 
 ```ts
-@OperonWorkflow()
+@Workflow()
 static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
 ```
 
-Like all Operon functions, `paymentWorkflow` is a static method on a class, in this case named `Shop`.
-Operon workflows must be decorated with `@OperonWorkflow()` and have a `WorkflowContext` as the first parameter.
+Like all DBOS functions, `paymentWorkflow` is a static method on a class, in this case named `Shop`.
+DBOS workflows must be decorated with `@Workflow()` and have a `WorkflowContext` as the first parameter.
 
 ```ts
   const productDetails = await ctxt.invoke(Shop).getCart(username);
@@ -177,7 +177,7 @@ In a real-world shop using a real-world payment provider such as Stripe, `create
 Since this is a demo, raw `fetch` calls are used instead.
 
 Note that if the payment session does not have a url field, we undo the earlier update to the product inventory.
-Since Operon workflows are guaranteed to reliably complete, even in the face of hardware failures, we will never leave product inventory unaccounted for.
+Since DBOS workflows are guaranteed to reliably complete, even in the face of hardware failures, we will never leave product inventory unaccounted for.
 
 Once we have the payment session, we need to redirect the user to the provided URL and wait for them to complete the payment workflow.
 We do this by calling `setEvent` to communicate out to the host environment and `recv` to wait until we receive notification that the payment workflow has completed.

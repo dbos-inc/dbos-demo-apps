@@ -1,5 +1,5 @@
 /**
- * operon-demo-shop-backend
+ * dbos-demo-shop-backend
  * private
  * DO NOT MODIFY - This file has been generated using oazapfts.
  * See https://www.npmjs.com/package/oazapfts
@@ -14,8 +14,8 @@ export const servers = {};
 export function login(body: {
     username: string;
     password: string;
-}, { operonWorkflowuuid }: {
-    operonWorkflowuuid?: string;
+}, { dbosWorkflowuuid }: {
+    dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
     return oazapfts.fetchText("/api/login", oazapfts.json({
         ...opts,
@@ -23,15 +23,15 @@ export function login(body: {
         body,
         headers: {
             ...opts && opts.headers,
-            "operon-workflowuuid": operonWorkflowuuid
+            "dbos-workflowuuid": dbosWorkflowuuid
         }
     }));
 }
 export function register(body: {
     username: string;
     password: string;
-}, { operonWorkflowuuid }: {
-    operonWorkflowuuid?: string;
+}, { dbosWorkflowuuid }: {
+    dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
     return oazapfts.fetchText("/api/register", oazapfts.json({
         ...opts,
@@ -39,12 +39,12 @@ export function register(body: {
         body,
         headers: {
             ...opts && opts.headers,
-            "operon-workflowuuid": operonWorkflowuuid
+            "dbos-workflowuuid": dbosWorkflowuuid
         }
     }));
 }
-export function getProducts({ operonWorkflowuuid }: {
-    operonWorkflowuuid?: string;
+export function getProducts({ dbosWorkflowuuid }: {
+    dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
     return oazapfts.fetchJson<{
         status: 200;
@@ -60,12 +60,12 @@ export function getProducts({ operonWorkflowuuid }: {
         ...opts,
         headers: {
             ...opts && opts.headers,
-            "operon-workflowuuid": operonWorkflowuuid
+            "dbos-workflowuuid": dbosWorkflowuuid
         }
     });
 }
-export function getProduct(id: number, { operonWorkflowuuid }: {
-    operonWorkflowuuid?: string;
+export function getProduct(id: number, { dbosWorkflowuuid }: {
+    dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
     return oazapfts.fetchJson<{
         status: 200;
@@ -81,15 +81,15 @@ export function getProduct(id: number, { operonWorkflowuuid }: {
         ...opts,
         headers: {
             ...opts && opts.headers,
-            "operon-workflowuuid": operonWorkflowuuid
+            "dbos-workflowuuid": dbosWorkflowuuid
         }
     });
 }
 export function addToCart(body: {
     username: string;
     product_id: number;
-}, { operonWorkflowuuid }: {
-    operonWorkflowuuid?: string;
+}, { dbosWorkflowuuid }: {
+    dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
     return oazapfts.fetchText("/api/add_to_cart", oazapfts.json({
         ...opts,
@@ -97,14 +97,14 @@ export function addToCart(body: {
         body,
         headers: {
             ...opts && opts.headers,
-            "operon-workflowuuid": operonWorkflowuuid
+            "dbos-workflowuuid": dbosWorkflowuuid
         }
     }));
 }
 export function getCart(body: {
     username: string;
-}, { operonWorkflowuuid }: {
-    operonWorkflowuuid?: string;
+}, { dbosWorkflowuuid }: {
+    dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
     return oazapfts.fetchJson<{
         status: 200;
@@ -123,12 +123,12 @@ export function getCart(body: {
         body,
         headers: {
             ...opts && opts.headers,
-            "operon-workflowuuid": operonWorkflowuuid
+            "dbos-workflowuuid": dbosWorkflowuuid
         }
     }));
 }
-export function webCheckout(username: string, { operonWorkflowuuid }: {
-    operonWorkflowuuid?: string;
+export function webCheckout(username: string, { dbosWorkflowuuid }: {
+    dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
     return oazapfts.fetchText(`/api/checkout_session${QS.query(QS.explode({
         username
@@ -137,19 +137,19 @@ export function webCheckout(username: string, { operonWorkflowuuid }: {
         method: "POST",
         headers: {
             ...opts && opts.headers,
-            "operon-workflowuuid": operonWorkflowuuid
+            "dbos-workflowuuid": dbosWorkflowuuid
         }
     });
 }
-export function paymentWebhook({ operonWorkflowuuid }: {
-    operonWorkflowuuid?: string;
+export function paymentWebhook({ dbosWorkflowuuid }: {
+    dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
     return oazapfts.fetchText("/payment_webhook", {
         ...opts,
         method: "POST",
         headers: {
             ...opts && opts.headers,
-            "operon-workflowuuid": operonWorkflowuuid
+            "dbos-workflowuuid": dbosWorkflowuuid
         }
     });
 }

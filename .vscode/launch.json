@@ -12,7 +12,7 @@
       "cwd": "${workspaceFolder}/e-commerce/shop-frontend",
     },
     {
-      "command": "npx operon start",
+      "command": "npx dbos-sdk start",
       "name": "Shop Backend",
       "preLaunchTask": "npm: build shop backend",
       "request": "launch",
@@ -27,7 +27,7 @@
       "cwd": "${workspaceFolder}/e-commerce/payment-frontend"
     },
     {
-      "command": "npx operon start",
+      "command": "npx dbos-sdk start",
       "name": "Payment Backend",
       "preLaunchTask": "npm: build payment backend",
       "request": "launch",
