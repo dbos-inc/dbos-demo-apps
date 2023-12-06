@@ -6,7 +6,7 @@
     "lint": "eslint --fix --ext .ts .",
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run",
-    "start": "npm run build && dbos start"
+    "start": "dbos-sdk start"
   },
   "dependencies": {
     "@dbos-inc/dbos-sdk": "^0.7.25-preview",

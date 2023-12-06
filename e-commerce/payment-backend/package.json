@@ -5,7 +5,7 @@
     "build": "tsc",
     "lint": "eslint --fix --ext .ts .",
     "migrate": "knex migrate:latest",
-    "start": "npm run build && dbos start",
+    "start": "dbos-sdk start",
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
