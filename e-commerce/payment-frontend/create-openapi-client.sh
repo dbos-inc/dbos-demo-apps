@@ -3,7 +3,7 @@ cur_dir=$(pwd)
 
 # generate the openapi definition document
 cd $fe_dir/../payment-backend
-npx dbos openapi src/operations.ts
+npx dbos-sdk openapi src/operations.ts
 
 cd $fe_dir
 rm -rf client
