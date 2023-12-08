@@ -6,6 +6,23 @@ import * as ts from 'typescript';
 import fs from 'node:fs/promises';
 import * as path from 'path';
 
+// Overall TODO list:
+//  Do a better job of sharing the code w/ Harry's OpenAPI generator; may take some refactoring of the generator
+//   Ultimately this code goes to the SDK, not the example directory
+//  Include all project files in scan, not just the entrypoint
+//   Include undecorated functions
+//  Do the best we can to link
+//  Make detection of API calls and unsafe constructs more sophisticated
+// Looking for:
+//  Unsafe API usage against the DB
+//  SQL injection possibility
+//  Await not in a communicator/transaction
+// There may be a limitation on callback functions; how are we to know that a callback isn't saved for later?
+//  (We are limiting transaction function to some constant we can establish at compile time, not variable)
+// Integrate the detected issues into lint-like results / vs.code
+// Generate a useful report about what tables are accessed by whom
+// Figure out if any rules are significant enough to prevent deployment
+
 import {
   DiagnosticsCollector,
   diagResult,
@@ -16,6 +33,15 @@ import {
   //findPackageInfo // TODO share / export this
 }
 from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/openApi';
+
+import {
+  ClassInfo,
+  MethodInfo,
+  ParameterInfo,
+  DecoratorInfo,
+  //TypeParser, // This gets the basic DBOS structure, not the depth I want
+}
+from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/TypeParser';
 
 export async function findPackageInfo(entrypoints: string[]): Promise<{ name: string, version: string }> {
   for (const entrypoint of entrypoints) {
@@ -154,64 +180,36 @@ function analyzeNode(node: ts.Node, fileName: string) {
   // Add more conditions as needed for other types of nodes
 }
 
-async function analyzeFile(fileName: string) {
-  const fileContents = await fs.readFile(fileName, 'utf8');
-  const sourceFile = ts.createSourceFile(
-    fileName,
-    fileContents,
-    ts.ScriptTarget.Latest
-  );
+async function analyzeFile(sourceFile:ts.SourceFile) {
 
   ts.forEachChild(sourceFile, node => {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const importPath = node.moduleSpecifier.text;
       if (libraryNames.includes(importPath)) {
-        console.log(`Detected usage of ${importPath} in file: ${fileName}`);
+        console.log(`Detected usage of ${importPath} in file: ${sourceFile.fileName}`);
       }
     }
   });
 
   ts.forEachChild(sourceFile, node => {
-    analyzeNode(node, fileName);
+    analyzeNode(node, sourceFile.fileName);
   });
 }
 
 export async function analyzeDirectory(directory: string) {
-  (await fs.readdir(directory)).forEach(file => {
+  (await fs.readdir(directory)).forEach(async file => {
     const fullPath = path.join(directory, file);
     if (fullPath.endsWith('.ts')) {
-      analyzeFile(fullPath);
+      const fileContents = await fs.readFile(fullPath, 'utf8');
+      const sourceFile = ts.createSourceFile(
+        fullPath,
+        fileContents,
+        ts.ScriptTarget.Latest
+      );
+    
+      analyzeFile(sourceFile);
     }
   });
-}
-
-export interface ClassInfo {
-  readonly node: ts.ClassDeclaration;
-  readonly name?: string;
-  readonly decorators: readonly DecoratorInfo[];
-  readonly methods: readonly MethodInfo[];
-}
-
-export interface MethodInfo {
-  readonly node: ts.MethodDeclaration;
-  readonly name: string;
-  readonly decorators: readonly DecoratorInfo[];
-  readonly parameters: readonly ParameterInfo[];
-}
-
-export interface ParameterInfo {
-  readonly node: ts.ParameterDeclaration;
-  readonly name: string;
-  readonly decorators: readonly DecoratorInfo[];
-  readonly required: boolean;
-}
-
-export interface DecoratorInfo {
-  node: ts.Decorator;
-  identifier: ts.Identifier;
-  args: readonly ts.Expression[];
-  name?: string;
-  module?: string;
 }
 
 function isStaticMethod(node: ts.MethodDeclaration): boolean {
@@ -234,6 +232,7 @@ export class TypeParser {
     const classes = new Array<ClassInfo>();
     for (const file of this.program.getSourceFiles()) {
       if (file.isDeclarationFile) continue;
+      analyzeFile(file); // TODO MOVE
       for (const stmt of file.statements) {
         if (ts.isClassDeclaration(stmt)) {
           const staticMethods = stmt.members
@@ -326,8 +325,30 @@ export class TypeParser {
   }
 }
 
+class CodeScanner {
+  readonly #diags = new DiagnosticsCollector();
+  get diags() { return this.#diags.diags; }
+
+  constructor(readonly program: ts.Program) {
+    //this.#checker = program.getTypeChecker();
+    //const config: Config = {
+    //  discriminatorType: 'open-api',
+    //  encodeRefs: false
+    //};
+    //const parser = createParser(program, config, aug => aug.addNodeParser(new BigIntKeywordParser())); // Wonder if needed...
+    //const formatter = createFormatter(config, (fmt) => fmt.addTypeFormatter(new BigIntTypeFormatter()));
+    //this.#schemaGenerator = new SchemaGenerator(program, parser, formatter, {});
+  }
+
+  scan(classes: readonly ClassInfo[], name: string, version:string) {
+
+  }
+};
 
 async function analyzeProgram(entrypoints: string[]) {
+  const { name, version } = await findPackageInfo(entrypoints);
+  console.log(`Found ${name}-${version}`);
+
   const program = ts.createProgram(entrypoints, {});
 
   const parser = new TypeParser(program);
@@ -335,14 +356,9 @@ async function analyzeProgram(entrypoints: string[]) {
   logDiagnostics(parser.diags);
   if (!classes || classes.length === 0) return undefined;
 
-  const { name, version } = await findPackageInfo(entrypoints);
-
-  console.log(`Found ${name}-${version}`);
-
-  //const generator = new OpenApiGenerator(program);
-  //const openapi = generator.generate(classes, name, version);
-  //logDiagnostics(generator.diags);
-  //return openapi;
+  const scanner = new CodeScanner(program);
+  scanner.scan(classes, name, version);
+  logDiagnostics(scanner.diags);
 }
 
 /*
@@ -403,7 +419,7 @@ fileNames.forEach(fileName => {
   const sourceFile = ts.createSourceFile(
     fileName,
     readFileSync(fileName).toString(),
-    ts.ScriptTarget.ES2015,
+    ts.ScriptTarget.ES2015, // Seems wrong
     true // setParentNodes
   );
 
@@ -411,10 +427,6 @@ fileNames.forEach(fileName => {
   delint(sourceFile);
 });
 */
-
-//const directoryToAnalyze = '/home/chuck/dbos/dbos-demo-apps/badcode'; // Update this path
-//const directoryToAnalyze = process.argv[2]; // The first argument passed to the script
-//analyzeDirectory(directoryToAnalyze);
 
 analyzeProgram([process.argv[2]]);
 
