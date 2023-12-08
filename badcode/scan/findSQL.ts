@@ -2,7 +2,8 @@
 
 //import { readFileSync } from "fs";
 import * as ts from 'typescript';
-import * as fs from 'fs';
+//import * as fs from 'fs';
+import fs from 'node:fs/promises';
 import * as path from 'path';
 
 import {
@@ -10,6 +11,42 @@ import {
   diagResult,
   logDiagnostics,
 } from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/tsDiagUtil';
+
+import {
+  //findPackageInfo // TODO share / export this
+}
+from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/openApi';
+
+export async function findPackageInfo(entrypoints: string[]): Promise<{ name: string, version: string }> {
+  for (const entrypoint of entrypoints) {
+    let dirname = path.dirname(entrypoint);
+    while (dirname !== '/') {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const packageJson = JSON.parse(await fs.readFile(path.join(dirname, 'package.json'), { encoding: 'utf-8' }));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const name = packageJson.name as string ?? "unknown";
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const version = packageJson.version as string | undefined;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const isPrivate = packageJson.private as boolean | undefined ?? false;
+
+        return {
+          name,
+          version: version
+            ? version
+            : isPrivate ? "private" : "unknown"
+        };
+      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        if ((error as any).code !== 'ENOENT') throw error;
+      }
+      dirname = path.dirname(dirname);
+    }
+  }
+  return { name: "unknown", version: "unknown" };
+}
+
 
 const libraryNames = ['pg', 'typeorm', 'knex', 'prisma'];
 
@@ -117,8 +154,8 @@ function analyzeNode(node: ts.Node, fileName: string) {
   // Add more conditions as needed for other types of nodes
 }
 
-function analyzeFile(fileName: string) {
-  const fileContents = fs.readFileSync(fileName, 'utf8');
+async function analyzeFile(fileName: string) {
+  const fileContents = await fs.readFile(fileName, 'utf8');
   const sourceFile = ts.createSourceFile(
     fileName,
     fileContents,
@@ -139,8 +176,8 @@ function analyzeFile(fileName: string) {
   });
 }
 
-export function analyzeDirectory(directory: string) {
-  fs.readdirSync(directory).forEach(file => {
+export async function analyzeDirectory(directory: string) {
+  (await fs.readdir(directory)).forEach(file => {
     const fullPath = path.join(directory, file);
     if (fullPath.endsWith('.ts')) {
       analyzeFile(fullPath);
@@ -290,13 +327,22 @@ export class TypeParser {
 }
 
 
-function analyzeProgram(entrypoints: string[]) {
+async function analyzeProgram(entrypoints: string[]) {
   const program = ts.createProgram(entrypoints, {});
 
   const parser = new TypeParser(program);
   const classes = parser.parse();
   logDiagnostics(parser.diags);
   if (!classes || classes.length === 0) return undefined;
+
+  const { name, version } = await findPackageInfo(entrypoints);
+
+  console.log(`Found ${name}-${version}`);
+
+  //const generator = new OpenApiGenerator(program);
+  //const openapi = generator.generate(classes, name, version);
+  //logDiagnostics(generator.diags);
+  //return openapi;
 }
 
 /*
