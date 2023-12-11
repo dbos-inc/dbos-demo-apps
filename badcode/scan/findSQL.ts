@@ -28,52 +28,17 @@ import {
   DiagnosticsCollector,
   diagResult,
   logDiagnostics,
-} from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/tsDiagUtil';
-
-import {
-  //findPackageInfo // TODO share / export this
-}
-from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/openApi';
+} from '@dbos-inc/dbos-sdk/dist/src/staticAnalysis/tsDiagUtil';
 
 import {
   ClassInfo,
   MethodInfo,
   ParameterInfo,
   DecoratorInfo,
+  findPackageInfo,
   //TypeParser, // This gets the basic DBOS structure, not the depth I want
 }
-from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/TypeParser';
-
-export async function findPackageInfo(entrypoints: string[]): Promise<{ name: string, version: string }> {
-  for (const entrypoint of entrypoints) {
-    let dirname = path.dirname(entrypoint);
-    while (dirname !== '/') {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const packageJson = JSON.parse(await fs.readFile(path.join(dirname, 'package.json'), { encoding: 'utf-8' }));
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        const name = packageJson.name as string ?? "unknown";
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        const version = packageJson.version as string | undefined;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        const isPrivate = packageJson.private as boolean | undefined ?? false;
-
-        return {
-          name,
-          version: version
-            ? version
-            : isPrivate ? "private" : "unknown"
-        };
-      } catch (error) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-        if ((error as any).code !== 'ENOENT') throw error;
-      }
-      dirname = path.dirname(dirname);
-    }
-  }
-  return { name: "unknown", version: "unknown" };
-}
-
+from '@dbos-inc/dbos-sdk/dist/src/staticAnalysis/TypeParser';
 
 const libraryNames = ['pg', 'typeorm', 'knex', 'prisma'];
 
@@ -198,7 +163,8 @@ async function analyzeFile(sourceFile:ts.SourceFile) {
 }
 
 export async function analyzeDirectory(directory: string) {
-  (await fs.readdir(directory)).forEach(async file => {
+  const files = await fs.readdir(directory);
+  for (const file of files) {
     const fullPath = path.join(directory, file);
     if (fullPath.endsWith('.ts')) {
       const fileContents = await fs.readFile(fullPath, 'utf8');
@@ -208,9 +174,9 @@ export async function analyzeDirectory(directory: string) {
         ts.ScriptTarget.Latest
       );
     
-      analyzeFile(sourceFile);
+      await analyzeFile(sourceFile);
     }
-  });
+  }
 }
 
 function isStaticMethod(node: ts.MethodDeclaration): boolean {
@@ -229,11 +195,11 @@ export class TypeParser {
     this.checker = program.getTypeChecker();
   }
 
-  parse(): readonly ClassInfo[] | undefined {
+  async parse(): Promise<readonly ClassInfo[] | undefined> {
     const classes = new Array<ClassInfo>();
     for (const file of this.program.getSourceFiles()) {
       if (file.isDeclarationFile) continue;
-      analyzeFile(file); // TODO MOVE
+      await analyzeFile(file); // TODO MOVE
       for (const stmt of file.statements) {
         if (ts.isClassDeclaration(stmt)) {
           const staticMethods = stmt.members
@@ -341,10 +307,10 @@ class CodeScanner {
     //this.#schemaGenerator = new SchemaGenerator(program, parser, formatter, {});
   }
 
-  scan(classes: readonly ClassInfo[], name: string, version:string) {
+  scan(_classes: readonly ClassInfo[], _name: string, _version:string) {
 
   }
-};
+}
 
 async function analyzeProgram(entrypoints: string[]) {
   const { name, version } = await findPackageInfo(entrypoints);
@@ -353,7 +319,7 @@ async function analyzeProgram(entrypoints: string[]) {
   const program = ts.createProgram(entrypoints, {});
 
   const parser = new TypeParser(program);
-  const classes = parser.parse();
+  const classes = await parser.parse();
   logDiagnostics(parser.diags);
   if (!classes || classes.length === 0) return undefined;
 
@@ -429,5 +395,9 @@ fileNames.forEach(fileName => {
 });
 */
 
-analyzeProgram([process.argv[2]]);
+analyzeProgram([process.argv[2]]).then(
+  () => {}
+).catch(
+  () => {}
+);
 
