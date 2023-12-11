@@ -22,6 +22,7 @@ import * as path from 'path';
 // Integrate the detected issues into lint-like results / vs.code
 // Generate a useful report about what tables are accessed by whom
 // Figure out if any rules are significant enough to prevent deployment
+// Make SQL API list a json file instead of code
 
 import {
   DiagnosticsCollector,
@@ -335,7 +336,7 @@ class CodeScanner {
     //  discriminatorType: 'open-api',
     //  encodeRefs: false
     //};
-    //const parser = createParser(program, config, aug => aug.addNodeParser(new BigIntKeywordParser())); // Wonder if needed...
+    //const parser = createParser(program, config, aug => aug.addNodeParser(new BigIntKeywordParser())); // Not needed...
     //const formatter = createFormatter(config, (fmt) => fmt.addTypeFormatter(new BigIntTypeFormatter()));
     //this.#schemaGenerator = new SchemaGenerator(program, parser, formatter, {});
   }
