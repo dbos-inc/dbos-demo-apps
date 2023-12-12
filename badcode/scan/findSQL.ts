@@ -175,8 +175,15 @@ class SDKStructure {
 
   log() {
     for (const file of this.files) {
+      console.log(`File: ${file.sourceFile.fileName}`);
       for (const dblib of file.dbUsage.modules) {
-        console.log(`Usage of ${dblib.dbLibrary} module in ${dblib.file.sourceFile.fileName}`);
+        console.log(`  Usage of ${dblib.dbLibrary} module in ${dblib.file.sourceFile.fileName}`);
+      }
+      for (const cls of file.classes) {
+        console.log(`  Class ${cls.name}`);
+        for (const mtd of cls.methods) {
+          console.log(`    Method ${mtd.name}`);
+        }
       }
     }
   }
