@@ -1,8 +1,6 @@
 /* eslint-disable no-console */
 
 import * as ts from 'typescript';
-import fs from 'node:fs/promises';
-import * as path from 'path';
 
 // Overall TODO list:
 // Source structure:
@@ -137,7 +135,8 @@ async function analyzeFile(sourceFileInfo: FileInfo) {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const importPath = node.moduleSpecifier.text;
       if (libraryNames.includes(importPath)) {
-        console.log(`Detected usage of ${importPath} in file: ${sourceFile.fileName}`);
+        sourceFileInfo.dbUsage.modules.push(new DBUsageEntry(node, importPath, sourceFileInfo));
+        //console.log(`Detected usage of ${importPath} in file: ${sourceFile.fileName}`);
       }
     }
   });
@@ -147,32 +146,18 @@ async function analyzeFile(sourceFileInfo: FileInfo) {
   });
 }
 
-/*
-export async function analyzeDirectory(directory: string) {
-  const files = await fs.readdir(directory);
-  for (const file of files) {
-    const fullPath = path.join(directory, file);
-    if (fullPath.endsWith('.ts')) {
-      const fileContents = await fs.readFile(fullPath, 'utf8');
-      const sourceFile = ts.createSourceFile(
-        fullPath,
-        fileContents,
-        ts.ScriptTarget.Latest
-      );
-    
-      await analyzeFile(sourceFile);
-    }
-  }
-}
-*/
-
 function isStaticMethod(node: ts.MethodDeclaration): boolean {
   const mods = node.modifiers ?? [];
   return mods.some(m => m.kind === ts.SyntaxKind.StaticKeyword);
 }
 
+class DBUsageEntry {
+  constructor(readonly node: ts.Node, readonly dbLibrary: string, readonly file: FileInfo) {
+  }
+}
+
 class DBUsage {
-  dbmodules : string[] = [];
+  modules : DBUsageEntry[] = [];
 }
 
 class FileInfo {
@@ -187,6 +172,14 @@ class SDKStructure {
   files : FileInfo[] = [];
   overallClasses : ClassInfo[] = [];
   overallDBUsage : DBUsage = new DBUsage();
+
+  log() {
+    for (const file of this.files) {
+      for (const dblib of file.dbUsage.modules) {
+        console.log(`Usage of ${dblib.dbLibrary} module in ${dblib.file.sourceFile.fileName}`);
+      }
+    }
+  }
 }
 
 export class SDKMethodFinder {
@@ -228,6 +221,7 @@ export class SDKMethodFinder {
 
       str.files.push(fi);
       str.overallClasses.push(...fi.classes);
+      str.overallDBUsage.modules.push(...fi.dbUsage.modules);
     }
 
     if (str.overallClasses.length === 0) {
@@ -333,7 +327,8 @@ async function analyzeProgram(entrypoints: string[]) {
   const stres = await finder.parse();
   logDiagnostics(finder.diags);
   if (!stres || stres.overallClasses.length === 0) return undefined;
-
+  stres.log();
+  
   const scanner = new CodeScanner(program);
   scanner.scan(stres.overallClasses, name, version);
   logDiagnostics(scanner.diags);
