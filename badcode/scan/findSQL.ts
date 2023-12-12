@@ -1,28 +1,31 @@
 /* eslint-disable no-console */
 
-//import { readFileSync } from "fs";
 import * as ts from 'typescript';
-//import * as fs from 'fs';
 import fs from 'node:fs/promises';
 import * as path from 'path';
 
 // Overall TODO list:
-//  Do a better job of sharing the code w/ Harry's OpenAPI generator; may take some refactoring of the generator
+// Source structure:
 //   Ultimately this code goes to the SDK, not the example directory
-//  Include all project files in scan, not just the entrypoint
+//   Invokable from npx
+//   Use in the deployment script, if we want to enforce rather than suggest
+// Invocation:
+//   Include all project files in scan (from project definition), not just the argv[]
+//     see analyzeProgram below
+//   Use the project config
+//   Integrate the detected issues into lint-like results / vs.code
+//   Make SQL API list (or other rules configuration) a json file instead of a hardcode
+// Detection
 //   Include undecorated functions
-//  Do the best we can to link
-//  Make detection of API calls and unsafe constructs more sophisticated
-// Looking for:
-//  Unsafe API usage against the DB
-//  SQL injection possibility
-//  Await not in a communicator/transaction
-// There may be a limitation on callback functions; how are we to know that a callback isn't saved for later?
-//  (We are limiting transaction function to some constant we can establish at compile time, not variable)
-// Integrate the detected issues into lint-like results / vs.code
-// Generate a useful report about what tables are accessed by whom
-// Figure out if any rules are significant enough to prevent deployment
-// Make SQL API list a json file instead of code
+//   Do the best we can to link
+//     Make detection of API calls and unsafe constructs more sophisticated
+//   Looking for:
+//     Unsafe API usage against the DB
+//     SQL injection possibility
+//     Await not in a communicator/transaction
+//   There may be a limitation on callback functions; how are we to know that a callback isn't saved for later?
+//     (We are limiting transaction function to some constant we can establish at compile time, not variable)
+//     Generate a useful report about what tables are accessed by whom
 
 import {
   DiagnosticsCollector,
@@ -62,30 +65,12 @@ function isDirectConcatenation(node: ts.Node): boolean {
   return false;
 }
 
-function isComplex(node: ts.Node, depth = 0): boolean {
-  const maxDepthAllowed = 3; // Define a threshold for complexity
-  if (depth > maxDepthAllowed) {
-    return true;
-  }
-
-  let isComplexNode = false;
-  node.forEachChild(child => {
-    if (isComplex(child, depth + 1)) {
-      isComplexNode = true;
-    }
-  });
-
-  return isComplexNode;
-}
-
 function analyzeDatabaseCall(node: ts.Node, _fileName: string): string {
   // Example logic to determine the nature of the database call
   if (isParameterizedQuery(node)) {
     return 'safe';
   } else if (isDirectConcatenation(node)) {
     return 'unsafe';
-  } else if (isComplex(node)) {
-    return 'complex';
   }
   return 'unknown';
 }
@@ -147,7 +132,6 @@ function analyzeNode(node: ts.Node, fileName: string) {
 }
 
 async function analyzeFile(sourceFile:ts.SourceFile) {
-
   ts.forEachChild(sourceFile, node => {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const importPath = node.moduleSpecifier.text;
@@ -184,7 +168,21 @@ function isStaticMethod(node: ts.MethodDeclaration): boolean {
   return mods.some(m => m.kind === ts.SyntaxKind.StaticKeyword);
 }
 
-export class TypeParser {
+class DBUsage {
+  dbmodules : string[] = [];
+}
+
+class FileInfo {
+  classes : ClassInfo[] = [];
+  dbUsage : DBUsage = new DBUsage();
+}
+class SDKStructure {
+  files : FileInfo[] = [];
+  overallClasses : ClassInfo[] = [];
+  overallDBUsage : DBUsage = new DBUsage();
+}
+
+export class SDKMethodFinder {
   readonly program: ts.Program;
   readonly checker: ts.TypeChecker;
   readonly diagc = new DiagnosticsCollector();
@@ -195,11 +193,14 @@ export class TypeParser {
     this.checker = program.getTypeChecker();
   }
 
-  async parse(): Promise<readonly ClassInfo[] | undefined> {
-    const classes = new Array<ClassInfo>();
+  async parse(): Promise<SDKStructure | undefined> {
+    const str = new SDKStructure();
     for (const file of this.program.getSourceFiles()) {
       if (file.isDeclarationFile) continue;
+  
       await analyzeFile(file); // TODO MOVE
+      const fi = new FileInfo;
+  
       for (const stmt of file.statements) {
         if (ts.isClassDeclaration(stmt)) {
           const staticMethods = stmt.members
@@ -208,7 +209,7 @@ export class TypeParser {
             .filter(isStaticMethod)
             .map(m => this.getMethod(m));
 
-          classes.push({
+          fi.classes.push({
             node: stmt,
             // a class may not have a name if it's the default export
             name: stmt.name?.getText(),
@@ -217,17 +218,20 @@ export class TypeParser {
           });
         }
       }
+
+      str.files.push(fi);
+      str.overallClasses.push(...fi.classes);
     }
 
-    if (classes.length === 0) {
+    if (str.overallClasses.length === 0) {
       this.diagc.warn(`no classes found in ${JSON.stringify(this.program.getRootFileNames())}`);
     }
     else {
       //this.diagc.warn(`Found ${classes.length} classes`);
-      console.log(`Found ${classes.length} classes`);
+      console.log(`Found ${str.overallClasses.length} classes`);
     }
 
-    return diagResult(classes, this.diags);
+    return diagResult(str, this.diags);
   }
 
   getMethod(node: ts.MethodDeclaration): MethodInfo {
@@ -318,86 +322,19 @@ async function analyzeProgram(entrypoints: string[]) {
 
   const program = ts.createProgram(entrypoints, {});
 
-  const parser = new TypeParser(program);
-  const classes = await parser.parse();
-  logDiagnostics(parser.diags);
-  if (!classes || classes.length === 0) return undefined;
+  const finder = new SDKMethodFinder(program);
+  const stres = await finder.parse();
+  logDiagnostics(finder.diags);
+  if (!stres || stres.overallClasses.length === 0) return undefined;
 
   const scanner = new CodeScanner(program);
-  scanner.scan(classes, name, version);
+  scanner.scan(stres.overallClasses, name, version);
   logDiagnostics(scanner.diags);
 }
 
-/*
-export function delint(sourceFile: ts.SourceFile) {
-  delintNode(sourceFile);
+/* Example of lint can be found at: https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API#traversing-the-ast-with-a-little-linter */
 
-  function delintNode(node: ts.Node) {
-    switch (node.kind) {
-      case ts.SyntaxKind.ForStatement:
-      case ts.SyntaxKind.ForInStatement:
-      case ts.SyntaxKind.WhileStatement:
-      case ts.SyntaxKind.DoStatement:
-        if ((node as ts.IterationStatement).statement.kind !== ts.SyntaxKind.Block) {
-          report(
-            node,
-            'A looping statement\'s contents should be wrapped in a block body.'
-          );
-        }
-        break;
-
-      case ts.SyntaxKind.IfStatement:
-        const ifStatement = node as ts.IfStatement;
-        if (ifStatement.thenStatement.kind !== ts.SyntaxKind.Block) {
-          report(ifStatement.thenStatement, 'An if statement\'s contents should be wrapped in a block body.');
-        }
-        if (
-          ifStatement.elseStatement &&
-          ifStatement.elseStatement.kind !== ts.SyntaxKind.Block &&
-          ifStatement.elseStatement.kind !== ts.SyntaxKind.IfStatement
-        ) {
-          report(
-            ifStatement.elseStatement,
-            'An else statement\'s contents should be wrapped in a block body.'
-          );
-        }
-        break;
-
-      case ts.SyntaxKind.BinaryExpression:
-        const op = (node as ts.BinaryExpression).operatorToken.kind;
-        if (op === ts.SyntaxKind.EqualsEqualsToken || op === ts.SyntaxKind.ExclamationEqualsToken) {
-          report(node, 'Use \'===\' and \'!==\'.');
-        }
-        break;
-    }
-
-    ts.forEachChild(node, delintNode);
-  }
-
-  function report(node: ts.Node, message: string) {
-    const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-    console.log(`${sourceFile.fileName} (${line + 1},${character + 1}): ${message}`);
-  }
-}
-
-const fileNames = process.argv.slice(2);
-fileNames.forEach(fileName => {
-  // Parse a file
-  const sourceFile = ts.createSourceFile(
-    fileName,
-    readFileSync(fileName).toString(),
-    ts.ScriptTarget.ES2015, // Seems wrong
-    true // setParentNodes
-  );
-
-  // delint it
-  delint(sourceFile);
-});
-*/
-
-analyzeProgram([process.argv[2]]).then(
-  () => {}
-).catch(
-  () => {}
+analyzeProgram(process.argv.slice(2)).then()
+.catch(
+  (e) => {console.log(e);}
 );
-
