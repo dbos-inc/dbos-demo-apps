@@ -131,7 +131,8 @@ function analyzeNode(node: ts.Node, fileName: string) {
   // Add more conditions as needed for other types of nodes
 }
 
-async function analyzeFile(sourceFile:ts.SourceFile) {
+async function analyzeFile(sourceFileInfo: FileInfo) {
+  const sourceFile = sourceFileInfo.sourceFile;
   ts.forEachChild(sourceFile, node => {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const importPath = node.moduleSpecifier.text;
@@ -146,6 +147,7 @@ async function analyzeFile(sourceFile:ts.SourceFile) {
   });
 }
 
+/*
 export async function analyzeDirectory(directory: string) {
   const files = await fs.readdir(directory);
   for (const file of files) {
@@ -162,6 +164,7 @@ export async function analyzeDirectory(directory: string) {
     }
   }
 }
+*/
 
 function isStaticMethod(node: ts.MethodDeclaration): boolean {
   const mods = node.modifiers ?? [];
@@ -175,6 +178,10 @@ class DBUsage {
 class FileInfo {
   classes : ClassInfo[] = [];
   dbUsage : DBUsage = new DBUsage();
+
+  constructor (readonly sourceFile: ts.SourceFile) {
+
+  }
 }
 class SDKStructure {
   files : FileInfo[] = [];
@@ -198,8 +205,8 @@ export class SDKMethodFinder {
     for (const file of this.program.getSourceFiles()) {
       if (file.isDeclarationFile) continue;
   
-      await analyzeFile(file); // TODO MOVE
-      const fi = new FileInfo;
+      const fi = new FileInfo(file);
+      await analyzeFile(fi);
   
       for (const stmt of file.statements) {
         if (ts.isClassDeclaration(stmt)) {
