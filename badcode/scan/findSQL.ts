@@ -24,6 +24,12 @@ import * as ts from 'typescript';
 //   There may be a limitation on callback functions; how are we to know that a callback isn't saved for later?
 //     (We are limiting transaction function to some constant we can establish at compile time, not variable)
 //     Generate a useful report about what tables are accessed by whom
+//   Low-level tasks
+//     Listing out of allowed awaits
+//     Listing out of properties of database calls
+//     Analyze properties of functions
+//     Taint user data symbols at entrypoints
+//     Top-down control-flow visit
 
 import {
   DiagnosticsCollector,
@@ -43,10 +49,38 @@ from '@dbos-inc/dbos-sdk/dist/src/staticAnalysis/TypeParser';
 
 const libraryNames = ['pg', 'typeorm', 'knex', 'prisma'];
 
-function isParameterizedQuery(node: ts.Node): boolean {
+function funcDefContainsDirectAwait(checker: ts.TypeChecker, node: ts.Node) {
+  // Check if the node is a function or method declaration
+  if (!ts.isFunctionDeclaration(node) && !ts.isMethodDeclaration(node)) {
+    throw new Error("Call this on the function / method declaration, not anything else");
+  }
+
+  let seenAny = false;
+
+  if (node.body) {
+    visit(node.body);
+  }
+
+  function visit(node: ts.Node) {
+    if (ts.isAwaitExpression(node)) {
+      const symbol = checker.getSymbolAtLocation(node);
+      if (symbol) {
+          console.log(`'await' found in function/method: ${symbol.getName()}`);
+      }
+      seenAny = true;
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  return seenAny;
+}
+
+function isParameterizedQuery(checker: ts.TypeChecker, node: ts.Node): boolean {
   // Check if the node is a call expression with parameters
   if (ts.isCallExpression(node)) {
     const { arguments: args } = node;
+    const sig = checker.getResolvedSignature(node);
+    console.log(sig?.declaration);
     // Look for patterns that resemble a parameterized query
     // This is a simplistic check and might need refinement based on the SQL library used
     return args.some(arg => ts.isStringLiteral(arg) || ts.isArrayLiteralExpression(arg));
@@ -63,9 +97,9 @@ function isDirectConcatenation(node: ts.Node): boolean {
   return false;
 }
 
-function analyzeDatabaseCall(node: ts.Node, _fileName: string): string {
+function analyzeDatabaseCall(checker: ts.TypeChecker, node: ts.Node, _fileName: string): string {
   // Example logic to determine the nature of the database call
-  if (isParameterizedQuery(node)) {
+  if (isParameterizedQuery(checker, node)) {
     return 'safe';
   } else if (isDirectConcatenation(node)) {
     return 'unsafe';
@@ -73,12 +107,12 @@ function analyzeDatabaseCall(node: ts.Node, _fileName: string): string {
   return 'unknown';
 }
 
-function analyzeFunction(node: ts.Node, fileName: string) {
+function analyzeFunction(checker: ts.TypeChecker, node: ts.Node, fileName: string) {
   let functionStatus = 'safe'; // Default assumption
 
   ts.forEachChild(node, child => {
     if (ts.isExpressionStatement(child)) {
-      const status = analyzeDatabaseCall(child, fileName);
+      const status = analyzeDatabaseCall(checker, child, fileName);
       if (status === 'unsafe') {
         functionStatus = 'unsafe';
       } else if (status === 'complex' && functionStatus !== 'unsafe') {
@@ -110,7 +144,7 @@ function analyzeFunctionCall(node: ts.CallExpression, _fileName: string) {
   });
 }
 
-function analyzeNode(node: ts.Node, fileName: string) {
+function analyzeNode(checker: ts.TypeChecker, node: ts.Node, fileName: string) {
   // Function to analyze individual AST nodes
   if (ts.isFunctionDeclaration(node) && node.body) {
     // Traverse function body for database calls
@@ -123,13 +157,13 @@ function analyzeNode(node: ts.Node, fileName: string) {
   }
 
   if (ts.isFunctionDeclaration(node) && node.body) {
-    analyzeFunction(node, fileName);
+    analyzeFunction(checker, node, fileName);
   }
 
   // Add more conditions as needed for other types of nodes
 }
 
-async function analyzeFile(sourceFileInfo: FileInfo) {
+async function analyzeFile(checker: ts.TypeChecker, sourceFileInfo: FileInfo) {
   const sourceFile = sourceFileInfo.sourceFile;
   ts.forEachChild(sourceFile, node => {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
@@ -142,7 +176,7 @@ async function analyzeFile(sourceFileInfo: FileInfo) {
   });
 
   ts.forEachChild(sourceFile, node => {
-    analyzeNode(node, sourceFile.fileName);
+    analyzeNode(checker, node, sourceFile.fileName);
   });
 }
 
@@ -189,6 +223,9 @@ class SDKStructure {
   }
 }
 
+/**
+ * Think of this as the bottom-up part - what is here and what is known beyond what TS provides
+ */
 export class SDKMethodFinder {
   readonly program: ts.Program;
   readonly checker: ts.TypeChecker;
@@ -206,7 +243,7 @@ export class SDKMethodFinder {
       if (file.isDeclarationFile) continue;
   
       const fi = new FileInfo(file);
-      await analyzeFile(fi);
+      await analyzeFile(this.checker, fi);
   
       for (const stmt of file.statements) {
         if (ts.isClassDeclaration(stmt)) {
@@ -271,7 +308,6 @@ export class SDKMethodFinder {
   }
 
   getDecorators(node: ts.HasDecorators): DecoratorInfo[] {
-
     return (ts.getDecorators(node) ?? [])
       .map(node => {
         const decoratorIdentifier = this.getDecoratorIdentifier(node);
@@ -304,23 +340,30 @@ export class SDKMethodFinder {
   }
 }
 
+/** This is the top down part */
 class CodeScanner {
   readonly #diags = new DiagnosticsCollector();
+  readonly #checker: ts.TypeChecker;
   get diags() { return this.#diags.diags; }
 
   constructor(readonly program: ts.Program) {
-    //this.#checker = program.getTypeChecker();
-    //const config: Config = {
-    //  discriminatorType: 'open-api',
-    //  encodeRefs: false
-    //};
-    //const parser = createParser(program, config, aug => aug.addNodeParser(new BigIntKeywordParser())); // Not needed...
-    //const formatter = createFormatter(config, (fmt) => fmt.addTypeFormatter(new BigIntTypeFormatter()));
-    //this.#schemaGenerator = new SchemaGenerator(program, parser, formatter, {});
+    this.#checker = program.getTypeChecker();
   }
 
-  scan(_classes: readonly ClassInfo[], _name: string, _version:string) {
-
+  scan(decs: SDKStructure, name: string, version:string) {
+    console.log(`Scanning app: ${name}-${version}`);
+    for (const file of decs.files) {
+      console.log(`  Scanning file: ${file.sourceFile.fileName}`);
+      for (const cls of file.classes) {
+        console.log(`    Scanning class: ${cls.name}`);
+        for (const mtd of cls.methods) {
+          console.log(`      Scanning method: ${mtd.name}`);
+          if (funcDefContainsDirectAwait(this.#checker, mtd.node)) {
+            console.log(`        ** Found direct await in ${mtd.name}`);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -334,10 +377,10 @@ async function analyzeProgram(entrypoints: string[]) {
   const stres = await finder.parse();
   logDiagnostics(finder.diags);
   if (!stres || stres.overallClasses.length === 0) return undefined;
-  stres.log();
+  //stres.log();
   
   const scanner = new CodeScanner(program);
-  scanner.scan(stres.overallClasses, name, version);
+  scanner.scan(stres, name, version);
   logDiagnostics(scanner.diags);
 }
 
