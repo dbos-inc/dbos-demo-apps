@@ -47,7 +47,67 @@ import {
 }
 from '@dbos-inc/dbos-sdk/dist/src/staticAnalysis/TypeParser';
 
-const libraryNames = ['pg', 'typeorm', 'knex', 'prisma'];
+export const dbLibraryNames = ['pg', 'typeorm', 'knex', 'prisma'];
+
+export const okAwaits = ['bcryptjs.hash'];
+
+function printAst(node: ts.Node) : string {
+    // Get human-readable name of the node kind
+    const syntaxKind = ts.SyntaxKind[node.kind];
+
+    // Optionally, add more details about the node (like its text content)
+    const nodeDetails = isRelevantNode(node) ? `: ${node.getText()}` : '';
+
+    // Log the current node
+    let cs = `${syntaxKind}${nodeDetails}{`;
+
+    // Recursively print each child of the current node
+    node.forEachChild((child) => {cs += printAst(child) + ",";});
+    cs += "}";
+    return cs;
+}
+
+function isRelevantNode(node: ts.Node): boolean {
+    // Define criteria for what nodes to include more details on
+    // For example, only include details for identifiers, literals, etc.
+    return ts.isIdentifier(node) || ts.isLiteralExpression(node) || true;
+}
+
+// Usage example
+const sourceCode = `let x = 5; console.log(x);`;
+const sourceFile = ts.createSourceFile('test.ts', sourceCode, ts.ScriptTarget.Latest, true);
+
+printAst(sourceFile);
+
+
+class WTR {
+  isInstance: boolean = false;
+  fqn: string = "";
+  // TODO - Type
+}
+
+// TODO: Provide context to this
+function whatDoesThisAccess(checker: ts.TypeChecker, exp: ts.Node) : WTR {
+  if (ts.isIdentifier(exp)) {
+    const symbol = checker.getSymbolAtLocation(exp);
+    if (symbol) {
+      // Do something with the symbol, like checking if it's an import
+      return {isInstance: false, fqn: symbol.escapedName.toString()};
+    }
+    else {
+      console.log("No symbol - CGPT doesn't understand getSymbolAtLocation");
+      return new WTR();
+    }
+  } else if (ts.isPropertyAccessExpression(exp)) {
+    // Handle nested PropertyAccessExpression
+    console.log("Nested property access");
+  }
+  else {
+    console.log(`Got something else: ${printAst(exp)}`);
+  }
+  // Add more cases as needed
+  return new WTR();
+}
 
 function funcDefContainsDirectAwait(checker: ts.TypeChecker, node: ts.Node) {
   // Check if the node is a function or method declaration
@@ -56,17 +116,60 @@ function funcDefContainsDirectAwait(checker: ts.TypeChecker, node: ts.Node) {
   }
 
   let seenAny = false;
-
+  
   if (node.body) {
     visit(node.body);
   }
 
   function visit(node: ts.Node) {
     if (ts.isAwaitExpression(node)) {
-      const symbol = checker.getSymbolAtLocation(node);
-      if (symbol) {
-          console.log(`'await' found in function/method: ${symbol.getName()}`);
+      console.log("Found Await");
+      const ae = node as ts.AwaitExpression;
+
+      const ce = ae.expression;
+      if (ts.isCallExpression(ce)) {
+        const cx = ce.expression;
+        if (ts.isIdentifier(cx)) {
+          seenAny = true;
+          const symbol = checker.getSymbolAtLocation(cx);
+          if (!symbol) {
+            console.error(`Expected a symbol in identifier expression ${cx.getFullText()}`);
+            return;
+          }
+          if (symbol.flags & ts.SymbolFlags.Alias) {
+            const originalSymbol = checker.getAliasedSymbol(symbol);
+            console.log(`${symbol.name} is an import from another module; ${originalSymbol.name}.`);
+            // Additional analysis on originalSymbol
+          } else if (symbol.declarations) {
+            const isLocalVariable = symbol.declarations.some(declaration => {
+                return ts.isVariableDeclaration(declaration) &&
+                        !ts.isSourceFile(declaration.parent);
+            });
+    
+            if (isLocalVariable) {
+                console.log(`${symbol.name} is a local variable.`);
+            }
+          }
+          if (symbol?.valueDeclaration) {
+            //symbol.valueDeclaration.
+          }
+        }
+        else if (ts.isPropertyAccessExpression(cx)) {
+          // There will be more work to do here to establish what type of object it is (if we know) and if the
+          //  accessed method is known to us
+          const name = cx.name.getText();
+          const wtr = whatDoesThisAccess(checker, cx.expression);
+          console.log(`This is a property access of ${wtr.fqn}.${name}`);
+        }
+        else {
+          // It is possibly inline code; do something about this
+          console.error(`Unclear what this means - expected CallExpression to call an identifier, but maybe it is a function tree ${cx.getFullText()}`);
+        }
       }
+      else {
+        console.error(`Unclear what this means - expected await to have a CallExpression ${ce.getFullText()}`);
+      }
+
       seenAny = true;
     }
     ts.forEachChild(node, visit);
@@ -168,7 +271,7 @@ async function analyzeFile(checker: ts.TypeChecker, sourceFileInfo: FileInfo) {
   ts.forEachChild(sourceFile, node => {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const importPath = node.moduleSpecifier.text;
-      if (libraryNames.includes(importPath)) {
+      if (dbLibraryNames.includes(importPath)) {
         sourceFileInfo.dbUsage.modules.push(new DBUsageEntry(node, importPath, sourceFileInfo));
         //console.log(`Detected usage of ${importPath} in file: ${sourceFile.fileName}`);
       }

@@ -7,6 +7,9 @@ import {
    ArgSources
 } from '@dbos-inc/dbos-sdk';
 
+import bcryptjs from 'bcryptjs';
+import bcryptjs2 from 'bcryptjs';
+
 import { Knex } from 'knex';
 
 export const AWS_TOKEN = "AKIAIUWUUQQN3GNUA88V";
@@ -45,6 +48,18 @@ export class Hello {
   @GetApi('/setting/:setting')
   static async getSetting(_ctx: HandlerContext, @ArgSource(ArgSources.URL) setting: string) {
     return getUserSetting(setting);
+  }
+
+  @GetApi('/hashfunc/:pwd')
+  static async hashPassword(_ctx: HandlerContext, @ArgSource(ArgSources.URL) password: string) {
+    const saltRounds = 10;
+    return await bcryptjs.hash(password, saltRounds);
+  }
+
+  @GetApi('/hashfunc2/:pwd')
+  static async hashPassword2(_ctx: HandlerContext, @ArgSource(ArgSources.URL) password: string) {
+    const saltRounds = 10;
+    return await bcryptjs2.hash(password, saltRounds);
   }
 
   @GetApi('/query1/:user')
