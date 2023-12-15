@@ -9,6 +9,8 @@ import {
 
 import bcryptjs from 'bcryptjs';
 import bcryptjs2 from 'bcryptjs';
+import {hash} from 'bcryptjs';
+import {hash as bchash} from 'bcryptjs';
 
 import { Knex } from 'knex';
 
@@ -60,6 +62,18 @@ export class Hello {
   static async hashPassword2(_ctx: HandlerContext, @ArgSource(ArgSources.URL) password: string) {
     const saltRounds = 10;
     return await bcryptjs2.hash(password, saltRounds);
+  }
+
+  @GetApi('/hashfunc3/:pwd')
+  static async hashPassword3(_ctx: HandlerContext, @ArgSource(ArgSources.URL) password: string) {
+    const saltRounds = 10;
+    return await hash(password, saltRounds);
+  }
+
+  @GetApi('/hashfunc4/:pwd')
+  static async hashPassword4(_ctx: HandlerContext, @ArgSource(ArgSources.URL) password: string) {
+    const saltRounds = 10;
+    return await bchash(password, saltRounds);
   }
 
   @GetApi('/query1/:user')
