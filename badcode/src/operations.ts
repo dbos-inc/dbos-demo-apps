@@ -7,6 +7,8 @@ import {
    ArgSources
 } from '@dbos-inc/dbos-sdk';
 
+import * as dbos from '@dbos-inc/dbos-sdk';
+
 import bcryptjs from 'bcryptjs';
 import bcryptjs2 from 'bcryptjs';
 import {hash} from 'bcryptjs';
@@ -70,7 +72,7 @@ export class Hello {
     return await hash(password, saltRounds);
   }
 
-  @GetApi('/hashfunc4/:pwd')
+  @dbos.GetApi('/hashfunc4/:pwd')
   static async hashPassword4(_ctx: HandlerContext, @ArgSource(ArgSources.URL) password: string) {
     const saltRounds = 10;
     return await bchash(password, saltRounds);

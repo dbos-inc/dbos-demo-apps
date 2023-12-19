@@ -73,11 +73,57 @@ function isRelevantNode(node: ts.Node): boolean {
     return ts.isIdentifier(node) || ts.isLiteralExpression(node) || true;
 }
 
-// Usage example
-const sourceCode = `let x = 5; console.log(x);`;
-const sourceFile = ts.createSourceFile('test.ts', sourceCode, ts.ScriptTarget.Latest, true);
+function getImportSpecifier(node: ts.Node, checker: ts.TypeChecker): { name: string; module: string; } | undefined {
+  const symbol = checker.getSymbolAtLocation(node);
+  const decls = symbol?.getDeclarations() ?? [];
+  for (const decl of decls) {
+    if (ts.isImportSpecifier(decl)) {
+      // decl.name is the name for this type used in the local module.
+      // If the type name was overridden in the local module, the original type name is stored in decl.propertyName.
+      // Otherwise, decl.propertyName is undefined.
+      const name = (decl.propertyName ?? decl.name).getText();
 
-printAst(sourceFile);
+      // comment in TS AST declaration indicates moduleSpecifier *must* be a string literal
+      //    "If [ImportDeclaration.moduleSpecifier] is not a StringLiteral it will be a grammar error."
+      // CB TODO: How do we know it is 3 levels up?
+      const module = decl.parent.parent.parent.moduleSpecifier as ts.StringLiteral;
+
+      return { name, module: module.text };
+    }
+  }
+  return undefined;
+}
+
+function getImportSpecifierFromPAE(pae: ts.PropertyAccessExpression, checker: ts.TypeChecker): { name: string; module: string; } | undefined {
+  const node = pae.expression;
+  const symbol = checker.getSymbolAtLocation(node);
+  if (!symbol) {
+    console.log("   YEAH NOT A SYMBOL");
+  }
+  const decls = symbol?.getDeclarations() ?? [];
+  for (const decl of decls) {
+    if (ts.isNamespaceImport(decl)) {
+      console.log("Namespace import declaration... "+printAst(decl.parent.parent));
+      const name = pae.name;
+      const module = decl.parent.parent.moduleSpecifier as ts.StringLiteral;
+      return {name: name.getText(), module: module.text};
+    }
+    if (ts.isImportSpecifier(decl)) {
+      // decl.name is the name for this type used in the local module.
+      // If the type name was overridden in the local module, the original type name is stored in decl.propertyName.
+      // Otherwise, decl.propertyName is undefined.
+      const name = (decl.propertyName ?? decl.name).getText();
+
+      // comment in TS AST declaration indicates moduleSpecifier *must* be a string literal
+      //    "If [ImportDeclaration.moduleSpecifier] is not a StringLiteral it will be a grammar error."
+      // CB TODO: How do we know it is 3 levels up?
+      const module = decl.parent.parent.parent.moduleSpecifier as ts.StringLiteral;
+
+      return { name, module: module.text };
+    }
+  }
+  return undefined;
+}
 
 
 class WTR {
@@ -131,6 +177,11 @@ function funcDefContainsDirectAwait(checker: ts.TypeChecker, node: ts.Node) {
         const cx = ce.expression;
         if (ts.isIdentifier(cx)) {
           seenAny = true;
+          const imp = getImportSpecifier(cx, checker);
+          if (imp) {
+            console.log(`This is an imported function: ${imp.module}.${imp.name}`);
+          }
+          /*
           const symbol = checker.getSymbolAtLocation(cx);
           if (!symbol) {
             console.error(`Expected a symbol in identifier expression ${cx.getFullText()}`);
@@ -153,6 +204,7 @@ function funcDefContainsDirectAwait(checker: ts.TypeChecker, node: ts.Node) {
           if (symbol?.valueDeclaration) {
             //symbol.valueDeclaration.
           }
+          */
         }
         else if (ts.isPropertyAccessExpression(cx)) {
           // There will be more work to do here to establish what type of object it is (if we know) and if the
@@ -160,6 +212,10 @@ function funcDefContainsDirectAwait(checker: ts.TypeChecker, node: ts.Node) {
           const name = cx.name.getText();
           const wtr = whatDoesThisAccess(checker, cx.expression);
           console.log(`This is a property access of ${wtr.fqn}.${name}`);
+          const imp = getImportSpecifier(cx, checker);
+          if (imp) {
+            console.log(`This is ALSO an imported function: ${imp.module}.${imp.name}`);
+          }
         }
         else {
           // It is possibly inline code; do something about this
@@ -344,7 +400,7 @@ export class SDKMethodFinder {
     const str = new SDKStructure();
     for (const file of this.program.getSourceFiles()) {
       if (file.isDeclarationFile) continue;
-  
+
       const fi = new FileInfo(file);
       await analyzeFile(this.checker, fi);
   
@@ -363,6 +419,23 @@ export class SDKMethodFinder {
             decorators: this.getDecorators(stmt),
             methods: staticMethods,
           });
+        }
+        else if (ts.isImportDeclaration(stmt)) {
+          console.log("Import "+printAst(stmt));
+        }
+        else if (ts.isVariableStatement(stmt)) {
+          console.log("Variable "+printAst(stmt));
+        }
+        else if (ts.isFunctionDeclaration(stmt)) {
+          console.log("Function "+printAst(stmt));
+        }
+        else if (ts.isInterfaceDeclaration(stmt) ||
+                 ts.isTypeAliasDeclaration(stmt))
+        {
+          continue; // Not likely to be useful
+        }
+        else {
+          console.log(`Top Level node ${stmt.kind} = ${printAst(stmt)}`);
         }
       }
 
@@ -396,17 +469,27 @@ export class SDKMethodFinder {
     return { node, name, decorators, required };
   }
 
-  getDecoratorIdentifier(node: ts.Decorator): { identifier: ts.Identifier; args: readonly ts.Expression[]; } | undefined {
+  getDecoratorIdentifier(node: ts.Decorator): { name: string | undefined, module: string | undefined, args: readonly ts.Expression[] } | undefined {
     if (ts.isCallExpression(node.expression)) {
+      if (ts.isPropertyAccessExpression(node.expression.expression)) {
+        const pae: ts.PropertyAccessExpression = node.expression.expression;
+        // Let's imagine a module is the expression
+        const { name, module } = getImportSpecifierFromPAE(pae, this.checker) ?? {};
+        //console.log("PROPERTY ACCESS: "+printAst(pae) + " ---- "+`${mod?.module}.${mod?.name}`);
+        return { name, module, args: node.expression.arguments };
+      }
       if (ts.isIdentifier(node.expression.expression)) {
-        return { identifier: node.expression.expression, args: node.expression.arguments };
+        const { name, module}  = getImportSpecifier(node.expression.expression, this.checker) ?? {};
+        return { name, module, args: node.expression.arguments };
       }
       this.diagc.raise(`Unexpected decorator CallExpression.expression type: ${ts.SyntaxKind[node.expression.expression.kind]}`, node);
     }
 
     if (ts.isIdentifier(node.expression)) {
-      return { identifier: node.expression, args: [] };
+      const {name, module} = getImportSpecifier(node.expression, this.checker) ?? {};
+      return { name, module, args: [] };
     }
+    // TODO: PropertyAccess at a high level
     this.diagc.raise(`Unexpected decorator expression type: ${ts.SyntaxKind[node.expression.kind]}`, node);
   }
 
@@ -415,31 +498,10 @@ export class SDKMethodFinder {
       .map(node => {
         const decoratorIdentifier = this.getDecoratorIdentifier(node);
         if (!decoratorIdentifier) return undefined;
-        const { identifier, args } = decoratorIdentifier;
-        const { name, module } = getImportSpecifier(identifier, this.checker) ?? {};
-        return { node, identifier, name, module, args } as DecoratorInfo;
+        const { name, module, args } = decoratorIdentifier;
+        return { node, name, module, args } as DecoratorInfo;
       })
       .filter((d): d is DecoratorInfo => !!d);
-
-    function getImportSpecifier(node: ts.Node, checker: ts.TypeChecker): { name: string; module: string; } | undefined {
-      const symbol = checker.getSymbolAtLocation(node);
-      const decls = symbol?.getDeclarations() ?? [];
-      for (const decl of decls) {
-        if (ts.isImportSpecifier(decl)) {
-          // decl.name is the name for this type used in the local module.
-          // If the type name was overridden in the local module, the original type name is stored in decl.propertyName.
-          // Otherwise, decl.propertyName is undefined.
-          const name = (decl.propertyName ?? decl.name).getText();
-
-          // comment in TS AST declaration indicates moduleSpecifier *must* be a string literal
-          //    "If [ImportDeclaration.moduleSpecifier] is not a StringLiteral it will be a grammar error."
-          const module = decl.parent.parent.parent.moduleSpecifier as ts.StringLiteral;
-
-          return { name, module: module.text };
-        }
-      }
-      return undefined;
-    }
   }
 }
 
