@@ -63,12 +63,12 @@ const checkout_complete_topic = "payment_checkout_complete";
 function getHostConfig(ctxt: DBOSContext) {
   const paymentHost = ctxt.getConfig<string>("payment_host");
   if (!paymentHost) {
-    ctxt.logger.crit("Missing payment_host configuration");
+    ctxt.logger.warn("Missing payment_host configuration");
   }
 
   const localHost = ctxt.getConfig<string>("local_host");
   if (!localHost) {
-    ctxt.logger.crit("Missing local_host configuration");
+    ctxt.logger.warn("Missing local_host configuration");
   }
 
   if (!paymentHost || !localHost) {
