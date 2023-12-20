@@ -144,6 +144,8 @@ function whatDoesThisCall(checker: ts.TypeChecker, exp: ts.CallExpression) {
     }
     return imp;
     /*
+    TODO: Do we need to check alias flags on symbols?
+    TODO: Check other things than imported functions...
     const symbol = checker.getSymbolAtLocation(cx);
     if (!symbol) {
       console.error(`Expected a symbol in identifier expression ${cx.getFullText()}`);
