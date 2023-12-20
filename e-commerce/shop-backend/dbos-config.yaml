@@ -1,5 +1,5 @@
 database:
-  hostname: 'localhost'
+  hostname: 'userdb-ec9c3d6e-2c80-4568-8bac-264d387ee017.ceagp5b7vwkp.us-east-1.rds.amazonaws.com'
   port: 5432
   username: 'postgres'
   password: ${PGPASSWORD}
@@ -7,6 +7,9 @@ database:
   system_database: 'shop_systemdb'
   connectionTimeoutMillis: 3000
   user_dbclient: 'knex'
+  ssl_ca: us-east-1-bundle.pem
+  migrate: ['migrate:latest']
+  rollback: ['migrate:rollback']
 runtimeConfig:
   port: 8082
 application:
