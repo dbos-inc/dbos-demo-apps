@@ -1,16 +1,21 @@
-//import dbos-eslint from './scan/custom_rules'
 
-module.exports = [{
+import dbosEslint from "./scan/custom_rules.js";
+import tsParser from "@typescript-eslint/parser";
+import ts from "@typescript-eslint/eslint-plugin";
+
+export default [
+ts.configs.recommended,
+{
   //"extends": [
   //  "eslint:recommended",
   //  "plugin:@typescript-eslint/recommended",
   //  "plugin:@typescript-eslint/recommended-requiring-type-checking"
   //],
   "plugins": {
-    //"@typescript-eslint",
+    "@typescript-eslint":ts,
     //"security",
     //"no-secrets",
-    //"./scan/custom_rules.ts",
+    "dbos-eslint": dbosEslint,
   },
   //"env": {
   //  "node": true,
@@ -45,8 +50,10 @@ module.exports = [{
     //  }
     //]
   },
-  //"parser": "@typescript-eslint/parser",
-  //"parserOptions": {
-  //  "project": "./tsconfig.json"
-  //}
+  "languageOptions": {
+     "parser": tsParser,
+     "parserOptions": {
+        "project": "./tsconfig.json"
+     },
+  },
 }];
