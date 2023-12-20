@@ -8,7 +8,7 @@ database:
   connectionTimeoutMillis: 3000
   user_dbclient: 'knex'
   ssl_ca: us-east-1-bundle.pem
-  migrate: ['migrate:latest']
+  migrate: ['migrate:latest','seed:run']
   rollback: ['migrate:rollback']
 runtimeConfig:
   port: 8082

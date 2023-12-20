@@ -1,6 +1,11 @@
 import { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
+  await knex.schema.createTable('dbos_hello', table => {
+    table.text('name').primary();
+    table.integer('greet_count').defaultTo(0);
+  });
+
   await knex.schema.createTable('cart', table => {
     table.string('username', 255).notNullable();
     table.integer('product_id').notNullable();
@@ -41,6 +46,7 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
+  await knex.schema.dropTable('dbos_hello');
   await knex.schema.dropTable('cart');
   await knex.schema.dropTable('users');
   await knex.schema.dropTable('orders');

@@ -1,3 +1,5 @@
+// knexfile.ts
+
 import { Knex } from 'knex';
 import { parseConfigFile } from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/config'
 import { DBOSConfig } from '@dbos-inc/dbos-sdk/dist/src/dbos-executor';
@@ -11,6 +13,7 @@ const config: Knex.Config = {
     user: dbosConfig.poolConfig.user,
     password: dbosConfig.poolConfig.password,
     database: dbosConfig.poolConfig.database,
+    ssl: dbosConfig.poolConfig.ssl,
   },
   migrations: {
     directory: './migrations'
