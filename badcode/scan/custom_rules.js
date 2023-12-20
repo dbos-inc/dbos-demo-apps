@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   rules: {
     'dbos-rules/detect-nondeterministic-calls': {
       // Rule configuration for Math.random() detection
@@ -15,7 +15,7 @@ module.exports = {
             if (node.callee.type === 'MemberExpression' &&
                 node.callee.object.name === 'Math' &&
                 node.callee.property.name === 'random')
-	    {
+	          {
               context.report({
                 node: node,
                 message: 'Avoid calling Math.random() directly; it can lead to non-reproducible behavior.',
