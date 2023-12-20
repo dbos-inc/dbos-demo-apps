@@ -97,18 +97,22 @@ function getImportSpecifier(node: ts.Node, checker: ts.TypeChecker): { name: str
 function getImportSpecifierFromPAE(pae: ts.PropertyAccessExpression, checker: ts.TypeChecker): { name: string; module: string; } | undefined {
   const node = pae.expression;
   const symbol = checker.getSymbolAtLocation(node);
-  if (!symbol) {
-    console.log("   YEAH NOT A SYMBOL");
-  }
+
+  //if (!symbol) {
+  //  console.error("NO symbol");
+  //}
+
   const decls = symbol?.getDeclarations() ?? [];
   for (const decl of decls) {
+    //console.log("Declaration: "+printAst(decl));
     if (ts.isNamespaceImport(decl)) {
-      console.log("Namespace import declaration... "+printAst(decl.parent.parent));
+      //console.log("Namespace import declaration... "+printAst(decl.parent.parent));
       const name = pae.name;
       const module = decl.parent.parent.moduleSpecifier as ts.StringLiteral;
       return {name: name.getText(), module: module.text};
     }
     if (ts.isImportSpecifier(decl)) {
+      //console.log("Import Specifier");
       // decl.name is the name for this type used in the local module.
       // If the type name was overridden in the local module, the original type name is stored in decl.propertyName.
       // Otherwise, decl.propertyName is undefined.
@@ -116,43 +120,67 @@ function getImportSpecifierFromPAE(pae: ts.PropertyAccessExpression, checker: ts
 
       // comment in TS AST declaration indicates moduleSpecifier *must* be a string literal
       //    "If [ImportDeclaration.moduleSpecifier] is not a StringLiteral it will be a grammar error."
-      // CB TODO: How do we know it is 3 levels up?
       const module = decl.parent.parent.parent.moduleSpecifier as ts.StringLiteral;
 
       return { name, module: module.text };
+    }
+    if (ts.isImportClause(decl)) {
+      //console.log("Import clause ");
+      const name = pae.name;
+      const module = decl.parent.moduleSpecifier as ts.StringLiteral;
+      return { name: name.getText(), module: module.text };
     }
   }
   return undefined;
 }
 
-
-class WTR {
-  isInstance: boolean = false;
-  fqn: string = "";
-  // TODO - Type
-}
-
-// TODO: Provide context to this
-function whatDoesThisAccess(checker: ts.TypeChecker, exp: ts.Node) : WTR {
-  if (ts.isIdentifier(exp)) {
-    const symbol = checker.getSymbolAtLocation(exp);
-    if (symbol) {
-      // Do something with the symbol, like checking if it's an import
-      return {isInstance: false, fqn: symbol.escapedName.toString()};
+// TODO: A better result type
+function whatDoesThisCall(checker: ts.TypeChecker, exp: ts.CallExpression) {
+  const cx = exp.expression;
+  if (ts.isIdentifier(cx)) {
+    const imp = getImportSpecifier(cx, checker);
+    if (imp) {
+      console.log(`This is an imported function: ${imp.module}.${imp.name}`);
     }
-    else {
-      console.log("No symbol - CGPT doesn't understand getSymbolAtLocation");
-      return new WTR();
+    return imp;
+    /*
+    const symbol = checker.getSymbolAtLocation(cx);
+    if (!symbol) {
+      console.error(`Expected a symbol in identifier expression ${cx.getFullText()}`);
+      return;
     }
-  } else if (ts.isPropertyAccessExpression(exp)) {
-    // Handle nested PropertyAccessExpression
-    console.log("Nested property access");
+    if (symbol.flags & ts.SymbolFlags.Alias) {
+      const originalSymbol = checker.getAliasedSymbol(symbol);
+      console.log(`${symbol.name} is an import from another module; ${originalSymbol.name}.`);
+      // Additional analysis on originalSymbol
+    } else if (symbol.declarations) {
+      const isLocalVariable = symbol.declarations.some(declaration => {
+          return ts.isVariableDeclaration(declaration) &&
+                  !ts.isSourceFile(declaration.parent);
+      });
+
+      if (isLocalVariable) {
+          console.log(`${symbol.name} is a local variable.`);
+      }
+    }
+    if (symbol?.valueDeclaration) {
+      //symbol.valueDeclaration.
+    }
+    */
+  }
+  else if (ts.isPropertyAccessExpression(cx)) {
+    // There will be more work to do here to establish what type of object it is (if we know) and if the
+    //  accessed method is known to us
+    // TODO: Currently only handles module imports - it could be a lot of other things
+    const imp = getImportSpecifierFromPAE(cx, checker);
+    console.log(`This is a property access of import ${imp?.module}.${imp?.name}`);
+    return imp;
   }
   else {
-    console.log(`Got something else: ${printAst(exp)}`);
+    // It is possibly inline code; do something about this
+    console.error(`Unclear what this means - expected CallExpression to call an identifier, but maybe it is a function tree ${cx.getFullText()}`);
   }
-  // Add more cases as needed
-  return new WTR();
+  return undefined;
 }
 
 function funcDefContainsDirectAwait(checker: ts.TypeChecker, node: ts.Node) {
@@ -174,53 +202,7 @@ function funcDefContainsDirectAwait(checker: ts.TypeChecker, node: ts.Node) {
 
       const ce = ae.expression;
       if (ts.isCallExpression(ce)) {
-        const cx = ce.expression;
-        if (ts.isIdentifier(cx)) {
-          seenAny = true;
-          const imp = getImportSpecifier(cx, checker);
-          if (imp) {
-            console.log(`This is an imported function: ${imp.module}.${imp.name}`);
-          }
-          /*
-          const symbol = checker.getSymbolAtLocation(cx);
-          if (!symbol) {
-            console.error(`Expected a symbol in identifier expression ${cx.getFullText()}`);
-            return;
-          }
-          if (symbol.flags & ts.SymbolFlags.Alias) {
-            const originalSymbol = checker.getAliasedSymbol(symbol);
-            console.log(`${symbol.name} is an import from another module; ${originalSymbol.name}.`);
-            // Additional analysis on originalSymbol
-          } else if (symbol.declarations) {
-            const isLocalVariable = symbol.declarations.some(declaration => {
-                return ts.isVariableDeclaration(declaration) &&
-                        !ts.isSourceFile(declaration.parent);
-            });
-    
-            if (isLocalVariable) {
-                console.log(`${symbol.name} is a local variable.`);
-            }
-          }
-          if (symbol?.valueDeclaration) {
-            //symbol.valueDeclaration.
-          }
-          */
-        }
-        else if (ts.isPropertyAccessExpression(cx)) {
-          // There will be more work to do here to establish what type of object it is (if we know) and if the
-          //  accessed method is known to us
-          const name = cx.name.getText();
-          const wtr = whatDoesThisAccess(checker, cx.expression);
-          console.log(`This is a property access of ${wtr.fqn}.${name}`);
-          const imp = getImportSpecifier(cx, checker);
-          if (imp) {
-            console.log(`This is ALSO an imported function: ${imp.module}.${imp.name}`);
-          }
-        }
-        else {
-          // It is possibly inline code; do something about this
-          console.error(`Unclear what this means - expected CallExpression to call an identifier, but maybe it is a function tree ${cx.getFullText()}`);
-        }
+        const _rv = whatDoesThisCall(checker, ce);
       }
       else {
         console.error(`Unclear what this means - expected await to have a CallExpression ${ce.getFullText()}`);
