@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   rules: {
     'dbos-rules/detect-nondeterministic-calls': {
       // Rule configuration for Math.random() detection
