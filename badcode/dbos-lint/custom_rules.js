@@ -12,6 +12,7 @@ module.exports = {
       create: function (context) {
         return {
           CallExpression(node) {
+            //console.log(node.callee.type+JSON.stringify(node));
             if (node.callee.type === 'MemberExpression' &&
                 node.callee.object.name === 'Math' &&
                 node.callee.property.name === 'random')
@@ -19,6 +20,14 @@ module.exports = {
               context.report({
                 node: node,
                 message: 'Avoid calling Math.random() directly; it can lead to non-reproducible behavior.',
+              });
+            }
+            if (node.callee.type === 'Identifier' && 
+                node.callee.name === 'setTimeout')
+            {
+              context.report({
+                node: node,
+                message: 'Avoid calling setTimeout() directly; it can lead to undesired behavior when debugging.',
               });
             }
           },
@@ -40,7 +49,7 @@ module.exports = {
             if (node.callee.name === 'Date') {
               context.report({
                 node: node,
-                message: 'Avoid using new Date(); consider using the DBOS XXX function for consistency and testability.',
+                message: 'Avoid using new Date(); consider using the DBOS SDK functions for consistency and testability.',
               });
             }
           },

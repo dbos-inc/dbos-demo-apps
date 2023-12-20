@@ -24,6 +24,10 @@ export const settings = {
     language: 'en'
 };
 
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function getUserSetting(setting: string): string {
   const _c = Math.random();
   debugger;
@@ -52,7 +56,8 @@ export class Hello {
 
   @GetApi('/setting/:setting')
   static async getSetting(_ctx: HandlerContext, @ArgSource(ArgSources.URL) setting: string) {
-    return getUserSetting(setting);
+    await sleep(100);
+    return getUserSetting(setting+new Date().toString());
   }
 
   @GetApi('/hashfunc/:pwd')
@@ -76,6 +81,7 @@ export class Hello {
   @dbos.GetApi('/hashfunc4/:pwd')
   static async hashPassword4(_ctx: HandlerContext, @ArgSource(ArgSources.URL) password: string) {
     const saltRounds = 10;
+    await sleep(1000);
     return await bchash(password, saltRounds);
   }
 
