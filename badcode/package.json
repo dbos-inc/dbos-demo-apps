@@ -10,11 +10,13 @@
     "sqlaudit": "tsc && node dist/scan/findSQL.js src/operations.ts"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.5",
     "@types/supertest": "^2.0.14",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.10.0",
     "eslint": "^8.53.0",
+    "eslint-plugin-dbos-lint": "file:dbos-lint",
     "eslint-plugin-no-secrets": "^0.8.9",
     "eslint-plugin-security": "^1.7.1",
     "jest": "^29.7.0",
@@ -23,7 +25,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.7.25-preview",
+    "@dbos-inc/dbos-sdk": "^0.7.35",
+    "bcryptjs": "^2.4.3",
     "knex": "^3.0.1",
     "ts-node": "^10.9.1"
   }
