@@ -1,6 +1,6 @@
 module.exports = {
   rules: {
-    'dbos-rules/detect-nondeterministic-calls': {
+    'detect-nondeterministic-calls': {
       // Rule configuration for Math.random() detection
       meta: {
         type: 'suggestion',
@@ -25,7 +25,7 @@ module.exports = {
         };
       },
     },
-    'dbos-rules/detect-new-date': {
+    'detect-new-date': {
       // Rule configuration for new Date() detection
       meta: {
         type: 'suggestion',
