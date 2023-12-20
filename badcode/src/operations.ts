@@ -25,8 +25,9 @@ export const settings = {
 };
 
 function getUserSetting(setting: string): string {
-    debugger;
-    return eval('settings.' + setting) as string;
+  const _c = Math.random();
+  debugger;
+  return eval('settings.' + setting) as string;
 }
 
 // The schema of the database table used in this example.
