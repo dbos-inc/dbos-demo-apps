@@ -1,5 +1,5 @@
 database:
-  hostname: 'userdb-ec9c3d6e-2c80-4568-8bac-264d387ee017.ceagp5b7vwkp.us-east-1.rds.amazonaws.com'
+  hostname: 'localhost'
   port: 5432
   username: 'postgres'
   password: ${PGPASSWORD}
