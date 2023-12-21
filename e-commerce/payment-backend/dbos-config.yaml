@@ -10,5 +10,9 @@ database:
   ssl_ca: us-east-1-bundle.pem
   migrate: ['migrate:latest']
   rollback: ['migrate:rollback']
+runtimeConfig:
+  port: 8086
+application:
+  frontend_host: 'http://localhost:8000'
 
 
