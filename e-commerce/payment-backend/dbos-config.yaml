@@ -1,14 +1,14 @@
 database:
-  hostname: 'userdb-6f7936e2-6530-4a84-ba4c-767aa790ff88.ceagp5b7vwkp.us-east-1.rds.amazonaws.com'
+  hostname: 'localhost'
   port: 5432
   username: 'postgres'
   password: ${PGPASSWORD}
   user_database: 'payment'
-  system_database: 'hello_systemdb'
+  system_database: 'payment_systemdb'
   connectionTimeoutMillis: 3000
   user_dbclient: 'knex'
   ssl_ca: us-east-1-bundle.pem
   migrate: ['migrate:latest']
   rollback: ['migrate:rollback']
-version: "4.1"
+
 
