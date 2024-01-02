@@ -2,7 +2,8 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:@dbos-inc/dbosRecommendedConfig"
   ],
   "plugins": [
     "@typescript-eslint",
@@ -23,12 +24,6 @@
     "@typescript-eslint/require-await": "off",
     "@typescript-eslint/no-unnecessary-type-assertion": "off",
     "@typescript-eslint/semi": ["error"],
-    "@dbos-inc/detect-nondeterministic-calls": "error",
-    "@dbos-inc/detect-new-date": "error",
-    "no-eval": "error",
-    "no-console": "error",
-    "security/detect-unsafe-regex": "error",
-    "no-secrets/no-secrets": "error",
 
     "@typescript-eslint/no-unused-vars": [
       "error",
