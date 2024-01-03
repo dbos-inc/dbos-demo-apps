@@ -7,7 +7,8 @@
 import * as Oazapfts from "oazapfts/lib/runtime";
 import * as QS from "oazapfts/lib/runtime/query";
 export const defaults: Oazapfts.RequestOpts = {
-    baseUrl: "/",
+//    baseUrl: "/",
+      baseUrl: "https://mj.cloud.dbos.dev/dbos-testuser/application/shop-backend" 
 };
 const oazapfts = Oazapfts.runtime(defaults);
 export const servers = {};
@@ -33,6 +34,7 @@ export function register(body: {
 }, { dbosWorkflowuuid }: {
     dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
+    console.log("hello");
     return oazapfts.fetchText("/api/register", oazapfts.json({
         ...opts,
         method: "POST",

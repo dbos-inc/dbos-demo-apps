@@ -5,7 +5,8 @@ import { bodyParser as KoaBodyParser } from '@koa/bodyparser';
 import { PaymentClient } from './client';
 
 const port = process.env.PORT || 8000;
-const basePath = process.env.PLAID_BACKEND || 'http://localhost:8086';
+// const basePath = process.env.PLAID_BACKEND || 'http://localhost:8086';
+const basePath = 'https://mj.cloud.dbos.dev/dbos-testuser/application/payment-backend' ;
 
 const client = new PaymentClient({ BASE: basePath});
 const api = client.default;

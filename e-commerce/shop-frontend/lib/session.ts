@@ -38,3 +38,4 @@ export async function getRequestCookie(
 
   return user as string;
 }
+
