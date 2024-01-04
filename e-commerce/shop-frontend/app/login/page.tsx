@@ -4,7 +4,6 @@ import axios from 'axios';
 import { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useRouter } from 'next/navigation';
-import { cookies } from 'next/headers';
 
 interface LoginFormInputs {
   username: string;
