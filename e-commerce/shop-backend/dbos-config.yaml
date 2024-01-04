@@ -7,8 +7,13 @@ database:
   system_database: 'shop_systemdb'
   connectionTimeoutMillis: 3000
   user_dbclient: 'knex'
+  migrate: ['migrate:latest','seed:run']
+  rollback: ['migrate:rollback']
 runtimeConfig:
   port: 8082
 application:
   payment_host: 'http://localhost:8086'
   local_host: 'http://localhost:8082'
+  # cloud example
+  # payment_host: 'https://dbos_domain/dbos-testuser/application/payment-backend'
+  # local_host: 'https://dbos_domain/dbos-testuser/application/shop-backend'

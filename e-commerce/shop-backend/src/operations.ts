@@ -2,7 +2,7 @@ import {
   TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
   GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
 } from '@dbos-inc/dbos-sdk';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
