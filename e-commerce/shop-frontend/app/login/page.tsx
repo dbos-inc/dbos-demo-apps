@@ -33,7 +33,6 @@ export default function AuthPage() {
   const onLogin = async (data: LoginFormInputs) => {
     try {
       await axios.post('/api/login', data);
-      // await axios.post('https://mj.cloud.dbos.dev/dbos-testuser/application/shop-backend/api/login', data);
       router.push('/');
     } catch (error) { // If the response code isn't 200-range, Axios throws an error.
       if (error instanceof axios.AxiosError && error.response) {
@@ -46,9 +45,7 @@ export default function AuthPage() {
 
   const onRegister = async (data: LoginFormInputs) => {
     try {
-      //TODO: revert change
-      // await axios.post('/api/register', data);
-      await axios.post('https://mj.cloud.dbos.dev/dbos-testuser/application/shop-backend/api/register', data);
+      await axios.post('/api/register', data);
       setRegisterError("Registration successful!")
     } catch (error) { // If the response code isn't 200-range, Axios throws an error.
       if (error instanceof axios.AxiosError && error.response) {

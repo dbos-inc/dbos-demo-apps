@@ -6,10 +6,12 @@
  */
 import * as Oazapfts from "oazapfts/lib/runtime";
 import * as QS from "oazapfts/lib/runtime/query";
+
 export const defaults: Oazapfts.RequestOpts = {
-//    baseUrl: "/",
-      baseUrl: "https://mj.cloud.dbos.dev/dbos-testuser/application/shop-backend" 
+    baseUrl: "/",
+    // baseUrl: "https://mj.cloud.dbos.dev/dbos-testuser/application/shop-backend" 
 };
+
 const oazapfts = Oazapfts.runtime(defaults);
 export const servers = {};
 export function login(body: {

@@ -21,8 +21,6 @@ const getProducts = async (): Promise<Product[]> => {
   export default async function Page() {
     
     const user = await getRequestCookie(cookies());
-    // const user = localStorage.getItem('user');
-    console.log("user is " + user)
     // Fetch data directly in a Server Component
     const products = await getProducts();
     // Forward fetched data to your Client Component
