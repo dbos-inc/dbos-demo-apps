@@ -7,10 +7,11 @@ type ArrayItemType<T> = T extends ReadonlyArray<infer U> ? U : never
 // utility type to return the data type of an Oazapfts api function return type
 type OazapftsReturn<T extends (...args: any) => any> = DataFieldType<Awaited<ReturnType<T>>>
 
-// export const backendAddress = "http://localhost:8082";
+export const backendAddress = "http://localhost:8082";
 // TO RUN with cloud change above line similar to use
-// using process.env.SHOP_BACKEND did not work
-export const backendAddress = "https://mj.cloud.dbos.dev/dbos-testuser/application/shop-backend";
+// export const backendAddress = "https://dbos_domain/dbos-testuser/application/shop-backend";
+// TODO: fix using process.env.SHOP_BACKEND. Did not work
+
 $api.defaults.baseUrl = backendAddress;
 console.log("backend api url" + $api.defaults.baseUrl)
 

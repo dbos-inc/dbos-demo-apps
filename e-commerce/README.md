@@ -54,7 +54,14 @@ For each setup, each package has a single npm command that is used to build and 
 
 * For payment-backend and shop-backend, run `npm run start` to build and launch the app
 * For shop-frontend, run `npm run dev` to launch the app
+  * To run with a backend in the cloud
+  * In lib/backend.ts 
+  * change export const backendAddress = "http://localhost:8082";
+  * to export const backendAddress = "url to cloud backend";
+
 * for payment-frontend, run `npm run start` to build and launch the app
+   * To run with a backend in the cloud 
+   * export PLAID_BACKEND=<url to cloud backend>
 
 > If you are using VSCode, there are launch configurations for each individual package in the demo. 
 > Additionally, there are compound configurations for launching the front and backend of shop or payment
