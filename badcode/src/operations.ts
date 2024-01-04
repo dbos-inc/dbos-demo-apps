@@ -2,7 +2,11 @@ import {
    TransactionContext,
    HandlerContext,
    Transaction,
+
+   DBOSResponseError,
+
    GetApi,
+   PostApi,
    ArgSource,
    ArgSources
 } from '@dbos-inc/dbos-sdk';
@@ -13,6 +17,8 @@ import bcryptjs from 'bcryptjs';
 import bcryptjs2 from 'bcryptjs';
 import {hash} from 'bcryptjs';
 import {hash as bchash} from 'bcryptjs';
+
+import bcrypt from 'bcrypt';
 
 import { Knex } from 'knex';
 
@@ -108,10 +114,18 @@ export class Hello {
     //const complexityregex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
     const complexityregex = /^[A-Za-z.,'-]([A-Za-z.,' -]*[A-Za-z.,'-])?$/;
     if (complexityregex.test(password)) {
-      return {user: username, pass: password};
+      return {user: username, pass: await bcrypt.hash(password, 10)};
     }
     else {
       throw new Error("Password not strong enough");
+    }
+  }
+
+  @PostApi('/api/login')
+  static async login(_ctx: HandlerContext, username: string, password: string): Promise<void> {
+    const user = {password: 'xxx'};
+    if (!(user && await bcrypt.compare(password, user.password))) {
+      throw new DBOSResponseError("Invalid username or password", 400);
     }
   }
 }

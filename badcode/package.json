@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@dbos-inc/eslint-plugin": "file:../../eslint-plugin/dbos-inc-eslint-plugin-0.0.2.tgz",
+    "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.5",
     "@types/supertest": "^2.0.14",
@@ -22,6 +23,7 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-sdk": "file:../../dbos-sdk/dbos-inc-dbos-sdk-0.0.0-placeholder.tgz",
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "knex": "^3.0.1",
     "ts-node": "^10.9.1"
