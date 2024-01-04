@@ -7,7 +7,6 @@ database:
   system_database: 'payment_systemdb'
   connectionTimeoutMillis: 3000
   user_dbclient: 'knex'
-  ssl_ca: us-east-1-bundle.pem
   migrate: ['migrate:latest']
   rollback: ['migrate:rollback']
 runtimeConfig:
