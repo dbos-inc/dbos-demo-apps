@@ -6,11 +6,9 @@
  */
 import * as Oazapfts from "oazapfts/lib/runtime";
 import * as QS from "oazapfts/lib/runtime/query";
-
 export const defaults: Oazapfts.RequestOpts = {
     baseUrl: "/",
 };
-
 const oazapfts = Oazapfts.runtime(defaults);
 export const servers = {};
 export function login(body: {
@@ -35,7 +33,6 @@ export function register(body: {
 }, { dbosWorkflowuuid }: {
     dbosWorkflowuuid?: string;
 } = {}, opts?: Oazapfts.RequestOpts) {
-    console.log("hello");
     return oazapfts.fetchText("/api/register", oazapfts.json({
         ...opts,
         method: "POST",

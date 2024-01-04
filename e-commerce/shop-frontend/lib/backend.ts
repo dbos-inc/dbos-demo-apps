@@ -11,9 +11,7 @@ export const backendAddress = "http://localhost:8082";
 // TO RUN with cloud change above line similar to use
 // export const backendAddress = "https://dbos_domain/dbos-testuser/application/shop-backend";
 // TODO: fix using process.env.SHOP_BACKEND. Did not work
-
 $api.defaults.baseUrl = backendAddress;
-console.log("backend api url" + $api.defaults.baseUrl)
 
 export type CartProduct = ArrayItemType<OazapftsReturn<typeof $api.getCart>>
 export type Product = OazapftsReturn<typeof $api.getProduct>
