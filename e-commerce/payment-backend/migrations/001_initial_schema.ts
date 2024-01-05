@@ -1,7 +1,6 @@
 import { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
-
   await knex.schema.createTable('session', table => {
     table.string('session_id', 255).primary();
     table.string('client_reference_id', 255).nullable();

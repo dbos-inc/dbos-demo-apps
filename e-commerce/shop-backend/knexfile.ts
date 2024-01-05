@@ -11,6 +11,7 @@ const config: Knex.Config = {
     user: dbosConfig.poolConfig.user,
     password: dbosConfig.poolConfig.password,
     database: dbosConfig.poolConfig.database,
+    ssl: dbosConfig.poolConfig.ssl,
   },
   migrations: {
     directory: './migrations'
