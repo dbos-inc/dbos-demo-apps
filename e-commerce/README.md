@@ -55,7 +55,7 @@ For each setup, each package has a single npm command that is used to build and 
 * For payment-backend and shop-backend, run `npm run start` to build and launch the app
 
 * For shop-frontend, run `npm run dev` to launch the app
-* To run with a backend in the cloud, in lib/backend.ts, change export const backendAddress = "http://localhost:8082" to export const backendAddress = "url to cloud backend";
+* To run with a backend in the cloud, export NEXT_PUBLIC_SHOP_BACKEND=<url to shop backend>
 
 * for payment-frontend, run `npm run start` to build and launch the app
 * To run with a backend in the cloud set export PLAID_BACKEND=<url to cloud backend>
