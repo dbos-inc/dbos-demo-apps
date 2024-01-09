@@ -5,19 +5,23 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint src",
+    "lint-fix": "eslint --fix src"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@dbos-inc/eslint-plugin": "^0.0.4",
     "@types/node": "^20.8.2",
+    "eslint": "^8.56.0",
     "prisma": "^5.4.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.7.25-preview",
+    "@dbos-inc/dbos-sdk": "^0.8.32-preview",
     "@prisma/client": "^5.4.0"
   }
 }
