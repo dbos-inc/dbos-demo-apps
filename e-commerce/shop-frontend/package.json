@@ -8,7 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.7.18-preview",
+    "@dbos-inc/dbos-sdk": "^0.8.32-preview",
     "@types/bcrypt": "^5.0.0",
     "@types/node": "20.3.3",
     "@types/pg": "^8.10.2",
