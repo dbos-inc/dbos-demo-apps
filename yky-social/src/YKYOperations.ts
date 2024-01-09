@@ -247,6 +247,7 @@ static async makePost(ctx: ORMTC, txt : string)
     p.author_orignal = ctx.authenticatedUser;
     p.media = [];
     p.mentions = [];
+    // eslint-disable-next-line @dbos-inc/detect-new-date
     p.post_time = new Date();
     p.post_type = PostType.POST;
 
@@ -306,6 +307,7 @@ static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string) :
     p.author_orignal = curUid;
     p.media = [];
     p.mentions = [toUid];
+    // eslint-disable-next-line @dbos-inc/detect-new-date
     p.post_time = new Date();
     p.post_type = PostType.PM;
 

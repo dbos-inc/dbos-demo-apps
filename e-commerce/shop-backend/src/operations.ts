@@ -2,7 +2,7 @@ import {
   TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
   GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
 } from '@dbos-inc/dbos-sdk';
-import bcrypt from 'bcryptjs';
+import bcryptjs from 'bcryptjs';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -84,7 +84,7 @@ export class Shop {
   @Transaction({ readOnly: true })
   static async login(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctxt.client<User>('users').select("password").where({ username }).first();
-    if (!(user && await bcrypt.compare(password, user.password))) {
+    if (!(user && await bcryptjs.compare(password, user.password))) {
       throw new DBOSResponseError("Invalid username or password", 400);
     }
   }
@@ -97,7 +97,7 @@ export class Shop {
       throw new DBOSResponseError("Username already exists", 400);
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcryptjs.hash(password, 10);
     await ctxt.client<User>('users').insert({ username, password: hashedPassword });
   }
 
