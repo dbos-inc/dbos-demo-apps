@@ -1,10 +1,8 @@
 {
   "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    "plugin:@dbos-inc/dbosRecommendedConfig"
   ],
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@dbos-inc"],
   "env": {
     "node": true,
     "es6": true
