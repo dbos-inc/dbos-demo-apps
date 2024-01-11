@@ -6,7 +6,7 @@ export class Hello {
   @Transaction()
   static async helloTransaction(txnCtxt: TransactionContext<PrismaClient>, name: string)  {
     const greeting = `Hello, ${name}!`;
-    console.log(greeting);
+    //console.log(greeting);
     const p: PrismaClient = txnCtxt.client as PrismaClient;
     const res = await p.dBOSHello.create({
         data: {
@@ -14,7 +14,7 @@ export class Hello {
         },
     });
     return `Greeting ${res.greeting_id}: ${greeting}`;
-  };
+  }
 
 
   @GetApi('/greeting/:name')

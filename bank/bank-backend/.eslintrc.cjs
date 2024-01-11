@@ -1,11 +1,11 @@
 /* eslint-env node */
 module.exports = {
-  extends: ['eslint:recommended',
-            'plugin:@typescript-eslint/recommended',
-            'plugin:@typescript-eslint/recommended-type-checked'],
+  extends: [
+    'plugin:@dbos-inc/dbosRecommendedConfig',
+  ],
   parser: '@typescript-eslint/parser',
-  "parserOptions": { "project": ["./tsconfig.json"] },
-  plugins: ['@typescript-eslint'],
+  //"parserOptions": { "project": ["./tsconfig.json"] },
+  plugins: ['@dbos-inc'],
   parserOptions: {
     project: true,
     tsconfigRootDir: __dirname,
@@ -20,12 +20,6 @@ module.exports = {
   ],
   rules: {
     'indent': ['error', 2],
-    "@typescript-eslint/unbound-method": [
-      "error",
-      {
-        ignoreStatic: true,
-      },
-    ],
   },
   "env": {
     "node": true

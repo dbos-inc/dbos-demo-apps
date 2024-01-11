@@ -1,13 +1,13 @@
 import { TransactionContext, HandlerContext, Transaction, GetApi, OrmEntities } from '@dbos-inc/dbos-sdk';
-import { Entity, EntityManager, PrimaryGeneratedColumn, Column } from "typeorm"
+import { Entity, EntityManager, PrimaryGeneratedColumn, Column } from "typeorm";
 
 @Entity("dboshello")
 export class DBOSHello {
     @PrimaryGeneratedColumn()
-    greeting_id: number = 0
+    greeting_id: number = 0;
 
     @Column()
-    greeting: string = "greeting"
+    greeting: string = "greeting";
 } 
 
 @OrmEntities([DBOSHello])
@@ -15,14 +15,14 @@ export class Hello {
 
   @Transaction()
   static async helloTransaction (txnCtxt: TransactionContext<EntityManager>, name: string)  {
-    const greeting = `Hello, ${name}!`
+    const greeting = `Hello, ${name}!`;
 
     const p: EntityManager = txnCtxt.client as EntityManager;
     const g: DBOSHello = new DBOSHello();
     g.greeting = greeting;
     const res = await p.save(g);
     return `Greeting ${res.greeting_id}: ${greeting}`;
-  };
+  }
 
   @GetApi('/greeting/:name')
   static async helloHandler(handlerCtxt: HandlerContext, name: string) {
