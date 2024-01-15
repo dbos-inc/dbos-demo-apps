@@ -8,7 +8,6 @@ database:
   connectionTimeoutMillis: 3000
   user_dbclient: 'knex'
   migrate: ['migrate:latest','seed:run']
-  # migrate: ['migrate:latest']
   rollback: ['migrate:rollback']
 runtimeConfig:
   port: 8082
