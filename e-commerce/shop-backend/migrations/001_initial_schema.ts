@@ -31,7 +31,7 @@ export async function up(knex: Knex): Promise<void> {
   });
 
   await knex.schema.createTable('products', table => {
-    table.increments('product_id').primary();
+    table.integer('product_id').primary();
     table.string('product', 255).unique().notNullable();
     table.text('description').notNullable();
     table.string('image_name', 255).notNullable();
