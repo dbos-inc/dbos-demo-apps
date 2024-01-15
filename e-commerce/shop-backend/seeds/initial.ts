@@ -7,6 +7,7 @@ export async function seed(knex: Knex): Promise<void> {
   // Inserts seed entries
   await knex("products").insert([
     {
+      product_id: 1,
       product: "Pen",
       description: "This is a great pen.",
       image_name: "pen.jpg",
@@ -14,6 +15,7 @@ export async function seed(knex: Knex): Promise<void> {
       inventory: 100000
     },
     {
+      product_id:2,
       product: "Pencil",
       description: "This is a great pencil.",
       image_name: "pencil.jpg",
