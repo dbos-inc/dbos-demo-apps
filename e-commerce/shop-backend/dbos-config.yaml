@@ -17,3 +17,4 @@ application:
   # cloud example
   # payment_host: 'https://dbos_domain/dbos-testuser/application/payment-backend'
   # local_host: 'https://dbos_domain/dbos-testuser/application/shop-backend'
+  
