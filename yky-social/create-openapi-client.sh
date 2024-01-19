@@ -1,7 +1,7 @@
 :
 
 # generate the openapi definition document
-npx dbos-sdk openapi src/operations.ts
+npx dbos-openapi generate src/operations.ts
 
 # generate the typescript-fetch client
 docker run --rm \
