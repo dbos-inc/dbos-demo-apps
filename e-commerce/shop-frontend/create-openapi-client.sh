@@ -3,7 +3,7 @@ cur_dir=$(pwd)
 
 # generate the openapi definition document
 cd $fe_dir/../shop-backend
-npx dbos-sdk openapi src/operations.ts
+npx dbos-openapi generate src/operations.ts
 
 cd $fe_dir
 npx oazapfts ../shop-backend/src/openapi.yaml  ./lib/client.ts

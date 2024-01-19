@@ -1,6 +1,6 @@
 /**
- * dbos-demo-shop-backend
- * private
+ * shop-backend
+ * 0.0.1
  * DO NOT MODIFY - This file has been generated using oazapfts.
  * See https://www.npmjs.com/package/oazapfts
  */
