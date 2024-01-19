@@ -198,7 +198,7 @@ export class Shop {
         ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
       }
 
-      if (updatedSession.payment_status == 'paid') {
+      if (updatedSession.payment_status === 'paid') {
         await ctxt.invoke(Shop).fulfillOrder(orderID);
         await ctxt.invoke(Shop).clearCart(username);
       } else {

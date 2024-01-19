@@ -172,7 +172,7 @@ static async findUser(ctx: ORMTC, curUid:string, uname:string, getProfile:boolea
     const rGraph = await sgRep.findOneBy({
         src_id: otherUser.id, tgt_id: curUid
     });
-    if (rGraph && rGraph.link_type == GraphType.BLOCK) {
+    if (rGraph && rGraph.link_type === GraphType.BLOCK) {
         return [undefined, undefined, undefined, undefined];
     }
 

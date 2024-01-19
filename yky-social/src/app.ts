@@ -63,7 +63,7 @@ export function getS3(ctx: DBOSContext) {
 
 // eslint-disable-next-line @typescript-eslint/require-await
 async function authMiddleware (ctx: MiddlewareContext) {
-  if (ctx.requiredRole.length == 0) {
+  if (ctx.requiredRole.length === 0) {
     return;
   }
 
@@ -204,7 +204,7 @@ export class YKY
   @PostApi("/follow")
   static async doFollow(ctx: TransactionContext<EntityManager>, followUid: string) {
     const curStatus = await Operations.getGraphStatus(ctx, ctx.authenticatedUser, followUid);
-    await Operations.setGraphStatus(ctx, ctx.authenticatedUser, followUid, curStatus == GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+    await Operations.setGraphStatus(ctx, ctx.authenticatedUser, followUid, curStatus === GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
     // TODO: That UID wasn't validated - maybe the DB should validate it
 
     return {message: "Followed."};
@@ -273,7 +273,7 @@ export class YKY
     if (!stat) {
       errorWithStatus("Upload not in progress", 400);
     }
-    if (stat!.authenticatedUser != ctx.authenticatedUser) {
+    if (stat!.authenticatedUser !== ctx.authenticatedUser) {
       errorWithStatus("Unable to access workflow", 403);
     }
     // Should we look at status?  What happens if this is a resubmit?
