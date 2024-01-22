@@ -13,7 +13,7 @@
     "ts-node": "^10.9.1"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-openapi": "^0.8.38-preview",
+    "@dbos-inc/dbos-openapi": "^0.8.41-preview",
     "@dbos-inc/eslint-plugin": "^0.0.4",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.5",

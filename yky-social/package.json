@@ -36,7 +36,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-openapi": "^0.8.38-preview",
+    "@dbos-inc/dbos-openapi": "^0.8.41-preview",
     "@dbos-inc/eslint-plugin": "^0.0.4",
     "@jest/globals": "^29.5.0",
     "@types/bcryptjs": "^2.4.2",
