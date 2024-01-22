@@ -2,8 +2,8 @@
 
 openapi: 3.0.3
 info:
-  title: dbos-demo-shop-backend
-  version: private
+  title: shop-backend
+  version: 0.0.1
 paths:
   /api/login:
     post:

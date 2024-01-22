@@ -2,8 +2,8 @@
 
 openapi: 3.0.3
 info:
-  title: dbos-demo-payment-backend
-  version: private
+  title: payment-backend
+  version: 0.0.1
 paths:
   /api/create_payment_session:
     post:
