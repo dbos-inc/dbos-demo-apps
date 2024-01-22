@@ -16,7 +16,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.8.38-preview",
+    "@dbos-inc/dbos-sdk": "^0.8.40-preview",
     "ts-node": "^10.9.1"
   }
 }
