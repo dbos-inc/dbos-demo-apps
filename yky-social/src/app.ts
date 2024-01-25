@@ -34,6 +34,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client, S3 } from '@aws-sdk/client-s3';
+import { CurrentTimeCommunicator } from '@dbos-inc/communicator-datetime';
 
 function getS3Config(ctx: DBOSContext) {
   const s3r = ctx.getConfig('aws_s3_region','us-east-2');
@@ -213,7 +214,8 @@ export class YKY
   @Workflow()
   @PostApi("/composepost")
   static async doCompose(ctx: WorkflowContext, @ArgRequired postText: string) {
-    const post = await ctx.invoke(Operations).makePost(postText);
+    const pdate = await ctx.invoke(CurrentTimeCommunicator).getCurrentDate();
+    const post = await ctx.invoke(Operations).makePost(postText, pdate);
     // This could be an asynchronous job
     await ctx.invoke(Operations).distributePost(post);
     return {message: "Posted."};

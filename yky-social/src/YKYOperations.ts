@@ -236,7 +236,7 @@ static async setGraphStatus(ctx: ORMTC, curUid : string, otherUid : string, stat
 // Compose a post
 // Future: If this takes a long time, split it into a workflow
 @Transaction()
-static async makePost(ctx: ORMTC, txt : string)
+static async makePost(ctx: ORMTC, txt : string, pdate : Date)
 {
     const manager = ctx.client;
 
@@ -247,8 +247,7 @@ static async makePost(ctx: ORMTC, txt : string)
     p.author_orignal = ctx.authenticatedUser;
     p.media = [];
     p.mentions = [];
-    // eslint-disable-next-line @dbos-inc/detect-new-date
-    p.post_time = new Date();
+    p.post_time = pdate; // This could be done in conjunction w/ the datbase
     p.post_type = PostType.POST;
 
     const postRep = manager.getRepository(Post);
@@ -297,7 +296,7 @@ static async distributePost(ctx: ORMTC, p: Post) {
     return p;
 }
 
-static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string) :
+static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string, mdate: Date) :
     Promise<void>
 {
     // Create post
@@ -307,8 +306,7 @@ static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string) :
     p.author_orignal = curUid;
     p.media = [];
     p.mentions = [toUid];
-    // eslint-disable-next-line @dbos-inc/detect-new-date
-    p.post_time = new Date();
+    p.post_time = mdate;
     p.post_type = PostType.PM;
 
     const postRep = ctx.client.getRepository(Post);
