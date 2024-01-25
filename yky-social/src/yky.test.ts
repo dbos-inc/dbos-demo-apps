@@ -14,13 +14,14 @@ import { YKY } from './app';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 import { Operations } from './YKYOperations';
 import { CurrentTimeCommunicator } from '@dbos-inc/communicator-datetime';
+import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
 
 import { TestingRuntime, createTestingRuntime } from '@dbos-inc/dbos-sdk';
 
 let testRuntime: TestingRuntime;
 
 beforeAll(async () => {
-  testRuntime = await createTestingRuntime([YKY, Operations, CurrentTimeCommunicator], "dbos-config.yaml");
+  testRuntime = await createTestingRuntime([YKY, Operations, CurrentTimeCommunicator, BcryptCommunicator], "dbos-config.yaml");
   await testRuntime.createUserSchema();
 });
 
