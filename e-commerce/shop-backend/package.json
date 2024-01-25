@@ -8,8 +8,8 @@
     "lint-fix": "eslint --fix src"
   },
   "dependencies": {
-    "@dbos-inc/dbos-cloud": "^0.8.45-preview",
-    "@dbos-inc/dbos-sdk": "^0.8.45-preview",
+    "@dbos-inc/dbos-cloud": "^0.8.48-preview",
+    "@dbos-inc/dbos-sdk": "^0.8.48-preview",
     "bcryptjs": "^2.4.3",
     "ts-node": "^10.9.1"
   },
