@@ -16,7 +16,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.8.40-preview",
+    "@dbos-inc/dbos-cloud": "^0.8.48-preview",
+    "@dbos-inc/dbos-sdk": "^0.8.48-preview",
     "ts-node": "^10.9.1"
   }
 }
