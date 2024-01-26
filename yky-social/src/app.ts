@@ -29,6 +29,7 @@ import {
   DBOSDeploy,
   InitContext,
 } from "@dbos-inc/dbos-sdk";
+import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
 
 import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
@@ -191,12 +192,14 @@ export class YKY
   //  say hey, it's fine, if it all matches?
   // Can this be generalized?
   @PostApi("/register")
+  @Workflow()
   @RequiredRole([]) // No role needed to register
-  static async doRegister(ctx: HandlerContext, firstName: string, lastName: string,
+  static async doRegister(ctx: WorkflowContext, firstName: string, lastName: string,
      username: string, @LogMask(LogMasks.HASH) password: string)
   {
+    const hashpass: string = await ctx.invoke(BcryptCommunicator).bcryptHash(password, 10);
     const user = await ctx.invoke(Operations).createUser(
-       firstName, lastName, username, password);
+       firstName, lastName, username, hashpass);
 
     return { message: 'User created.', id:user.id };
   }

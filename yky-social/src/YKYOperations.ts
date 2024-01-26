@@ -39,11 +39,6 @@ export function errorWithStatus(msg: string, st: number) : ResponseError
     return err;
 }
 
-async function hashPassword(password: string): Promise<string> {
-    const saltRounds = 10;
-    return bcryptjs.hash(password, saltRounds);
-}
-
 async function comparePasswords(password: string, hashedPassword: string): Promise<boolean> {
   const isMatch = await bcryptjs.compare(password, hashedPassword);
   return isMatch;
@@ -57,13 +52,13 @@ export class Operations
 
 @Transaction()
 @RequiredRole([])
-static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @SkipLogging pass:string) :
+static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @SkipLogging hashpass:string) :
    Promise<UserLogin>
 {
     const manager = ctx.client;
 
-    if (!first || !last || !uname || !pass) {
-        throw errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${pass}`, 400);
+    if (!first || !last || !uname || !hashpass) {
+        throw errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${hashpass}`, 400);
     }
 
     const user = new UserLogin();
@@ -71,14 +66,7 @@ static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @Sk
     user.last_name = last;
     user.user_name = uname;
 
-    try
-    {
-       user.password_hash = await hashPassword(pass);
-    }
-    catch (e)
-    {
-        throw errorWithStatus("Password hash failed", 400);
-    }
+    user.password_hash = hashpass;
 
     const existingUser = await manager.findOneBy(UserLogin, {
         user_name: user.user_name,
