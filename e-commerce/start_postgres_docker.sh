@@ -24,8 +24,5 @@ docker exec dbos-ecommerce psql -U postgres -c "CREATE DATABASE shop;"
 docker exec dbos-ecommerce psql -U postgres -c "CREATE DATABASE payment;"
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-npm run --prefix $SCRIPT_DIR/shop-backend migrate
-npm run --prefix $SCRIPT_DIR/payment-backend migrate
-
-# Add Seed Data
-npm run --prefix $SCRIPT_DIR/shop-backend seed
+npm run --prefix $SCRIPT_DIR/shop-backend db:setup
+npm run --prefix $SCRIPT_DIR/payment-backend db:setup
