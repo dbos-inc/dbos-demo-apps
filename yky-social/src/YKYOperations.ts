@@ -39,11 +39,6 @@ export function errorWithStatus(msg: string, st: number) : ResponseError
     return err;
 }
 
-async function hashPassword(password: string): Promise<string> {
-    const saltRounds = 10;
-    return bcryptjs.hash(password, saltRounds);
-}
-
 async function comparePasswords(password: string, hashedPassword: string): Promise<boolean> {
   const isMatch = await bcryptjs.compare(password, hashedPassword);
   return isMatch;
@@ -57,13 +52,13 @@ export class Operations
 
 @Transaction()
 @RequiredRole([])
-static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @SkipLogging pass:string) :
+static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @SkipLogging hashpass:string) :
    Promise<UserLogin>
 {
     const manager = ctx.client;
 
-    if (!first || !last || !uname || !pass) {
-        throw errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${pass}`, 400);
+    if (!first || !last || !uname || !hashpass) {
+        throw errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${hashpass}`, 400);
     }
 
     const user = new UserLogin();
@@ -71,14 +66,7 @@ static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @Sk
     user.last_name = last;
     user.user_name = uname;
 
-    try
-    {
-       user.password_hash = await hashPassword(pass);
-    }
-    catch (e)
-    {
-        throw errorWithStatus("Password hash failed", 400);
-    }
+    user.password_hash = hashpass;
 
     const existingUser = await manager.findOneBy(UserLogin, {
         user_name: user.user_name,
@@ -236,7 +224,7 @@ static async setGraphStatus(ctx: ORMTC, curUid : string, otherUid : string, stat
 // Compose a post
 // Future: If this takes a long time, split it into a workflow
 @Transaction()
-static async makePost(ctx: ORMTC, txt : string)
+static async makePost(ctx: ORMTC, txt : string, pdate : Date)
 {
     const manager = ctx.client;
 
@@ -247,8 +235,7 @@ static async makePost(ctx: ORMTC, txt : string)
     p.author_orignal = ctx.authenticatedUser;
     p.media = [];
     p.mentions = [];
-    // eslint-disable-next-line @dbos-inc/detect-new-date
-    p.post_time = new Date();
+    p.post_time = pdate; // This could be done in conjunction w/ the datbase
     p.post_type = PostType.POST;
 
     const postRep = manager.getRepository(Post);
@@ -297,7 +284,7 @@ static async distributePost(ctx: ORMTC, p: Post) {
     return p;
 }
 
-static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string) :
+static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string, mdate: Date) :
     Promise<void>
 {
     // Create post
@@ -307,8 +294,7 @@ static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string) :
     p.author_orignal = curUid;
     p.media = [];
     p.mentions = [toUid];
-    // eslint-disable-next-line @dbos-inc/detect-new-date
-    p.post_time = new Date();
+    p.post_time = mdate;
     p.post_type = PostType.PM;
 
     const postRep = ctx.client.getRepository(Post);

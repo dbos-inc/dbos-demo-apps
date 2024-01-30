@@ -29,11 +29,13 @@ import {
   DBOSDeploy,
   InitContext,
 } from "@dbos-inc/dbos-sdk";
+import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
 
 import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client, S3 } from '@aws-sdk/client-s3';
+import { CurrentTimeCommunicator } from '@dbos-inc/communicator-datetime';
 
 function getS3Config(ctx: DBOSContext) {
   const s3r = ctx.getConfig('aws_s3_region','us-east-2');
@@ -190,12 +192,14 @@ export class YKY
   //  say hey, it's fine, if it all matches?
   // Can this be generalized?
   @PostApi("/register")
+  @Workflow()
   @RequiredRole([]) // No role needed to register
-  static async doRegister(ctx: HandlerContext, firstName: string, lastName: string,
+  static async doRegister(ctx: WorkflowContext, firstName: string, lastName: string,
      username: string, @LogMask(LogMasks.HASH) password: string)
   {
+    const hashpass: string = await ctx.invoke(BcryptCommunicator).bcryptHash(password, 10);
     const user = await ctx.invoke(Operations).createUser(
-       firstName, lastName, username, password);
+       firstName, lastName, username, hashpass);
 
     return { message: 'User created.', id:user.id };
   }
@@ -213,7 +217,8 @@ export class YKY
   @Workflow()
   @PostApi("/composepost")
   static async doCompose(ctx: WorkflowContext, @ArgRequired postText: string) {
-    const post = await ctx.invoke(Operations).makePost(postText);
+    const pdate = await ctx.invoke(CurrentTimeCommunicator).getCurrentDate();
+    const post = await ctx.invoke(Operations).makePost(postText, pdate);
     // This could be an asynchronous job
     await ctx.invoke(Operations).distributePost(post);
     return {message: "Posted."};
