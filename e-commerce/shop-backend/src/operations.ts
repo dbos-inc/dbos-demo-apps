@@ -164,6 +164,7 @@ export class Shop {
   static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
     const productDetails = await ctxt.invoke(Shop).getCart(username);
     if (productDetails.length === 0) {
+      ctxt.logger.error(`Checkout for ${username} failed: empty cart`);
       await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
@@ -172,12 +173,14 @@ export class Shop {
 
     const valid: boolean = await ctxt.invoke(Shop).subtractInventory(productDetails);
     if (!valid) {
+      ctxt.logger.error(`Checkout for ${username} failed: insufficient inventory`);
       await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
 
     const paymentSession = await ctxt.invoke(Shop).createPaymentSession(productDetails, origin);
     if (!paymentSession?.url) {
+      ctxt.logger.error(`Checkout for ${username} failed: couldn't create payment session`);
       await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
       await ctxt.setEvent(checkout_url_topic, null);
       return;
@@ -193,6 +196,7 @@ export class Shop {
     } else {
       // if the checkout complete notification didn't arrive in time, retrieve the session information 
       // in order to check the payment status explicitly 
+      ctxt.logger.warn(`Checkout for ${username}: payment notification timed out`);
       const updatedSession = await ctxt.invoke(Shop).retrievePaymentSession(paymentSession.session_id);
       if (!updatedSession) {
         ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
@@ -202,6 +206,7 @@ export class Shop {
         await ctxt.invoke(Shop).fulfillOrder(orderID);
         await ctxt.invoke(Shop).clearCart(username);
       } else {
+        ctxt.logger.error(`Checkout for ${username} failed: payment not received`);
         await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
         await ctxt.invoke(Shop).errorOrder(orderID);
       }
@@ -311,7 +316,6 @@ export class Shop {
     if (!payload.client_reference_id) {
       ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
     } else {
-      ctxt.logger.info(`Received for ${payload.client_reference_id}`);
       await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
     }
   }
