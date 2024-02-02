@@ -164,6 +164,7 @@ export class Shop {
   static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
     const productDetails = await ctxt.invoke(Shop).getCart(username);
     if (productDetails.length === 0) {
+      ctxt.logger.error(`Checkout for ${username} failed: empty cart`);
       await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
@@ -172,12 +173,14 @@ export class Shop {
 
     const valid: boolean = await ctxt.invoke(Shop).subtractInventory(productDetails);
     if (!valid) {
+      ctxt.logger.error(`Checkout for ${username} failed: insufficient inventory`);
       await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
 
     const paymentSession = await ctxt.invoke(Shop).createPaymentSession(productDetails, origin);
     if (!paymentSession?.url) {
+      ctxt.logger.error(`Checkout for ${username} failed: couldn't create payment session`);
       await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
       await ctxt.setEvent(checkout_url_topic, null);
       return;
@@ -311,7 +314,6 @@ export class Shop {
     if (!payload.client_reference_id) {
       ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
     } else {
-      ctxt.logger.info(`Received for ${payload.client_reference_id}`);
       await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
     }
   }
