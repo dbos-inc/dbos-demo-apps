@@ -196,6 +196,7 @@ export class Shop {
     } else {
       // if the checkout complete notification didn't arrive in time, retrieve the session information 
       // in order to check the payment status explicitly 
+      ctxt.logger.warn(`Checkout for ${username}: payment notification timed out`);
       const updatedSession = await ctxt.invoke(Shop).retrievePaymentSession(paymentSession.session_id);
       if (!updatedSession) {
         ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
@@ -205,6 +206,7 @@ export class Shop {
         await ctxt.invoke(Shop).fulfillOrder(orderID);
         await ctxt.invoke(Shop).clearCart(username);
       } else {
+        ctxt.logger.error(`Checkout for ${username} failed: payment not received`);
         await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
         await ctxt.invoke(Shop).errorOrder(orderID);
       }
