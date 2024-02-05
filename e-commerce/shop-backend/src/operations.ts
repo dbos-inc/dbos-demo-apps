@@ -154,6 +154,7 @@ export class Shop {
     const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 
     if (url === null) {
+      ctxt.logger.warn(`Canceling checkout for ${username}. Checkout Workflow UUID: ${handle.getWorkflowUUID()}`)
       ctxt.koaContext.redirect(`${origin}/checkout/cancel`);
     } else {
       ctxt.koaContext.redirect(url);
@@ -171,8 +172,9 @@ export class Shop {
 
     const orderID = await ctxt.invoke(Shop).createOrder(username, productDetails);
 
-    const valid: boolean = await ctxt.invoke(Shop).subtractInventory(productDetails);
-    if (!valid) {
+    try {
+      await ctxt.invoke(Shop).subtractInventory(productDetails);
+    } catch (error) {
       ctxt.logger.error(`Checkout for ${username} failed: insufficient inventory`);
       await ctxt.setEvent(checkout_url_topic, null);
       return;
@@ -226,21 +228,16 @@ export class Shop {
   }
 
   @Transaction()
-  static async subtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<boolean> {
+  static async subtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<void> {
     for (const product of products) {
-      const row = await ctxt.client<Product>('products').where({ product_id: product.product_id }).select('inventory').first();
-      const inventory = row?.inventory ?? 0;
-      if (inventory < product.inventory) {
-        return false;
+      const numAffected = await ctxt.client<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
+      .update({
+        inventory: ctxt.client.raw('inventory - ?', [product.inventory])
+      });
+      if (numAffected <= 0) {
+        throw new Error("Insufficient Inventory")
       }
     }
-
-    // If all products have enough inventory, subtract the inventory from the products in the database
-    for (const product of products) {
-      await ctxt.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctxt.client.raw('inventory - ?', [product.inventory]) });
-    }
-
-    return true;
   }
 
   @Transaction()
