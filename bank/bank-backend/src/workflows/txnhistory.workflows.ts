@@ -147,7 +147,7 @@ export class BankTransactionHistory {
           "dbos-workflowuuid": workflowUUID,
         },
       });
-      if (remoteRes.status != 200) {
+      if (remoteRes.status !== 200) {
         commCtxt.logger.error("Remote transfer failed, returned with status: " + remoteRes.statusText);
         return false;
       }

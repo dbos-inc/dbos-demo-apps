@@ -4,15 +4,18 @@
   "scripts": {
     "build": "tsc",
     "test": "npx knex migrate:rollback && npx knex migrate:up && jest",
+    "db:setup": "npx knex migrate:up && npx knex seed:run",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.8.36-preview",
+    "@dbos-inc/dbos-cloud": "^0.8.48-preview",
+    "@dbos-inc/dbos-sdk": "^0.8.48-preview",
     "bcryptjs": "^2.4.3",
     "ts-node": "^10.9.1"
   },
   "devDependencies": {
+    "@dbos-inc/dbos-openapi": "^0.8.41-preview",
     "@dbos-inc/eslint-plugin": "^0.0.4",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.5",

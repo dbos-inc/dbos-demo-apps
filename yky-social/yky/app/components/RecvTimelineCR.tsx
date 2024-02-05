@@ -15,7 +15,12 @@ interface Props {
   userid: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) => fetch(url, {
+  method: 'POST', headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({}),
+}).then((res) => res.json());
 
 const RecvTimelineCR: React.FC<Props> = ({ userid }) => {
   let rquserid = userid;
@@ -23,12 +28,12 @@ const RecvTimelineCR: React.FC<Props> = ({ userid }) => {
     rquserid = 'default';
   }
 
-  const { data, error, isLoading } = useSWR(`/fetchrtl?rqtimeline=${userid}`,
+  const { data, error, isLoading } = useSWR(`/fetchrtl`,
     fetcher
   );
 
-  if (error) return "An error has occurred.";
-  if (isLoading) return "Loading...";
+  if (error) { return "An error has occurred."; }
+  if (isLoading) { return "Loading..."; }
 
 
   const messageList = data.timeline as RecvItem[];

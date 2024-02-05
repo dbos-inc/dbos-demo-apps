@@ -66,42 +66,72 @@ import {
 
 export interface DoComposeOperationRequest {
     doComposeRequest: DoComposeRequest;
+    dbosWorkflowuuid?: string;
 }
 
 export interface DoFindUserRequest {
     findUserName: string;
+    dbosWorkflowuuid?: string;
 }
 
 export interface DoFollowOperationRequest {
     doFollowRequest: DoFollowRequest;
+    dbosWorkflowuuid?: string;
 }
 
 export interface DoKeyDownloadRequest {
     filekey: string;
+    dbosWorkflowuuid?: string;
 }
 
 export interface DoKeyUploadRequest {
     filename: string;
+    dbosWorkflowuuid?: string;
 }
 
 export interface DoLoginOperationRequest {
     doLoginRequest: DoLoginRequest;
+    dbosWorkflowuuid?: string;
 }
 
 export interface DoMediaDeleteRequest {
     filekey: string;
+    dbosWorkflowuuid?: string;
 }
 
 export interface DoRegisterOperationRequest {
     doRegisterRequest: DoRegisterRequest;
+    dbosWorkflowuuid?: string;
+}
+
+export interface DoStartMediaUploadRequest {
+    dbosWorkflowuuid?: string;
 }
 
 export interface FinishMediaUploadRequest {
     wfid: string;
+    dbosWorkflowuuid?: string;
 }
 
 export interface GetPostRequest {
     id: string;
+    dbosWorkflowuuid?: string;
+}
+
+export interface GetProfilePhotoRequest {
+    dbosWorkflowuuid?: string;
+}
+
+export interface HelloRequest {
+    dbosWorkflowuuid?: string;
+}
+
+export interface ReceiveTimelineRequest {
+    dbosWorkflowuuid?: string;
+}
+
+export interface SendTimelineRequest {
+    dbosWorkflowuuid?: string;
 }
 
 /**
@@ -121,6 +151,10 @@ export class DefaultApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
 
         const response = await this.request({
             path: `/composepost`,
@@ -155,6 +189,10 @@ export class DefaultApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
+
         const response = await this.request({
             path: `/finduser`,
             method: 'GET',
@@ -184,6 +222,10 @@ export class DefaultApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
 
         const response = await this.request({
             path: `/follow`,
@@ -218,6 +260,10 @@ export class DefaultApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
+
         const response = await this.request({
             path: `/getMediaDownloadKey`,
             method: 'GET',
@@ -250,6 +296,10 @@ export class DefaultApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
+
         const response = await this.request({
             path: `/getMediaUploadKey`,
             method: 'GET',
@@ -279,6 +329,10 @@ export class DefaultApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
 
         const response = await this.request({
             path: `/login`,
@@ -313,6 +367,10 @@ export class DefaultApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
+
         const response = await this.request({
             path: `/deleteMedia`,
             method: 'GET',
@@ -343,6 +401,10 @@ export class DefaultApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
+
         const response = await this.request({
             path: `/register`,
             method: 'POST',
@@ -363,10 +425,14 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async doStartMediaUploadRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DoStartMediaUpload200Response>> {
+    async doStartMediaUploadRaw(requestParameters: DoStartMediaUploadRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DoStartMediaUpload200Response>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
 
         const response = await this.request({
             path: `/startMediaUpload`,
@@ -380,8 +446,8 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async doStartMediaUpload(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DoStartMediaUpload200Response> {
-        const response = await this.doStartMediaUploadRaw(initOverrides);
+    async doStartMediaUpload(requestParameters: DoStartMediaUploadRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DoStartMediaUpload200Response> {
+        const response = await this.doStartMediaUploadRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -399,6 +465,10 @@ export class DefaultApi extends runtime.BaseAPI {
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
 
         const response = await this.request({
             path: `/finishMediaUpload`,
@@ -432,6 +502,10 @@ export class DefaultApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
+
         const response = await this.request({
             path: `/post/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters.id))),
             method: 'GET',
@@ -451,10 +525,14 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async getProfilePhotoRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetProfilePhoto200Response>> {
+    async getProfilePhotoRaw(requestParameters: GetProfilePhotoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetProfilePhoto200Response>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
 
         const response = await this.request({
             path: `/getProfilePhoto`,
@@ -468,17 +546,21 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async getProfilePhoto(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetProfilePhoto200Response> {
-        const response = await this.getProfilePhotoRaw(initOverrides);
+    async getProfilePhoto(requestParameters: GetProfilePhotoRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetProfilePhoto200Response> {
+        const response = await this.getProfilePhotoRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async helloRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Hello200Response>> {
+    async helloRaw(requestParameters: HelloRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Hello200Response>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
 
         const response = await this.request({
             path: `/`,
@@ -492,17 +574,21 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async hello(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Hello200Response> {
-        const response = await this.helloRaw(initOverrides);
+    async hello(requestParameters: HelloRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Hello200Response> {
+        const response = await this.helloRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async receiveTimelineRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ReceiveTimeline200Response>> {
+    async receiveTimelineRaw(requestParameters: ReceiveTimelineRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ReceiveTimeline200Response>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
 
         const response = await this.request({
             path: `/recvtimeline`,
@@ -516,17 +602,21 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async receiveTimeline(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ReceiveTimeline200Response> {
-        const response = await this.receiveTimelineRaw(initOverrides);
+    async receiveTimeline(requestParameters: ReceiveTimelineRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ReceiveTimeline200Response> {
+        const response = await this.receiveTimelineRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async sendTimelineRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SendTimeline200Response>> {
+    async sendTimelineRaw(requestParameters: SendTimelineRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SendTimeline200Response>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters.dbosWorkflowuuid !== undefined && requestParameters.dbosWorkflowuuid !== null) {
+            headerParameters['dbos-workflowuuid'] = String(requestParameters.dbosWorkflowuuid);
+        }
 
         const response = await this.request({
             path: `/sendtimeline`,
@@ -540,8 +630,8 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async sendTimeline(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SendTimeline200Response> {
-        const response = await this.sendTimelineRaw(initOverrides);
+    async sendTimeline(requestParameters: SendTimelineRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SendTimeline200Response> {
+        const response = await this.sendTimelineRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
