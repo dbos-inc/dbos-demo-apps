@@ -35,7 +35,7 @@ import {
   DiagnosticsCollector,
   diagResult,
   logDiagnostics,
-} from '@dbos-inc/dbos-sdk/dist/src/staticAnalysis/tsDiagUtil';
+} from '@dbos-inc/dbos-sdk/dist/packages/dbos-openapi/tsDiagUtil';
 
 import {
   ClassInfo,
@@ -45,7 +45,7 @@ import {
   findPackageInfo,
   //TypeParser, // This gets the basic DBOS structure, not the depth I want
 }
-from '@dbos-inc/dbos-sdk/dist/src/staticAnalysis/TypeParser';
+from '@dbos-inc/dbos-sdk/dist/packages/dbos-openapi/TypeParser';
 
 export const dbLibraryNames = ['pg', 'typeorm', 'knex', 'prisma'];
 
