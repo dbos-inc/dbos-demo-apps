@@ -3,7 +3,7 @@
     "plugin:@dbos-inc/dbosRecommendedConfig"
   ],
   "plugins": [
-    "@dbos-inc",
+    "@dbos-inc"
   ],
   "env": {
     "node": true,

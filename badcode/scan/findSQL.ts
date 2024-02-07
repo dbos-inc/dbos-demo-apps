@@ -15,7 +15,7 @@ import * as ts from 'typescript';
 //   Make SQL API list (or other rules configuration) a json file instead of a hardcode
 // Detection
 //   Include undecorated functions
-//   Do the best we can to link
+//***Do the best we can to link
 //     Make detection of API calls and unsafe constructs more sophisticated
 //   Looking for:
 //     Unsafe API usage against the DB
@@ -23,13 +23,18 @@ import * as ts from 'typescript';
 //     Await not in a communicator/transaction
 //   There may be a limitation on callback functions; how are we to know that a callback isn't saved for later?
 //     (We are limiting transaction function to some constant we can establish at compile time, not variable)
+//       Which functions will/may call a provided callback function; which are saved for later
+//         which are called that were saved (COMEFROM)?
+//         When saved, what is the scope - activation / global / something in between?
 //     Generate a useful report about what tables are accessed by whom
 //   Low-level tasks
 //     Listing out of allowed awaits
 //     Listing out of properties of database calls
 //     Analyze properties of functions
 //     Taint user data symbols at entrypoints
-//     Top-down control-flow visit
+//       Untaint / extend type information along validations/flow nodes
+//     Some things may be constants
+//   Top-down control-flow visit
 
 import {
   DiagnosticsCollector,
@@ -47,30 +52,30 @@ import {
 }
 from '@dbos-inc/dbos-sdk/dist/packages/dbos-openapi/TypeParser';
 
+// TODO: Make this a configuration .json or something
 export const dbLibraryNames = ['pg', 'typeorm', 'knex', 'prisma'];
-
 export const okAwaits = ['bcryptjs.hash'];
 
 function printAst(node: ts.Node) : string {
-    // Get human-readable name of the node kind
-    const syntaxKind = ts.SyntaxKind[node.kind];
-
-    // Optionally, add more details about the node (like its text content)
-    const nodeDetails = isRelevantNode(node) ? `: ${node.getText()}` : '';
-
-    // Log the current node
-    let cs = `${syntaxKind}${nodeDetails}{`;
-
-    // Recursively print each child of the current node
-    node.forEachChild((child) => {cs += printAst(child) + ",";});
-    cs += "}";
-    return cs;
-}
-
-function isRelevantNode(node: ts.Node): boolean {
+  function isRelevantNode(node: ts.Node): boolean {
     // Define criteria for what nodes to include more details on
     // For example, only include details for identifiers, literals, etc.
     return ts.isIdentifier(node) || ts.isLiteralExpression(node) || true;
+  }
+
+  // Get human-readable name of the node kind
+  const syntaxKind = ts.SyntaxKind[node.kind];
+
+  // Optionally, add more details about the node (like its text content)
+  const nodeDetails = isRelevantNode(node) ? `: ${node.getText()}` : '';
+
+  // Log the current node
+  let cs = `${syntaxKind}${nodeDetails}{`;
+
+  // Recursively print each child of the current node
+  node.forEachChild((child) => {cs += printAst(child) + ",";});
+  cs += "}";
+  return cs;
 }
 
 function getImportSpecifier(node: ts.Node, checker: ts.TypeChecker): { name: string; module: string; } | undefined {
@@ -85,7 +90,7 @@ function getImportSpecifier(node: ts.Node, checker: ts.TypeChecker): { name: str
 
       // comment in TS AST declaration indicates moduleSpecifier *must* be a string literal
       //    "If [ImportDeclaration.moduleSpecifier] is not a StringLiteral it will be a grammar error."
-      // CB TODO: How do we know it is 3 levels up?
+      // CB: How do we know it is 3 levels up?  It just is.
       const module = decl.parent.parent.parent.moduleSpecifier as ts.StringLiteral;
 
       return { name, module: module.text };
@@ -539,3 +544,8 @@ analyzeProgram(process.argv.slice(2)).then()
 .catch(
   (e) => {console.log(e);}
 );
+
+// Make a bunch of function definitions and function calls...
+//  See if we can tell what they all are, what their "names" are, and what each thing calls.
+// Things that have decorators - that we know already...
+// Type information - we have it already, we do want to extend it a little...
