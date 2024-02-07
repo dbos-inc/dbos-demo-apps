@@ -154,7 +154,7 @@ export class Shop {
     const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 
     if (url === null) {
-      ctxt.logger.warn(`Canceling checkout for ${username}. Checkout Workflow UUID: ${handle.getWorkflowUUID()}`)
+      ctxt.logger.warn(`Canceling checkout for ${username}. Checkout Workflow UUID: ${handle.getWorkflowUUID()}`);
       ctxt.koaContext.redirect(`${origin}/checkout/cancel`);
     } else {
       ctxt.koaContext.redirect(url);
@@ -235,7 +235,7 @@ export class Shop {
         inventory: ctxt.client.raw('inventory - ?', [product.inventory])
       });
       if (numAffected <= 0) {
-        throw new Error("Insufficient Inventory")
+        throw new Error("Insufficient Inventory");
       }
     }
   }

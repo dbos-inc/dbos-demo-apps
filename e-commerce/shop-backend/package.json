@@ -9,14 +9,14 @@
     "lint-fix": "eslint --fix src"
   },
   "dependencies": {
-    "@dbos-inc/dbos-cloud": "^0.8.48-preview",
-    "@dbos-inc/dbos-sdk": "^0.8.48-preview",
+    "@dbos-inc/dbos-sdk": "^0.8.62",
     "bcryptjs": "^2.4.3",
     "ts-node": "^10.9.1"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-openapi": "^0.8.41-preview",
-    "@dbos-inc/eslint-plugin": "^0.0.4",
+    "@dbos-inc/dbos-cloud": "^0.8.61-preview",
+    "@dbos-inc/dbos-openapi": "^0.8.61-preview",
+    "@dbos-inc/eslint-plugin": "^0.0.6",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.5",
     "@types/supertest": "^2.0.14",
