@@ -13,14 +13,12 @@
     "ejs": "^3.1.9",
     "koa": "^2.14.2",
     "koa-router": "^12.0.0",
-    "oazapfts": "^4.10.0",
-    "request": "^2.88.2"
+    "oazapfts": "^4.10.0"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.2",
     "@types/koa": "^2.13.9",
     "@types/koa-router": "^7.4.5",
-    "@types/request": "^2.48.11",
     "openapi-typescript-codegen": "^0.25.0",
     "typescript": "^5.2.2"
   }
