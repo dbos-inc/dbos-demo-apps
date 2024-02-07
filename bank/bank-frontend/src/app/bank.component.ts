@@ -295,7 +295,7 @@ export class BankComponent {
       }
 
       getMsg(){
-        let url = '/api/greeting';
+        const url = '/api/greeting';
         this._service.getResource(this.bankUrl + url)
           .subscribe(
             {
@@ -315,7 +315,7 @@ export class BankComponent {
           JSON.stringify(newAcct))
           .subscribe({
             next: (data: any) => {this.bankmsg = 'Successfully created an account! Account ID: ' + data;
-            this.getAccounts();},
+              this.getAccounts();},
             error: (err: any) => { this.bankmsg = 'Failed to create a new account' }
           });
       }
