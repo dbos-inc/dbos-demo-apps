@@ -25,7 +25,7 @@ jobs:
     services:
       # Label used to access the service container.
       bankdb:
-        image: postgres:15.4
+        image: postgres:16
         env:
           # Specify the password for Postgres superuser.
           POSTGRES_PASSWORD: dbos
@@ -51,10 +51,10 @@ jobs:
           PGPASSWORD: bank
       - name: Checkout demo app
         uses: actions/checkout@v3
-      - name: Use Node.js 18
+      - name: Use Node.js 20
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
           cache-dependency-path: 'bank/bank-backend/package-lock.json'
       - name: Compile Bank Server

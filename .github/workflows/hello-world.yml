@@ -25,7 +25,7 @@ jobs:
     services:
       # Label used to access the service container.
       postgres:
-        image: postgres:15.4
+        image: postgres:16
         env:
           # Specify the password for Postgres superuser.
           POSTGRES_PASSWORD: dbos
@@ -49,10 +49,10 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: dbos-demo-apps
-      - name: Use Node.js 18
+      - name: Use Node.js 20
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
       - name: Compile Hello World
         working-directory: dbos-demo-apps/hello-extended
         run: |
