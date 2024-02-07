@@ -4,14 +4,18 @@
   "scripts": {
     "build": "tsc",
     "db:setup": "npx knex migrate:up",
-    "test": "npx knex migrate:rollback && npx knex migrate:up && jest"
+    "test": "npx knex migrate:rollback && npx knex migrate:up && jest",
+    "lint": "eslint src",
+    "lint-fix": "eslint --fix src"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-openapi": "^0.8.61-preview",
     "@dbos-inc/dbos-cloud": "^0.8.61-preview",
+    "@dbos-inc/dbos-openapi": "^0.8.61-preview",
+    "@dbos-inc/eslint-plugin": "^0.0.6",
     "@types/jest": "^29.5.5",
     "@types/supertest": "^2.0.14",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "eslint": "^8.56.0",
     "jest": "^29.7.0",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.1",
