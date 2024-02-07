@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@dbos-inc/eslint-plugin": "^0.0.4",
+    "@dbos-inc/eslint-plugin": "^0.0.6",
     "@types/node": "^20.7.1",
     "eslint": "^8.56.0",
     "ts-node": "^10.9.1",

@@ -7,12 +7,12 @@
     "lint-fix": "eslint --fix src"
   },
   "devDependencies": {
-    "@dbos-inc/eslint-plugin": "^0.0.4",
+    "@dbos-inc/eslint-plugin": "^0.0.6",
     "eslint": "^8.56.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.8.32-preview",
+    "@dbos-inc/dbos-sdk": "^0.8.62",
     "axios": "^1.5.1",
     "ts-node": "^10.9.1"
   }

@@ -7,7 +7,8 @@
     "test": "npx knex migrate:rollback && npx knex migrate:up && jest"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-openapi": "^0.8.41-preview",
+    "@dbos-inc/dbos-openapi": "^0.8.61-preview",
+    "@dbos-inc/dbos-cloud": "^0.8.61-preview",
     "@types/jest": "^29.5.5",
     "@types/supertest": "^2.0.14",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -17,8 +18,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-cloud": "^0.8.48-preview",
-    "@dbos-inc/dbos-sdk": "^0.8.48-preview",
+    "@dbos-inc/dbos-sdk": "^0.8.62",
     "ts-node": "^10.9.1"
   }
 }
