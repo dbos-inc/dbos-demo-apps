@@ -44,10 +44,8 @@ jobs:
       - name: "Setup postgres config"
         run: |
           docker ps
-          docker exec shopdb psql -U postgres -c "CREATE USER shop WITH PASSWORD '${PGPASSWORD}';"
-          docker exec shopdb psql -U postgres -c "ALTER USER shop CREATEDB;"
-          docker exec shopdb psql -U postgres -c "CREATE DATABASE shop OWNER shop;"
-          docker exec shopdb psql -U postgres -c "CREATE DATABASE payment OWNER shop;"
+          docker exec shopdb psql -U postgres -c "CREATE DATABASE shop;"
+          docker exec shopdb psql -U postgres -c "CREATE DATABASE payment;"
         env:
           PGPASSWORD: shop
       - name: Checkout demo app
