@@ -28,7 +28,7 @@ jobs:
         image: postgres:16
         env:
           # Specify the password for Postgres superuser.
-          POSTGRES_PASSWORD: dbos
+          POSTGRES_PASSWORD: shop
         # Set health checks to wait until postgres has started
         options: >-
           --name shopdb
