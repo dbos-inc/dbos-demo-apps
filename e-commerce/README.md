@@ -5,7 +5,7 @@ e-commerce scenario with separate apps for the online shop and the payment provi
 
 ## Demo Setup
 
-This demo requires Node 18.x or later and a PostgreSQL compatible database.
+This demo requires Node 20.x or later and a PostgreSQL compatible database.
 The demo includes a script to configure a PostgreSQL Docker container on your behalf.
 
 ### npm install 

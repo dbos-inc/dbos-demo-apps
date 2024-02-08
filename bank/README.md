@@ -1,7 +1,7 @@
 # DBOS Bank Demo App
 
 This is a simplified bank application that uses [DBOS](https://github.com/dbos-inc/dbos-sdk) as the backend framework.
-It requires Node 18.x or later and Docker.
+It requires Node 20.x or later and Docker.
 
 ## Run the Demo
 
