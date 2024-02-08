@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'bank/**'
+      - 'e-commerce/**'
       - '.github/workflows/shop.yml'
   pull_request:
     types:
@@ -13,7 +13,7 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'bank/**'
+      - 'e-commerce/**'
       - '.github/workflows/shop.yml'
   workflow_dispatch:
 
@@ -24,7 +24,7 @@ jobs:
     # Service container for Postgres
     services:
       # Label used to access the service container.
-      bankdb:
+      shopdb:
         image: postgres:16
         env:
           # Specify the password for Postgres superuser.
