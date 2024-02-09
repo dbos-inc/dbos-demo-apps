@@ -1,4 +1,6 @@
 name: CI for Hello world (Prisma) demo
+runs:
+  using: 'node20'
 
 on:
   push:
