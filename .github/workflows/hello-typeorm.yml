@@ -57,7 +57,6 @@ jobs:
         working-directory: dbos-demo-apps/hello-typeorm
         run: |
           npm install
-          npx knex migrate:latest
           npm run build
           npm run lint
           npm run test

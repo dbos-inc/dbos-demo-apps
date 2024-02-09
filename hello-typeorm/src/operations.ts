@@ -1,4 +1,4 @@
-import { TransactionContext, HandlerContext, Transaction, GetApi, OrmEntities } from '@dbos-inc/dbos-sdk';
+import { TransactionContext, HandlerContext, Transaction, GetApi, OrmEntities, DBOSDeploy, InitContext } from '@dbos-inc/dbos-sdk';
 import { Entity, EntityManager, PrimaryGeneratedColumn, Column } from "typeorm";
 
 @Entity("dboshello")
@@ -29,4 +29,8 @@ export class Hello {
     return handlerCtxt.invoke(Hello).helloTransaction(name);
   }
 
+  @DBOSDeploy()
+  static async setUpSchema(ctx: InitContext) {
+    await ctx.createUserSchema();
+  }
 }
