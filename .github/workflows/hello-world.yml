@@ -59,6 +59,8 @@ jobs:
           npm install
           npx knex migrate:latest
           npm run build
+          npm run lint
+          npm run test
         env:
           PGPASSWORD: dbos
           NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
