@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src"
   },
@@ -14,9 +14,14 @@
   "license": "ISC",
   "devDependencies": {
     "@dbos-inc/eslint-plugin": "^0.0.6",
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.8.2",
+    "@types/supertest": "^6.0.2",
     "eslint": "^8.56.0",
+    "jest": "^29.7.0",
     "prisma": "^5.4.0",
+    "supertest": "^6.3.4",
+    "ts-jest": "^29.1.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
