@@ -28,7 +28,7 @@ interface Product {
   inventory: number,
 }
 
-type DisplayProduct = Omit<Product, 'inventory'> & { display_price: string };
+export type DisplayProduct = Omit<Product, 'inventory'> & { display_price: string };
 type CartProduct = Product & { display_price: string };
 
 interface Order {

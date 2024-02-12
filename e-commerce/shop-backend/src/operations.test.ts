@@ -1,5 +1,5 @@
 import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
-import { Shop } from "./operations";
+import { Shop, DisplayProduct } from "./operations";
 import request from "supertest";
 
 describe("operations", () => {
@@ -59,7 +59,14 @@ describe("operations", () => {
       .post("/api/login")
       .send(req);
     expect(resp1.status).toBe(204);
+  });
 
+  test("products", async () => {
+    const presp = await request(testRuntime.getHandlersCallback())
+      .get("/api/products");
+    expect(presp.status).toBe(200);
+    const prods = presp.body as DisplayProduct[];
+    expect(prods.length).toBe(2);
 
     /*
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
