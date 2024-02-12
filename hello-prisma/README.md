@@ -19,7 +19,6 @@ Run this command to create the database schema:
 npx prisma migrate dev --name init
 ```
 
-
 Finally, start the simple HTTP server:
 ```shell
 npx dbos-sdk start

@@ -12,14 +12,7 @@ Then compile this app:
 ```shell
 npm run build
 ```
-
-Update dbos-config.yaml to specify your database name. It must have been created prior to running this app.
-Create the table this app requires with the following SQL query:
-
-```sql
-CREATE TABLE IF NOT EXISTS DBOSHello (greeting_id SERIAL PRIMARY KEY, greeting TEXT);
-```
-
+Update `dbos-config.yaml` to specify your database name.  The database must have been created prior to running this app, but tables will be created by TypeORM (via the method marked `@DBOSDeploy`).
 
 Finally, start the simple HTTP server:
 ```shell

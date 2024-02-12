@@ -1,11 +1,11 @@
-name: CI for Hello world (extended) demo
+name: CI for Hello world (Prisma) demo
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - 'hello-extended/**'
-      - '.github/workflows/hello-world.yml'
+      - 'hello-prisma/**'
+      - '.github/workflows/hello-prisma.yml'
   pull_request:
     types:
       - ready_for_review
@@ -13,8 +13,8 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'hello-extended/**'
-      - '.github/workflows/hello-world.yml'
+      - 'hello-prisma/**'
+      - '.github/workflows/hello-prisma.yml'
   workflow_dispatch:
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: Setup Postgres
-        run: docker exec postgres psql -U postgres -c "CREATE DATABASE hello;"
+        run: docker exec postgres psql -U postgres -c "CREATE DATABASE helloprisma;"
         env:
           PGPASSWORD: dbos
       - name: Checkout demo app
@@ -54,11 +54,11 @@ jobs:
         with:
           node-version: 20
       - name: Compile Hello World
-        working-directory: dbos-demo-apps/hello-extended
+        working-directory: dbos-demo-apps/hello-prisma
         run: |
           npm install
-          npx knex migrate:latest
           npm run build
+          npx prisma migrate dev --name init
           npm run lint
           npm run test
         env:
