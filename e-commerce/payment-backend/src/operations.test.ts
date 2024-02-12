@@ -19,6 +19,7 @@ describe("operations", () => {
 
   test("foo", async () => {
     const req = {
+      webhook: "http://fakehost/webhook",
       success_url: "http://fakehost/success",
       cancel_url: "http://fakehost/cancel",
       client_reference_id: "fake-client-ref",

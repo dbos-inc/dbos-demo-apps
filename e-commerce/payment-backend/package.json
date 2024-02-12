@@ -4,7 +4,7 @@
   "scripts": {
     "build": "tsc",
     "db:setup": "npx knex migrate:up",
-    "test": "npx knex migrate:rollback && npx knex migrate:up # && jest",
+    "test": "npx knex migrate:rollback && npx knex migrate:up && jest",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src"
   },
