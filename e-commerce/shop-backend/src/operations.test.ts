@@ -30,6 +30,35 @@ describe("operations", () => {
       .post("/api/register")
       .send(req);
     expect(resp2.status).toBe(400);
+  });
+
+  test("login", async () => {
+    const breq1 = {
+      username: 'nosuchsshopper',
+      password: 'shopperpass',
+    };
+    const bresp1 = await request(testRuntime.getHandlersCallback())
+      .post("/api/login")
+      .send(breq1);
+    expect(bresp1.status).toBe(400);
+
+    const breq2 = {
+      username: 'nosuchsshopper',
+      password: 'incorrectpass',
+    };
+    const bresp2 = await request(testRuntime.getHandlersCallback())
+      .post("/api/login")
+      .send(breq2);
+    expect(bresp2.status).toBe(400);
+
+    const req = {
+      username: 'shopper',
+      password: 'shopperpass',
+    };
+    const resp1 = await request(testRuntime.getHandlersCallback())
+      .post("/api/login")
+      .send(req);
+    expect(resp1.status).toBe(204);
 
 
     /*
