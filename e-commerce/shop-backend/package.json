@@ -3,12 +3,13 @@
   "version": "0.0.1",
   "scripts": {
     "build": "tsc",
-    "test": "npx knex migrate:rollback && npx knex migrate:up # && jest",
+    "test": "npx knex migrate:rollback && npx knex migrate:up && jest",
     "db:setup": "npx knex migrate:up && npx knex seed:run",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src"
   },
   "dependencies": {
+    "@dbos-inc/communicator-bcrypt": "^0.8.62",
     "@dbos-inc/dbos-sdk": "^0.8.62",
     "bcryptjs": "^2.4.3",
     "ts-node": "^10.9.1"
