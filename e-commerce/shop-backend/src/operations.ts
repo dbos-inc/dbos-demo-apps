@@ -29,7 +29,7 @@ interface Product {
 }
 
 export type DisplayProduct = Omit<Product, 'inventory'> & { display_price: string };
-type CartProduct = Product & { display_price: string };
+export type CartProduct = Product & { display_price: string };
 
 interface Order {
   order_id: number,

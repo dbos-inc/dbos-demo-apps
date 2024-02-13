@@ -1,5 +1,5 @@
 import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
-import { Shop, DisplayProduct } from "./operations";
+import { Shop, DisplayProduct, CartProduct } from "./operations";
 import request from "supertest";
 
 describe("operations", () => {
@@ -100,15 +100,25 @@ describe("operations", () => {
       .post("/api/add_to_cart")
       .send(acr);
     expect(cresp.status).toBe(204);
+
+    const gcr = {'username': 'shopper'}
+    const gcresp = await request(testRuntime.getHandlersCallback())
+      .post("/api/get_cart")
+      .send(gcr);
+    expect(gcresp.status).toBe(200);
+    const cart = gcresp.body as CartProduct[];
+    expect(cart.length).toBe(1);
+
+    /* Is this expected to be 200?
+    const bgcr = {'username': 'noshopper'}
+    const bgcresp = await request(testRuntime.getHandlersCallback())
+      .post("/api/get_cart")
+      .send(bgcr);
+    expect(bgcresp.status).toBe(400);
+    */
   });
 
   /*
-    # Add an item to your cart
-    url = f'https://{config.dbos_domain}/{config.default_username}/application/{shopapp}/api/add_to_cart'
-    data = {'username': shop_username, 'product_id':1}
-    res = session.post(url, json=data, timeout=config.default_timeout)
-    assert res.status_code == 204
-
     # Retrieve your payment session
     url = f'https://{config.dbos_domain}/{config.default_username}/application/{paymentapp}/api/session/1'
     res = session.get(url, timeout=config.default_timeout)
@@ -166,7 +176,6 @@ describe("operations", () => {
     assert cart_empty
    */
 
-  // add_to_cart
   // get_cart
   // checkout_session
 });
