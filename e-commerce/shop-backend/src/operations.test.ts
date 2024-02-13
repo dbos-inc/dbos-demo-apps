@@ -154,58 +154,5 @@ describe("operations", () => {
     }
     expect(cart_empty).toBe(true);
   });
-
-  /*
-    # Retrieve your payment session
-    url = f'https://{config.dbos_domain}/{config.default_username}/application/{paymentapp}/api/session/1'
-    res = session.get(url, timeout=config.default_timeout)
-    assert res.status_code == 204
-
-    # Check out your cart
-    headers = {"Origin": "xxx"}
-    url = f'https://{config.dbos_domain}/{config.default_username}/application/{shopapp}/api/checkout_session?username={shop_username}'
-    res = session.post(url, headers = headers, allow_redirects=False, timeout=120)
-    content = res.content.decode('utf-8')
-    session_id = extract_uuid_from_line(content)
-    assert session_id is not None, content
-
-    # Submit your payment
-    sessiondata = {"session_id":session_id}
-    url = f'https://{config.dbos_domain}/{config.default_username}/application/{paymentapp}/api/submit_payment'
-    res = session.post(url, json=sessiondata, timeout=config.default_timeout)
-
-    # After some time, your payment should succeed
-    payment_successful = False
-    for _ in range(10):
-        url = f'https://{config.dbos_domain}/{config.default_username}/application/{paymentapp}/api/session/{session_id}'
-        res = requests.get(url, timeout=config.default_timeout)
-        try:
-            data = res.json()
-            if data['payment_status'] == "paid":
-                payment_successful = True
-                break
-        except ValueError:
-            pass
-        time.sleep(1)
-    assert payment_successful
-
-    # After the payment has succeeded, your cart should be emptied
-    cart_empty = False
-    for _ in range(10):
-        url = f'https://{config.dbos_domain}/{config.default_username}/application/{shopapp}/api/get_cart'
-        data = {'username': shop_username}
-        res = session.post(url, json=data, timeout=config.default_timeout)
-        try:
-            data = res.json()
-            if len(data) == 0:
-                cart_empty = True
-                break
-        except ValueError:
-            pass
-        time.sleep(1)
-    assert cart_empty
-   */
-
-  // checkout_session
 });
 
