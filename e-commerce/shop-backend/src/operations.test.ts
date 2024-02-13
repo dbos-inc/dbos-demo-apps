@@ -68,29 +68,20 @@ describe("operations", () => {
     const prods = presp.body as DisplayProduct[];
     expect(prods.length).toBe(2);
 
-    /*
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const session_id = resp1.body.session_id as string;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const url = new URL(resp1.body.url as string);
-    expect(url.pathname).toBe(`/payment/${session_id}`);
+    const ppresp = await request(testRuntime.getHandlersCallback())
+      .get(`/api/products/${prods[0].product_id}`);
+    expect(ppresp.status).toBe(200);
+    const bpresp = await request(testRuntime.getHandlersCallback())
+      .get(`/api/products/xyzzy`);
+    expect(bpresp.status).toBe(400);
+    const bpresp2 = await request(testRuntime.getHandlersCallback())
+      .get(`/api/products/9801`);
+    expect(bpresp2.status).toBe(204);
+});
 
-    const resp2 = await request(testRuntime.getHandlersCallback())
-      .get(`/api/session_info/${session_id}`);
-    expect(resp2.status).toBe(200);
-
-    expect(resp2.body).toBeDefined();
-    const body = resp2.body as PaymentSessionInformation;
-    expect(body.session_id).toBe(session_id);
-    expect(body.success_url).toBe(req.success_url);
-    expect(body.cancel_url).toBe(req.cancel_url);
-    expect(body.status).toBeFalsy();
-    expect(body.items.length).toBe(req.items.length);
-
-    // send a payment_complete_topic message to complete the workflow
-    await testRuntime.send(session_id, null, payment_complete_topic);
-    await testRuntime.retrieveWorkflow(session_id).getResult();
-   */
-  });
+  // products/:id
+  // add_to_cart
+  // get_cart
+  // checkout_session
 });
 
