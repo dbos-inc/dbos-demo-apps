@@ -1,6 +1,7 @@
 import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { Shop, DisplayProduct, CartProduct } from "./operations";
 import request from "supertest";
+import { sleep } from "@dbos-inc/dbos-sdk/dist/src/utils";
 
 describe("operations", () => {
 
@@ -116,6 +117,42 @@ describe("operations", () => {
       .send(bgcr);
     expect(bgcresp.status).toBe(400);
     */
+
+    /* Is this expected to be 302?
+    const bcoresp = await request(testRuntime.getHandlersCallback())
+      .post(`/api/checkout_session?username=noshopper`).set("Origin", "xxx");
+    expect(bcoresp.status).toBe(400);
+    */
+
+    // Initiate checkout
+    const coresp = await request(testRuntime.getHandlersCallback())
+      .post(`/api/checkout_session?username=shopper`).set("Origin", "xxx");
+    expect(coresp.status).toBe(302);
+    const session = coresp.text;
+    console.log(session);
+
+    // Fake a payment reply 
+    const payresp = await request(testRuntime.getHandlersCallback())
+    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: session.replace(/^[^>]*>/g, '').replace(/<.*/g, ''), payment_status: "paid"});
+    expect(payresp.status).toBe(204);
+    // /payment_webhook { session_id: string; client_reference_id?: string; payment_status: string }
+
+    // After the payment has succeeded, your cart should be emptied
+    let cart_empty = false;
+    for (let i=0; i<10; ++i) {
+      const ecr = {'username': 'shopper'}
+      const ecresp = await request(testRuntime.getHandlersCallback())
+        .post("/api/get_cart")
+        .send(ecr);
+      expect(ecresp.status).toBe(200);
+      const ecart = ecresp.body as CartProduct[];
+      if (ecart.length === 0) {
+        cart_empty = true;
+        break;
+      }
+      await sleep(100);
+    }
+    expect(cart_empty).toBe(true);
   });
 
   /*
@@ -123,13 +160,6 @@ describe("operations", () => {
     url = f'https://{config.dbos_domain}/{config.default_username}/application/{paymentapp}/api/session/1'
     res = session.get(url, timeout=config.default_timeout)
     assert res.status_code == 204
-
-    # Retrieve your cart
-    url = f'https://{config.dbos_domain}/{config.default_username}/application/{shopapp}/api/get_cart'
-    data = {'username': shop_username}
-    res = session.post(url, json=data, timeout=config.default_timeout)
-    assert res.status_code == 200
-    assert (len(res.json()) == 1)
 
     # Check out your cart
     headers = {"Origin": "xxx"}
@@ -176,7 +206,6 @@ describe("operations", () => {
     assert cart_empty
    */
 
-  // get_cart
   // checkout_session
 });
 

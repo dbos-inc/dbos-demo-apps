@@ -192,6 +192,7 @@ export class Shop {
     const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
 
     if (notification && notification === 'paid') {
+      ctxt.logger.info(`Checkout for ${username}: payment notification received`);
       // if the checkout complete notification arrived, the payment is successful so fulfill the order
       await ctxt.invoke(Shop).fulfillOrder(orderID);
       await ctxt.invoke(Shop).clearCart(username);
@@ -205,6 +206,7 @@ export class Shop {
       }
 
       if (updatedSession.payment_status === 'paid') {
+        ctxt.logger.info(`Checkout for ${username}: Fetched status which was paid`);
         await ctxt.invoke(Shop).fulfillOrder(orderID);
         await ctxt.invoke(Shop).clearCart(username);
       } else {
@@ -213,6 +215,7 @@ export class Shop {
         await ctxt.invoke(Shop).errorOrder(orderID);
       }
     }
+    ctxt.logger.info(`Checkout for ${username}: workflow complete`);
   }
 
   @Transaction()
@@ -264,6 +267,14 @@ export class Shop {
 
   @Communicator()
   static async createPaymentSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
+    if (origin === 'xxx') {
+        // TODO: Only in test mode
+        return {
+            session_id: "1234",
+            url:ctxt.workflowUUID,
+            payment_status: "pending",
+        }
+    }
     const { paymentHost, localHost } = getHostConfig(ctxt);
 
     const response = await fetch(`${paymentHost}/api/create_payment_session`, {
