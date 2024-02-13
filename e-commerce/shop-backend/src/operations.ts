@@ -273,7 +273,7 @@ export class Shop {
             session_id: "1234",
             url:ctxt.workflowUUID,
             payment_status: "pending",
-        }
+        };
     }
     const { paymentHost, localHost } = getHostConfig(ctxt);
 
