@@ -6,7 +6,8 @@
     "test": "npx knex migrate:rollback && npx knex migrate:up && jest",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
-    "start": "dbos-sdk start"
+    "start": "dbos-sdk start",
+    "load": "go-tpc tpcc prepare --no-check -d postgres -U postgres -p ${PGPASSWORD} -D tpcc -P 5432 --conn-params sslmode=disable --warehouses 1"
   },
   "devDependencies": {
     "@dbos-inc/dbos-cloud": "^0.8.62",

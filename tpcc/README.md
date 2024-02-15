@@ -26,10 +26,11 @@ You can install it using the following script:
 curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/pingcap/go-tpc/master/install.sh | sh
 ```
 
-Then load the TPC-C data with the number of warehouses (scale factor) you want, for example, populating data of one warehouse in the local Postgres database you just created:
+Then load the TPC-C data:
 ```bash
-go-tpc tpcc prepare --no-check -d postgres -U postgres -p dbos -D tpcc -P 5432 --conn-params sslmode=disable --warehouses 1
+npm run load
 ```
+We load a single warehouse of data, but you can modify the `load` script in `package.json` for larger-scale data.
 
 Next, build and run the app:
 
