@@ -1,3 +1,5 @@
+name: CI for YKY-Social
+
 on:
   push:
     branches: [ "main" ]
