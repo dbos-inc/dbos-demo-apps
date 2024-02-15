@@ -48,7 +48,7 @@ jobs:
       - name: Install go-tpc
         run: curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/pingcap/go-tpc/master/install.sh | sh
       - name: Load TPC-C Data
-        run: go-tpc tpcc prepare --no-check -d postgres -U postgres -p ${PGPASSWORD} -D tpcc -P 5432 --conn-params sslmode=disable --warehouses 1
+        run: /home/runner/.go-tpc/bin/go-tpc tpcc prepare --no-check -d postgres -U postgres -p ${PGPASSWORD} -D tpcc -P 5432 --conn-params sslmode=disable --warehouses 1
         env:
           PGPASSWORD: dbos
       - name: Checkout demo app
