@@ -5,7 +5,8 @@
     "build": "tsc",
     "test": "npx knex migrate:rollback && npx knex migrate:up && jest",
     "lint": "eslint src",
-    "lint-fix": "eslint --fix src"
+    "lint-fix": "eslint --fix src",
+    "start": "dbos-sdk start"
   },
   "devDependencies": {
     "@dbos-inc/dbos-cloud": "^0.8.62",

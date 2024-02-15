@@ -2,24 +2,24 @@ import { TransactionContext, Transaction, GetApi, HandlerContext, ArgSources, Ar
 import { Knex } from 'knex';
 import { getRandomInt, getCustomerName } from "./utils";
 
-const numDistPerWhse = 10; // Districts per warehouse
-const numCustPerDist = 3000;
-const numItems = 100000;
-const invalidItemID = -12345;
+const DIST_PER_WAREHOUSE = 10; // Districts per warehouse
+const CUSTOMER_PER_DIST = 3000;
+const NUM_ITEMS = 100000;
+const INVALID_ITEM_ID = -12345;
 
 export class TPCC {
 
   @GetApi('/payment/:warehouses')
   static async paymentHandler(ctxt: HandlerContext, @ArgSource(ArgSources.URL) warehouses: number) {
     const w_id = getRandomInt(warehouses) + 1;
-    const d_id = getRandomInt(numDistPerWhse) + 1;
+    const d_id = getRandomInt(DIST_PER_WAREHOUSE) + 1;
     let c_d_id, c_w_id;
     // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
     if (Math.random() <= 0.85) {
       c_d_id = d_id;
       c_w_id = w_id;
     } else {
-      c_d_id = getRandomInt(numDistPerWhse) + 1;
+      c_d_id = getRandomInt(DIST_PER_WAREHOUSE) + 1;
       c_w_id = warehouses > 1 ? getRandomInt(warehouses, w_id - 1) + 1 : w_id;
     }
 
@@ -29,7 +29,7 @@ export class TPCC {
     if (Math.random() <= 0.6) {
       customer = getCustomerName();
     } else {
-      customer = getRandomInt(numCustPerDist) + 1;
+      customer = getRandomInt(CUSTOMER_PER_DIST) + 1;
     }
 
     const h_amount = (getRandomInt(500000) + 100) / 100;
@@ -47,15 +47,15 @@ export class TPCC {
   @GetApi('/neworder/:warehouses')
   static async newOrderHandler(ctxt: HandlerContext, @ArgSource(ArgSources.URL) warehouses: number) {
     const w_id = getRandomInt(warehouses) + 1;
-    const districtID = getRandomInt(numDistPerWhse) + 1;
-    const customerID = getRandomInt(numCustPerDist) + 1;
+    const districtID = getRandomInt(DIST_PER_WAREHOUSE) + 1;
+    const customerID = getRandomInt(CUSTOMER_PER_DIST) + 1;
   
     const itemCount = getRandomInt(11) + 5;
     const orderLines = new Array<{ itemID: number, supplierWarehouseID: number, quantity: number, }>(itemCount);
   
     for (let i = 0; i < itemCount; i++) {
       // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
-      const itemID = Math.floor(Math.random() * numItems) + 1;
+      const itemID = Math.floor(Math.random() * NUM_ITEMS) + 1;
       // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
       const quantity = Math.floor(Math.random() * 10) + 1;
       const supplierWarehouseID = warehouses > 1 ? getRandomInt(warehouses, w_id - 1) + 1 : w_id;
@@ -64,7 +64,7 @@ export class TPCC {
   
     // We need to cause 1% of the new orders to be rolled back.
     if (getRandomInt(100) + 1 === 1) {
-      orderLines[itemCount - 1].itemID = invalidItemID;
+      orderLines[itemCount - 1].itemID = INVALID_ITEM_ID;
     }
   
     try {

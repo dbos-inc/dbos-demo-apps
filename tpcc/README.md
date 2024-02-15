@@ -38,7 +38,7 @@ npm run build
 npx dbos-sdk start
 ```
 
-Finally, curl the server to see that it's working! You need to modify the last number to the number of warehouses you loaded:
+Finally, curl the server to see that it's working! You can modify the last parameter (we use `1` here for one warehouse) to the number of warehouses you loaded:
 
 ```bash
 # Trigger the Payment transaction
@@ -49,7 +49,7 @@ curl http://localhost:3000/neworder/1
 ```
 
 > [!NOTE]
-> We deliberately make 1% of the NewOrder transaction fails, so it's normal to see `Error: I_ID=-12345 not found!`
+> We deliberately make 1% of the NewOrder transaction fails, so it's normal to see `Error new order: I_ID=-12345 not found!` occasionally.
 
 ## Deploying to DBOS Cloud
 Coming soon...
