@@ -62,4 +62,3 @@ jobs:
           npm run test
         env:
           PGPASSWORD: dbos
-          NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

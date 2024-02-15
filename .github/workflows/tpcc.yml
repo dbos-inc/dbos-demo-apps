@@ -1,11 +1,11 @@
-name: CI for Hello world (Prisma) demo
+name: CI for TPC-C
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - 'hello-prisma/**'
-      - '.github/workflows/hello-prisma.yml'
+      - 'tpcc/**'
+      - '.github/workflows/tpcc.yml'
   pull_request:
     types:
       - ready_for_review
@@ -13,8 +13,8 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'hello-prisma/**'
-      - '.github/workflows/hello-prisma.yml'
+      - 'tpcc/**'
+      - '.github/workflows/tpcc.yml'
   workflow_dispatch:
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: Setup Postgres
-        run: docker exec postgres psql -U postgres -c "CREATE DATABASE helloprisma;"
+        run: docker exec postgres psql -U postgres -c "CREATE DATABASE tpcc;"
         env:
           PGPASSWORD: dbos
       - name: Checkout demo app
@@ -53,12 +53,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-      - name: Compile Hello World
-        working-directory: dbos-demo-apps/hello-prisma
+      - name: Compile and Test TPC-C
+        working-directory: dbos-demo-apps/tpcc
         run: |
           npm install
           npm run build
-          npx prisma migrate dev --name init
           npm run lint
           npm run test
         env:
