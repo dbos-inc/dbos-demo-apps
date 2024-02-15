@@ -1,7 +1,6 @@
 import { TransactionContext, Transaction, GetApi, HandlerContext, ArgSources, ArgSource } from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 import { getRandomInt, getCustomerName } from "./utils";
-import { v1 as uuidv1 } from "uuid";
 
 const numDistPerWhse = 10; // Districts per warehouse
 const numCustPerDist = 3000;
@@ -10,9 +9,9 @@ const invalidItemID = -12345;
 
 export class TPCC {
 
-  @GetApi('/payment/:numw')
-  static async paymentHandler(ctxt: HandlerContext, @ArgSource(ArgSources.URL) numw: number) {
-    const w_id = getRandomInt(numw) + 1;
+  @GetApi('/payment/:warehouses')
+  static async paymentHandler(ctxt: HandlerContext, @ArgSource(ArgSources.URL) warehouses: number) {
+    const w_id = getRandomInt(warehouses) + 1;
     const d_id = getRandomInt(numDistPerWhse) + 1;
     let c_d_id, c_w_id;
     // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
@@ -21,7 +20,7 @@ export class TPCC {
       c_w_id = w_id;
     } else {
       c_d_id = getRandomInt(numDistPerWhse) + 1;
-      c_w_id = numw > 1 ? getRandomInt(numw, w_id - 1) + 1 : w_id;
+      c_w_id = warehouses > 1 ? getRandomInt(warehouses, w_id - 1) + 1 : w_id;
     }
 
     // 60% lookups by last name
@@ -35,19 +34,19 @@ export class TPCC {
 
     const h_amount = (getRandomInt(500000) + 100) / 100;
 
-    const workflowUUID = uuidv1();
     try {
-      await ctxt.invoke(TPCC, workflowUUID).payment(w_id, d_id, c_w_id, c_d_id, customer, h_amount);
+      const res = await ctxt.invoke(TPCC).payment(w_id, d_id, c_w_id, c_d_id, customer, h_amount);
+      return res;
     } catch (err) {
       const error = err as Error;
       ctxt.logger.error(`Error payment: ${error.message}`);
+      return `Error payment: ${error.message}`;
     }
-    return workflowUUID;
   }
 
-  @GetApi('/neworder/:numw')
-  static async newOrderHandler(ctxt: HandlerContext, @ArgSource(ArgSources.URL) numw: number) {
-    const w_id = getRandomInt(numw) + 1;
+  @GetApi('/neworder/:warehouses')
+  static async newOrderHandler(ctxt: HandlerContext, @ArgSource(ArgSources.URL) warehouses: number) {
+    const w_id = getRandomInt(warehouses) + 1;
     const districtID = getRandomInt(numDistPerWhse) + 1;
     const customerID = getRandomInt(numCustPerDist) + 1;
   
@@ -59,7 +58,7 @@ export class TPCC {
       const itemID = Math.floor(Math.random() * numItems) + 1;
       // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
       const quantity = Math.floor(Math.random() * 10) + 1;
-      const supplierWarehouseID = numw > 1 ? getRandomInt(numw, w_id - 1) + 1 : w_id;
+      const supplierWarehouseID = warehouses > 1 ? getRandomInt(warehouses, w_id - 1) + 1 : w_id;
       orderLines[i] = { itemID, supplierWarehouseID, quantity };
     }
   
@@ -68,14 +67,14 @@ export class TPCC {
       orderLines[itemCount - 1].itemID = invalidItemID;
     }
   
-    const workflowUUID = uuidv1();
     try {
-      await ctxt.invoke(TPCC, workflowUUID).newOrder(w_id, districtID, customerID, orderLines);
+      const res = await ctxt.invoke(TPCC).newOrder(w_id, districtID, customerID, orderLines);
+      return res;
     } catch (err) {
       const error = err as Error;
       ctxt.logger.error(`Error new order: ${error.message}`);
+      return `Error new order: ${error.message}`;
     }
-    return workflowUUID;
   }
 
   @Transaction({isolationLevel: "REPEATABLE READ"})  // Run this function as a database transaction

@@ -48,5 +48,8 @@ curl http://localhost:3000/payment/1
 curl http://localhost:3000/neworder/1
 ```
 
+> [!NOTE]
+> We deliberately make 1% of the NewOrder transaction fails, so it's normal to see `Error: I_ID=-12345 not found!`
+
 ## Deploying to DBOS Cloud
 Coming soon...
