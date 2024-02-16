@@ -39,7 +39,7 @@ exports.up = async function(knex) {
     table.specificType('c_state', 'char(2)');
     table.specificType('c_zip', 'char(9)');
     table.specificType('c_phone', 'char(16)');
-    table.timestamp('c_since');
+    table.timestamp('c_since').defaultTo(knex.fn.now());
     table.specificType('c_credit', 'char(2)');
     table.decimal('c_credit_lim', 12, 2);
     table.decimal('c_discount', 4, 4);
@@ -57,7 +57,7 @@ exports.up = async function(knex) {
     table.integer('h_c_w_id').notNullable();
     table.integer('h_d_id').notNullable();
     table.integer('h_w_id').notNullable();
-    table.timestamp('h_date');
+    table.timestamp('h_date').defaultTo(knex.fn.now());
     table.decimal('h_amount', 6, 2);
     table.string('h_data', 24);
   });
@@ -74,7 +74,7 @@ exports.up = async function(knex) {
     table.integer('o_d_id').notNullable();
     table.integer('o_w_id').notNullable();
     table.integer('o_c_id');
-    table.timestamp('o_entry_d');
+    table.timestamp('o_entry_d').defaultTo(knex.fn.now());
     table.integer('o_carrier_id');
     table.integer('o_ol_cnt');
     table.integer('o_all_local');
