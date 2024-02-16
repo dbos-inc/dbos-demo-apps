@@ -23,7 +23,17 @@ npx knex migrate:latest
 To load TPC-C data, we use [go-tpc](https://github.com/pingcap/go-tpc/tree/master).
 You can install it using the following script:
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/pingcap/go-tpc/master/install.sh | sh
+./install_go_tpc.sh
+```
+
+After installation, the script would prompt the installation path and instruction to run it. For example, you may need to open a new terminal, or source your shell profile to use it.
+An example output from the script:
+```
+Detected shell: bash
+Shell profile:  /home/ubuntu/.bashrc
+/home/ubuntu/.bashrc has been modified to to add go-tpc to PATH
+open a new terminal or source /home/ubuntu/.bashrc to use it
+Installed path: /home/ubuntu/.go-tpc/bin/go-tpc
 ```
 
 Then load the TPC-C data:
