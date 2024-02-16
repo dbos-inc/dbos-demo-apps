@@ -62,5 +62,10 @@ curl http://localhost:3000/neworder/1
 > [!NOTE]
 > We deliberately make 1% of the NewOrder transaction fails, so it's normal to see `Error new order: I_ID=-12345 not found!` occasionally.
 
+You can also run unit tests:
+```bash
+npm test
+```
+
 ## Deploying to DBOS Cloud
 Coming soon...
