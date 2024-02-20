@@ -1,5 +1,5 @@
 import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
-import { Shop, DisplayProduct, CartProduct } from "./operations";
+import { Shop, CartProduct } from "./operations";
 import request from "supertest";
 import { sleep } from "@dbos-inc/dbos-sdk/dist/src/utils";
 
@@ -42,12 +42,12 @@ describe("operations", () => {
   });
 
   test("products", async () => {
-    const presp = await request(testRuntime.getHandlersCallback())
-      .get("/api/products");
-    expect(presp.status).toBe(200);
-    const prods = presp.body as DisplayProduct[];
+    const prods = await testRuntime.invoke(Shop).getProducts();
     expect(prods.length).toBe(2);
-
+    await testRuntime.invoke(Shop).getProduct(prods[0].product_id);
+    expect(testRuntime.invoke(Shop).getProduct(9801)).resolves.toBeNull();
+  
+    // Check URL version also
     const ppresp = await request(testRuntime.getHandlersCallback())
       .get(`/api/products/${prods[0].product_id}`);
     expect(ppresp.status).toBe(200);
