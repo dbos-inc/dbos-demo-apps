@@ -267,14 +267,10 @@ export class Shop {
 
   @Communicator()
   static async createPaymentSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
-    if (origin === 'xxx') {
-        // TODO: Only in test mode
-        return {
-            session_id: "1234",
-            url:ctxt.workflowUUID,
-            payment_status: "pending",
-        };
-    }
+    return await Shop.placePaymentSessionRequest(ctxt, productDetails, origin);
+  }
+
+  static async placePaymentSessionRequest(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
     const { paymentHost, localHost } = getHostConfig(ctxt);
 
     const response = await fetch(`${paymentHost}/api/create_payment_session`, {

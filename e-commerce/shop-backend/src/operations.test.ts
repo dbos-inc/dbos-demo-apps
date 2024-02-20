@@ -93,6 +93,16 @@ describe("operations", () => {
     expect(bcoresp.status).toBe(400);
     */
 
+    // Spy on / stub out the URL fetch
+    const paySpy = jest.spyOn(Shop, 'placePaymentSessionRequest');
+    paySpy.mockImplementation(async (ctxt: CommunicatorContext, _productDetails: Product[], _origin: string) => {
+      return {
+        session_id: "1234",
+        url:ctxt.workflowUUID,
+        payment_status: "pending",
+      };
+    });
+
     // Initiate checkout
     const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
     const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
@@ -100,9 +110,8 @@ describe("operations", () => {
 
     // Fake a payment reply 
     const payresp = await request(testRuntime.getHandlersCallback())
-    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: url.replace(/^[^>]*>/g, '').replace(/<.*/g, ''), payment_status: "paid"});
+    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.getWorkflowUUID(), payment_status: "paid"});
     expect(payresp.status).toBe(204);
-    // /payment_webhook { session_id: string; client_reference_id?: string; payment_status: string }
 
     // After the payment has succeeded, your cart should be emptied
     let cart_empty = false;
@@ -115,6 +124,9 @@ describe("operations", () => {
       await sleep(100);
     }
     expect(cart_empty).toBe(true);
+
+    expect(paySpy).toHaveBeenCalled();
+    paySpy.mockRestore();
   });
 });
 
