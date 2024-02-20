@@ -17,6 +17,7 @@ describe("operations", () => {
   });
 
 
+  // This is a demonstration of the handler-based approach to making calls
   test("register", async () => {
     const req = {
       username: 'shopper',
@@ -30,36 +31,14 @@ describe("operations", () => {
     const resp2 = await request(testRuntime.getHandlersCallback())
       .post("/api/register")
       .send(req);
-    expect(resp2.status).toBe(400);
+    expect(resp2.status).toBe(400); // Already exists
   });
 
+  // This is a demonstration of the testing-runtime approach to making calls
   test("login", async () => {
-    const breq1 = {
-      username: 'nosuchsshopper',
-      password: 'shopperpass',
-    };
-    const bresp1 = await request(testRuntime.getHandlersCallback())
-      .post("/api/login")
-      .send(breq1);
-    expect(bresp1.status).toBe(400);
-
-    const breq2 = {
-      username: 'nosuchsshopper',
-      password: 'incorrectpass',
-    };
-    const bresp2 = await request(testRuntime.getHandlersCallback())
-      .post("/api/login")
-      .send(breq2);
-    expect(bresp2.status).toBe(400);
-
-    const req = {
-      username: 'shopper',
-      password: 'shopperpass',
-    };
-    const resp1 = await request(testRuntime.getHandlersCallback())
-      .post("/api/login")
-      .send(req);
-    expect(resp1.status).toBe(204);
+    expect(() => testRuntime.invoke(Shop).login('nosuchshopper', 'shopperpass')).rejects.toThrow();
+    expect(() => testRuntime.invoke(Shop).login('shopper', 'incorrectpass')).rejects.toThrow();
+    await testRuntime.invoke(Shop).login('shopper','shopperpass');
   });
 
   test("products", async () => {
