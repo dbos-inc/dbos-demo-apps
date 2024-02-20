@@ -4,7 +4,7 @@
   "description": "Simple functions",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src"
   },
