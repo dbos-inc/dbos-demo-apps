@@ -7,19 +7,19 @@ import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
 
-const OrderStatus = {
+export const OrderStatus = {
   PENDING: 0,
   FULFILLED: 1,
   CANCELLED: -1,
 };
 
-interface Cart {
+export interface Cart {
   username: string,
   product_id: number,
   quantity: number,
 }
 
-interface Product {
+export interface Product {
   product_id: number,
   product: string,
   description: string,
@@ -31,7 +31,7 @@ interface Product {
 export type DisplayProduct = Omit<Product, 'inventory'> & { display_price: string };
 export type CartProduct = Product & { display_price: string };
 
-interface Order {
+export interface Order {
   order_id: number,
   username: string,
   order_status: number,
@@ -39,26 +39,26 @@ interface Order {
   last_update_time: bigint,
 }
 
-interface OrderItem {
+export interface OrderItem {
   order_id: number,
   product_id: number,
   price: number,
   quantity: number,
 }
 
-interface User {
+export interface User {
   username: string,
   password: string,
 }
 
-interface PaymentSession {
+export interface PaymentSession {
   session_id: string,
   url?: string,
   payment_status: string,
 }
 
-const checkout_url_topic = "payment_checkout_url";
-const checkout_complete_topic = "payment_checkout_complete";
+export const checkout_url_topic = "payment_checkout_url";
+export const checkout_complete_topic = "payment_checkout_complete";
 
 function getHostConfig(ctxt: DBOSContext) {
   const paymentHost = ctxt.getConfig<string>("payment_host");

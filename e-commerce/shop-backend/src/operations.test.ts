@@ -1,5 +1,5 @@
-import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
-import { Shop, CartProduct } from "./operations";
+import { CommunicatorContext, TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
+import { Shop, Product, PaymentSession, checkout_url_topic } from "./operations";
 import request from "supertest";
 import { sleep } from "@dbos-inc/dbos-sdk/dist/src/utils";
 
@@ -75,18 +75,8 @@ describe("operations", () => {
     expect(bcresp2.status).toBe(400);
     */
 
-    const acr ={'username': 'shopper', 'product_id':1};
-    const cresp = await request(testRuntime.getHandlersCallback())
-      .post("/api/add_to_cart")
-      .send(acr);
-    expect(cresp.status).toBe(204);
-
-    const gcr = {'username': 'shopper'}
-    const gcresp = await request(testRuntime.getHandlersCallback())
-      .post("/api/get_cart")
-      .send(gcr);
-    expect(gcresp.status).toBe(200);
-    const cart = gcresp.body as CartProduct[];
+    await testRuntime.invoke(Shop).addToCart('shopper', 1);
+    const cart = await testRuntime.invoke(Shop).getCart('shopper');
     expect(cart.length).toBe(1);
 
     /* Is this expected to be 200?
@@ -104,27 +94,20 @@ describe("operations", () => {
     */
 
     // Initiate checkout
-    const coresp = await request(testRuntime.getHandlersCallback())
-      .post(`/api/checkout_session?username=shopper`).set("Origin", "xxx");
-    expect(coresp.status).toBe(302);
-    const session = coresp.text;
-    console.log(session);
+    const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
+    const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    if (!url) throw new Error("URL not returned");
 
     // Fake a payment reply 
     const payresp = await request(testRuntime.getHandlersCallback())
-    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: session.replace(/^[^>]*>/g, '').replace(/<.*/g, ''), payment_status: "paid"});
+    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: url.replace(/^[^>]*>/g, '').replace(/<.*/g, ''), payment_status: "paid"});
     expect(payresp.status).toBe(204);
     // /payment_webhook { session_id: string; client_reference_id?: string; payment_status: string }
 
     // After the payment has succeeded, your cart should be emptied
     let cart_empty = false;
     for (let i=0; i<10; ++i) {
-      const ecr = {'username': 'shopper'}
-      const ecresp = await request(testRuntime.getHandlersCallback())
-        .post("/api/get_cart")
-        .send(ecr);
-      expect(ecresp.status).toBe(200);
-      const ecart = ecresp.body as CartProduct[];
+      const ecart = await testRuntime.invoke(Shop).getCart('shopper');
       if (ecart.length === 0) {
         cart_empty = true;
         break;
