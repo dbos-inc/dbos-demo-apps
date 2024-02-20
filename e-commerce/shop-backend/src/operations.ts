@@ -7,19 +7,19 @@ import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
 
-const OrderStatus = {
+export const OrderStatus = {
   PENDING: 0,
   FULFILLED: 1,
   CANCELLED: -1,
 };
 
-interface Cart {
+export interface Cart {
   username: string,
   product_id: number,
   quantity: number,
 }
 
-interface Product {
+export interface Product {
   product_id: number,
   product: string,
   description: string,
@@ -28,10 +28,10 @@ interface Product {
   inventory: number,
 }
 
-type DisplayProduct = Omit<Product, 'inventory'> & { display_price: string };
-type CartProduct = Product & { display_price: string };
+export type DisplayProduct = Omit<Product, 'inventory'> & { display_price: string };
+export type CartProduct = Product & { display_price: string };
 
-interface Order {
+export interface Order {
   order_id: number,
   username: string,
   order_status: number,
@@ -39,26 +39,26 @@ interface Order {
   last_update_time: bigint,
 }
 
-interface OrderItem {
+export interface OrderItem {
   order_id: number,
   product_id: number,
   price: number,
   quantity: number,
 }
 
-interface User {
+export interface User {
   username: string,
   password: string,
 }
 
-interface PaymentSession {
+export interface PaymentSession {
   session_id: string,
   url?: string,
   payment_status: string,
 }
 
-const checkout_url_topic = "payment_checkout_url";
-const checkout_complete_topic = "payment_checkout_complete";
+export const checkout_url_topic = "payment_checkout_url";
+export const checkout_complete_topic = "payment_checkout_complete";
 
 function getHostConfig(ctxt: DBOSContext) {
   const paymentHost = ctxt.getConfig<string>("payment_host");
@@ -192,6 +192,7 @@ export class Shop {
     const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
 
     if (notification && notification === 'paid') {
+      ctxt.logger.debug(`Checkout for ${username}: payment notification received`);
       // if the checkout complete notification arrived, the payment is successful so fulfill the order
       await ctxt.invoke(Shop).fulfillOrder(orderID);
       await ctxt.invoke(Shop).clearCart(username);
@@ -205,6 +206,7 @@ export class Shop {
       }
 
       if (updatedSession.payment_status === 'paid') {
+        ctxt.logger.debug(`Checkout for ${username}: Fetched status which was paid`);
         await ctxt.invoke(Shop).fulfillOrder(orderID);
         await ctxt.invoke(Shop).clearCart(username);
       } else {
@@ -213,6 +215,7 @@ export class Shop {
         await ctxt.invoke(Shop).errorOrder(orderID);
       }
     }
+    ctxt.logger.debug(`Checkout for ${username}: workflow complete`);
   }
 
   @Transaction()
@@ -264,6 +267,10 @@ export class Shop {
 
   @Communicator()
   static async createPaymentSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
+    return await Shop.placePaymentSessionRequest(ctxt, productDetails, origin);
+  }
+
+  static async placePaymentSessionRequest(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
     const { paymentHost, localHost } = getHostConfig(ctxt);
 
     const response = await fetch(`${paymentHost}/api/create_payment_session`, {
