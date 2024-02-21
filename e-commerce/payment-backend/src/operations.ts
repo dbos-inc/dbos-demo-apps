@@ -178,7 +178,7 @@ export class PlaidPayments {
   ): Promise<void>
   {
     if (ctxt.getConfig('unittest', false) && webhook === "http://fakehost/webhook") {
-      return; // In testing - but it would be good to confirm this by checking the environment
+      return; // In testing, matching the bogus testing URL
     }
     const body = { session_id, payment_status: getPaymentStatus(status), client_reference_id };
 
