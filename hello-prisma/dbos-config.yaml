@@ -2,7 +2,9 @@ database:
   hostname: 'localhost'
   port: 5432
   username: 'postgres'
+  app_db_name: 'helloprisma'
   user_database: 'helloprisma'
   password: ${PGPASSWORD}
   connectionTimeoutMillis: 3000
-  user_dbclient: "prisma"
+  app_db_client: "prisma"
+  user_dbclient: 'prisma'

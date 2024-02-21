@@ -3,10 +3,11 @@ database:
   port: 5432
   username: 'bank'
   connectionTimeoutMillis: 3000
-  user_database: 'bank'
+  app_db_name: 'bank'
+  user_database: 'bank' # Will be deprecated, use app_db_name instead
   password: ${PGPASSWORD}
-  system_database: 'dbos_bank_systemdb'
-  user_dbclient: "prisma"
+  app_db_client: "prisma"
+  user_dbclient: "prisma" # Will be deprecated, use app_db_client instead
 telemetry:
   logs:
     logLevel: 'info'
