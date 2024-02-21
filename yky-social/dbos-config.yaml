@@ -3,9 +3,10 @@ database:
   port: ${POSTGRES_PORT}
   username: ${POSTGRES_USERNAME}
   password: ${POSTGRES_PASSWORD}
+  app_db_name: ${POSTGRES_DATABASE}
   user_database: ${POSTGRES_DATABASE}
-  system_database: 'opsys'
   connectionTimeoutMillis: 3000
+  app_db_client: 'typeorm'
   user_dbclient: 'typeorm'
 telemetry:
   logs:

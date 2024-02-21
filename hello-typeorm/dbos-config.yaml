@@ -2,7 +2,9 @@ database:
   hostname: 'localhost'
   port: 5432
   username: 'postgres'
+  app_db_name: 'hellotypeorm'
   user_database: 'hellotypeorm'
   password: ${PGPASSWORD}
   connectionTimeoutMillis: 3000
+  app_db_client: "typeorm"
   user_dbclient: "typeorm"
