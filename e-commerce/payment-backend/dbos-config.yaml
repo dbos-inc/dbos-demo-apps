@@ -9,7 +9,7 @@ database:
   username: 'postgres'
   password: ${PGPASSWORD}
   app_db_name: 'payment'
-  user_database: 'shop' # Will be deprecated, use app_db_name instead
+  user_database: 'payment' # Will be deprecated, use app_db_name instead
   connectionTimeoutMillis: 3000
   app_db_client: 'knex'
   user_dbclient: 'knex' # Will be deprecated, use app_db_client instead
