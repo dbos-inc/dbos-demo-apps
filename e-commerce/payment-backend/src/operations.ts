@@ -170,7 +170,7 @@ export class PlaidPayments {
 
   @Communicator()
   static async paymentWebhook(
-    ctxt: CommunicatorContext, 
+    ctxt: CommunicatorContext,
     webhook: string, 
     session_id: string, 
     status: string | undefined, 
