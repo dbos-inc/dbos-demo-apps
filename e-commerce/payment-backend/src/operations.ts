@@ -170,15 +170,15 @@ export class PlaidPayments {
 
   @Communicator()
   static async paymentWebhook(
-    _ctxt: CommunicatorContext, 
+    ctxt: CommunicatorContext, 
     webhook: string, 
     session_id: string, 
     status: string | undefined, 
     client_reference_id: string | undefined
   ): Promise<void>
   {
-    if (webhook === "http://fakehost/webhook") {
-        return; // In testing - but it would be good to confirm this by checking the environment
+    if (ctxt.getConfig('unittest', false) && webhook === "http://fakehost/webhook") {
+      return; // In testing - but it would be good to confirm this by checking the environment
     }
     const body = { session_id, payment_status: getPaymentStatus(status), client_reference_id };
 

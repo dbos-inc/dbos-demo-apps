@@ -8,6 +8,7 @@ describe("operations", () => {
 
   beforeAll(async () => {
     testRuntime = await createTestingRuntime([PlaidPayments], undefined);
+    testRuntime.setConfig('unittest', true);
     await testRuntime.queryUserDB<void>(`delete from items;`);
     await testRuntime.queryUserDB<void>(`delete from session;`);
   });
