@@ -11,6 +11,8 @@
   "dependencies": {
     "@dbos-inc/communicator-bcrypt": "^0.9.25",
     "@dbos-inc/dbos-sdk": "^0.9.25",
+    "@opentelemetry/api-logs": "^0.48.0",
+    "@opentelemetry/sdk-logs": "^0.48.0",
     "bcryptjs": "^2.4.3",
     "ts-node": "^10.9.1"
   },
