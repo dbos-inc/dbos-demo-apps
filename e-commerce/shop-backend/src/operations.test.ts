@@ -1,5 +1,5 @@
 import { CommunicatorContext, TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
-import { Shop, Product, PaymentSession, checkout_url_topic } from "./operations";
+import { Shop, Product, checkout_url_topic, BcryptCommunicator } from "./operations";
 import request from "supertest";
 import { sleep } from "@dbos-inc/dbos-sdk/dist/src/utils";
 
@@ -8,7 +8,7 @@ describe("operations", () => {
   let testRuntime: TestingRuntime;
 
   beforeAll(async () => {
-    testRuntime = await createTestingRuntime([Shop], undefined);
+    testRuntime = await createTestingRuntime([Shop, BcryptCommunicator], undefined);
     await testRuntime.queryUserDB<void>(`delete from users;`);
   });
 

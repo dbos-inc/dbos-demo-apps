@@ -2,7 +2,8 @@ import {
   TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
   GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
 } from '@dbos-inc/dbos-sdk';
-import bcryptjs from 'bcryptjs';
+import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
+export { BcryptCommunicator };
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -84,20 +85,24 @@ export class Shop {
   @Transaction({ readOnly: true })
   static async login(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctxt.client<User>('users').select("password").where({ username }).first();
-    if (!(user && await bcryptjs.compare(password, user.password))) {
+    if (!(user && await BcryptCommunicator.bcryptCompare(password, user.password))) {
       throw new DBOSResponseError("Invalid username or password", 400);
     }
   }
 
   @PostApi('/api/register')
+  @Workflow()
+  static async register(ctxt: WorkflowContext, username: string, password: string): Promise<void> {
+    const hashedPassword = await ctxt.invoke(BcryptCommunicator).bcryptHash(password, 10);
+    await ctxt.invoke(Shop).saveNewUser(username, hashedPassword);
+  }
+
   @Transaction()
-  static async register(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
+  static async saveNewUser(ctxt: KnexTransactionContext, username: string, hashedPassword: string): Promise<void> {
     const user = await ctxt.client<User>('users').select().where({ username }).first();
     if (user) {
       throw new DBOSResponseError("Username already exists", 400);
     }
-
-    const hashedPassword = await bcryptjs.hash(password, 10);
     await ctxt.client<User>('users').insert({ username, password: hashedPassword });
   }
 
