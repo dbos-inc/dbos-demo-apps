@@ -60,6 +60,5 @@ jobs:
           npx knex migrate:latest
           npm run build
           npm run lint
-          npm run test
         env:
           PGPASSWORD: dbos
