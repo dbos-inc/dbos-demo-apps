@@ -1,5 +1,6 @@
 import { CommunicatorContext, TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
-import { Shop, Product, checkout_url_topic, BcryptCommunicator } from "./operations";
+import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
+import { Shop, Product, checkout_url_topic } from "./operations";
 import request from "supertest";
 import { sleep } from "@dbos-inc/dbos-sdk/dist/src/utils";
 
