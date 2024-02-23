@@ -1,4 +1,4 @@
-name: CI for Hello world (extended) demo
+name: CI for greeting emails example
 
 on:
   push:
