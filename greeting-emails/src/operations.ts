@@ -6,21 +6,19 @@ import {
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
 
-export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 export class Greetings {
     @Communicator()
     static async SendGreetingEmail(ctxt: CommunicatorContext) {
         ctxt.logger.info("Sending Email...");
         // Code omitted for simplicity
         ctxt.logger.info("Email sent!");
-        await sleep(10);
+        await new Promise((resolve) => resolve("Email sent!"));
     }
 
     @Transaction()
     static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
         await ctxt.client.raw(
-            "INSERT INTO dbos_hello (greeting_name, greeting_note_content) VALUES (?, ?)",
+            "INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)",
             [friend, content]
         );
     }
@@ -34,7 +32,7 @@ export class Greetings {
             ctxt.logger.info(
                 "Press control + C to interrupt the workflow..."
             );
-            await sleep(1000);
+            await ctxt.sleep(1);
         }
 
         await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);

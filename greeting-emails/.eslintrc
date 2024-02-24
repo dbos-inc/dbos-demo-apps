@@ -1,5 +1,11 @@
 {
   "root": true,
+  "extends": [
+    "plugin:@dbos-inc/dbosRecommendedConfig"
+  ],
+  "plugins": [
+    "@dbos-inc"
+  ],
   "env": {
     "node": true,
     "es6": true
