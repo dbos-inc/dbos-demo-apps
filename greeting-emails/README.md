@@ -17,7 +17,7 @@ In this quickstart, we use [knex.js](https://knexjs.org/) to manage database mig
 Run our provided migration to create a database table:
 
 ```bash
-npx knex migrate:latest
+npx dbos-sdk migrate
 ```
 
 Next, build and run the app:
