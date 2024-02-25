@@ -18,7 +18,7 @@ export class Greetings {
     @Transaction()
     static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
         await ctxt.client.raw(
-            "INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)",
+            "INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)",
             [friend, content]
         );
     }
@@ -32,6 +32,7 @@ export class Greetings {
             ctxt.logger.info(
                 "Press control + C to interrupt the workflow..."
             );
+            // Sleep 1 second
             await ctxt.sleep(1);
         }
 
