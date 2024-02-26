@@ -196,11 +196,12 @@ export class Shop {
     await ctxt.setEvent(checkout_url_topic, paymentSession.url);
     const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
 
+    let orderIsPaid = false;
+
     if (notification && notification === 'paid') {
       ctxt.logger.debug(`Checkout for ${username}: payment notification received`);
       // if the checkout complete notification arrived, the payment is successful so fulfill the order
-      await ctxt.invoke(Shop).fulfillOrder(orderID);
-      await ctxt.invoke(Shop).clearCart(username);
+      orderIsPaid = true;
     } else {
       // if the checkout complete notification didn't arrive in time, retrieve the session information 
       // in order to check the payment status explicitly 
@@ -211,14 +212,18 @@ export class Shop {
       }
 
       if (updatedSession.payment_status === 'paid') {
-        ctxt.logger.debug(`Checkout for ${username}: Fetched status which was paid`);
-        await ctxt.invoke(Shop).fulfillOrder(orderID);
-        await ctxt.invoke(Shop).clearCart(username);
-      } else {
-        ctxt.logger.error(`Checkout for ${username} failed: payment not received`);
-        await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
-        await ctxt.invoke(Shop).errorOrder(orderID);
+        orderIsPaid = true;
       }
+    }
+    
+    if (orderIsPaid) {
+      ctxt.logger.debug(`Checkout for ${username}: Fetched status which was paid`);
+      await ctxt.invoke(Shop).fulfillOrder(orderID);
+      await ctxt.invoke(Shop).clearCart(username);
+    } else {
+      ctxt.logger.error(`Checkout for ${username} failed: payment not received`);
+      await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
+      await ctxt.invoke(Shop).errorOrder(orderID);
     }
     ctxt.logger.debug(`Checkout for ${username}: workflow complete`);
   }
