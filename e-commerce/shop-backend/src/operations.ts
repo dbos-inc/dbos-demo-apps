@@ -212,16 +212,18 @@ export class Shop {
       }
 
       if (updatedSession.payment_status === 'paid') {
+        ctxt.logger.debug(`Checkout for ${username}: Fetched status which was paid`);
         orderIsPaid = true;
       }
+      else {
+        ctxt.logger.error(`Checkout for ${username} failed: payment not received`);
+      }
     }
-    
+
     if (orderIsPaid) {
-      ctxt.logger.debug(`Checkout for ${username}: Fetched status which was paid`);
       await ctxt.invoke(Shop).fulfillOrder(orderID);
       await ctxt.invoke(Shop).clearCart(username);
     } else {
-      ctxt.logger.error(`Checkout for ${username} failed: payment not received`);
       await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
       await ctxt.invoke(Shop).errorOrder(orderID);
     }
