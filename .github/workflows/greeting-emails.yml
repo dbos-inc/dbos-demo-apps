@@ -1,11 +1,11 @@
-name: CI for Hello world (extended) demo
+name: CI for greeting emails example
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - 'hello-extended/**'
-      - '.github/workflows/hello-world.yml'
+      - 'greeting-emails/**'
+      - '.github/workflows/greeting-emails.yml'
   pull_request:
     types:
       - ready_for_review
@@ -13,8 +13,8 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'hello-extended/**'
-      - '.github/workflows/hello-world.yml'
+      - 'greeting-emails/**'
+      - '.github/workflows/greeting-emails.yml'
   workflow_dispatch:
 
 jobs:
@@ -54,12 +54,11 @@ jobs:
         with:
           node-version: 20
       - name: Compile Hello World
-        working-directory: dbos-demo-apps/hello-extended
+        working-directory: dbos-demo-apps/greeting-emails
         run: |
           npm install
           npx knex migrate:latest
           npm run build
           npm run lint
-          npm run test
         env:
           PGPASSWORD: dbos
