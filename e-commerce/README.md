@@ -49,21 +49,21 @@ Both shop and payment use [knex.js](https://knexjs.org/) as a database access li
 ### Run the Demo
 
 Each of the four parts of the demo must run in its own terminal window.
-For each setup, each package has a single npm command that is used to build and launch the package
+For each setup, each package has a single npm command that is used to build and launch the package.
 
-* For payment-backend and shop-backend, run `npx dbos-sdk start` to build and launch the app
+* For payment-backend and shop-backend, run `npm run build` and `npx dbos-sdk start` to build and launch the app, respectively.
 
-* For shop-frontend, run `npm run dev` to launch the app
-* To run with a backend in the cloud, export NEXT_PUBLIC_SHOP_BACKEND=<url to shop backend>
+* For shop-frontend, run `npm run dev` to launch the app.
+* To run with a backend in the cloud, export NEXT_PUBLIC_SHOP_BACKEND=<url to shop backend>.
 
-* for payment-frontend, run `npm run start` to build and launch the app
-* To run with a backend in the cloud set export PLAID_BACKEND=<url to cloud backend>
+* for payment-frontend, run `npm run start` to build and launch the app.
+* To run with a backend in the cloud set export PLAID_BACKEND=<url to cloud backend>.
 
-* for cloud update the urls in dbos-config.yaml to point to cloud
+* for cloud update the urls in dbos-config.yaml to point to cloud.
 
-> If you are using VSCode, there are launch configurations for each individual package in the demo. 
-> Additionally, there are compound configurations for launching the front and backend of shop or payment
-> as well as a compound configuration for launching all four packages in the E-Commerce demo
+> If you are using VSCode, there are launch configurations for each individual package in the demo.
+> Additionally, there are compound configurations for launching the front and backend of shop or payment.
+> as well as a compound configuration for launching all four packages in the E-Commerce demo.
 
 ## Demo Walkthrough
 
