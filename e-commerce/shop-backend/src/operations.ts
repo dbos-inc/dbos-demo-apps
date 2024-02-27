@@ -174,7 +174,14 @@ export class Shop {
 
   @Workflow()
   static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
-    const productDetails = await ctxt.invoke(Shop).getCart(username);
+    let productDetails;
+    try {
+      productDetails = await ctxt.invoke(Shop).getCart(username);
+    }
+    catch (error) {
+      await ctxt.setEvent(checkout_url_topic, null);
+      return;
+    }
     if (productDetails.length === 0) {
       ctxt.logger.error(`Checkout for ${username} failed: empty cart`);
       await ctxt.setEvent(checkout_url_topic, null);

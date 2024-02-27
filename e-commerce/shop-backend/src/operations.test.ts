@@ -82,11 +82,9 @@ describe("operations", () => {
       .send(bgcr);
     expect(bgcresp.status).toBe(400);
 
-    /* Is this expected to be 302?
     const bcoresp = await request(testRuntime.getHandlersCallback())
       .post(`/api/checkout_session?username=noshopper`).set("Origin", "xxx");
-    expect(bcoresp.status).toBe(400);
-    */
+    expect(bcoresp.status).toBe(302); // CB TODO - Different status code?
 
     // Spy on / stub out the URL fetch
     const paySpy = jest.spyOn(Shop, 'placePaymentSessionRequest');
