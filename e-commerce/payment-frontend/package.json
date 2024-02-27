@@ -4,7 +4,8 @@
   "main": "dist/app.js",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/app.js"
+    "start": "npm run build && node dist/app.js",
+    "dev": "npm run build && node dist/app.js"
   },
   "dependencies": {
     "@dbos-inc/dbos-sdk": "^0.8.62",
