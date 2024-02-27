@@ -1,6 +1,7 @@
 import { WorkflowContext, Workflow, HandlerContext, PostApi } from '@dbos-inc/dbos-sdk';
 
-import { ShopUtilities, CartProduct, checkout_complete_topic } from './utilities';
+import { ShopUtilities, CartProduct, checkout_complete_topic, shopUrl } from './utilities';
+export { ShopUtilities } from './utilities'; // Required to register methods
 
 export const checkout_url_topic = "payment_checkout_url";
 
@@ -20,30 +21,31 @@ export class Shop {
   static async webCheckout(ctxt: HandlerContext): Promise<void> {
     // Handle will be returned immediately, and the workflow will continue in the background
     const handle = await ctxt.invoke(Shop).paymentWorkflow();
+    ctxt.logger.info(`Checkout workflow started with UUID: ${handle.getWorkflowUUID()}`);
 
-    // This will block until we get the event
-    const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    // This will block until the payment session is ready
+    const session_id = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 
-    if (url === null) {
-      ctxt.logger.warn(`Canceling checkout with workflow UUID: ${handle.getWorkflowUUID()}`);
-      ctxt.koaContext.redirect(`${localHost}/checkout/cancel`);
+    if (session_id === null) {
+      ctxt.logger.warn("workflow cancelled");
     } else {
-      ctxt.koaContext.redirect(url);
+        ctxt.logger.info(`Checkout session ID: ${session_id}`);
     }
   }
 
   @Workflow()
-  static async paymentWorkflow(ctxt: WorkflowContext, origin: string): Promise<void> {
+  static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
     // Attempt to update the inventory. Undo the order if this fails
     try {
       await ctxt.invoke(ShopUtilities).subtractInventory(product);
     } catch (error) {
+        console.log(error);
       ctxt.logger.error(`Checkout for failed: insufficient inventory`);
       await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
 
-    const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession(product, origin);
+    const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession(product);
     if (!paymentSession?.url) {
       ctxt.logger.error(`Checkout failed: couldn't create payment session`);
       await ctxt.invoke(ShopUtilities).undoSubtractInventory(product);
@@ -51,7 +53,7 @@ export class Shop {
       return;
     }
 
-    await ctxt.setEvent(checkout_url_topic, paymentSession.url);
+    await ctxt.setEvent(checkout_url_topic, paymentSession.session_id);
     const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
 
     if (notification && notification === 'paid') {
