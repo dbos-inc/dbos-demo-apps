@@ -65,6 +65,7 @@ export class Shop {
     } else {
       // Otherwise, either the payment failed or the notification timed out.
       ctxt.logger.warn(`Checkout payment failed or timed out`);
+      await ctxt.invoke(ShopUtilities).undoSubtractInventory(product);
     }
   }
 }
