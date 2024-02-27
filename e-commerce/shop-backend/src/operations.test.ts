@@ -17,7 +17,6 @@ describe("operations", () => {
     await testRuntime.destroy();
   });
 
-
   // This is a demonstration of the handler-based approach to making calls
   test("register", async () => {
     const req = {
@@ -61,20 +60,17 @@ describe("operations", () => {
   });
 
   test("shopping", async () => {
-    /* CB - This is probably a bug - gets a 204.
     const bacr = {'username': 'noshopper', 'product_id':1};
     const bcresp = await request(testRuntime.getHandlersCallback())
       .post("/api/add_to_cart")
       .send(bacr);
-    expect(bcresp.status).toBe(400); */
+    expect(bcresp.status).toBe(500);
 
-    /* CB - This is probably a bug too - gets a 204
     const bacr2 ={'username': 'shopper', 'product_id':9801};
     const bcresp2 = await request(testRuntime.getHandlersCallback())
       .post("/api/add_to_cart")
       .send(bacr2);
-    expect(bcresp2.status).toBe(400);
-    */
+    expect(bcresp2.status).toBe(500);
 
     await testRuntime.invoke(Shop).addToCart('shopper', 1);
     const cart = await testRuntime.invoke(Shop).getCart('shopper');
