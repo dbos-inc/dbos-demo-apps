@@ -23,4 +23,4 @@ application:
   # local_host: 'https://dbos_domain/dbos-testuser/application/shop-backend'
 telemetry:
   logs:
-    logLevel: 'debug'
+    logLevel: 'info'

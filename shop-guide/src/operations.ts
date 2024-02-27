@@ -1,6 +1,6 @@
 import { WorkflowContext, Workflow, HandlerContext, PostApi } from '@dbos-inc/dbos-sdk';
 
-import { ShopUtilities, CartProduct, checkout_complete_topic, shopUrl } from './utilities';
+import { ShopUtilities, CartProduct, checkout_complete_topic, printPaymentUrls } from './utilities';
 export { ShopUtilities } from './utilities'; // Required to register methods
 
 export const checkout_url_topic = "payment_checkout_url";
@@ -25,26 +25,26 @@ export class Shop {
 
     // This will block until the payment session is ready
     const session_id = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
-
     if (session_id === null) {
-      ctxt.logger.warn("workflow cancelled");
-    } else {
-        ctxt.logger.info(`Checkout session ID: ${session_id}`);
+      ctxt.logger.error("workflow failed");
+      return;
     }
+
+    printPaymentUrls(ctxt, handle.getWorkflowUUID(), session_id);
   }
 
   @Workflow()
   static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
-    // Attempt to update the inventory. Undo the order if this fails
+    // Attempt to update the inventory. Signal the handler if it fails.
     try {
       await ctxt.invoke(ShopUtilities).subtractInventory(product);
     } catch (error) {
-        console.log(error);
-      ctxt.logger.error(`Checkout for failed: insufficient inventory`);
+      ctxt.logger.error(`Checkout failed: unable to update inventory`);
       await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
 
+    // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
     const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession(product);
     if (!paymentSession?.url) {
       ctxt.logger.error(`Checkout failed: couldn't create payment session`);
@@ -53,30 +53,19 @@ export class Shop {
       return;
     }
 
+    // Signal the handler with the payment session ID.
     await ctxt.setEvent(checkout_url_topic, paymentSession.session_id);
-    const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
+
+    // Wait for a notification from the payment service.
+    const notification = await ctxt.recv<string>(checkout_complete_topic, 30);
 
     if (notification && notification === 'paid') {
-      ctxt.logger.debug(`Checkout payment notification received`);
-      // if the checkout complete notification arrived, the payment is successful so fulfill the order
+      // if the checkout complete notification arrived.
+      ctxt.logger.info(`Checkout payment notification received`);
     } else {
-      // if the checkout complete notification didn't arrive in time, retrieve the session information
-      // in order to check the payment status explicitly
-      ctxt.logger.warn(`Checkout: payment notification timed out`);
-      const updatedSession = await ctxt.invoke(ShopUtilities).retrievePaymentSession(paymentSession.session_id);
-      if (!updatedSession) {
-        ctxt.logger.error(`Recovering order failed: payment service unreachable`);
-      }
-
-      if (updatedSession.payment_status === 'paid') {
-        ctxt.logger.debug(`Checkout: Fetched status which was paid`);
-      } else {
-        ctxt.logger.error(`Checkout: payment not received`);
-        await ctxt.invoke(ShopUtilities).undoSubtractInventory(product);
-      }
+      // Otherwise, either the payment failed or the notification timed out.
+      ctxt.logger.warn(`Checkout payment failed or timed out`);
     }
-    ctxt.logger.debug(`Checkout: workflow complete`);
   }
-
 }
 
