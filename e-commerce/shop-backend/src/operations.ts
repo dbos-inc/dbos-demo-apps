@@ -141,6 +141,11 @@ export class Shop {
   @PostApi('/api/get_cart')
   @Transaction({ readOnly: true })
   static async getCart(ctxt: KnexTransactionContext, username: string): Promise<CartProduct[]> {
+    const user = await ctxt.client<User>('users').select("username").where({ username });
+    if (!user.length) {
+      ctxt.logger.error(`getCart for ${username} failed: no such user`);
+      throw new DBOSResponseError("No such user", 400);
+    }
     const rows = await ctxt.client<Cart>('cart').select("product_id", "quantity").where({ username });
     const products = rows.map(async (row) => {
       const product = await Shop.getProduct(ctxt, row.product_id)!;
@@ -155,6 +160,7 @@ export class Shop {
     if (typeof username !== 'string' || typeof origin !== 'string') {
       throw new DBOSResponseError("Invalid request!", 400);
     }
+
     const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
     const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 

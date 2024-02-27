@@ -76,13 +76,11 @@ describe("operations", () => {
     const cart = await testRuntime.invoke(Shop).getCart('shopper');
     expect(cart.length).toBe(1);
 
-    /* Is this expected to be 200?
     const bgcr = {'username': 'noshopper'}
     const bgcresp = await request(testRuntime.getHandlersCallback())
       .post("/api/get_cart")
       .send(bgcr);
     expect(bgcresp.status).toBe(400);
-    */
 
     /* Is this expected to be 302?
     const bcoresp = await request(testRuntime.getHandlersCallback())

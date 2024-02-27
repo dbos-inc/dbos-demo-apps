@@ -17,7 +17,6 @@ describe("operations", () => {
     await testRuntime.destroy();
   });
 
-
   test("foo", async () => {
     const req = {
       webhook: "http://fakehost/webhook",
