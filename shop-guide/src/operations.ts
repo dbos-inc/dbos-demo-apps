@@ -1,24 +1,12 @@
 import { WorkflowContext, Workflow, HandlerContext, PostApi } from '@dbos-inc/dbos-sdk';
-
-import { ShopUtilities, CartProduct, checkout_complete_topic, printPaymentUrls } from './utilities';
+import { ShopUtilities, checkout_complete_topic, generatePaymentUrls, product } from './utilities';
 export { ShopUtilities } from './utilities'; // Required to register methods
 
 export const checkout_url_topic = "payment_checkout_url";
 
-const product: CartProduct = {
-  product_id: 1,
-  product: 'a pen',
-  description: 'such a stylish pen',
-  image_name: 'red_pen.jpg',
-  price: 1000, // an expensive pen
-  inventory: 10,
-  display_price: '$100.00',
-};
-
 export class Shop {
-
   @PostApi('/api/checkout_session')
-  static async webCheckout(ctxt: HandlerContext): Promise<void> {
+  static async webCheckout(ctxt: HandlerContext): Promise<string> {
     // Handle will be returned immediately, and the workflow will continue in the background
     const handle = await ctxt.invoke(Shop).paymentWorkflow();
     ctxt.logger.info(`Checkout workflow started with UUID: ${handle.getWorkflowUUID()}`);
@@ -27,10 +15,10 @@ export class Shop {
     const session_id = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
     if (session_id === null) {
       ctxt.logger.error("workflow failed");
-      return;
+      return "";
     }
 
-    printPaymentUrls(ctxt, handle.getWorkflowUUID(), session_id);
+    return generatePaymentUrls(handle.getWorkflowUUID(), session_id);
   }
 
   @Workflow()
@@ -39,6 +27,7 @@ export class Shop {
     try {
       await ctxt.invoke(ShopUtilities).subtractInventory(product);
     } catch (error) {
+        console.log(error);
       ctxt.logger.error(`Checkout failed: unable to update inventory`);
       await ctxt.setEvent(checkout_url_topic, null);
       return;

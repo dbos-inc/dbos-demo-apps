@@ -49,13 +49,19 @@ export const paymentUrl = 'http://localhost:8086';
 
 export const checkout_complete_topic = "payment_checkout_complete";
 
-export function printPaymentUrls(ctxt: HandlerContext, workflowUUID: string, paymentSessionUUID: string): void {
-  ctxt.logger.info(
-    `Submit payment: curl -X POST http://localhost:8086/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}'`,
-  );
-  ctxt.logger.info(
-    `Cancel payment: curl -X POST http://localhost:8086/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}'`,
-  );
+export const product: CartProduct = {
+  product_id: 1,
+  product: 'a pen',
+  description: 'such a stylish pen',
+  image_name: 'red_pen.jpg',
+  price: 1000, // an expensive pen
+  inventory: 10,
+  display_price: '$100.00',
+};
+
+export function generatePaymentUrls(workflowUUID: string, paymentSessionUUID: string): string {
+    return `Submit payment: curl -X POST http://localhost:8086/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}' \
+    \nCancel payment: curl -X POST http://localhost:8086/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}'`;
 }
 
 export class ShopUtilities {
