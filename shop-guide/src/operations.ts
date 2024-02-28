@@ -25,16 +25,15 @@ export class Shop {
   static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
     // Attempt to update the inventory. Signal the handler if it fails.
     try {
-      await ctxt.invoke(ShopUtilities).subtractInventory(product);
+      await ctxt.invoke(ShopUtilities).subtractInventory();
     } catch (error) {
-        console.log(error);
       ctxt.logger.error("Failed to update inventory");
       await ctxt.setEvent(checkout_url_topic, null);
       return;
     }
 
     // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
-    const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession(product);
+    const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession();
     if (!paymentSession?.url) {
       ctxt.logger.error("Failed to create payment session");
       await ctxt.invoke(ShopUtilities).undoSubtractInventory(product);
@@ -47,6 +46,7 @@ export class Shop {
 
     // Wait for a notification from the payment service.
     const notification = await ctxt.recv<string>(checkout_complete_topic, 30);
+    console.log(notification);
 
     if (notification && notification === 'paid') {
       // If the payment succeeds, fulfill the order (code omitted for clarity.)

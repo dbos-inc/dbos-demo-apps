@@ -49,14 +49,15 @@ export const paymentUrl = 'http://localhost:8086';
 
 export const checkout_complete_topic = "payment_checkout_complete";
 
+// In this guide, we will be checking out this type of product. The database is initialized with 100000 of them.
 export const product: CartProduct = {
   product_id: 1,
   product: 'a pen',
   description: 'such a stylish pen',
   image_name: 'red_pen.jpg',
   price: 1000, // an expensive pen
-  inventory: 10,
-  display_price: '$100.00',
+  inventory: 1,
+  display_price: '$1000.00',
 };
 
 export function generatePaymentUrls(workflowUUID: string, paymentSessionUUID: string): string {
@@ -66,7 +67,7 @@ export function generatePaymentUrls(workflowUUID: string, paymentSessionUUID: st
 
 export class ShopUtilities {
   @Transaction()
-  static async subtractInventory(ctxt: KnexTransactionContext, product: Product): Promise<void> {
+  static async subtractInventory(ctxt: KnexTransactionContext): Promise<void> {
       const numAffected = await ctxt.client<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
       .update({
         inventory: ctxt.client.raw('inventory - ?', [product.inventory])
@@ -82,8 +83,8 @@ export class ShopUtilities {
   }
 
   @Communicator()
-  static async createPaymentSession(ctxt: CommunicatorContext, productDetail: Product): Promise<PaymentSession> {
-    return await ShopUtilities.placePaymentSessionRequest(ctxt, productDetail);
+  static async createPaymentSession(ctxt: CommunicatorContext): Promise<PaymentSession> {
+    return await ShopUtilities.placePaymentSessionRequest(ctxt, product);
   }
 
   static async placePaymentSessionRequest(ctxt: CommunicatorContext, product: Product): Promise<PaymentSession> {
