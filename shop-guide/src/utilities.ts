@@ -44,9 +44,6 @@ export interface PaymentSession {
   payment_status: string,
 }
 
-export const shopUrl = 'http://localhost:8082';
-export const paymentUrl = 'http://localhost:8086';
-
 export const checkout_complete_topic = "payment_checkout_complete";
 
 // In this guide, we will be checking out this type of product. The database is initialized with 100000 of them.
@@ -60,9 +57,10 @@ export const product: CartProduct = {
   display_price: '$1000.00',
 };
 
-export function generatePaymentUrls(workflowUUID: string, paymentSessionUUID: string): string {
-    return `Submit payment: curl -X POST http://localhost:8086/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}' \
-    \nCancel payment: curl -X POST http://localhost:8086/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}'`;
+export function generatePaymentUrls(ctxt: HandlerContext, workflowUUID: string, paymentSessionUUID: string): string {
+    const paymentUrl = ctxt.getConfig('payment_host') || 'http://localhost:8086';
+    return `Submit payment: curl -X POST ${paymentUrl}/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}' \
+    \nCancel payment: curl -X POST ${paymentUrl}/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}'`;
 }
 
 export class ShopUtilities {
@@ -88,6 +86,9 @@ export class ShopUtilities {
   }
 
   static async placePaymentSessionRequest(ctxt: CommunicatorContext, product: Product): Promise<PaymentSession> {
+    const paymentUrl = ctxt.getConfig('payment_host', 'http://localhost:8086');
+    const shopUrl = ctxt.getConfig('shop_host', 'http://localhost:8082');
+
     const response = await fetch(`${paymentUrl}/api/create_payment_session`, {
       method: 'POST',
       headers: {
@@ -111,7 +112,8 @@ export class ShopUtilities {
   }
 
   @Communicator()
-  static async retrievePaymentSession(_ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
+  static async retrievePaymentSession(ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
+    const paymentUrl = ctxt.getConfig('payment_host') || 'http://localhost:8086';
     const response = await fetch(`${paymentUrl}/api/session/${sessionID}`, {
       method: 'GET',
       headers: {

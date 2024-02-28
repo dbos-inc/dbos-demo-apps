@@ -18,7 +18,7 @@ export class Shop {
       return "";
     }
 
-    return generatePaymentUrls(handle.getWorkflowUUID(), session_id);
+    return generatePaymentUrls(ctxt, handle.getWorkflowUUID(), session_id);
   }
 
   @Workflow()
