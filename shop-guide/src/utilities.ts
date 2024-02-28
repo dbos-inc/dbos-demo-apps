@@ -44,7 +44,7 @@ export interface PaymentSession {
   payment_status: string,
 }
 
-export const checkout_complete_topic = "payment_checkout_complete";
+export const payment_complete_topic = "payment_complete";
 
 // In this guide, we will be checking out this type of product. The database is initialized with 100000 of them.
 export const product: CartProduct = {
@@ -76,7 +76,7 @@ export class ShopUtilities {
   }
 
   @Transaction()
-  static async undoSubtractInventory(ctxt: KnexTransactionContext, product: Product): Promise<void> {
+  static async undoSubtractInventory(ctxt: KnexTransactionContext): Promise<void> {
     await ctxt.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctxt.client.raw('inventory + ?', [product.inventory]) });
   }
 
@@ -135,7 +135,7 @@ export class ShopUtilities {
     if (!payload.client_reference_id) {
       ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
     } else {
-      await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
+      await ctxt.send(payload.client_reference_id, payload.payment_status, payment_complete_topic);
     }
   }
 
