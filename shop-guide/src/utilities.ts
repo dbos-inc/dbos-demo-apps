@@ -58,7 +58,7 @@ export const product: CartProduct = {
 };
 
 export function generatePaymentUrls(ctxt: HandlerContext, workflowUUID: string, paymentSessionUUID: string): string {
-    const paymentUrl = ctxt.getConfig('payment_host') || 'http://localhost:8086';
+    const paymentUrl = ctxt.getConfig('payment_host', 'http://localhost:8086');
     return `Submit payment: curl -X POST ${paymentUrl}/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}' \
     \nCancel payment: curl -X POST ${paymentUrl}/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}'`;
 }
@@ -113,7 +113,7 @@ export class ShopUtilities {
 
   @Communicator()
   static async retrievePaymentSession(ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
-    const paymentUrl = ctxt.getConfig('payment_host') || 'http://localhost:8086';
+    const paymentUrl = ctxt.getConfig('payment_host', 'http://localhost:8086');
     const response = await fetch(`${paymentUrl}/api/session/${sessionID}`, {
       method: 'GET',
       headers: {

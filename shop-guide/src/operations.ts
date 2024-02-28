@@ -9,7 +9,6 @@ export class Shop {
   static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
     // Handle will be returned immediately, and the workflow will continue in the background
     const handle = await ctxt.invoke(Shop, key).paymentWorkflow();
-    ctxt.logger.info(`Checkout workflow started with UUID: ${handle.getWorkflowUUID()}`);
 
     // This will block until the payment session is ready
     const session_id = await ctxt.getEvent<string>(handle.getWorkflowUUID(), session_topic);
@@ -34,7 +33,7 @@ export class Shop {
 
     // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
     const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession();
-    if (!paymentSession?.url) {
+    if (!paymentSession.url) {
       ctxt.logger.error("Failed to create payment session");
       await ctxt.invoke(ShopUtilities).undoSubtractInventory();
       await ctxt.setEvent(session_topic, null);
