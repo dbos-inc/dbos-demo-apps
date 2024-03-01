@@ -104,6 +104,36 @@ class EventSender<T>
   }
 }
 
+/**
+ * This class ensures that an undo is executed unless canceled
+ */
+class UndoList {
+  constructor(readonly ctxt: WorkflowContext) {}
+
+  undos: Map<string, () => Promise<void> > = new Map();
+  registerUndo(name: string, fn: () => Promise<void>) {
+    this.undos.set(name, fn);
+  }
+  cancelUndo(name: string) {
+    if (!this.undos.has(name)) {
+      this.ctxt.logger.debug(`Node: undo named ${name} is not registered`);
+    }
+    this.undos.delete(name);
+  }
+
+  async atCompletion() {
+    for (const [_name, fn] of this.undos) {
+      try {
+        await fn();
+      }
+      catch (e) {
+        const err = e as Error;
+        this.ctxt.logger.debug(`Unexpected error in undo function ${err.message}`);
+      }
+    }
+  }
+}
+
 export class Shop {
 
   @PostApi('/api/login')
@@ -201,6 +231,8 @@ export class Shop {
   static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
     // Coupled with the `finally` block, this will ensure that an event is sent out of the workflow.
     const event = new EventSender(ctxt, checkout_url_topic);
+    const undos = new UndoList(ctxt);
+  
     try {
       const productDetails = await ctxt.invoke(Shop).getCart(username);
       if (productDetails.length === 0) {
@@ -214,6 +246,7 @@ export class Shop {
         // This is a transaction that either completes or leaves the system as it was.
         //  If it completes, the order must be sent or the subtraction must be undone.
         await ctxt.invoke(Shop).subtractInventory(productDetails);
+        undos.registerUndo('inventory', ()=>{return ctxt.invoke(Shop).undoSubtractInventory(productDetails);})
       } catch (error) {
         ctxt.logger.error(`Checkout for ${username} failed: insufficient inventory`);
         return;
@@ -222,7 +255,6 @@ export class Shop {
       const paymentSession = await ctxt.invoke(Shop).createPaymentSession(productDetails, origin);
       if (!paymentSession?.url) {
         ctxt.logger.error(`Checkout for ${username} failed: couldn't create payment session`);
-        await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
         return;
       }
 
@@ -254,14 +286,15 @@ export class Shop {
 
       if (orderIsPaid) {
         await ctxt.invoke(Shop).fulfillOrder(orderID);
+        undos.cancelUndo('inventory');
         await ctxt.invoke(Shop).clearCart(username);
       } else {
-        await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
         await ctxt.invoke(Shop).errorOrder(orderID);
       }
       ctxt.logger.debug(`Checkout for ${username}: workflow complete`);
     }
     finally {
+      await undos.atCompletion();
       await event.atCompletion();
     }
   }
