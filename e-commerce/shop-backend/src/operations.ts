@@ -235,14 +235,14 @@ export class Shop {
         // if the checkout complete notification arrived, the payment is successful so fulfill the order
         orderIsPaid = true;
       } else {
-        // if the checkout complete notification didn't arrive in time, retrieve the session information 
-        // in order to check the payment status explicitly 
+        // if the checkout complete notification didn't arrive in time, retrieve the session information
+        // in order to check the payment status explicitly
         ctxt.logger.warn(`Checkout for ${username}: payment notification timed out`);
         const updatedSession = await ctxt.invoke(Shop).retrievePaymentSession(paymentSession.session_id);
         if (!updatedSession) {
           ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
         }
-  
+
         if (updatedSession.payment_status === 'paid') {
           ctxt.logger.debug(`Checkout for ${username}: Fetched status which was paid`);
           orderIsPaid = true;
@@ -251,7 +251,7 @@ export class Shop {
           ctxt.logger.error(`Checkout for ${username} failed: payment not received`);
         }
       }
-  
+
       if (orderIsPaid) {
         await ctxt.invoke(Shop).fulfillOrder(orderID);
         await ctxt.invoke(Shop).clearCart(username);
