@@ -246,7 +246,7 @@ export class Shop {
         // This is a transaction that either completes or leaves the system as it was.
         //  If it completes, the order must be sent or the subtraction must be undone.
         await ctxt.invoke(Shop).subtractInventory(productDetails);
-        undos.registerUndo('inventory', ()=>{return ctxt.invoke(Shop).undoSubtractInventory(productDetails);})
+        undos.registerUndo('inventory', ()=>{return ctxt.invoke(Shop).undoSubtractInventory(productDetails);});
       } catch (error) {
         ctxt.logger.error(`Checkout for ${username} failed: insufficient inventory`);
         return;
