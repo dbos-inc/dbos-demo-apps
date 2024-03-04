@@ -120,6 +120,59 @@ describe("operations", () => {
 
     expect(paySpy).toHaveBeenCalled();
     paySpy.mockRestore();
+
+    // Check inventory restored
+    const p = await testRuntime.invoke(Shop).getInventory(1);
+    expect(p).toBe(99999);
+  });
+
+  test("cancel order", async () => {
+    await testRuntime.invoke(Shop).addToCart('shopper', 1);
+    const cart = await testRuntime.invoke(Shop).getCart('shopper');
+    expect(cart.length).toBe(1);
+
+    // Spy on / stub out the URL fetch
+    const paySpy = jest.spyOn(Shop, 'placePaymentSessionRequest');
+    paySpy.mockImplementation(async (ctxt: CommunicatorContext, _productDetails: Product[], _origin: string) => {
+      return {
+        session_id: "1234",
+        url:ctxt.workflowUUID,
+        payment_status: "pending",
+      };
+    });
+
+    // Initiate checkout
+    const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
+    const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    if (!url) throw new Error("URL not returned");
+
+    // Check inventory temporary deduction
+    const p = await testRuntime.invoke(Shop).getInventory(1);
+    expect(p).toBe(99998);
+
+    // Fake a payment cancel reply
+    const payresp = await request(testRuntime.getHandlersCallback())
+    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.getWorkflowUUID(), payment_status: "canceled"});
+    expect(payresp.status).toBe(204);
+
+    // After the payment has failed, your cart should be emptied
+    let cart_empty = false;
+    for (let i=0; i<10; ++i) {
+      const ecart = await testRuntime.invoke(Shop).getCart('shopper');
+      if (ecart.length === 0) {
+        cart_empty = true;
+        break;
+      }
+      await sleep(100);
+    }
+    expect(cart_empty).toBe(false); // We leave it in cart when payment is canceled
+
+    expect(paySpy).toHaveBeenCalled();
+    paySpy.mockRestore();
+
+    // Check inventory restored
+    const p2 = await testRuntime.invoke(Shop).getInventory(1);
+    expect(p2).toBe(99999);
   });
 });
 

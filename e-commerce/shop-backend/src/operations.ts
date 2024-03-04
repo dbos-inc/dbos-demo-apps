@@ -187,6 +187,16 @@ export class Shop {
     return product;
   }
 
+  @Transaction({ readOnly: true })
+  static async getInventory(ctxt: KnexTransactionContext, id: number): Promise<number | null> {
+
+    const rows = await ctxt.client<Product>('products').select("product_id", "inventory").where({ product_id: id });
+    if (rows.length === 0) {
+      return null;
+    }
+    return rows[0].inventory;
+  }
+
   @PostApi('/api/add_to_cart')
   @Transaction()
   static async addToCart(ctxt: KnexTransactionContext, username: string, product_id: number): Promise<void> {
