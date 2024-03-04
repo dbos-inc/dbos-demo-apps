@@ -257,7 +257,7 @@ This will generate the OpenAPI definition file for the project and save it to th
 
 ### Generate Client Code
 
-Both shop and payment backend folders contain a `create-openapi-client.sh` script that executes the OpenAPI Generator Docker image
+The shop backend folder contains a `create-openapi-client.sh` script that executes the OpenAPI Generator Docker image
 against the generated OpenAPI definition file (specifying the appropriate generator) and moves the generated code into the
 appropriate frontend project.
 
