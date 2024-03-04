@@ -1,8 +1,9 @@
-import { CommunicatorContext, TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
+import { CommunicatorContext, TestingRuntime, TransactionContext, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
 import { Shop, Product, checkout_url_topic } from "./operations";
 import request from "supertest";
 import { sleep } from "@dbos-inc/dbos-sdk/dist/src/utils";
+import { Knex } from 'knex';
 
 describe("operations", () => {
 
@@ -171,6 +172,30 @@ describe("operations", () => {
     paySpy.mockRestore();
 
     // Check inventory restored
+    const p2 = await testRuntime.invoke(Shop).getInventory(1);
+    expect(p2).toBe(99999);
+  });
+
+  test("throw from subtract inventory", async () => {
+    await testRuntime.invoke(Shop).addToCart('shopper', 1);
+    const cart = await testRuntime.invoke(Shop).getCart('shopper');
+    expect(cart.length).toBe(1);
+
+    // Spy on / stub out the URL fetch
+    const invSpy = jest.spyOn(Shop, 'subtractInventoryInternal');
+    invSpy.mockImplementation(async (ctxt: TransactionContext<Knex>, products: Product[]): Promise<void> => {
+      throw new Error("Something went wrong");
+    });
+
+    // Initiate checkout
+    const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
+    const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    expect(url).toBeNull();
+
+    expect(invSpy).toHaveBeenCalled();
+    invSpy.mockRestore();
+
+    // Check inventory (was never deducted)
     const p2 = await testRuntime.invoke(Shop).getInventory(1);
     expect(p2).toBe(99999);
   });

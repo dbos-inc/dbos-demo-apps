@@ -323,6 +323,10 @@ export class Shop {
 
   @Transaction()
   static async subtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<void> {
+    return await Shop.subtractInventoryInternal(ctxt, products);
+  }
+
+  static async subtractInventoryInternal(ctxt: KnexTransactionContext, products: Product[]): Promise<void> {
     for (const product of products) {
       const numAffected = await ctxt.client<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
       .update({
