@@ -1,7 +1,9 @@
 import {
   TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
-  GetApi, PostApi, DBOSResponseError, ArgRequired, ArgOptional, DBOSContext, Communicator, CommunicatorContext, ArgSource, ArgSources
+  GetApi, PostApi, DBOSResponseError, ArgRequired, ArgOptional, DBOSContext, Communicator, CommunicatorContext, ArgSource, ArgSources, KoaMiddleware
 } from '@dbos-inc/dbos-sdk';
+
+import KoaViews from '@ladjs/koa-views';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -57,8 +59,42 @@ export interface PaymentSessionInformation {
   items: PaymentItem[];
 }
 
+@KoaMiddleware(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }))
 export class PlaidPayments {
+  // UI
+  @GetApi('/')
+  static async rootPage(_ctx: HandlerContext) {
+    return 'Plaid Payments';
+  }
 
+  @GetApi('/payment/:session_id')
+  static async paymentPage(ctx: HandlerContext, session_id: string) {
+    const session = await ctx.invoke(PlaidPayments).getSessionInformationTrans(session_id);
+    if (!session) {
+      return `Invalid session id ${session_id}`;
+    }
+
+    await ctx.koaContext.render('payment', { session });
+  }
+
+  @PostApi('/payment/:session_id')
+  static async paymentAction(ctx: HandlerContext, @ArgSource(ArgSources.URL) session_id: string) {
+    const session = await ctx.invoke(PlaidPayments).getSessionInformationTrans(session_id);
+    if (!session) {
+      return `Invalid session id ${session_id}`;
+    }
+
+    const submit = 'submit' in ctx.koaContext.request.body;
+    if (submit) {
+      await PlaidPayments.submitPayment(ctx, session_id);
+      ctx.koaContext.redirect(session.success_url);
+    } else {
+      await PlaidPayments.cancelPayment(ctx, session_id);
+      ctx.koaContext.redirect(session.cancel_url);
+    }
+  }
+
+  // API
   @PostApi('/api/create_payment_session')
   static async createPaymentSession(
     ctxt: HandlerContext,
@@ -97,8 +133,11 @@ export class PlaidPayments {
   }
 
   @GetApi('/api/session_info/:session_id')
+  static async getSessionInformation(ctxt: HandlerContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
+    return await ctxt.invoke(PlaidPayments).getSessionInformationTrans(session_id);
+  }
   @Transaction({ readOnly: true })
-  static async getSessionInformation(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
+  static async getSessionInformationTrans(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
     ctxt.logger.info(`getting session record ${session_id}`);
     const session = await ctxt.client<SessionTable>('session')
       .select("session_id", "success_url", "cancel_url", "status")
