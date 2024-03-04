@@ -62,11 +62,6 @@ export interface PaymentSessionInformation {
 @KoaMiddleware(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }))
 export class PlaidPayments {
   // UI
-  @GetApi('/')
-  static async rootPage(_ctx: HandlerContext) {
-    return 'Plaid Payments';
-  }
-
   @GetApi('/payment/:session_id')
   static async paymentPage(ctx: HandlerContext, session_id: string) {
     const session = await ctx.invoke(PlaidPayments).getSessionInformationTrans(session_id);
@@ -94,7 +89,7 @@ export class PlaidPayments {
     }
   }
 
-  // API
+  // API for shop
   @PostApi('/api/create_payment_session')
   static async createPaymentSession(
     ctxt: HandlerContext,
@@ -132,10 +127,17 @@ export class PlaidPayments {
     };
   }
 
-  @GetApi('/api/session_info/:session_id')
-  static async getSessionInformation(ctxt: HandlerContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
-    return await ctxt.invoke(PlaidPayments).getSessionInformationTrans(session_id);
+  // Optional API, used in shop guide
+  @PostApi('/api/submit_payment')
+  static async submitPayment(ctxt: HandlerContext, session_id: string) {
+    await ctxt.send(session_id, payment_submitted, payment_complete_topic);
   }
+
+  @PostApi('/api/cancel_payment')
+  static async cancelPayment(ctxt: HandlerContext, session_id: string) {
+    await ctxt.send(session_id, payment_cancelled, payment_complete_topic);
+  }
+
   @Transaction({ readOnly: true })
   static async getSessionInformationTrans(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
     ctxt.logger.info(`getting session record ${session_id}`);
@@ -149,16 +151,6 @@ export class PlaidPayments {
       .select("description", "price", "quantity")
       .where({ session_id });
     return { ...session, items };
-  }
-
-  @PostApi('/api/submit_payment')
-  static async submitPayment(ctxt: HandlerContext, session_id: string) {
-    await ctxt.send(session_id, payment_submitted, payment_complete_topic);
-  }
-
-  @PostApi('/api/cancel_payment')
-  static async cancelPayment(ctxt: HandlerContext, session_id: string) {
-    await ctxt.send(session_id, payment_cancelled, payment_complete_topic);
   }
 
   @Workflow()
