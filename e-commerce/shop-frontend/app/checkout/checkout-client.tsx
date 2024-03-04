@@ -11,11 +11,6 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ cart, username }) => {
 
-    const handleCheckout = async () => {
-        // await api.webCheckout({ username });
-        console.log("Checkout!");
-      };
-
     const subtotal = (cart.reduce((total, product) => total + product.price * product.inventory, 0) / 100).toFixed(2);
 
     // this form redirects directly to the backend which then sends a redirect to the payment page.

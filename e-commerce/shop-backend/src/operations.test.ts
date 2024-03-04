@@ -1,8 +1,9 @@
-import { CommunicatorContext, TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
+import { CommunicatorContext, TestingRuntime, TransactionContext, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
 import { Shop, Product, checkout_url_topic } from "./operations";
 import request from "supertest";
 import { sleep } from "@dbos-inc/dbos-sdk/dist/src/utils";
+import { Knex } from 'knex';
 
 describe("operations", () => {
 
@@ -16,7 +17,6 @@ describe("operations", () => {
   afterAll(async () => {
     await testRuntime.destroy();
   });
-
 
   // This is a demonstration of the handler-based approach to making calls
   test("register", async () => {
@@ -61,38 +61,31 @@ describe("operations", () => {
   });
 
   test("shopping", async () => {
-    /* CB - This is probably a bug - gets a 204.
     const bacr = {'username': 'noshopper', 'product_id':1};
     const bcresp = await request(testRuntime.getHandlersCallback())
       .post("/api/add_to_cart")
       .send(bacr);
-    expect(bcresp.status).toBe(400); */
+    expect(bcresp.status).toBe(500);
 
-    /* CB - This is probably a bug too - gets a 204
     const bacr2 ={'username': 'shopper', 'product_id':9801};
     const bcresp2 = await request(testRuntime.getHandlersCallback())
       .post("/api/add_to_cart")
       .send(bacr2);
-    expect(bcresp2.status).toBe(400);
-    */
+    expect(bcresp2.status).toBe(500);
 
     await testRuntime.invoke(Shop).addToCart('shopper', 1);
     const cart = await testRuntime.invoke(Shop).getCart('shopper');
     expect(cart.length).toBe(1);
 
-    /* Is this expected to be 200?
     const bgcr = {'username': 'noshopper'}
     const bgcresp = await request(testRuntime.getHandlersCallback())
       .post("/api/get_cart")
       .send(bgcr);
     expect(bgcresp.status).toBe(400);
-    */
 
-    /* Is this expected to be 302?
     const bcoresp = await request(testRuntime.getHandlersCallback())
       .post(`/api/checkout_session?username=noshopper`).set("Origin", "xxx");
-    expect(bcoresp.status).toBe(400);
-    */
+    expect(bcoresp.status).toBe(302); // CB TODO - Different status code?
 
     // Spy on / stub out the URL fetch
     const paySpy = jest.spyOn(Shop, 'placePaymentSessionRequest');
@@ -128,6 +121,83 @@ describe("operations", () => {
 
     expect(paySpy).toHaveBeenCalled();
     paySpy.mockRestore();
+
+    // Check inventory restored
+    const p = await testRuntime.invoke(Shop).getInventory(1);
+    expect(p).toBe(99999);
+  });
+
+  test("cancel order", async () => {
+    await testRuntime.invoke(Shop).addToCart('shopper', 1);
+    const cart = await testRuntime.invoke(Shop).getCart('shopper');
+    expect(cart.length).toBe(1);
+
+    // Spy on / stub out the URL fetch
+    const paySpy = jest.spyOn(Shop, 'placePaymentSessionRequest');
+    paySpy.mockImplementation(async (ctxt: CommunicatorContext, _productDetails: Product[], _origin: string) => {
+      return {
+        session_id: "1234",
+        url:ctxt.workflowUUID,
+        payment_status: "pending",
+      };
+    });
+
+    // Initiate checkout
+    const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
+    const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    if (!url) throw new Error("URL not returned");
+
+    // Check inventory temporary deduction
+    const p = await testRuntime.invoke(Shop).getInventory(1);
+    expect(p).toBe(99998);
+
+    // Fake a payment cancel reply
+    const payresp = await request(testRuntime.getHandlersCallback())
+    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.getWorkflowUUID(), payment_status: "canceled"});
+    expect(payresp.status).toBe(204);
+
+    // After the payment has failed, your cart should be emptied
+    let cart_empty = false;
+    for (let i=0; i<10; ++i) {
+      const ecart = await testRuntime.invoke(Shop).getCart('shopper');
+      if (ecart.length === 0) {
+        cart_empty = true;
+        break;
+      }
+      await sleep(100);
+    }
+    expect(cart_empty).toBe(false); // We leave it in cart when payment is canceled
+
+    expect(paySpy).toHaveBeenCalled();
+    paySpy.mockRestore();
+
+    // Check inventory restored
+    const p2 = await testRuntime.invoke(Shop).getInventory(1);
+    expect(p2).toBe(99999);
+  });
+
+  test("throw from subtract inventory", async () => {
+    await testRuntime.invoke(Shop).addToCart('shopper', 1);
+    const cart = await testRuntime.invoke(Shop).getCart('shopper');
+    expect(cart.length).toBe(1);
+
+    // Spy on / stub out the URL fetch
+    const invSpy = jest.spyOn(Shop, 'subtractInventoryInternal');
+    invSpy.mockImplementation(async (ctxt: TransactionContext<Knex>, products: Product[]): Promise<void> => {
+      throw new Error("Something went wrong");
+    });
+
+    // Initiate checkout
+    const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
+    const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    expect(url).toBeNull();
+
+    expect(invSpy).toHaveBeenCalled();
+    invSpy.mockRestore();
+
+    // Check inventory (was never deducted)
+    const p2 = await testRuntime.invoke(Shop).getInventory(1);
+    expect(p2).toBe(99999);
   });
 });
 

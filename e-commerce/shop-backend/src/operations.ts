@@ -79,6 +79,61 @@ function getHostConfig(ctxt: DBOSContext) {
   return { paymentHost, localHost };
 }
 
+/**
+ * This class sets a workflow event exactly once.
+ *   (Provided that it is used in a "finally" clause or similar)
+ */
+class EventSender<T>
+{
+  completed: boolean = false;
+  constructor(readonly ctxt: WorkflowContext, readonly topic: string) { }
+
+  async setEvent(result: T|null) : Promise<void> {
+    if (this.completed) {
+      this.ctxt.logger.debug(`Programmer error - setEvent called twice for topic ${this.topic} in workflow ${this.ctxt.workflowUUID}`);
+      return;
+    }
+    this.completed = true;
+    return this.ctxt.setEvent(this.topic, result);
+  }
+
+  async atCompletion() : Promise<void> {
+    if (!this.completed) {
+      return this.setEvent(null);
+    }
+  }
+}
+
+/**
+ * This class ensures that an undo is executed unless canceled
+ */
+class UndoList {
+  constructor(readonly ctxt: WorkflowContext) {}
+
+  undos: Map<string, () => Promise<void> > = new Map();
+  registerUndo(name: string, fn: () => Promise<void>) {
+    this.undos.set(name, fn);
+  }
+  cancelUndo(name: string) {
+    if (!this.undos.has(name)) {
+      this.ctxt.logger.debug(`Node: undo named ${name} is not registered`);
+    }
+    this.undos.delete(name);
+  }
+
+  async atCompletion() {
+    for (const [_name, fn] of this.undos) {
+      try {
+        await fn();
+      }
+      catch (e) {
+        const err = e as Error;
+        this.ctxt.logger.debug(`Unexpected error in undo function ${err.message}`);
+      }
+    }
+  }
+}
+
 export class Shop {
 
   @PostApi('/api/login')
@@ -132,6 +187,16 @@ export class Shop {
     return product;
   }
 
+  @Transaction({ readOnly: true })
+  static async getInventory(ctxt: KnexTransactionContext, id: number): Promise<number | null> {
+
+    const rows = await ctxt.client<Product>('products').select("product_id", "inventory").where({ product_id: id });
+    if (rows.length === 0) {
+      return null;
+    }
+    return rows[0].inventory;
+  }
+
   @PostApi('/api/add_to_cart')
   @Transaction()
   static async addToCart(ctxt: KnexTransactionContext, username: string, product_id: number): Promise<void> {
@@ -141,6 +206,11 @@ export class Shop {
   @PostApi('/api/get_cart')
   @Transaction({ readOnly: true })
   static async getCart(ctxt: KnexTransactionContext, username: string): Promise<CartProduct[]> {
+    const user = await ctxt.client<User>('users').select("username").where({ username });
+    if (!user.length) {
+      ctxt.logger.error(`getCart for ${username} failed: no such user`);
+      throw new DBOSResponseError("No such user", 400);
+    }
     const rows = await ctxt.client<Cart>('cart').select("product_id", "quantity").where({ username });
     const products = rows.map(async (row) => {
       const product = await Shop.getProduct(ctxt, row.product_id)!;
@@ -155,6 +225,7 @@ export class Shop {
     if (typeof username !== 'string' || typeof origin !== 'string') {
       throw new DBOSResponseError("Invalid request!", 400);
     }
+
     const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
     const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 
@@ -168,59 +239,74 @@ export class Shop {
 
   @Workflow()
   static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
-    const productDetails = await ctxt.invoke(Shop).getCart(username);
-    if (productDetails.length === 0) {
-      ctxt.logger.error(`Checkout for ${username} failed: empty cart`);
-      await ctxt.setEvent(checkout_url_topic, null);
-      return;
-    }
-
-    const orderID = await ctxt.invoke(Shop).createOrder(username, productDetails);
-
+    // Coupled with the `finally` block, this will ensure that an event is sent out of the workflow.
+    const event = new EventSender(ctxt, checkout_url_topic);
+    const undos = new UndoList(ctxt);
+  
     try {
-      await ctxt.invoke(Shop).subtractInventory(productDetails);
-    } catch (error) {
-      ctxt.logger.error(`Checkout for ${username} failed: insufficient inventory`);
-      await ctxt.setEvent(checkout_url_topic, null);
-      return;
-    }
-
-    const paymentSession = await ctxt.invoke(Shop).createPaymentSession(productDetails, origin);
-    if (!paymentSession?.url) {
-      ctxt.logger.error(`Checkout for ${username} failed: couldn't create payment session`);
-      await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
-      await ctxt.setEvent(checkout_url_topic, null);
-      return;
-    }
-
-    await ctxt.setEvent(checkout_url_topic, paymentSession.url);
-    const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
-
-    if (notification && notification === 'paid') {
-      ctxt.logger.debug(`Checkout for ${username}: payment notification received`);
-      // if the checkout complete notification arrived, the payment is successful so fulfill the order
-      await ctxt.invoke(Shop).fulfillOrder(orderID);
-      await ctxt.invoke(Shop).clearCart(username);
-    } else {
-      // if the checkout complete notification didn't arrive in time, retrieve the session information 
-      // in order to check the payment status explicitly 
-      ctxt.logger.warn(`Checkout for ${username}: payment notification timed out`);
-      const updatedSession = await ctxt.invoke(Shop).retrievePaymentSession(paymentSession.session_id);
-      if (!updatedSession) {
-        ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
+      const productDetails = await ctxt.invoke(Shop).getCart(username);
+      if (productDetails.length === 0) {
+        ctxt.logger.error(`Checkout for ${username} failed: empty cart`);
+        return;
       }
 
-      if (updatedSession.payment_status === 'paid') {
-        ctxt.logger.debug(`Checkout for ${username}: Fetched status which was paid`);
+      const orderID = await ctxt.invoke(Shop).createOrder(username, productDetails);
+
+      try {
+        // This is a transaction that either completes or leaves the system as it was.
+        //  If it completes, the order must be sent or the subtraction must be undone.
+        await ctxt.invoke(Shop).subtractInventory(productDetails);
+        undos.registerUndo('inventory', ()=>{return ctxt.invoke(Shop).undoSubtractInventory(productDetails);});
+      } catch (error) {
+        ctxt.logger.error(`Checkout for ${username} failed: insufficient inventory`);
+        return;
+      }
+
+      const paymentSession = await ctxt.invoke(Shop).createPaymentSession(productDetails, origin);
+      if (!paymentSession?.url) {
+        ctxt.logger.error(`Checkout for ${username} failed: couldn't create payment session`);
+        return;
+      }
+
+      await event.setEvent(paymentSession.url);
+      const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
+      let orderIsPaid = false;
+
+      if (notification && notification === 'paid') {
+        ctxt.logger.debug(`Checkout for ${username}: payment notification received`);
+        // if the checkout complete notification arrived, the payment is successful so fulfill the order
+        orderIsPaid = true;
+      } else {
+        // if the checkout complete notification didn't arrive in time, retrieve the session information
+        // in order to check the payment status explicitly
+        ctxt.logger.warn(`Checkout for ${username}: payment notification timed out`);
+        const updatedSession = await ctxt.invoke(Shop).retrievePaymentSession(paymentSession.session_id);
+        if (!updatedSession) {
+          ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
+        }
+
+        if (updatedSession.payment_status === 'paid') {
+          ctxt.logger.debug(`Checkout for ${username}: Fetched status which was paid`);
+          orderIsPaid = true;
+        }
+        else {
+          ctxt.logger.error(`Checkout for ${username} failed: payment not received`);
+        }
+      }
+
+      if (orderIsPaid) {
         await ctxt.invoke(Shop).fulfillOrder(orderID);
+        undos.cancelUndo('inventory');
         await ctxt.invoke(Shop).clearCart(username);
       } else {
-        ctxt.logger.error(`Checkout for ${username} failed: payment not received`);
-        await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
         await ctxt.invoke(Shop).errorOrder(orderID);
       }
+      ctxt.logger.debug(`Checkout for ${username}: workflow complete`);
     }
-    ctxt.logger.debug(`Checkout for ${username}: workflow complete`);
+    finally {
+      await undos.atCompletion();
+      await event.atCompletion();
+    }
   }
 
   @Transaction()
@@ -237,6 +323,10 @@ export class Shop {
 
   @Transaction()
   static async subtractInventory(ctxt: KnexTransactionContext, products: Product[]): Promise<void> {
+    return await Shop.subtractInventoryInternal(ctxt, products);
+  }
+
+  static async subtractInventoryInternal(ctxt: KnexTransactionContext, products: Product[]): Promise<void> {
     for (const product of products) {
       const numAffected = await ctxt.client<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
       .update({
