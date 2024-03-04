@@ -56,9 +56,6 @@ For each setup, each package has a single npm command that is used to build and 
 * For shop-frontend, run `npm run dev` to launch the app.
 * To run with a backend in the cloud, export NEXT_PUBLIC_SHOP_BACKEND=<url to shop backend>.
 
-* for payment-frontend, run `npm run start` to build and launch the app.
-* To run with a backend in the cloud set export PLAID_BACKEND=<url to cloud backend>.
-
 * for cloud update the urls in dbos-config.yaml to point to cloud.
 
 > If you are using VSCode, there are launch configurations for each individual package in the demo.
@@ -79,7 +76,7 @@ Add one or more writing utensils to your cart then press "Proceed to Checkout".
 The checkout page will display a summary of your order. 
 
 Pressing "Proceed to Checkout" on the summary page redirects you to the payment page.
-Note that this app is running on a different localhost port (8000 vs. 3000 for shop) to simulate a different web site.
+Note that this app is running on a different localhost port (defaults of 8086 for payment vs. 3000 for shop) to simulate a different web site.
 The payment page will display a similar summary of your order along with buttons to submit or cancel payment.
 Pressing Cancel Payment will redirect you back to the shop, with your cart intact.
 Pressing Submit Payment simulates entering your payment information, redirecting you back to shop indicating your payment was successful.
