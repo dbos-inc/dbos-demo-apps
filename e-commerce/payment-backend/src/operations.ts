@@ -127,7 +127,7 @@ export class PlaidPayments {
     };
   }
 
-  // Optional API, used in shop guide
+  // Optional API, used in shop guide and/or unit tests
   @PostApi('/api/submit_payment')
   static async submitPayment(ctxt: HandlerContext, session_id: string) {
     await ctxt.send(session_id, payment_submitted, payment_complete_topic);
@@ -138,8 +138,13 @@ export class PlaidPayments {
     await ctxt.send(session_id, payment_cancelled, payment_complete_topic);
   }
 
+  @GetApi('/api/session_info/:session_id')
+  static async getSessionInformation(ctxt: HandlerContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
+    return ctxt.invoke(PlaidPayments).getSessionInformationTrans(session_id);
+  }
+
   @Transaction({ readOnly: true })
-  static async getSessionInformationTrans(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
+  static async getSessionInformationTrans(ctxt: KnexTransactionContext, session_id: string): Promise<PaymentSessionInformation | undefined> {
     ctxt.logger.info(`getting session record ${session_id}`);
     const session = await ctxt.client<SessionTable>('session')
       .select("session_id", "success_url", "cancel_url", "status")
