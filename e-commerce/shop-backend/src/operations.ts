@@ -277,9 +277,11 @@ export class Shop {
         // if the checkout complete notification arrived, the payment is successful so fulfill the order
         orderIsPaid = true;
       } else {
-        // if the checkout complete notification didn't arrive in time, retrieve the session information
-        // in order to check the payment status explicitly
-        ctxt.logger.warn(`Checkout for ${username}: payment notification timed out`);
+        // The checkout complete notification didn't arrive in time, or payment declined
+        if (!notification) {
+          ctxt.logger.warn(`Checkout for ${username}: payment notification timed out`);
+        }
+        // Retrieve the session information in order to check the payment status explicitly
         const updatedSession = await ctxt.invoke(Shop).retrievePaymentSession(paymentSession.session_id);
         if (!updatedSession) {
           ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
