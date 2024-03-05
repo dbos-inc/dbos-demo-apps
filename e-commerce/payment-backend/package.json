@@ -13,8 +13,6 @@
     "@dbos-inc/dbos-openapi": "^0.9.25",
     "@dbos-inc/eslint-plugin": "^0.0.6",
     "@types/jest": "^29.5.5",
-    "@types/koa": "^2.13.9",
-    "@types/koa-router": "^7.4.5",
     "@types/supertest": "^2.0.14",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "eslint": "^8.56.0",
@@ -25,11 +23,8 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-sdk": "^0.10.11-preview",
-    "@koa/bodyparser": "^5.0.0",
     "@ladjs/koa-views": "^9.0.0",
     "ejs": "^3.1.9",
-    "koa": "^2.14.2",
-    "koa-router": "^12.0.0",
     "ts-node": "^10.9.1"
   }
 }
