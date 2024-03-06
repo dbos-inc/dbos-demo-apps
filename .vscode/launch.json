@@ -20,13 +20,6 @@
       "cwd": "${workspaceFolder}/e-commerce/shop-backend",
     },
     {
-      "command": "npm run start",
-      "name": "Payment Frontend",
-      "request": "launch",
-      "type": "node-terminal",
-      "cwd": "${workspaceFolder}/e-commerce/payment-frontend"
-    },
-    {
       "command": "npx dbos-sdk start",
       "name": "Payment Backend",
       "preLaunchTask": "npm: build payment backend",
@@ -41,7 +34,6 @@
       "configurations": [
         "Shop Frontend",
         "Shop Backend",
-        "Payment Frontend",
         "Payment Backend"
       ],
       "stopAll": true
@@ -57,7 +49,6 @@
     {
       "name": "Payment",
       "configurations": [
-        "Payment Frontend",
         "Payment Backend"
       ],
       "stopAll": true
