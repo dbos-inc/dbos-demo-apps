@@ -60,7 +60,7 @@ For each setup, each package has a single npm command that is used to build and 
 
 ## Demo Walkthrough
 
-Once all three processes are running, navigate to http://localhost:3000. 
+Once all three processes are running, navigate to http://localhost:3000.
 You will be presented with a simple web shop for purchasing extremely high quality writing utensils.
 
 Before adding a writing utensil to your cart, you must first create an account and login.
