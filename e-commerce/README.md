@@ -46,25 +46,21 @@ via [psql](https://www.postgresql.org/docs/current/app-psql.html) in the docker 
 Additionally, you need to configure the schemas for those databases via the `npm run db:setup` command in each of the backend package folders.
 Both shop and payment use [knex.js](https://knexjs.org/) as a database access library to manage migrations and seed data.
 
-### Run the Demo
+### Run the Demo (locally)
 
-Each of the four parts of the demo must run in its own terminal window.
+Each of the three parts of the demo must run in its own terminal window.
 For each setup, each package has a single npm command that is used to build and launch the package.
 
 * For payment-backend and shop-backend, run `npm run build` and `npx dbos-sdk start` to build and launch the app, respectively.
-
 * For shop-frontend, run `npm run dev` to launch the app.
-* To run with a backend in the cloud, export NEXT_PUBLIC_SHOP_BACKEND=<url to shop backend>.
-
-* for cloud update the urls in dbos-config.yaml to point to cloud.
 
 > If you are using VSCode, there are launch configurations for each individual package in the demo.
 > Additionally, there are compound configurations for launching the front and backend of shop or payment.
-> as well as a compound configuration for launching all four packages in the E-Commerce demo.
+> as well as a compound configuration for launching all three packages in the E-Commerce demo.
 
 ## Demo Walkthrough
 
-Once all four processes are running, navigate to http://localhost:3000. 
+Once all three processes are running, navigate to http://localhost:3000. 
 You will be presented with a simple web shop for purchasing extremely high quality writing utensils.
 
 Before adding a writing utensil to your cart, you must first create an account and login.
@@ -81,6 +77,10 @@ The payment page will display a similar summary of your order along with buttons
 Pressing Cancel Payment will redirect you back to the shop, with your cart intact.
 Pressing Submit Payment simulates entering your payment information, redirecting you back to shop indicating your payment was successful.
 When a payment is submitted, your shopping cart is cleared automatically.
+
+## Deploying the Demo to the Cloud
+* To run with a backend in the cloud, export NEXT_PUBLIC_SHOP_BACKEND=<url to shop backend>.
+* for cloud update the urls in dbos-config.yaml to point to cloud.
 
 ## Under the Covers
 
