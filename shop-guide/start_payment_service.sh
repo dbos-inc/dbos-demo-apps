@@ -12,6 +12,7 @@ pushd $PAYMENT_SERVICE_DIR
 
 npm i
 npm run build
+npx dbos-sdk migrate
 npx dbos-sdk start
 
 popd

@@ -59,13 +59,13 @@ export const product: CartProduct = {
 
 export function generatePaymentUrls(ctxt: HandlerContext, workflowUUID: string, paymentSessionUUID: string): string {
     const paymentUrl = ctxt.getConfig('payment_host', 'http://localhost:8086');
-    return `Submit payment: curl -X POST ${paymentUrl}/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}' \
-    \nCancel payment: curl -X POST ${paymentUrl}/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}'`;
+    return `Submit payment:\ncurl -X POST ${paymentUrl}/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}' \
+    \nCancel payment:\ncurl -X POST ${paymentUrl}/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}'\n`;
 }
 
 export class ShopUtilities {
   @Transaction()
-  static async subtractInventory(ctxt: KnexTransactionContext): Promise<void> {
+  static async reserveInventory(ctxt: KnexTransactionContext): Promise<void> {
       const numAffected = await ctxt.client<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
       .update({
         inventory: ctxt.client.raw('inventory - ?', [product.inventory])
@@ -76,7 +76,7 @@ export class ShopUtilities {
   }
 
   @Transaction()
-  static async undoSubtractInventory(ctxt: KnexTransactionContext): Promise<void> {
+  static async undoReserveInventory(ctxt: KnexTransactionContext): Promise<void> {
     await ctxt.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctxt.client.raw('inventory + ?', [product.inventory]) });
   }
 
