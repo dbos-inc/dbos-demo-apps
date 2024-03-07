@@ -67,7 +67,7 @@ jobs:
           # The stuff used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
-          POSTGRES_DBNAME: socialts
+          POSTGRES_DATABASE: socialts
           POSTGRES_USERNAME: socialts
           PGPASSWORD: socialts
           POSTGRES_PASSWORD: socialts
