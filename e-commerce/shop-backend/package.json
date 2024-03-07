@@ -10,15 +10,15 @@
   },
   "dependencies": {
     "@dbos-inc/communicator-bcrypt": "^0.9.25",
-    "@dbos-inc/dbos-sdk": "^0.9.25",
+    "@dbos-inc/dbos-sdk": "^0.11.8",
     "@opentelemetry/api-logs": "^0.48.0",
     "@opentelemetry/sdk-logs": "^0.48.0",
     "bcryptjs": "^2.4.3",
     "ts-node": "^10.9.1"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^0.9.25",
-    "@dbos-inc/dbos-openapi": "^0.9.25",
+    "@dbos-inc/dbos-cloud": "^0.11.8",
+    "@dbos-inc/dbos-openapi": "^0.11.8",
     "@dbos-inc/eslint-plugin": "^0.0.6",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.5",
