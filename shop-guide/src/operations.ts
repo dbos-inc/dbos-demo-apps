@@ -49,10 +49,10 @@ export class Shop {
   
     if (notification && notification === 'paid') {
       // If the payment succeeds, fulfill the order (code omitted for brevity.)
-      ctxt.logger.info(`Payment succeeded!`);
+      ctxt.logger.info(`Checkout with UUID ${ctxt.workflowUUID} succeeded!`);
     } else {
       // If the payment fails or times out, cancel the order and return inventory.
-      ctxt.logger.warn(`Payment failed or timed out!`);
+      ctxt.logger.warn(`Checkout with UUID ${ctxt.workflowUUID} failed or timed out...`);
       await ctxt.invoke(ShopUtilities).undoReserveInventory();
     }
   }
