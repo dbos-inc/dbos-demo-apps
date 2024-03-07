@@ -17,3 +17,5 @@ runtimeConfig:
   port: 8086
 application:
   frontend_host: 'http://localhost:8086'
+  # For DBOS Cloud:
+  frontend_host: 'https://<username>-<app-name>.cloud.dbos.dev'
