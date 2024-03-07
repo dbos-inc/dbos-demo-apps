@@ -8,7 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^0.8.62",
+    "@dbos-inc/dbos-sdk": "^0.11.8",
     "axios": "^1.4.0",
     "bootstrap": "^5.3.0",
     "iron-session": "^6.3.1",
