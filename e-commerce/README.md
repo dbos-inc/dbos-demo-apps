@@ -91,22 +91,22 @@ The following steps are necessary to deploy the payment backend to the DBOS Clou
 * Change to the payment application's directory (`e-commerce/payment-backend`).
 * Use the `npx dbos-cloud login` command from within the application directory, if you haven't already logged in.
 * Provision a DBOS Cloud database instance (using `npx dbos-cloud database provision`) if you have not already done so.
-* Register the application, using `npx dbos-cloud application register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance.
+* Register the application, using `npx dbos-cloud app register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance.
 * In the dbos-config.yaml, set `frontend_host` to the URL that the payment server will have once deployed.  This is of the form `https://<username>-<app-name>.cloud.dbos.dev`.
-* Deploy the application, using `npx dbos-cloud application deploy`.
+* Deploy the application, using `npx dbos-cloud app deploy`.
 
 Be sure to note down the URL provided for accessing the payment backend; it is necessary for configuring the shop backend.
 The URL will be of the form `https://cloud.dbos.dev/apps/<username>/<app-name>` or `https://<username>-<app-name>.cloud.dbos.dev/`.
-The URL should match what was set as `frontend-host` in `dbos-config.yaml`.  If not, edit `dbos-config.yaml` and redeploy with `npx dbos-cloud application deploy`.
+The URL should match what was set as `frontend-host` in `dbos-config.yaml`.  If not, edit `dbos-config.yaml` and redeploy with `npx dbos-cloud app deploy`.
 
 ### Configuring and Deploying the Shop Backend
 Assuming that the payment backend has already been deployed, the following additional steps are necessary to deploy the shop backend to the DBOS Cloud.
 
 * Change to the shop backend application directory (`e-commerce/shop-backend`).
 * Use the `npx dbos-cloud login` command from within the application directory, if you haven't already logged in.
-* Register the application, using `npx dbos-cloud application register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance. (The payment app and shop app can share this database server instance, each will have its own database on that server instance.)
+* Register the application, using `npx dbos-cloud app register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance. (The payment app and shop app can share this database server instance, each will have its own database on that server instance.)
 * Adjust the `dbos-config.yaml` file, setting `payment_host` and `local_host` to your DBOS Cloud URLs.
-* Deploy the `shop-backend` app with `npx dbos-cloud application deploy`.
+* Deploy the `shop-backend` app with `npx dbos-cloud app deploy`.
 
 ### Shop Frontend
 The Shop Frontend is built in [Next.js](https://nextjs.org/) and does not (currently) deploy to DBOS Cloud.
