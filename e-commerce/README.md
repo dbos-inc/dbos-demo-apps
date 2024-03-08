@@ -79,10 +79,8 @@ Pressing Submit Payment simulates entering your payment information, redirecting
 When a payment is submitted, your shopping cart is cleared automatically.
 
 ## Deploying the Demo to the Cloud
-:::tip
-If you have not yet read the [DBOS Cloud Quickstart](https://docs.dbos.dev/getting-started/quickstart-cloud) or the
-[DBOS Cloud Tutorials](https://docs.dbos.dev/category/dbos-cloud-tutorials) it may be a good idea to do so.
-:::
+> **💡 Tip:** If you have not yet read the [DBOS Cloud Quickstart](https://docs.dbos.dev/getting-started/quickstart-cloud) or the
+> [DBOS Cloud Tutorials](https://docs.dbos.dev/category/dbos-cloud-tutorials) it may be a good idea to do so.
 
 ### Deploying the Payment Backend
 The following steps are necessary to deploy the payment backend to the DBOS Cloud:
