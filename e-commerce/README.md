@@ -94,7 +94,7 @@ The following steps are necessary to deploy the payment backend to the DBOS Clou
 * Deploy the application, using `npx dbos-cloud app deploy`.
 
 Be sure to note down the URL provided for accessing the payment backend; it is necessary for configuring the shop backend.
-The URL will be of the form `https://cloud.dbos.dev/apps/<username>/<app-name>` or `https://<username>-<app-name>.cloud.dbos.dev/`.
+The URL will be of the form `https://<username>-<app-name>.cloud.dbos.dev/`.
 The URL should match what was set as `frontend-host` in `dbos-config.yaml`.  If not, edit `dbos-config.yaml` and redeploy with `npx dbos-cloud app deploy`.
 
 ### Configuring and Deploying the Shop Backend
