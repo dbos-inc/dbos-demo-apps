@@ -17,10 +17,9 @@ export class Shop {
       ctxt.logger.error("workflow failed");
       return "";
     }
-  
     return generatePaymentUrls(ctxt, handle.getWorkflowUUID(), session_id);
   }
-  
+
   @Workflow()
   static async checkoutWorkflow(ctxt: WorkflowContext): Promise<void> {
     // Attempt to update the inventory. Signal the handler if it fails.
@@ -31,7 +30,7 @@ export class Shop {
       await ctxt.setEvent(session_topic, null);
       return;
     }
-  
+
     // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
     const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession();
     if (!paymentSession.url) {
@@ -40,7 +39,7 @@ export class Shop {
       await ctxt.setEvent(session_topic, null);
       return;
     }
-  
+
     // Notify the handler of the payment session ID.
     await ctxt.setEvent(session_topic, paymentSession.session_id);
   
@@ -52,6 +51,7 @@ export class Shop {
       ctxt.logger.info(`Checkout with UUID ${ctxt.workflowUUID} succeeded!`);
     } else {
       // If the payment fails or times out, cancel the order and return inventory.
+      // Code to check session status with payment provider in case of timeout omitted for brevity.
       ctxt.logger.warn(`Checkout with UUID ${ctxt.workflowUUID} failed or timed out...`);
       await ctxt.invoke(ShopUtilities).undoReserveInventory();
     }
