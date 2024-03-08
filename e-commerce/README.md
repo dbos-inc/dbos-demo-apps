@@ -119,6 +119,26 @@ You can continue to run it locally:
 
 The Shop frontend can also be deployed to a Next.js hosting environment, such as [Vercel](https://vercel.com/solutions/nextjs).
 
+## Cloud Monitoring, Logs, and Dashboard
+
+### Retrieving Status and Logs
+Once you have deployed the shop to the cloud and placed a few orders, try out some of the cloud administration and monitoring commands.
+(See the [tutorial](https://docs.dbos.dev/category/dbos-cloud-tutorials) or the [CLI reference](https://docs.dbos.dev/api-reference/cloud-cli) for more information.)
+
+Check the application status and logs from either the `e-commerce/payment-backend` or `e-commerce/shop-backend` directories by excuting DBOS Cloud CLI commands, such as:
+* `npx dbos-cloud app status` - Provide a summary of the app, its database server, whether it is available, and if so, the app's URL
+* `npx dbos-cloud app logs -l 300` - Retrieve the last 5 minutes worth of application logs.
+
+### Viewing the Monitoring Dashboard
+The DBOS Cloud Monitoring Dashboard provides summary statistics of application calls, and allows drilling down into log entries and call traces.
+
+To access the dashboard:
+* There is one dashboard per DBOS Cloud user registration.  If you have not yet already launched a dashboard, run `npx dbos-cloud dashboard launch`.  This will provide the dashboard URL.
+* If you already launched the dashboard, but forget the URL, run `npx dbos-cloud dashboard url` from a DBOS application directory.
+* Open the dashboard URL in a web browser, and sign in.
+
+The dashboard provides logs and traces for all of your applications.  For additional information about the dashboard, see the [Monitoring Dashboard tutorial](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
+
 ## Under the Covers
 
 > Note, this section assumes you have read at least the [DBOS Getting Started docs](https://docs.dbos.dev/category/getting-started).
