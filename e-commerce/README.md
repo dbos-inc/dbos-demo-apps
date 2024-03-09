@@ -3,7 +3,7 @@
 This demo is a pair of [DBOS](https://github.com/dbos-inc/dbos-sdk) based systems demonstrating an 
 e-commerce scenario with separate apps for the online shop and the payment provider.
 
-## Demo Setup
+## Demo Setup (local)
 
 This demo requires Node 20.x or later and a PostgreSQL compatible database.
 The demo includes a script to configure a PostgreSQL Docker container on your behalf.
@@ -46,29 +46,22 @@ via [psql](https://www.postgresql.org/docs/current/app-psql.html) in the docker 
 Additionally, you need to configure the schemas for those databases via the `npm run db:setup` command in each of the backend package folders.
 Both shop and payment use [knex.js](https://knexjs.org/) as a database access library to manage migrations and seed data.
 
-### Run the Demo
+### Run the Demo (locally)
 
-Each of the four parts of the demo must run in its own terminal window.
+Each of the three parts of the demo must run in its own terminal window.
 For each setup, each package has a single npm command that is used to build and launch the package.
 
 * For payment-backend and shop-backend, run `npm run build` and `npx dbos-sdk start` to build and launch the app, respectively.
-
 * For shop-frontend, run `npm run dev` to launch the app.
-* To run with a backend in the cloud, export NEXT_PUBLIC_SHOP_BACKEND=<url to shop backend>.
-
-* for payment-frontend, run `npm run start` to build and launch the app.
-* To run with a backend in the cloud set export PLAID_BACKEND=<url to cloud backend>.
-
-* for cloud update the urls in dbos-config.yaml to point to cloud.
 
 > If you are using VSCode, there are launch configurations for each individual package in the demo.
 > Additionally, there are compound configurations for launching the front and backend of shop or payment.
-> as well as a compound configuration for launching all four packages in the E-Commerce demo.
+> as well as a compound configuration for launching all three packages in the E-Commerce demo.
 
 ## Demo Walkthrough
 
-Once all four processes are running, navigate to http://localhost:3000. 
-You will be presented with a simple web shop for purchasing extremely high quality writing utensils.
+Once all three processes are running, navigate to http://localhost:3000.
+You will be presented with a simple web shop for purchasing extremely high-quality writing utensils.
 
 Before adding a writing utensil to your cart, you must first create an account and login.
 Press the "Login" button in the navigation bar to register a username and password.
@@ -79,11 +72,70 @@ Add one or more writing utensils to your cart then press "Proceed to Checkout".
 The checkout page will display a summary of your order. 
 
 Pressing "Proceed to Checkout" on the summary page redirects you to the payment page.
-Note that this app is running on a different localhost port (8000 vs. 3000 for shop) to simulate a different web site.
+Note that this app is running on a different localhost port (defaults of 8086 for payment vs. 3000 for shop) to simulate a different web site.
 The payment page will display a similar summary of your order along with buttons to submit or cancel payment.
 Pressing Cancel Payment will redirect you back to the shop, with your cart intact.
 Pressing Submit Payment simulates entering your payment information, redirecting you back to shop indicating your payment was successful.
 When a payment is submitted, your shopping cart is cleared automatically.
+
+## Deploying the Demo to the Cloud
+> **💡 Tip:** If you have not yet read the [DBOS Cloud Quickstart](https://docs.dbos.dev/getting-started/quickstart-cloud) or the
+> [DBOS Cloud Tutorials](https://docs.dbos.dev/category/dbos-cloud-tutorials) it may be a good idea to do so.
+
+### Deploying the Payment Backend
+The following steps are necessary to deploy the payment backend to the DBOS Cloud:
+
+* Register for DBOS Cloud if you haven't already done so.
+* Change to the payment application's directory (`e-commerce/payment-backend`).
+* Use the `npx dbos-cloud login` command from within the application directory, if you haven't already logged in.
+* Provision a DBOS Cloud database instance (using `npx dbos-cloud database provision`) if you have not already done so.
+* Register the application, using `npx dbos-cloud app register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance.
+* In the dbos-config.yaml, set `frontend_host` to the URL that the payment server will have once deployed.  This is of the form `https://<username>-payment-backend.cloud.dbos.dev`.
+* Deploy the application, using `npx dbos-cloud app deploy`.
+
+Be sure to note down the URL provided for accessing the payment backend; it is necessary for configuring the shop backend.
+The URL will be of the form `https://<username>-<app-name>.cloud.dbos.dev/`.
+The URL should match what was set as `frontend-host` in `dbos-config.yaml`.  If not, edit `dbos-config.yaml` and redeploy with `npx dbos-cloud app deploy`.
+
+### Configuring and Deploying the Shop Backend
+Assuming that the payment backend has already been deployed, the following additional steps are necessary to deploy the shop backend to the DBOS Cloud.
+
+* Change to the shop backend application directory (`e-commerce/shop-backend`).
+* Use the `npx dbos-cloud login` command from within the application directory, if you haven't already logged in.
+* Register the application, using `npx dbos-cloud app register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance. (The payment app and shop app can share this database server instance, each will have its own database on that server instance.)
+* Adjust the `dbos-config.yaml` file, setting `payment_host` and `local_host` to your DBOS Cloud URLs.
+* Deploy the `shop-backend` app with `npx dbos-cloud app deploy`.
+
+### Shop Frontend
+The Shop Frontend is built in [Next.js](https://nextjs.org/) and does not (currently) deploy to DBOS Cloud.
+
+You can continue to run it locally:
+* Change to the shop frontend application directory (`e-commerce/shop-frontend`).
+* Set the environment variable `NEXT_PUBLIC_SHOP_BACKEND` to `https://<username>-shop-backend.cloud.dbos.dev/`
+* Run `npm run dev` to launch the app.
+* All three processes are deployed and running, navigate to http://localhost:3000.
+
+The Shop frontend can also be deployed to a Next.js hosting environment, such as [Vercel](https://vercel.com/solutions/nextjs).
+
+## Cloud Monitoring, Logs, and Dashboard
+
+### Retrieving Status and Logs
+Once you have deployed the shop to the cloud and placed a few orders, try out some of the cloud administration and monitoring commands.
+(See the [tutorial](https://docs.dbos.dev/category/dbos-cloud-tutorials) or the [CLI reference](https://docs.dbos.dev/api-reference/cloud-cli) for more information.)
+
+Check the application status and logs from either the `e-commerce/payment-backend` or `e-commerce/shop-backend` directories by excuting DBOS Cloud CLI commands, such as:
+* `npx dbos-cloud app status` - Provide a summary of the app, its database server, whether it is available, and if so, the app's URL
+* `npx dbos-cloud app logs -l 300` - Retrieve the last 5 minutes worth of application logs.
+
+### Viewing the Monitoring Dashboard
+The DBOS Cloud Monitoring Dashboard provides summary statistics of application calls, and allows drilling down into log entries and call traces.
+
+To access the dashboard:
+* There is one dashboard per DBOS Cloud user registration.  If you have not yet already launched a dashboard, run `npx dbos-cloud dashboard launch`.  This will provide the dashboard URL.
+* If you already launched the dashboard, but forget the URL, run `npx dbos-cloud dashboard url` from a DBOS application directory.
+* Open the dashboard URL in a web browser, and sign in.
+
+The dashboard provides logs and traces for all of your applications.  For additional information about the dashboard, see the [Monitoring Dashboard tutorial](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
 
 ## Under the Covers
 
@@ -260,7 +312,7 @@ This will generate the OpenAPI definition file for the project and save it to th
 
 ### Generate Client Code
 
-Both shop and payment backend folders contain a `create-openapi-client.sh` script that executes the OpenAPI Generator Docker image
+The shop backend folder contains a `create-openapi-client.sh` script that executes the OpenAPI Generator Docker image
 against the generated OpenAPI definition file (specifying the appropriate generator) and moves the generated code into the
 appropriate frontend project.
 

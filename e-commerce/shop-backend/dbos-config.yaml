@@ -9,18 +9,17 @@ database:
   username: 'postgres'
   password: ${PGPASSWORD}
   app_db_name: 'shop'
-  user_database: 'shop' # Will be deprecated, use app_db_name instead
   connectionTimeoutMillis: 3000
   app_db_client: 'knex'
-  user_dbclient: 'knex' # Will be deprecated, use app_db_client instead
   migrate: ['npx knex migrate:latest','npx knex seed:run']
   rollback: ['npx knex migrate:rollback']
 runtimeConfig:
   port: 8082
 application:
+  # Local defaults
   payment_host: 'http://localhost:8086'
   local_host: 'http://localhost:8082'
   # cloud example
-  # payment_host: 'https://dbos_domain/apps/[dbos-username]/payment-backend'
-  # local_host: 'https://dbos_domain/apps/[dbos-username]/shop-backend'
+  # payment_host: 'https://<username>-payment-backend.cloud.dbos.dev'
+  # local_host: 'https://<username>-shop-backend.cloud.dbos.dev'
 

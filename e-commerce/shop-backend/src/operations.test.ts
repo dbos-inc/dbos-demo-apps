@@ -155,6 +155,7 @@ describe("operations", () => {
     const payresp = await request(testRuntime.getHandlersCallback())
     .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.getWorkflowUUID(), payment_status: "canceled"});
     expect(payresp.status).toBe(204);
+    try {await handle.getResult();} catch (e) {}
 
     // After the payment has failed, your cart should be emptied
     let cart_empty = false;
@@ -191,6 +192,7 @@ describe("operations", () => {
     const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
     const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
     expect(url).toBeNull();
+    try {await handle.getResult();} catch (e) {}
 
     expect(invSpy).toHaveBeenCalled();
     invSpy.mockRestore();
