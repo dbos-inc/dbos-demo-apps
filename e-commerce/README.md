@@ -137,7 +137,7 @@ To access the dashboard:
 
 The dashboard provides logs and traces for all of your applications.  For additional information about the dashboard, see the [Monitoring Dashboard tutorial](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
 
-## Using the DBOS Debugger
+## Using the DBOS Time Travel Debugger
 
 Provenance data is captured by DBOS during workflow execution.  The DBOS debugger uses this provenance data to provide replays of past transactions.  This novel feature allows production scenarios to be reproduced in the development environment.
 
