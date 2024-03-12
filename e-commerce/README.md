@@ -137,7 +137,7 @@ To access the dashboard:
 
 The dashboard provides logs and traces for all of your applications.  For additional information about the dashboard, see the [Monitoring Dashboard tutorial](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
 
-## Using the DBOS Debugger
+## Using the DBOS Time Travel Debugger
 
 Provenance data is captured by DBOS during workflow execution.  The DBOS debugger uses this provenance data to provide replays of past transactions.  This novel feature allows production scenarios to be reproduced in the development environment.
 
@@ -146,8 +146,9 @@ A number of steps are required.  First, a workflow is selected for replay.  Then
 ### Visual Studio Code Extension
 The following section is only a brief overview of the debugger extension.  For a tutorial, see [Time Travel Debugging](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging).
 
-The debugger can be launched by clicking on the "Time Travel Debug" icon (which will be above the `@Workflow` and `@Transaction` decorators placed on DBOS methods).
-The debugger can also be launched by clicking on workflow IDs in the cloud dashboard.
+Provenance data is automatically captured by DBOS Cloud during workflow execution.  Time travel currently only works for applications deployed to DBOS Cloud.
+* The debugger can be launched by clicking on the "Time Travel Debug" icon (which will be above the `@Workflow` and `@Transaction` decorators placed on DBOS methods).  This will pull down workflow IDs from the cloud.
+* The debugger can also be launched by clicking on workflow IDs in the cloud dashboard.
 
 > Tips:
 > * The "DBOS Time Travel Debugger" extension must be installed.  Sometimes restarting Visual Studio Code is necessary.
