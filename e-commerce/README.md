@@ -152,6 +152,7 @@ Provenance data is automatically captured by DBOS Cloud during workflow executio
 
 > Tips:
 > * The "DBOS Time Travel Debugger" extension must be installed.  Sometimes restarting Visual Studio Code is necessary.
+> * Detailed information and instructions can be found in the [Time Travel Debugger](https://docs.dbos.dev/api-reference/time-travel-debugger) reference.
 > * Visual Studio Code should be open to the folder of the application you want to debug, not a child or parent folder.  This allows the extension to find the application configuration and use the saved app credentials to access DBOS Cloud.
 > * If the extension reports an error, review the logs that can be seen under "View"->"Output"->"DBOS" and "DBOS Debug Proxy".
 > * The Debugger extension needs the database password to retrieve a snapshot of data for debugging.  If the password needs to be changed, select "View"->"Command Palette..." and click "DBOS: Delete Stored Application Datbase Passwords" and try debugging again.
