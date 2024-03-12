@@ -137,6 +137,27 @@ To access the dashboard:
 
 The dashboard provides logs and traces for all of your applications.  For additional information about the dashboard, see the [Monitoring Dashboard tutorial](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
 
+## Using the DBOS Time Travel Debugger
+
+Provenance data is captured by DBOS during workflow execution.  The DBOS debugger uses this provenance data to provide replays of past transactions.  This novel feature allows production scenarios to be reproduced in the development environment.
+
+A number of steps are required.  First, a workflow is selected for replay.  Then, database data for that workflow is exported and brought to the development environment.  Then, the application code is executed against a database proxy that provides snapshots of data as the workflow progresses.
+
+### Visual Studio Code Extension
+The following section is only a brief overview of the debugger extension.  For a tutorial, see [Time Travel Debugging](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging).
+
+Provenance data is automatically captured by DBOS Cloud during workflow execution.  Time travel currently only works for applications deployed to DBOS Cloud.
+* The debugger can be launched by clicking on the "Time Travel Debug" icon (which will be above the `@Workflow` and `@Transaction` decorators placed on DBOS methods).  This will pull down workflow IDs from the cloud.
+* The debugger can also be launched by clicking on workflow IDs in the cloud dashboard.
+
+> Tips:
+> * The "DBOS Time Travel Debugger" extension must be installed.  Sometimes restarting Visual Studio Code is necessary.
+> * Detailed information and instructions can be found in the [Time Travel Debugger](https://docs.dbos.dev/api-reference/time-travel-debugger) reference.
+> * Visual Studio Code should be open to the folder of the application you want to debug, not a child or parent folder.  This allows the extension to find the application configuration and use the saved app credentials to access DBOS Cloud.
+> * If the extension reports an error, review the logs that can be seen under "View"->"Output"->"DBOS" and "DBOS Debug Proxy".
+> * The Debugger extension needs the database password to retrieve a snapshot of data for debugging.  If the password needs to be changed, select "View"->"Command Palette..." and click "DBOS: Delete Stored Application Datbase Passwords" and try debugging again.
+> * Debugging sessions are often more interesting if a breakpoint is set prior to launch.  (Otherwise execution will replay and the debugging session will quickly end.)
+
 ## Under the Covers
 
 > Note, this section assumes you have read at least the [DBOS Getting Started docs](https://docs.dbos.dev/category/getting-started).
