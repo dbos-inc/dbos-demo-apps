@@ -79,7 +79,8 @@ export class PlaidPayments {
       return `Invalid session id ${session_id}`;
     }
 
-    const submit = 'submit' in ctx.koaContext.request.body;
+    const body = ctx.koaContext.request.body as object;
+    const submit = 'submit' in body;
     if (submit) {
       await PlaidPayments.submitPayment(ctx, session_id);
       ctx.koaContext.redirect(session.success_url);
