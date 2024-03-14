@@ -5,7 +5,6 @@ import {
 
 import KoaViews from '@ladjs/koa-views';
 import { Knex } from 'knex';
-import { Request } from 'koa';
 
 type KnexTransactionContext = TransactionContext<Knex>;
 
