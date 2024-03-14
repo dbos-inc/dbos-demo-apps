@@ -13,6 +13,8 @@
     "@dbos-inc/dbos-openapi": "^1.0.2",
     "@dbos-inc/eslint-plugin": "^0.0.6",
     "@types/jest": "^29.5.5",
+    "@types/koa": "2.15.0",
+    "@types/koa-bodyparser": "4.3.12",
     "@types/supertest": "^2.0.14",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "eslint": "^8.56.0",
