@@ -5,6 +5,7 @@ import {
 import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
 export { BcryptCommunicator };
 import { Knex } from 'knex';
+import { Request } from 'koa';
 
 type KnexTransactionContext = TransactionContext<Knex>;
 
@@ -409,7 +410,7 @@ export class Shop {
 
   @PostApi('/payment_webhook')
   static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
-    const req = ctxt.koaContext.request;
+    const req: Request = ctxt.koaContext.request;
 
     type Session = { session_id: string; client_reference_id?: string; payment_status: string };
     const payload = req.body as Session;
