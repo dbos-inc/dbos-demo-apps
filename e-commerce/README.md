@@ -346,3 +346,41 @@ and [typescript-node](https://openapi-generator.tech/docs/generators/typescript-
 
 Installing the [OpenAPI Generator CLI](https://openapi-generator.tech/docs/installation) requires Java runtime support.
 They also provide a [Docker image](https://openapi-generator.tech/docs/installation#docker) that acts as a standalone executable.
+
+## Unit Testing in DBOS
+
+The e-commerce example application demonstrates a number of techniques for testing DBOS application logic before deployment.
+For more information on testing in DBOS, see the [Testing and Debugging](https://docs.dbos.dev/tutorials/testing-tutorial) tutorial and [DBOS Testing Runtime](https://docs.dbos.dev/api-reference/testing-runtime) reference.
+
+### Testing Techniques
+
+The `payment-backend` project uses:
+* The [`jest`](https://jestjs.io/) testing framework for defining test suites (setup, teardown, and tests) and reporting test results.
+* The [DBOS Testing Runtime](https://docs.dbos.dev/api-reference/testing-runtime), which permits "clear-box" testing of the application logic.
+* [`supertest`](https://github.com/ladjs/supertest) executed against [`testRuntime.getHandlersCallback()`](https://docs.dbos.dev/api-reference/testing-runtime#runtimegethandlerscallback) to test HTTP handling logic in combination with the DBOS-based application code.
+* `testRuntime.send` and `testRuntime.retrieveWorkflow` to examine and interact with the workflow under test.
+* `testRuntime.setConfig` to set application configuration items, allowing the resulting behavior to be unit-tested.
+
+The `shop-backend` project uses a few additional testing techniques:
+* Using `testRuntime.invoke` to call application functions without creating HTTP-style requests (via `supertest`).
+* Using `jest.spyOn` to mock the behavior of communicators.
+> **💡 Note:** `jest.spyOn` cannot be used to replace a DBOS function directly, as places its interceptor after the function is already registered with the DBOS framework.
+> As a workaround, consider refactoring such that `jest.spyOn` intercepts a plain, undecorated `static` method.
+
+### Setting Up For Testing
+In order to use `jest`, `supertest`, etc., they should be installed as development dependencies in `package.json`:
+```bash
+npm install --save-dev jest supertest ts-jest
+```
+
+Tests can be run from the command line using commands like:
+```bash
+PGPASSWORD=<pwd> npm run test
+```
+
+Availability of simple testing command invocation is due to the following lines in `package.json`, located in the `scripts` section:
+```json
+  "scripts": {
+    "test": "npx knex migrate:rollback && npx knex migrate:up && jest --detectOpenHandles"
+  }
+```
