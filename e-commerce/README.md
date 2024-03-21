@@ -359,7 +359,7 @@ The `payment-backend` project uses:
 * The [DBOS Testing Runtime](https://docs.dbos.dev/api-reference/testing-runtime), which permits "clear-box" testing of the application logic.
 * [`supertest`](https://github.com/ladjs/supertest) executed against [`testRuntime.getHandlersCallback()`](https://docs.dbos.dev/api-reference/testing-runtime#runtimegethandlerscallback) to test HTTP handling logic in combination with the DBOS-based application code.
 * `testRuntime.send` and `testRuntime.retrieveWorkflow` to examine and interact with the workflow under test.
-* `testRuntime.setConfig` to set application configuration items, allowing the resulting behavior to be unit-tested.
+* `testRuntime.setConfig` to set [application configuration](https://docs.dbos.dev/api-reference/configuration/#application) items, allowing the resulting behavior to be unit-tested.
 
 The `shop-backend` project uses a few additional testing techniques:
 * Using `testRuntime.invoke` to call application functions without creating HTTP-style requests (via `supertest`).
