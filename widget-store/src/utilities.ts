@@ -56,11 +56,6 @@ export class ShopUtilities {
     return item[0];
   }
 
-  @Communicator()
-  static async createPaymentSession(ctxt: CommunicatorContext): Promise<string> {
-    return `/payment/${ctxt.workflowUUID}`;
-  }
-
   @Transaction()
   static async createOrder(ctxt: KnexTransactionContext): Promise<number> {
     const orders = await ctxt.client<Order>('orders').insert({ 

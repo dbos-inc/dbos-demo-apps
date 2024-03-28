@@ -35,16 +35,15 @@ export class Shop {
       await ctxt.setEvent(PAYMENT_URL_EVENT, null);
       return;
     }
-
     const orderID = await ctxt.invoke(ShopUtilities).createOrder();
 
-    // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
-    const paymentURL = await ctxt.invoke(ShopUtilities).createPaymentSession();
-
     // Provide the paymentURL back to webCheckout (above)
-    await ctxt.setEvent(PAYMENT_URL_EVENT, paymentURL);
+    await ctxt.setEvent(PAYMENT_URL_EVENT, `/payment/${ctxt.workflowUUID}`);
 
     // Wait for a payment notification from paymentWebhook (below)
+    // This simulates a communicator waiting on a payment processor
+    // If the timeout expires (seconds), this returns null
+    // and the order is cancelled
     const notification = await ctxt.recv<string>(PAYMENT_TOPIC, 120);
 
     // If the money is good - fulfill the order. Else, cancel:
