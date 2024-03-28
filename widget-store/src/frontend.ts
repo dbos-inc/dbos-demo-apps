@@ -17,10 +17,14 @@ export class Frontend {
 
   @GetApi('/')
   static async frontend(ctxt: HandlerContext) {
-    const inventory = await ctxt.invoke(ShopUtilities).retrieveInventory();
+    //const inventory = await ctxt.invoke(ShopUtilities).retrieveInventory();
+    const prod = await ctxt.invoke(ShopUtilities).retrieveProduct();
     return await render("purchase", {
       uuid: uuidv4(),
-      inventory: inventory,
+      inventory: prod.inventory,
+      product: prod.product,
+      description: prod.description,
+      price: prod.price,
     });
   }
 

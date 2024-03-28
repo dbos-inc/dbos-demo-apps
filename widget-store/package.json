@@ -1,5 +1,5 @@
 {
-  "name": "shop-demo",
+  "name": "widget-store",
   "version": "0.0.1",
   "scripts": {
     "build": "tsc",
