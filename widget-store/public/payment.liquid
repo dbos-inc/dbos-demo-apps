@@ -105,13 +105,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })
             });
-
             if (response.ok) {
-                if (status === 'paid') {
-                    window.location.href = '/success';
-                } else {
-                    window.location.href = '/';
-                }
+                window.location.href = await response.text();
             } else {
                 const errorText = await response.text();
                 console.log("Error", errorText);

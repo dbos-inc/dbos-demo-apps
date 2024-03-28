@@ -5,10 +5,10 @@ import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
 
-export const OrderStatus = {
-  PENDING: 0,
-  FULFILLED: 1,
-  CANCELLED: -1,
+export enum OrderStatus {
+  PENDING= 0,
+  FULFILLED= 1,
+  CANCELLED= -1,
 };
 
 export interface Product {
@@ -22,18 +22,16 @@ export interface Product {
 export interface Order {
   order_id: number,
   order_status: number,
-  last_update_time: bigint,
+  last_update_time: Date,
   product_id: number,
 }
 
-export const payment_complete_topic = "payment_complete";
-
-export const product_id = 1
+export const PRODUCT_ID = 1
 
 export class ShopUtilities {
   @Transaction()
   static async subtractInventory(ctxt: KnexTransactionContext): Promise<void> {
-      const numAffected = await ctxt.client<Product>('products').where('product_id', product_id).andWhere('inventory', '>=', 1)
+      const numAffected = await ctxt.client<Product>('products').where('product_id', PRODUCT_ID).andWhere('inventory', '>=', 1)
       .update({
         inventory: ctxt.client.raw('inventory - ?', 1)
       });
@@ -46,24 +44,14 @@ export class ShopUtilities {
 
   @Transaction()
   static async undoSubtractInventory(ctxt: KnexTransactionContext): Promise<void> {
-    await ctxt.client<Product>('products').where({ product_id: product_id }).update({ inventory: ctxt.client.raw('inventory + ?', 1) });
-  }
-
-  @Transaction()
-  static async retrieveInventory(ctxt: KnexTransactionContext): Promise<number> {
-    const item = await ctxt.client<Product>('products').select("inventory").where({ product_id: product_id });
-    if (!item.length) {
-      ctxt.logger.warn(`Product ${product_id} not found`)
-      return 0;
-    }
-    return item[0].inventory;
+    await ctxt.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory: ctxt.client.raw('inventory + ?', 1) });
   }
 
   @Transaction()
   static async retrieveProduct(ctxt: KnexTransactionContext): Promise<Product> {
-    const item = await ctxt.client<Product>('products').select("*").where({ product_id: product_id });
+    const item = await ctxt.client<Product>('products').select("*").where({ product_id: PRODUCT_ID });
     if (!item.length) {
-      throw new Error(`Product ${product_id} not found`);
+      throw new Error(`Product ${PRODUCT_ID} not found`);
     }
     return item[0];
   }
@@ -73,31 +61,38 @@ export class ShopUtilities {
     return `/payment/${ctxt.workflowUUID}`;
   }
 
-  @PostApi('/payment_webhook/:key/:status')
-  static async paymentWebhook(ctxt: HandlerContext, key: string, status: string): Promise<void> {
-    await ctxt.send(key, status, payment_complete_topic);
-  }
-
   @Transaction()
   static async createOrder(ctxt: KnexTransactionContext): Promise<number> {
-    const orders = await ctxt.client<Order>('orders').insert({ order_status: OrderStatus.PENDING, last_update_time: 0n, product_id: product_id }).returning('order_id');
+    const orders = await ctxt.client<Order>('orders').insert({ 
+      order_status: OrderStatus.PENDING, 
+      product_id: PRODUCT_ID,
+      last_update_time: ctxt.client.fn.now()}).returning('order_id');
     const orderID = orders[0].order_id;
     return orderID;
   }
 
   @Transaction()
-  static async fulfillOrder(ctxt: KnexTransactionContext, orderID: number): Promise<void> {
-    await ctxt.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.FULFILLED });
+  static async fulfillOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
+    await ctxt.client<Order>('orders').where({ order_id: order_id }).update({ 
+      order_status: OrderStatus.FULFILLED,
+      last_update_time: ctxt.client.fn.now()
+    });
   }
 
   @Transaction()
-  static async errorOrder(ctxt: KnexTransactionContext, orderID: number): Promise<void> {
-    await ctxt.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.CANCELLED });
+  static async errorOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
+    await ctxt.client<Order>('orders').where({ order_id: order_id }).update({ 
+      order_status: OrderStatus.CANCELLED,
+      last_update_time: ctxt.client.fn.now() 
+    });
   }
 
-  @PostApi('/crash_application')
-  static async crashApplication(_ctxt: HandlerContext) {
-    process.exit(1);
+  @Transaction()
+  static async retrieveOrder(ctxt: KnexTransactionContext, order_id: number): Promise<Order> {
+    const item = await ctxt.client<Order>('orders').select("*").where({ order_id: order_id });
+    if (!item.length) {
+      throw new Error(`Order ${order_id} not found`);
+    }
+    return item[0];
   }
-
 }

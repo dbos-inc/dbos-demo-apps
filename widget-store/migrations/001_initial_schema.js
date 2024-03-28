@@ -10,7 +10,7 @@ exports.up = async function(knex) {
   await knex.schema.createTable('orders', table => {
     table.increments('order_id').primary();
     table.integer('order_status').notNullable();
-    table.bigInteger('last_update_time').notNullable();
+    table.datetime('last_update_time').notNullable().defaultTo(knex.fn.now());
     table.integer('product_id').notNullable();
     table.foreign('product_id').references('products.product_id');
   });

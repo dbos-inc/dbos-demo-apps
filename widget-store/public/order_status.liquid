@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Confirmed - DBOS Widget Store</title>
+    <title>Order Status - DBOS Widget Store</title>
     <link rel="icon" type="image/x-icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico">
     <style>
         body, html {
@@ -34,8 +34,8 @@
             padding: 20px;
             margin: 20px 0;
             width: 80%;
-            max-width: 600px;
-            text-align: center;
+            max-width: 800px;
+            text-align: left;
         }
 
         .section-title {
@@ -81,7 +81,7 @@
 <div class="container">
     <img src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png" alt="DBOS Logo" class="logo">
     <div class="confirmation-section">
-        <div class="section-title">Payment confirmed!</div>
+        <div class="section-title">Order ID: {{order_id}}<br>Status: {{status}}<br>{{time}}</div>
         <div class="button-container">
             <a href="/" class="button confirm-button">Continue Shopping</a>
         </div>
