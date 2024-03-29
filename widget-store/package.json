@@ -1,0 +1,23 @@
+{
+  "name": "widget-store",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc",
+    "test": "npx knex migrate:rollback && npx knex migrate:up && npx knex seed:run && jest --detectOpenHandles",
+    "db:setup": "npx knex migrate:up && npx knex seed:run",
+    "lint": "eslint src",
+    "lint-fix": "eslint --fix src"
+  },
+  "devDependencies": {
+    "@dbos-inc/dbos-cloud": "^1.2.12",
+    "@dbos-inc/eslint-plugin": "^0.0.6",
+    "@types/uuid": "^9.0.8",
+    "eslint": "^8.57.0",
+    "typescript": "~5.3.3"
+  },
+  "dependencies": {
+    "@dbos-inc/dbos-sdk": "^1.2.12",
+    "liquidjs": "^10.10.1",
+    "uuid": "^9.0.1"
+  }
+}
