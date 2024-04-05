@@ -6,7 +6,9 @@
     "test": "npx knex migrate:rollback && npx knex migrate:up && npx knex seed:run && jest --detectOpenHandles",
     "db:setup": "npx knex migrate:up && npx knex seed:run",
     "lint": "eslint src",
-    "lint-fix": "eslint --fix src"
+    "lint-fix": "eslint --fix src",
+    "dev": "nodemon",
+    "start": "npx dbos-sdk start"
   },
   "dependencies": {
     "@dbos-inc/communicator-bcrypt": "^1.1.15",
@@ -24,6 +26,7 @@
     "@types/supertest": "^2.0.14",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
+    "nodemon": "^3.1.0",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
