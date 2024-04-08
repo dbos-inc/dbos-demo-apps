@@ -388,11 +388,15 @@ Availability of simple testing command invocation is due to the following lines 
 ## Using `nodemon` To Apply Changes To Running Development Servers
 When developing an application and running locally, it is convenient to have the running server pick up any
 changes to the code as they are saved.  One common solution to this is to use [`nodemon`](https://github.com/remy/nodemon).
-The `shop-backend` app demonstrates use of this utility within a DBOS project.
+
+The `shop-backend` app demonstrates use of this utility within a DBOS project; if you run `npm run dev`, the server
+process launched will automatically recompile and restart when the code is changed.
+
+The following steps were used to enable `nodemon` on `shop-backend`, and similar steps can be applied to any DBOS application.
 
 ### Install `nodemon`
 `nodemon` is just a regular package that can be installed with a command such as `npm install --save-dev nodemon`.
-Because `nodemon` is used in development only, it should be installed in the `devDependencies` section of `package.json`.
+(Because `nodemon` is used in development only, it should be installed in the `devDependencies` section of `package.json`.)
 
 ### Add Helper Scripts To `package.json`
 To allow commands such as `npm run start` (which will be the same as `npx dbos-sdk start` but perhaps be more consistent
