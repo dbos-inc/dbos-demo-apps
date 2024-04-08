@@ -26,6 +26,7 @@ export interface ItemTable {
 }
 
 export const payment_complete_topic = "payment_complete_topic";
+export const payment_session_started_topic = "payment_session_started_topic";
 export const payment_submitted = "payment.submitted";
 export const payment_cancelled = "payment.cancelled";
 
@@ -107,6 +108,7 @@ export class PlaidPayments {
 
     const handle = await ctxt.invoke(PlaidPayments).paymentSession(webhook, success_url, cancel_url, items, client_reference_id);
     const session_id = handle.getWorkflowUUID();
+    await ctxt.getEvent(session_id, payment_session_started_topic, 1000);
 
     return {
       session_id,
@@ -171,6 +173,7 @@ export class PlaidPayments {
     const session_id = ctxt.workflowUUID;
     ctxt.logger.info(`creating payment session ${session_id}`);
     await ctxt.invoke(PlaidPayments).insertSession(session_id, webhook, success_url, cancel_url, items, client_ref);
+    await ctxt.setEvent(payment_session_started_topic, 'inserted');
 
     const notification = await ctxt.recv<string>(payment_complete_topic, 60) ?? "payment.error";
     ctxt.logger.info(`payment session ${session_id} new status ${notification}`);
