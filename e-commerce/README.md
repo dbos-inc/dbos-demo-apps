@@ -384,3 +384,45 @@ Availability of simple testing command invocation is due to the following lines 
     "test": "npx knex migrate:rollback && npx knex migrate:up && jest --detectOpenHandles"
   }
 ```
+
+## Using `nodemon` To Apply Changes To Running Development Servers
+When developing an application and running locally, it is convenient to have the running server pick up any
+changes to the code as they are saved.  One common solution to this is to use [`nodemon`](https://github.com/remy/nodemon).
+
+The `shop-backend` app demonstrates use of this utility within a DBOS project; if you run `npm run dev`, the server
+process launched will automatically recompile and restart when the code is changed.
+
+The following steps were used to enable `nodemon` on `shop-backend`, and similar steps can be applied to any DBOS application.
+
+### Install `nodemon`
+`nodemon` is just a regular package that can be installed with a command such as `npm install --save-dev nodemon`.
+(Because `nodemon` is used in development only, it should be installed in the `devDependencies` section of `package.json`.)
+
+### Add Helper Scripts To `package.json`
+To allow commands such as `npm run start` (which will be the same as `npx dbos-sdk start` but perhaps be more consistent
+with the experience in other frameworks) and `npm run dev` to work, these should be added to the `scripts` section of
+`package.json`:
+```json
+  "scripts": {
+    "dev": "nodemon",
+    "start": "npx dbos-sdk start"
+  },
+```
+
+### Provide `nodemon` Configuration
+There are [numerous approaches for configuring `nodemon`](https://github.com/remy/nodemon?tab=readme-ov-file#config-files).
+This demo uses `nodemon.json` for configuration, as this is a common default.
+
+```json
+{
+  "watch": ["src/","migrations/"],
+  "ext": "ts,json",
+  "ignore": ["src/**/*.test.ts"],
+  "exec": "npm run build && npx knex migrate:up && npm run start"
+}
+```
+
+* `exec`: The command to be executed when starting or restarting the app; in this case the start command defined in `scripts` as above.
+* `watch`: This array lists directories to monitor for file changes.
+* `ext`: This comma-delimited list indicates which file extensions should be monitored for changes.
+* `ignore`: This array lists patterns of files to exclude from monitoring.
