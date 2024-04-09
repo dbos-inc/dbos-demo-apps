@@ -26,7 +26,7 @@ export interface Order {
   product_id: number,
 }
 
-export const PRODUCT_ID = 1
+export const PRODUCT_ID = 1;
 
 export class ShopUtilities {
   @Transaction()
