@@ -1,4 +1,4 @@
-import { WorkflowContext, Workflow, HandlerContext, PostApi, ArgOptional} from '@dbos-inc/dbos-sdk';
+import { WorkflowContext, Workflow, HandlerContext, PostApi, ArgOptional } from '@dbos-inc/dbos-sdk';
 import { ShopUtilities } from './utilities';
 import { Frontend } from './frontend';
 
@@ -15,7 +15,7 @@ export class Shop {
   static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
     // Start the workflow (below): this gives us the handle immediately and continues in background
     const handle = await ctxt.invoke(Shop, key).paymentWorkflow();
-    
+
     // Wait for the workflow to create the payment URL; return that to the user
     const paymentURL = await ctxt.getEvent<string>(handle.getWorkflowUUID(), PAYMENT_URL_EVENT);
     if (paymentURL === null) {
@@ -55,31 +55,32 @@ export class Shop {
       await ctxt.invoke(ShopUtilities).errorOrder(orderID);
       await ctxt.invoke(ShopUtilities).undoSubtractInventory();
     }
-    
+
     // Return the finished order ID back to paymentWebhook (below)
     await ctxt.setEvent(ORDER_URL_EVENT, `/order/${orderID}`);
   }
 
   @PostApi('/payment_webhook/:key/:status')
   static async paymentWebhook(ctxt: HandlerContext, key: string, status: string): Promise<string> {
-    
+
     // Send payment status to the workflow above
     await ctxt.send(key, status, PAYMENT_TOPIC);
-    
+
     // Wait for workflow to give us the order URL
     const orderURL = await ctxt.getEvent<string>(key, ORDER_URL_EVENT);
     if (orderURL === null) {
       ctxt.logger.error("retreving order URL failed");
       return "/error";
     }
-    
+
     // Return the order status URL to the client
     return orderURL;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   @PostApi('/crash_application')
   static async crashApplication(_ctxt: HandlerContext) {
-    
+
     // For testing and demo purposes :) 
     process.exit(1);
   }

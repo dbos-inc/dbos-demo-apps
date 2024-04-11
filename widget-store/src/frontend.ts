@@ -9,8 +9,8 @@ const engine = new Liquid({
   extname: ".liquid"
 });
 
-function render(file: string, ctx?: object): Promise<string> {
-  return engine.renderFile(file, ctx);
+async function render(file: string, ctx?: object): Promise<string> {
+  return await engine.renderFile(file, ctx) as string;
 }
 
 export class Frontend {
