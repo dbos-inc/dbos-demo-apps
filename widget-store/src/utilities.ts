@@ -34,8 +34,8 @@ export class ShopUtilities {
         inventory: ctxt.client.raw('inventory - ?', 1)
       });
     //A good block to uncomment in time-travel debugger to see an example of querying past state
-    //const item = await ctxt.client<Product>('products').select('inventory').where({ product_id: product.product_id });
-    //ctxt.logger.info(">>> Remaining inventory: " + item[0].inventory); 
+    // const item = await ctxt.client<Product>('products').select('inventory').where({ product_id: PRODUCT_ID });
+    // ctxt.logger.info(">>> Remaining inventory: " + item[0].inventory);
     if (numAffected <= 0) {
       throw new Error("Insufficient Inventory");
     }
