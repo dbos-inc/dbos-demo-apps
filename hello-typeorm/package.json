@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.1.15",
+    "@dbos-inc/dbos-cloud": "^1.7.6",
     "@dbos-inc/eslint-plugin": "^0.0.6",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.7.1",
@@ -24,7 +24,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^1.1.15",
+    "@dbos-inc/dbos-sdk": "^1.7.6",
     "typeorm": "^0.3.17"
   }
 }
