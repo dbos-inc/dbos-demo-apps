@@ -4,17 +4,8 @@ database:
   username: 'bank'
   connectionTimeoutMillis: 3000
   app_db_name: 'bank'
-  user_database: 'bank' # Will be deprecated, use app_db_name instead
   password: ${PGPASSWORD}
   app_db_client: "prisma"
-  user_dbclient: 'prisma' # Will be deprecated, use app_db_client instead
-telemetry:
-  logs:
-    logLevel: 'debug'
-    addContextMetadata: true
-    silent: false
-  traces:
-    enabled: false
 runtimeConfig:
   port: 8081
 application:
