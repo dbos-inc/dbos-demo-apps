@@ -1,8 +1,0 @@
-database:
-  hostname: 'localhost'
-  port: 5432
-  username: 'postgres'
-  app_db_name: 'hellotypeorm'
-  password: ${PGPASSWORD}
-  connectionTimeoutMillis: 3000
-  app_db_client: "typeorm"
