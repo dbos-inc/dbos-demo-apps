@@ -227,7 +227,7 @@ export class Shop {
       throw new DBOSResponseError("Invalid request!", 400);
     }
 
-    const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
+    const handle = await ctxt.startWorkflow(Shop).paymentWorkflow(username, origin);
     const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
 
     if (url === null) {
