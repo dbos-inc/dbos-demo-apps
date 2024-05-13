@@ -8,7 +8,7 @@ export class Shop {
   @PostApi('/checkout/:key?')
   static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
     // A workflow handle is immediately returned. The workflow continues in the background.
-    const handle = await ctxt.invoke(Shop, key).checkoutWorkflow();
+    const handle = await ctxt.startWorkflow(Shop, key).checkoutWorkflow();
     ctxt.logger.info(`Checkout workflow started with UUID: ${handle.getWorkflowUUID()}`);
   
     // Wait until the payment session is ready
