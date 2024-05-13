@@ -263,7 +263,7 @@ export class YKY
     //   Or give the user the existing workflow, if any
 
     const fn = `photos/${mediaKey}-${Date.now()}`;
-    const wfh = await ctx.startWorkflow(Operations).mediaUpload('profile', mediaKey, fn, bucket);
+    const wfh = await ctx.invoke(Operations).mediaUpload('profile', mediaKey, fn, bucket);
     const upkey = await ctx.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
     return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
   }
