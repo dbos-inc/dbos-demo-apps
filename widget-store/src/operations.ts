@@ -14,7 +14,7 @@ export class Shop {
   @PostApi('/checkout/:key?')
   static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
     // Start the workflow (below): this gives us the handle immediately and continues in background
-    const handle = await ctxt.invoke(Shop, key).paymentWorkflow();
+    const handle = await ctxt.startWorkflow(Shop, key).paymentWorkflow();
 
     // Wait for the workflow to create the payment URL; return that to the user
     const paymentURL = await ctxt.getEvent<string>(handle.getWorkflowUUID(), PAYMENT_URL_EVENT);
