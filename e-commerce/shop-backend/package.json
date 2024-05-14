@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "scripts": {
     "build": "tsc",
-    "test": "npx knex migrate:rollback && npx knex migrate:up && npx knex seed:run && jest --detectOpenHandles",
-    "db:setup": "npx knex migrate:up && npx knex seed:run",
+    "test": "npx dbos rollback && npx dbos migrate && jest --detectOpenHandles",
+    "db:setup": "npx dbos migrate",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
     "dev": "nodemon",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@dbos-inc/communicator-bcrypt": "^1.1.15",
-    "@dbos-inc/dbos-sdk": "^1.7.6",
+    "@dbos-inc/dbos-sdk": "^1.9.14-preview",
     "ts-node": "^10.9.1"
   },
   "devDependencies": {

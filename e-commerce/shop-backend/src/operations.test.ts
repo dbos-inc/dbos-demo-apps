@@ -2,8 +2,9 @@ import { CommunicatorContext, TestingRuntime, TransactionContext, createTestingR
 import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
 import { Shop, Product, checkout_url_topic } from "./operations";
 import request from "supertest";
-import { sleep } from "@dbos-inc/dbos-sdk/dist/src/utils";
 import { Knex } from 'knex';
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 describe("operations", () => {
 
@@ -98,7 +99,7 @@ describe("operations", () => {
     });
 
     // Initiate checkout
-    const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
+    const handle = await testRuntime.startWorkflow(Shop).paymentWorkflow('shopper', 'xxx');
     const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
     if (!url) throw new Error("URL not returned");
 
@@ -143,7 +144,7 @@ describe("operations", () => {
     });
 
     // Initiate checkout
-    const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
+    const handle = await testRuntime.startWorkflow(Shop).paymentWorkflow('shopper', 'xxx');
     const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
     if (!url) throw new Error("URL not returned");
 
@@ -189,7 +190,7 @@ describe("operations", () => {
     });
 
     // Initiate checkout
-    const handle = await testRuntime.invoke(Shop).paymentWorkflow('shopper', 'xxx');
+    const handle = await testRuntime.startWorkflow(Shop).paymentWorkflow('shopper', 'xxx');
     const url = await testRuntime.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
     expect(url).toBeNull();
     try {await handle.getResult();} catch (e) {}

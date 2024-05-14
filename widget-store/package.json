@@ -16,7 +16,7 @@
     "typescript": "~5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^1.7.6",
+    "@dbos-inc/dbos-sdk": "^1.9.14-preview",
     "liquidjs": "^10.10.1",
     "uuid": "^9.0.1"
   }

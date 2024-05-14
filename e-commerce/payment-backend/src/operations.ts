@@ -106,7 +106,7 @@ export class PlaidPayments {
       throw new DBOSResponseError("items must be non-empty", 404);
     }
 
-    const handle = await ctxt.invoke(PlaidPayments).paymentSession(webhook, success_url, cancel_url, items, client_reference_id);
+    const handle = await ctxt.startWorkflow(PlaidPayments).paymentSession(webhook, success_url, cancel_url, items, client_reference_id);
     const session_id = handle.getWorkflowUUID();
     await ctxt.getEvent(session_id, payment_session_started_topic, 1000);
 
