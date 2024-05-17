@@ -418,7 +418,7 @@ This demo uses `nodemon.json` for configuration, as this is a common default.
   "watch": ["src/","migrations/"],
   "ext": "ts,json",
   "ignore": ["src/**/*.test.ts"],
-  "exec": "npm run build && npx knex migrate:up && npm run start"
+  "exec": "npm run build && npx dbos migrate && npm run start"
 }
 ```
 
