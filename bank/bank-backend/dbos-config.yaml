@@ -13,4 +13,5 @@ runtimeConfig:
 application:
   bankname: "DBOS Bank - ${BANK_SCHEMA}"
   bankport: '8081'
-  bankschema: ${BANK_SCHEMA}
+  #bankschema: ${BANK_SCHEMA}
+  bankschema: public
