@@ -61,7 +61,6 @@ jobs:
         working-directory: bank/bank-backend/
         run: |
           npm ci
-          npx prisma migrate dev --name init --schema prisma/schema.prisma
           npm run lint
           npm run build
           npm test
