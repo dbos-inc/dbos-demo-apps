@@ -6,13 +6,6 @@ database:
   app_db_name: ${POSTGRES_DATABASE}
   app_db_client: 'typeorm'
   connectionTimeoutMillis: 3000
-telemetry:
-  logs:
-    logLevel: 'debug'
-    addContextMetadata: true
-    silent: false
-  traces:
-    enabled: false
 runtimeConfig:
   port: 3000
 application:

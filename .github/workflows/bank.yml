@@ -61,7 +61,6 @@ jobs:
         working-directory: bank/bank-backend/
         run: |
           npm ci
-          npx prisma migrate dev --name init --schema prisma/schema.prisma
           npm run lint
           npm run build
           npm test
@@ -72,4 +71,5 @@ jobs:
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
           BANK_PORT: 8081
-          BANK_SCHEMA: banktest
+          # CB 6/6/2024 - temporary limitation
+          BANK_SCHEMA: public
