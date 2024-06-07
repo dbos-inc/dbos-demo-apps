@@ -6,6 +6,8 @@ database:
   app_db_name: 'bank'
   password: ${PGPASSWORD}
   app_db_client: "prisma"
+  migrate:
+    - npx prisma migrate deploy
 runtimeConfig:
   port: 8081
 application:
