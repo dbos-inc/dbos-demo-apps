@@ -3,17 +3,9 @@ database:
   port: ${POSTGRES_PORT}
   username: ${POSTGRES_USERNAME}
   password: ${POSTGRES_PASSWORD}
-  user_database: ${POSTGRES_DATABASE}
-  system_database: 'opsys'
+  app_db_name: ${POSTGRES_DATABASE}
+  app_db_client: 'typeorm'
   connectionTimeoutMillis: 3000
-  user_dbclient: 'typeorm'
-telemetry:
-  logs:
-    logLevel: 'debug'
-    addContextMetadata: true
-    silent: false
-  traces:
-    enabled: false
 runtimeConfig:
   port: 3000
 application:

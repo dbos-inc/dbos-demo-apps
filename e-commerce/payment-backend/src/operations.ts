@@ -1,7 +1,9 @@
 import {
   TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
-  GetApi, PostApi, DBOSResponseError, ArgRequired, ArgOptional, DBOSContext, Communicator, CommunicatorContext, ArgSource, ArgSources
+  GetApi, PostApi, DBOSResponseError, ArgRequired, ArgOptional, DBOSContext, Communicator, CommunicatorContext, ArgSource, ArgSources, KoaMiddleware
 } from '@dbos-inc/dbos-sdk';
+
+import KoaViews from '@ladjs/koa-views';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -24,6 +26,7 @@ export interface ItemTable {
 }
 
 export const payment_complete_topic = "payment_complete_topic";
+export const payment_session_started_topic = "payment_session_started_topic";
 export const payment_submitted = "payment.submitted";
 export const payment_cancelled = "payment.cancelled";
 
@@ -57,8 +60,38 @@ export interface PaymentSessionInformation {
   items: PaymentItem[];
 }
 
+@KoaMiddleware(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }))
 export class PlaidPayments {
+  // UI
+  @GetApi('/payment/:session_id')
+  static async paymentPage(ctx: HandlerContext, session_id: string) {
+    const session = await ctx.invoke(PlaidPayments).getSessionInformationTrans(session_id);
+    if (!session) {
+      return `Invalid session id ${session_id}`;
+    }
 
+    await ctx.koaContext.render('payment', { session });
+  }
+
+  @PostApi('/payment/:session_id')
+  static async paymentAction(ctx: HandlerContext, @ArgSource(ArgSources.URL) session_id: string) {
+    const session = await ctx.invoke(PlaidPayments).getSessionInformationTrans(session_id);
+    if (!session) {
+      return `Invalid session id ${session_id}`;
+    }
+
+    const body = ctx.koaContext.request.body as object;
+    const submit = 'submit' in body;
+    if (submit) {
+      await PlaidPayments.submitPayment(ctx, session_id);
+      ctx.koaContext.redirect(session.success_url);
+    } else {
+      await PlaidPayments.cancelPayment(ctx, session_id);
+      ctx.koaContext.redirect(session.cancel_url);
+    }
+  }
+
+  // API for shop
   @PostApi('/api/create_payment_session')
   static async createPaymentSession(
     ctxt: HandlerContext,
@@ -73,8 +106,9 @@ export class PlaidPayments {
       throw new DBOSResponseError("items must be non-empty", 404);
     }
 
-    const handle = await ctxt.invoke(PlaidPayments).paymentSession(webhook, success_url, cancel_url, items, client_reference_id);
+    const handle = await ctxt.startWorkflow(PlaidPayments).paymentSession(webhook, success_url, cancel_url, items, client_reference_id);
     const session_id = handle.getWorkflowUUID();
+    await ctxt.getEvent(session_id, payment_session_started_topic, 1000);
 
     return {
       session_id,
@@ -96,9 +130,24 @@ export class PlaidPayments {
     };
   }
 
+  // Optional API, used in shop guide and/or unit tests
+  @PostApi('/api/submit_payment')
+  static async submitPayment(ctxt: HandlerContext, session_id: string) {
+    await ctxt.send(session_id, payment_submitted, payment_complete_topic);
+  }
+
+  @PostApi('/api/cancel_payment')
+  static async cancelPayment(ctxt: HandlerContext, session_id: string) {
+    await ctxt.send(session_id, payment_cancelled, payment_complete_topic);
+  }
+
   @GetApi('/api/session_info/:session_id')
+  static async getSessionInformation(ctxt: HandlerContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
+    return ctxt.invoke(PlaidPayments).getSessionInformationTrans(session_id);
+  }
+
   @Transaction({ readOnly: true })
-  static async getSessionInformation(ctxt: KnexTransactionContext, @ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
+  static async getSessionInformationTrans(ctxt: KnexTransactionContext, session_id: string): Promise<PaymentSessionInformation | undefined> {
     ctxt.logger.info(`getting session record ${session_id}`);
     const session = await ctxt.client<SessionTable>('session')
       .select("session_id", "success_url", "cancel_url", "status")
@@ -110,16 +159,6 @@ export class PlaidPayments {
       .select("description", "price", "quantity")
       .where({ session_id });
     return { ...session, items };
-  }
-
-  @PostApi('/api/submit_payment')
-  static async submitPayment(ctxt: HandlerContext, session_id: string) {
-    await ctxt.send(session_id, payment_submitted, payment_complete_topic);
-  }
-
-  @PostApi('/api/cancel_payment')
-  static async cancelPayment(ctxt: HandlerContext, session_id: string) {
-    await ctxt.send(session_id, payment_cancelled, payment_complete_topic);
   }
 
   @Workflow()
@@ -134,6 +173,7 @@ export class PlaidPayments {
     const session_id = ctxt.workflowUUID;
     ctxt.logger.info(`creating payment session ${session_id}`);
     await ctxt.invoke(PlaidPayments).insertSession(session_id, webhook, success_url, cancel_url, items, client_ref);
+    await ctxt.setEvent(payment_session_started_topic, 'inserted');
 
     const notification = await ctxt.recv<string>(payment_complete_topic, 60) ?? "payment.error";
     ctxt.logger.info(`payment session ${session_id} new status ${notification}`);
@@ -170,12 +210,16 @@ export class PlaidPayments {
 
   @Communicator()
   static async paymentWebhook(
-    _ctxt: CommunicatorContext, 
+    ctxt: CommunicatorContext,
     webhook: string, 
     session_id: string, 
     status: string | undefined, 
     client_reference_id: string | undefined
-  ): Promise<void> {
+  ): Promise<void>
+  {
+    if (ctxt.getConfig('unittest', false) && webhook === "http://fakehost/webhook") {
+      return; // In testing, matching the bogus testing URL
+    }
     const body = { session_id, payment_status: getPaymentStatus(status), client_reference_id };
 
     await fetch(webhook, {

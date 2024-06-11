@@ -83,7 +83,8 @@ Grant that user the following permissions (replace `yky-social-photos` with your
 			]
 		}
 	]
-}```
+}
+```
 
 Use the following CORS policy:
 ```json
@@ -102,7 +103,8 @@ Use the following CORS policy:
         ],
         "ExposeHeaders": []
     }
-]```
+]
+```
 
 ### Build and Run Backend
 

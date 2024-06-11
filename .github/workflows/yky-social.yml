@@ -1,3 +1,5 @@
+name: CI for YKY-Social
+
 on:
   push:
     branches: [ "main" ]
@@ -20,7 +22,7 @@ jobs:
     services:
       # Label used to access the service container.
       postgres:
-        image: postgres:15.4
+        image: postgres:16
         env:
           # Specify the password for Postgres superuser.
           POSTGRES_PASSWORD: dbos
@@ -48,8 +50,6 @@ jobs:
         run: |
           cd ./dbos-demo-apps/yky-social
           npm ci --no-audit
-        env:
-          NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Create new PG DB and User
         run: |
           cd ./dbos-demo-apps/yky-social
@@ -67,7 +67,7 @@ jobs:
           # The stuff used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
-          POSTGRES_DBNAME: socialts
+          POSTGRES_DATABASE: socialts
           POSTGRES_USERNAME: socialts
           PGPASSWORD: socialts
           POSTGRES_PASSWORD: socialts

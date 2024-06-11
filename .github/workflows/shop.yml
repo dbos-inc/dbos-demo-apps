@@ -1,0 +1,85 @@
+name: CI for ecommerce / shop demo
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'e-commerce/**'
+      - '.github/workflows/shop.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'e-commerce/**'
+      - '.github/workflows/shop.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Service container for Postgres
+    services:
+      # Label used to access the service container.
+      shopdb:
+        image: postgres:16
+        env:
+          # Specify the password for Postgres superuser.
+          POSTGRES_PASSWORD: shop
+        # Set health checks to wait until postgres has started
+        options: >-
+          --name shopdb
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+    steps:
+      - name: "Setup postgres config"
+        run: |
+          docker ps
+          docker exec shopdb psql -U postgres -c "CREATE DATABASE shop;"
+          docker exec shopdb psql -U postgres -c "CREATE DATABASE payment;"
+        env:
+          PGPASSWORD: shop
+      - name: Checkout demo app
+        uses: actions/checkout@v3
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: 'e-commerce/shop-backend/package-lock.json'
+      - name: Compile Shop Backend Server
+        working-directory: e-commerce/shop-backend/
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+          npm test
+        env:
+          PGPASSWORD: shop
+          # The hostname used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: localhost
+          # The default PostgreSQL port
+          POSTGRES_PORT: 5432
+      - name: Compile Payment Backend Server
+        working-directory: e-commerce/payment-backend/
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+          npm test
+        env:
+          PGPASSWORD: shop
+          # The hostname used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: localhost
+          # The default PostgreSQL port
+          POSTGRES_PORT: 5432
+

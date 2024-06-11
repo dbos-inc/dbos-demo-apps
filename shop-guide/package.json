@@ -1,0 +1,21 @@
+{
+  "name": "shop-backend",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc",
+    "test": "npx knex migrate:rollback && npx knex migrate:up && npx knex seed:run && jest --detectOpenHandles",
+    "db:setup": "npx knex migrate:up && npx knex seed:run",
+    "lint": "eslint src",
+    "lint-fix": "eslint --fix src"
+  },
+  "dependencies": {
+    "@dbos-inc/dbos-sdk": "^1.13.9",
+    "knex": "^3.1.0"
+  },
+  "devDependencies": {
+    "@dbos-inc/dbos-cloud": "^1.13.9",
+    "@dbos-inc/eslint-plugin": "0.0.6",
+    "eslint": "^8.56.0",
+    "typescript": "^5.2.2"
+  }
+}

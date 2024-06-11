@@ -3,9 +3,9 @@
 This demo is a pair of [DBOS](https://github.com/dbos-inc/dbos-sdk) based systems demonstrating an 
 e-commerce scenario with separate apps for the online shop and the payment provider.
 
-## Demo Setup
+## Demo Setup (local)
 
-This demo requires Node 18.x or later and a PostgreSQL compatible database.
+This demo requires Node 20.x or later and a PostgreSQL compatible database.
 The demo includes a script to configure a PostgreSQL Docker container on your behalf.
 
 ### npm install 
@@ -46,66 +46,22 @@ via [psql](https://www.postgresql.org/docs/current/app-psql.html) in the docker 
 Additionally, you need to configure the schemas for those databases via the `npm run db:setup` command in each of the backend package folders.
 Both shop and payment use [knex.js](https://knexjs.org/) as a database access library to manage migrations and seed data.
 
-### Run the Demo
+### Run the Demo (locally)
 
-Each of the four parts of the demo must run in its own terminal window.
-For each setup, each package has a single npm command that is used to build and launch the package
+Each of the three parts of the demo must run in its own terminal window.
+For each setup, each package has a single npm command that is used to build and launch the package.
 
-* For payment-backend and shop-backend, run `npx dbos-sdk start` to build and launch the app
+* For payment-backend and shop-backend, run `npm run build` and `npx dbos-sdk start` to build and launch the app, respectively.
+* For shop-frontend, run `npm run dev` to launch the app.
 
-* For shop-frontend, run `npm run dev` to launch the app
-* To run with a backend in the cloud, export NEXT_PUBLIC_SHOP_BACKEND=<url to shop backend>
-
-* for payment-frontend, run `npm run start` to build and launch the app
-* To run with a backend in the cloud set export PLAID_BACKEND=<url to cloud backend>
-
-* for cloud update the urls in dbos-config.yaml to point to cloud
-
-> If you are using VSCode, there are launch configurations for each individual package in the demo. 
-> Additionally, there are compound configurations for launching the front and backend of shop or payment
-> as well as a compound configuration for launching all four packages in the E-Commerce demo
-
-## OpenAPI-based DBOS clients
-
-DBOS CLI 0.6 adds the `openapi` command that generates an [OpenAPI 3.0.3](https://www.openapis.org/) definition for a DBOS project.
-This specification can be used to automatically generate strongly typed client code to invoke DBOS HTTP endpoints.
-The E-Commerce app demonstrates this approach.
-
-> Note: Typically, assets such as the generated OpenAPI definition and client code would be generated during the build process instead of checked into the source code repository.
-> For these demo apps, we have added the generated files to this repository in order to minimize the effort for developers trying out the demo.
-> This section describes the steps we went thru to produce the OpenAPI definition and the client code.
-
-### Generate OpenAPI Definition
-
-Both the shop and payment backend projects are DBOS projects that have `src/operations.ts` as their operations entrypoint file.
-To generate an OpenAPI definition for a DBOS project, run the `dbos-sdk openapi` command from a terminal like this:
-
-``` shell
-# run this in the <root>/e-commerce/payment-backend and <root>/e-commerce/shop-backend folders
-npx dbos-sdk openapi src/operations.ts
-```
-
-This will generate the OpenAPI definition file for the project and save it to the `src/openapi.yaml` path.
-
-### Generate Client Code
-
-There are a variety of tools from different vendors to generate client code from an OpenAPI definition
-such as [Swagger CodeGen](https://swagger.io/tools/swagger-codegen/) and [Microsoft Kiota](https://learn.microsoft.com/en-us/openapi/kiota/overview).
-For this demo, we used [OpenAPI Generator](https://openapi-generator.tech/).
-OpenAPI Generator provides a variety of generators targeting different languages and runtimes.
-We used [typescript-fetch](https://openapi-generator.tech/docs/generators/typescript-fetch) for shop
-and [typescript-node](https://openapi-generator.tech/docs/generators/typescript-node) for payment.
-
-Installing the [OpenAPI Generator CLI](https://openapi-generator.tech/docs/installation) requires Java runtime support.
-They also provide a [Docker image](https://openapi-generator.tech/docs/installation#docker) that acts as a standalone executable.
-Both shop and payment backend folders contain a `create-openapi-client.sh` script that executes the OpenAPI Generator Docker image 
-against the generated OpenAPI definition file (specifying the appropriate generator) and moves the generated code into the 
-appropriate frontend project. 
+> If you are using VSCode, there are launch configurations for each individual package in the demo.
+> Additionally, there are compound configurations for launching the front and backend of shop or payment.
+> as well as a compound configuration for launching all three packages in the E-Commerce demo.
 
 ## Demo Walkthrough
 
-Once all four processes are running, navigate to http://localhost:3000. 
-You will be presented with a simple web shop for purchasing extremely high quality writing utensils.
+Once all three processes are running, navigate to http://localhost:3000.
+You will be presented with a simple web shop for purchasing extremely high-quality writing utensils.
 
 Before adding a writing utensil to your cart, you must first create an account and login.
 Press the "Login" button in the navigation bar to register a username and password.
@@ -116,11 +72,91 @@ Add one or more writing utensils to your cart then press "Proceed to Checkout".
 The checkout page will display a summary of your order. 
 
 Pressing "Proceed to Checkout" on the summary page redirects you to the payment page.
-Note that this app is running on a different localhost port (8000 vs. 3000 for shop) to simulate a different web site.
+Note that this app is running on a different localhost port (defaults of 8086 for payment vs. 3000 for shop) to simulate a different web site.
 The payment page will display a similar summary of your order along with buttons to submit or cancel payment.
 Pressing Cancel Payment will redirect you back to the shop, with your cart intact.
 Pressing Submit Payment simulates entering your payment information, redirecting you back to shop indicating your payment was successful.
 When a payment is submitted, your shopping cart is cleared automatically.
+
+## Deploying the Demo to the Cloud
+> **💡 Tip:** If you have not yet read the [DBOS Cloud Quickstart](https://docs.dbos.dev/getting-started/quickstart-cloud) or the
+> [DBOS Cloud Tutorials](https://docs.dbos.dev/category/dbos-cloud-tutorials) it may be a good idea to do so.
+
+### Deploying the Payment Backend
+The following steps are necessary to deploy the payment backend to the DBOS Cloud:
+
+* Register for DBOS Cloud if you haven't already done so.
+* Change to the payment application's directory (`e-commerce/payment-backend`).
+* Use the `npx dbos-cloud login` command from within the application directory, if you haven't already logged in.
+* Provision a DBOS Cloud database instance (using `npx dbos-cloud database provision`) if you have not already done so.
+* Register the application, using `npx dbos-cloud app register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance.
+* In the dbos-config.yaml, set `frontend_host` to the URL that the payment server will have once deployed.  This is of the form `https://<username>-payment-backend.cloud.dbos.dev`.
+* Deploy the application, using `npx dbos-cloud app deploy`.
+
+Be sure to note down the URL provided for accessing the payment backend; it is necessary for configuring the shop backend.
+The URL will be of the form `https://<username>-<app-name>.cloud.dbos.dev/`.
+The URL should match what was set as `frontend-host` in `dbos-config.yaml`.  If not, edit `dbos-config.yaml` and redeploy with `npx dbos-cloud app deploy`.
+
+### Configuring and Deploying the Shop Backend
+Assuming that the payment backend has already been deployed, the following additional steps are necessary to deploy the shop backend to the DBOS Cloud.
+
+* Change to the shop backend application directory (`e-commerce/shop-backend`).
+* Use the `npx dbos-cloud login` command from within the application directory, if you haven't already logged in.
+* Register the application, using `npx dbos-cloud app register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance. (The payment app and shop app can share this database server instance, each will have its own database on that server instance.)
+* Adjust the `dbos-config.yaml` file, setting `payment_host` and `local_host` to your DBOS Cloud URLs.
+* Deploy the `shop-backend` app with `npx dbos-cloud app deploy`.
+
+### Shop Frontend
+The Shop Frontend is built in [Next.js](https://nextjs.org/) and does not (currently) deploy to DBOS Cloud.
+
+You can continue to run it locally:
+* Change to the shop frontend application directory (`e-commerce/shop-frontend`).
+* Set the environment variable `NEXT_PUBLIC_SHOP_BACKEND` to `https://<username>-shop-backend.cloud.dbos.dev/`
+* Run `npm run dev` to launch the app.
+* All three processes are deployed and running, navigate to http://localhost:3000.
+
+The Shop frontend can also be deployed to a Next.js hosting environment, such as [Vercel](https://vercel.com/solutions/nextjs).
+
+## Cloud Monitoring, Logs, and Dashboard
+
+### Retrieving Status and Logs
+Once you have deployed the shop to the cloud and placed a few orders, try out some of the cloud administration and monitoring commands.
+(See the [tutorial](https://docs.dbos.dev/category/dbos-cloud-tutorials) or the [CLI reference](https://docs.dbos.dev/api-reference/cloud-cli) for more information.)
+
+Check the application status and logs from either the `e-commerce/payment-backend` or `e-commerce/shop-backend` directories by excuting DBOS Cloud CLI commands, such as:
+* `npx dbos-cloud app status` - Provide a summary of the app, its database server, whether it is available, and if so, the app's URL
+* `npx dbos-cloud app logs -l 300` - Retrieve the last 5 minutes worth of application logs.
+
+### Viewing the Monitoring Dashboard
+The DBOS Cloud Monitoring Dashboard provides summary statistics of application calls, and allows drilling down into log entries and call traces.
+
+To access the dashboard:
+* There is one dashboard per DBOS Cloud user registration.  If you have not yet already launched a dashboard, run `npx dbos-cloud dashboard launch`.  This will provide the dashboard URL.
+* If you already launched the dashboard, but forget the URL, run `npx dbos-cloud dashboard url` from a DBOS application directory.
+* Open the dashboard URL in a web browser, and sign in.
+
+The dashboard provides logs and traces for all of your applications.  For additional information about the dashboard, see the [Monitoring Dashboard tutorial](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
+
+## Using the DBOS Time Travel Debugger
+
+Provenance data is captured by DBOS during workflow execution.  The DBOS debugger uses this provenance data to provide replays of past transactions.  This novel feature allows production scenarios to be reproduced in the development environment.
+
+A number of steps are required.  First, a workflow is selected for replay.  Then, database data for that workflow is exported and brought to the development environment.  Then, the application code is executed against a database proxy that provides snapshots of data as the workflow progresses.
+
+### Visual Studio Code Extension
+The following section is only a brief overview of the debugger extension.  For a tutorial, see [Time Travel Debugging](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging).
+
+Provenance data is automatically captured by DBOS Cloud during workflow execution.  Time travel currently only works for applications deployed to DBOS Cloud.
+* The debugger can be launched by clicking on the "Time Travel Debug" icon (which will be above the `@Workflow` and `@Transaction` decorators placed on DBOS methods).  This will pull down workflow IDs from the cloud.
+* The debugger can also be launched by clicking on workflow IDs in the cloud dashboard.
+
+> Tips:
+> * The "DBOS Time Travel Debugger" extension must be installed.  Sometimes restarting Visual Studio Code is necessary.
+> * Detailed information and instructions can be found in the [Time Travel Debugger](https://docs.dbos.dev/api-reference/time-travel-debugger) reference.
+> * Visual Studio Code should be open to the folder of the application you want to debug, not a child or parent folder.  This allows the extension to find the application configuration and use the saved app credentials to access DBOS Cloud.
+> * If the extension reports an error, review the logs that can be seen under "View"->"Output"->"DBOS" and "DBOS Debug Proxy".
+> * The Debugger extension needs the database password to retrieve a snapshot of data for debugging.  If the password needs to be changed, select "View"->"Command Palette..." and click "DBOS: Delete Stored Application Datbase Passwords" and try debugging again.
+> * Debugging sessions are often more interesting if a breakpoint is set prior to launch.  (Otherwise execution will replay and the debugging session will quickly end.)
 
 ## Under the Covers
 
@@ -271,3 +307,122 @@ static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
   }
 }
 ```
+
+## OpenAPI-based DBOS clients
+
+The `@dbos-inc/dbos-openapi` package provides an `generate` command that generates an [OpenAPI 3.0.3](https://www.openapis.org/)
+definition for a DBOS project.
+This specification can be used to automatically generate strongly typed client code to invoke DBOS HTTP endpoints.
+The E-Commerce app demonstrates this approach.
+
+> Note: Typically, assets such as the generated OpenAPI definition and client code would be generated during the build process instead of checked into the source code repository.
+> For these demo apps, we have added the generated files to this repository in order to minimize the effort for developers trying out the demo.
+> This section describes the steps we went through to produce the OpenAPI definition and the client code.
+
+### Generate OpenAPI Definition
+
+Both the shop and payment backend projects are DBOS projects that have `src/operations.ts` as their operations entrypoint file.
+To generate an OpenAPI definition for a DBOS project, run the `dbos-openapi generate` command from a terminal like this:
+
+``` shell
+# run this in the <root>/e-commerce/payment-backend and <root>/e-commerce/shop-backend folders
+npx dbos-openapi generate src/operations.ts
+```
+
+This will generate the OpenAPI definition file for the project and save it to the `src/openapi.yaml` path.
+
+### Generate Client Code
+
+The shop backend folder contains a `create-openapi-client.sh` script that executes the OpenAPI Generator Docker image
+against the generated OpenAPI definition file (specifying the appropriate generator) and moves the generated code into the
+appropriate frontend project.
+
+There are a variety of tools from different vendors to generate client code from an OpenAPI definition
+such as [Swagger CodeGen](https://swagger.io/tools/swagger-codegen/) and [Microsoft Kiota](https://learn.microsoft.com/en-us/openapi/kiota/overview).
+For this demo, we used [OpenAPI Generator](https://openapi-generator.tech/).
+OpenAPI Generator provides a variety of generators targeting different languages and runtimes.
+We used [typescript-fetch](https://openapi-generator.tech/docs/generators/typescript-fetch) for shop
+and [typescript-node](https://openapi-generator.tech/docs/generators/typescript-node) for payment.
+
+Installing the [OpenAPI Generator CLI](https://openapi-generator.tech/docs/installation) requires Java runtime support.
+They also provide a [Docker image](https://openapi-generator.tech/docs/installation#docker) that acts as a standalone executable.
+
+## Unit Testing in DBOS
+
+The e-commerce example application demonstrates a number of techniques for testing DBOS application logic before deployment.
+For more information on testing in DBOS, see the [Testing and Debugging](https://docs.dbos.dev/tutorials/testing-tutorial) tutorial and [DBOS Testing Runtime](https://docs.dbos.dev/api-reference/testing-runtime) reference.
+
+### Testing Techniques
+
+The `payment-backend` project uses:
+* The [`jest`](https://jestjs.io/) testing framework for defining test suites (setup, teardown, and tests) and reporting test results.
+* The [DBOS Testing Runtime](https://docs.dbos.dev/api-reference/testing-runtime), which permits "clear-box" testing of the application logic.
+* [`supertest`](https://github.com/ladjs/supertest) executed against [`testRuntime.getHandlersCallback()`](https://docs.dbos.dev/api-reference/testing-runtime#runtimegethandlerscallback) to test HTTP handling logic in combination with the DBOS-based application code.
+* `testRuntime.send` and `testRuntime.retrieveWorkflow` to examine and interact with the workflow under test.
+* `testRuntime.setConfig` to set [application configuration](https://docs.dbos.dev/api-reference/configuration/#application) items, allowing the resulting behavior to be unit-tested.
+
+The `shop-backend` project uses a few additional testing techniques:
+* Using `testRuntime.invoke` to call application functions without creating HTTP-style requests (via `supertest`).
+* Using `jest.spyOn` to mock the behavior of communicators.
+> **💡 Note:** `jest.spyOn` cannot be used to replace a DBOS function directly, as places its interceptor after the function is already registered with the DBOS framework.
+> As a workaround, consider refactoring such that `jest.spyOn` intercepts a plain, undecorated `static` method.
+
+### Setting Up For Testing
+In order to use `jest`, `supertest`, etc., they should be installed as development dependencies in `package.json`:
+```bash
+npm install --save-dev jest supertest ts-jest
+```
+
+Tests can be run from the command line using commands like:
+```bash
+PGPASSWORD=<pwd> npm run test
+```
+
+Availability of simple testing command invocation is due to the following lines in `package.json`, located in the `scripts` section:
+```json
+  "scripts": {
+    "test": "npx knex migrate:rollback && npx knex migrate:up && jest --detectOpenHandles"
+  }
+```
+
+## Using `nodemon` To Apply Changes To Running Development Servers
+When developing an application and running locally, it is convenient to have the running server pick up any
+changes to the code as they are saved.  One common solution to this is to use [`nodemon`](https://github.com/remy/nodemon).
+
+The `shop-backend` app demonstrates use of this utility within a DBOS project; if you run `npm run dev`, the server
+process launched will automatically recompile and restart when the code is changed.
+
+The following steps were used to enable `nodemon` on `shop-backend`, and similar steps can be applied to any DBOS application.
+
+### Install `nodemon`
+`nodemon` is just a regular package that can be installed with a command such as `npm install --save-dev nodemon`.
+(Because `nodemon` is used in development only, it should be installed in the `devDependencies` section of `package.json`.)
+
+### Add Helper Scripts To `package.json`
+To allow commands such as `npm run start` (which will be the same as `npx dbos-sdk start` but perhaps be more consistent
+with the experience in other frameworks) and `npm run dev` to work, these should be added to the `scripts` section of
+`package.json`:
+```json
+  "scripts": {
+    "dev": "nodemon",
+    "start": "npx dbos-sdk start"
+  },
+```
+
+### Provide `nodemon` Configuration
+There are [numerous approaches for configuring `nodemon`](https://github.com/remy/nodemon?tab=readme-ov-file#config-files).
+This demo uses `nodemon.json` for configuration, as this is a common default.
+
+```json
+{
+  "watch": ["src/","migrations/"],
+  "ext": "ts,json",
+  "ignore": ["src/**/*.test.ts"],
+  "exec": "npm run build && npx dbos migrate && npm run start"
+}
+```
+
+* `exec`: The command to be executed when starting or restarting the app; in this case the start command defined in `scripts` as above.
+* `watch`: This array lists directories to monitor for file changes.
+* `ext`: This comma-delimited list indicates which file extensions should be monitored for changes.
+* `ignore`: This array lists patterns of files to exclude from monitoring.

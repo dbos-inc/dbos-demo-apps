@@ -21,6 +21,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
+  await knex.schema.dropTable('items'); // Items depends on session
   await knex.schema.dropTable('session');
-  await knex.schema.dropTable('items');
 }

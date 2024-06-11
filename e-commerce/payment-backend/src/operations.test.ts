@@ -8,6 +8,7 @@ describe("operations", () => {
 
   beforeAll(async () => {
     testRuntime = await createTestingRuntime([PlaidPayments], undefined);
+    testRuntime.setConfig('unittest', true);
     await testRuntime.queryUserDB<void>(`delete from items;`);
     await testRuntime.queryUserDB<void>(`delete from session;`);
   });
@@ -16,9 +17,9 @@ describe("operations", () => {
     await testRuntime.destroy();
   });
 
-
   test("foo", async () => {
     const req = {
+      webhook: "http://fakehost/webhook",
       success_url: "http://fakehost/success",
       cancel_url: "http://fakehost/cancel",
       client_reference_id: "fake-client-ref",

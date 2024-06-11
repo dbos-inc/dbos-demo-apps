@@ -1,8 +1,0 @@
-database:
-  hostname: 'localhost'
-  port: 5432
-  username: 'postgres'
-  user_database: 'helloprisma'
-  password: ${PGPASSWORD}
-  connectionTimeoutMillis: 3000
-  user_dbclient: "prisma"
