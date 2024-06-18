@@ -17,14 +17,14 @@ In this quickstart, we use [knex.js](https://knexjs.org/) to manage database mig
 Run our provided migration to create a database table:
 
 ```bash
-npx dbos-sdk migrate
+npx dbos migrate
 ```
 
 Next, build and run the app:
 
 ```bash
 npm run build
-npx dbos-sdk start
+npx dbos start
 ```
 
 Finally, curl the server to see that it's working!
@@ -38,4 +38,4 @@ We can help you get started in our [programming quickstart](https://docs.dbos.de
 
 ## Learn More
 
-To learn more about DBOS, take a look at [our documentation](https://docs.dbos.dev/) or our [source code](https://github.com/dbos-inc/dbos-sdk).
+To learn more about DBOS, take a look at [our documentation](https://docs.dbos.dev/) or our [source code](https://github.com/dbos-inc/dbos-transact).

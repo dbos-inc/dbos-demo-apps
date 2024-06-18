@@ -1,6 +1,6 @@
 # DBOS E-Commerce Demo Apps
 
-This demo is a pair of [DBOS](https://github.com/dbos-inc/dbos-sdk) based systems demonstrating an 
+This demo is a pair of [DBOS](https://github.com/dbos-inc/dbos-transact) based systems demonstrating an 
 e-commerce scenario with separate apps for the online shop and the payment provider.
 
 ## Demo Setup (local)
@@ -51,7 +51,7 @@ Both shop and payment use [knex.js](https://knexjs.org/) as a database access li
 Each of the three parts of the demo must run in its own terminal window.
 For each setup, each package has a single npm command that is used to build and launch the package.
 
-* For payment-backend and shop-backend, run `npm run build` and `npx dbos-sdk start` to build and launch the app, respectively.
+* For payment-backend and shop-backend, run `npm run build` and `npx dbos start` to build and launch the app, respectively.
 * For shop-frontend, run `npm run dev` to launch the app.
 
 > If you are using VSCode, there are launch configurations for each individual package in the demo.
@@ -399,13 +399,13 @@ The following steps were used to enable `nodemon` on `shop-backend`, and similar
 (Because `nodemon` is used in development only, it should be installed in the `devDependencies` section of `package.json`.)
 
 ### Add Helper Scripts To `package.json`
-To allow commands such as `npm run start` (which will be the same as `npx dbos-sdk start` but perhaps be more consistent
+To allow commands such as `npm run start` (which will be the same as `npx dbos start` but perhaps be more consistent
 with the experience in other frameworks) and `npm run dev` to work, these should be added to the `scripts` section of
 `package.json`:
 ```json
   "scripts": {
     "dev": "nodemon",
-    "start": "npx dbos-sdk start"
+    "start": "npx dbos start"
   },
 ```
 

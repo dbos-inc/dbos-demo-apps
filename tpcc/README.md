@@ -46,7 +46,7 @@ Next, build and run the app:
 
 ```bash
 npm run build
-npx dbos-sdk start
+npx dbos start
 ```
 
 Finally, curl the server to see that it's working! You can modify the last parameter (we use `1` here for one warehouse) to the number of warehouses you loaded:

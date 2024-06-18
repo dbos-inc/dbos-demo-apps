@@ -1,6 +1,6 @@
 # DBOS Social Demo App (YKY)
 
-This demo shows a [DBOS](https://github.com/dbos-inc/dbos-sdk) backend system coupled with a next.js frontend.
+This demo shows a [DBOS](https://github.com/dbos-inc/dbos-transact) backend system coupled with a next.js frontend.
 
 It simulates a simple social network, and demonstrates:
 * Use of DBOS workflows, transactions, and communicators
@@ -129,7 +129,7 @@ export S3_BUCKET_NAME=<bucket>
 export AWS_ACCESS_KEY=<key>
 export AWS_SECRET_ACCESS_KEY=<secret>
 
-npx dbos-sdk start -p 3000
+npx dbos start -p 3000
 ```
 
 ## Run YKY FrontEnd
