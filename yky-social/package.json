@@ -9,7 +9,7 @@
     "lint": "eslint --fix --ext .ts .",
     "tsc": "tsc",
     "clean": "rm -rf dist",
-    "start": "npm run build && dbos-sdk start"
+    "start": "npm run build && dbos start"
   },
   "keywords": [],
   "author": "",
