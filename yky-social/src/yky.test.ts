@@ -21,7 +21,7 @@ import { TestingRuntime, createTestingRuntime } from '@dbos-inc/dbos-sdk';
 let testRuntime: TestingRuntime;
 
 beforeAll(async () => {
-  testRuntime = await createTestingRuntime([YKY, Operations, CurrentTimeCommunicator, BcryptCommunicator], "dbos-config.yaml");
+  testRuntime = await createTestingRuntime();
   await testRuntime.createUserSchema();
 });
 

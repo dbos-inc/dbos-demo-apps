@@ -2,9 +2,6 @@ import { WorkflowContext, Workflow, HandlerContext, PostApi, ArgOptional } from 
 import { ShopUtilities } from './utilities';
 import { Frontend } from './frontend';
 
-export { ShopUtilities };
-export { Frontend };
-
 export const PAYMENT_TOPIC = "payment";
 export const PAYMENT_URL_EVENT = "payment_url";
 export const ORDER_URL_EVENT = "order_url";
