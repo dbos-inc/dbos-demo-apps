@@ -3,7 +3,6 @@ import {
   GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
 } from '@dbos-inc/dbos-sdk';
 import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
-export { BcryptCommunicator };
 import { Knex } from 'knex';
 import { Request } from 'koa';
 
