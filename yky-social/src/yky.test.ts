@@ -9,12 +9,8 @@ import { Readable } from 'stream';
 
 import { describe, expect } from '@jest/globals';
 import request from 'supertest';
-import { YKY } from './app';
 
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
-import { Operations } from './YKYOperations';
-import { CurrentTimeCommunicator } from '@dbos-inc/communicator-datetime';
-import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
 
 import { TestingRuntime, createTestingRuntime } from '@dbos-inc/dbos-sdk';
 
