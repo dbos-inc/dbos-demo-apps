@@ -14,6 +14,8 @@ import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { TestingRuntime, createTestingRuntime } from '@dbos-inc/dbos-sdk';
 
+export { Operations } from './YKYOperations';
+
 let testRuntime: TestingRuntime;
 
 beforeAll(async () => {
