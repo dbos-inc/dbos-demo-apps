@@ -470,7 +470,7 @@ static async mediaUpload(ctx: WorkflowContext, mtype: string, mediaId: string, m
         // It might be a good idea to clobber the s3 key in case it arrived but we weren't told.
         //   (The access key duration is less than the time we wait, so it can't be started.)
         // TODO: perhaps put this operation in a communicator later.
-        await this.ensureS3FileDropped(ctx, mediaFile, bucket);
+        await Operations.ensureS3FileDropped(ctx, mediaFile, bucket);
     }
     return {};
 }
