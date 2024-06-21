@@ -126,7 +126,7 @@ export class YKY
 
   @Transaction({readOnly: true})
   @GetApi('/recvtimeline')
-  static async receiveTimeline(ctx: TransactionContext<EntityManager>) 
+  static async receiveTimeline(ctx: TransactionContext<EntityManager>)
   {
     const rtl = await Operations.readRecvTimeline(ctx, ctx.authenticatedUser, [RecvType.POST], true);
     const tl = rtl.map((tle) => {
@@ -227,7 +227,8 @@ export class YKY
   @GetApi("/getMediaUploadKey")
   @Workflow()
   static async doKeyUpload(ctx: WorkflowContext, filename: string) {
-    const key = `photos/${filename}-${Date.now()}`;
+    const currTime = await ctx.invoke(CurrentTimeCommunicator).getCurrentTime();
+    const key = `photos/${filename}-${currTime}`;
     const bucket = ctx.getConfig('aws_s3_bucket', 'yky-social-photos');
     const postPresigned = await ctx.invoke(Operations).createS3UploadKey(key, bucket);
 
@@ -238,7 +239,7 @@ export class YKY
   static async doKeyDownload(ctx: HandlerContext, filekey: string) {
     const key = filekey;
     const bucket = ctx.getConfig('aws_s3_bucket', 'yky-social-photos');
-  
+
     const presignedUrl = await Operations.getS3DownloadKey(ctx, key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
   }
@@ -261,8 +262,8 @@ export class YKY
 
     // Future: Rate limit the user's requests as they start workflows...
     //   Or give the user the existing workflow, if any
-
-    const fn = `photos/${mediaKey}-${Date.now()}`;
+    const currTime = await ctx.invoke(CurrentTimeCommunicator).getCurrentTime();
+    const fn = `photos/${mediaKey}-${currTime}`;
     const wfh = await ctx.invoke(Operations).mediaUpload('profile', mediaKey, fn, bucket);
     const upkey = await ctx.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
     return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
@@ -292,7 +293,7 @@ export class YKY
     if (filekey === null) return {};
 
     const bucket = ctx.getConfig('aws_s3_bucket', 'yky-social-photos');
-  
+
     const presignedUrl = await Operations.getS3DownloadKey(ctx, filekey, bucket);
     ctx.logger.debug("Giving URL "+presignedUrl);
     return { message: "Signed URL", url: presignedUrl, key: filekey };

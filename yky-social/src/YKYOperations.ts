@@ -144,7 +144,7 @@ static async getPost(ctx: ORMTC, _curUid: string, post:string) :
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
 @Transaction({readOnly: true})
 static async findUser(ctx: ORMTC, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
-   Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]> 
+   Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]>
 {
     const manager = ctx.client;
     const userRep = manager.getRepository(UserLogin);
@@ -184,7 +184,7 @@ static async findUser(ctx: ORMTC, curUid:string, uname:string, getProfile:boolea
     if (getProfile) {
         const upRep = manager.getRepository(UserProfile);
         const up = await upRep.findOneBy({id: otherUser.id});
-        
+
         // Future: If we're not friends, we could strip part of this out based on public/private preferences
         if (up) {
             profile = up;
@@ -469,7 +469,8 @@ static async mediaUpload(ctx: WorkflowContext, mtype: string, mediaId: string, m
         // No need to make a database record, or, at this point, roll anything back.
         // It might be a good idea to clobber the s3 key in case it arrived but we weren't told.
         //   (The access key duration is less than the time we wait, so it can't be started.)
-        await this.ensureS3FileDropped(ctx, mediaFile, bucket);
+        // TODO: perhaps put this operation in a communicator later.
+        await Operations.ensureS3FileDropped(ctx, mediaFile, bucket);
     }
     return {};
 }
