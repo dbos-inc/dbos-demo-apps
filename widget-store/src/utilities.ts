@@ -1,4 +1,5 @@
-import { Transaction, TransactionContext} from '@dbos-inc/dbos-sdk';
+import { SendEmailCommunicator } from '@dbos-inc/communicator-email-ses';
+import { Transaction, TransactionContext, Workflow, WorkflowContext, configureInstance} from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -25,6 +26,8 @@ export interface Order {
 }
 
 export const PRODUCT_ID = 1;
+
+const reportSes = configureInstance(SendEmailCommunicator, 'reportSES', {awscfgname: 'aws_config'});
 
 export class ShopUtilities {
   @Transaction()
@@ -90,4 +93,46 @@ export class ShopUtilities {
     }
     return item[0];
   }
+
+  @Workflow()
+  static async nightlyReport(ctx: WorkflowContext) {
+    // NOTE: This is not correct for two reasons:
+    //  1. Use of a nondeterministic function `new Date()` outside of a communicator
+    //  2. This may not give the right answer if the workflow is delayed (see #1)
+    // We will fix these things in a bit.
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const sales = await ctx.invoke(ShopUtilities).getDailySales(yesterday);
+    await ShopUtilities.sendStatusEmail(ctx, yesterday, sales);
+  }
+  @Transaction({readOnly: true})
+  static async getDailySales(ctx: KnexTransactionContext, day: Date) {
+    const startOfDay = new Date(day.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(day.setHours(23, 59, 59, 999));
+
+    const result = await ctx.client('orders')
+      .join('products', 'orders.product_id', 'products.product_id')
+      .whereBetween('orders.last_update_time', [startOfDay, endOfDay])
+      .select(ctx.client.raw('COUNT(DISTINCT orders.order_id) as order_count'))
+      .select(ctx.client.raw('COUNT(orders.product_id) as product_count'))
+      .select(ctx.client.raw('SUM(products.price) as total_price'));
+
+    return result[0] as SalesSummary;
+  }
+
+  static async sendStatusEmail(ctx: WorkflowContext, yd: Date, sales: SalesSummary) {
+    await ctx.invoke(reportSes).sendEmail({
+      to: ['manager@widgetstore.dbos.dev'],
+      from: 'reportbot@widgetstore.dbos.dev',
+      subject: `Daily report for ${yd.toDateString()}`,
+      bodyText: `Yesterday we had ${sales.order_count} orders, selling ${sales.product_count} units, for a total of ${sales.total_price} dollars`,
+    });
+  }
+}
+
+interface SalesSummary {
+  order_count: number;
+  product_count: number;
+  total_price: number;
 }

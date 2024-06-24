@@ -1,6 +1,6 @@
 import { WorkflowContext, Workflow, HandlerContext, PostApi, ArgOptional } from '@dbos-inc/dbos-sdk';
 import { ShopUtilities } from './utilities';
-export { Frontend } from './frontend';
+import { Frontend } from './frontend';
 
 export { ShopUtilities };
 export { Frontend };
@@ -85,5 +85,3 @@ export class Shop {
     process.exit(1);
   }
 }
-
-

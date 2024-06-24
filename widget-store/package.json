@@ -16,6 +16,7 @@
     "typescript": "~5.3.3"
   },
   "dependencies": {
+    "@dbos-inc/communicator-email-ses": "^1.14.13",
     "@dbos-inc/dbos-sdk": "^1.13.9",
     "liquidjs": "^10.10.1",
     "uuid": "^9.0.1"
