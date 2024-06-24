@@ -1,6 +1,6 @@
 import { WorkflowContext, Workflow, HandlerContext, PostApi, ArgOptional } from '@dbos-inc/dbos-sdk';
 import { ShopUtilities } from './utilities';
-import { Frontend } from './frontend';
+export { Frontend } from './frontend';
 
 export { ShopUtilities };
 export { Frontend };
