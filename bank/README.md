@@ -17,14 +17,14 @@ Nor is it possible to use mechanisms such as [two-phase-commit](https://en.wikip
 
 Accurate, reliable interbank transfers [predate widespread electronic systems by over a century](https://cacm.acm.org/opinion/victorian-data-processing/).
 Many features (such as the ability to write checks on paper) along with associated artifacts (bad checks, disputed charges, and processes to deal with them) remain in modern banking.
-So, banking remains a system of requests, reconciliation, and compensating actions, rather than a system of near-instant ACID transactions.
+So, banking remains a system of requests, settlements/reconciliation, and compensating actions, rather than a system of near-instant ACID transactions.
 
 ### DBOS Bank Transfer Model
 
 Many interbank transactions rely on a third-party [clearing house](https://en.wikipedia.org/wiki/Automated_clearing_house).
 However, this DBOS Bank Demo App acts more like a [wire transfer](https://en.wikipedia.org/wiki/Wire_transfer), where banks send messages to each other directly.
 
-Of course the demo is simplified: it does not use [SWIFT](https://en.wikipedia.org/wiki/SWIFT) or a similar standard network for messaging, nor is the reconclliation (wherein the sending bank transfers some real assets to the receiving bank) implemented.
+Of course the demo is simplified: it does not use [SWIFT](https://en.wikipedia.org/wiki/SWIFT) or a similar standard network for messaging, nor is the settlement process (wherein the sending bank transfers some real assets to the receiving bank) implemented.
 
 The demo does, however:
 
