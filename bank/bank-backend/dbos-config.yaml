@@ -1,0 +1,17 @@
+database:
+  hostname: 'localhost'
+  port: 5432
+  username: 'bank'
+  connectionTimeoutMillis: 3000
+  app_db_name: 'bank'
+  password: ${PGPASSWORD}
+  app_db_client: "prisma"
+  migrate:
+    - npx prisma migrate deploy
+runtimeConfig:
+  port: 8081
+application:
+  bankname: "DBOS Bank - ${BANK_SCHEMA}"
+  bankport: '8081'
+  #bankschema: ${BANK_SCHEMA}
+  bankschema: public
