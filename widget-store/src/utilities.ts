@@ -1,5 +1,5 @@
 import { SendEmailCommunicator } from '@dbos-inc/communicator-email-ses';
-import { Transaction, TransactionContext, Workflow, WorkflowContext, configureInstance} from '@dbos-inc/dbos-sdk';
+import { Scheduled, Transaction, TransactionContext, Workflow, WorkflowContext, configureInstance} from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -94,13 +94,10 @@ export class ShopUtilities {
     return item[0];
   }
 
+  @Scheduled({crontab: '0 0 * * *'}) // Every midnight
   @Workflow()
-  static async nightlyReport(ctx: WorkflowContext) {
-    // NOTE: This is not correct for two reasons:
-    //  1. Use of a nondeterministic function `new Date()` outside of a communicator
-    //  2. This may not give the right answer if the workflow is delayed (see #1)
-    // We will fix these things in a bit.
-    const yesterday = new Date();
+  static async nightlyReport(ctx: WorkflowContext, schedDate: Date, _curdate: Date) {
+    const yesterday = schedDate;
     yesterday.setDate(yesterday.getDate() - 1);
 
     const sales = await ctx.invoke(ShopUtilities).getDailySales(yesterday);
