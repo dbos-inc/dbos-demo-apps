@@ -2,7 +2,7 @@
 
 DBOS Bank Demo App is a simplified bank application that uses [DBOS Transact](https://github.com/dbos-inc/dbos-sdk) as the backend framework.
 
-This demo shows authentication using [Keycloak](https://www.keycloak.org/), simple database operations using [Prisma](https://www.prisma.io), integration with an [Angular](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.
+This demo shows simple database operations using [Prisma](https://www.prisma.io), integration with an [Angular](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.
 
 The demo requires Node 20.x or later and uses Docker to simplify setup.
 
@@ -36,32 +36,20 @@ The demo does, however:
 
 The DBOS Bank Demo App ensures that either both accounts are affected, or neither is, regardless of any functional or non-functional errors.  This is done with very little error-handling code, and the error-handling code that exists is in support of business requirements (sender must actually have the money) rather than for handling hardware or environmental issues.
 
-## Run the Demo
-
-TODO!
+## Run the Demo Locally
 
 ### Pre-requisites
 
 #### Start PostgreSQL
-First, let's set up a Postgres database.
-Set the `PGPASSWORD` environment variable to whatever you'd like, then start Postgres in a Docker container using our convenient script:
+First, let's set up a database for each bank.  Each bank app can have its own database server, but, to simplify deployment, we will put both bank databases in the same Postgres instance.
+
+Set the `PGPASSWORD` environment variable to whatever you'd like, then start Postgres in a Docker container using the `start_postgres_docker` script:
 ```shell
+export PGPORT=5432 # Optional; can be set to a non-default value
 export PGPASSWORD=<database password>
 ./scripts/start_postgres_docker.sh
 ```
-This script sets up a new Postgres user `bank` that owns the database `bank`, and creates a `keycloak` schema in the `bank` database so we can proceed to our next step.
-
-#### Start Keycloak
-Next, start a [Keycloak](https://www.keycloak.org/) server using Docker.
-We use Keycloak to manage user authentication for our bank application.
-```shell
-./scripts/start_keycloak_docker.sh
-```
-You can visit `http://localhost:8083/` to view the admin console for the Keycloak server.
-We import a default [dbos-realm](./scripts/dbos-realm.json) with the admin name and password (you can use it to log in Keycloak's admin console):
-```
-dbos-admin / dbos-pass
-```
+This script sets up two new Postgres users: `bank_a` that owns the database `bank_a`, and `bank_b` that owns database `bank_b`.
 
 ### Start two backend servers
 In this tutorial, we'll start two bank servers, respresenting two different banks, and do transactions across them.
@@ -312,4 +300,9 @@ static async createAccountFunc(txnCtxt: PrismaContext, ownerName: string, type: 
 For example, we configure another test user, email and password `john@test.com / 123`, to only have an "appUser" role and is not authorized to create a new account.
 If you logged in as `john@test.com`, pressing the "Create a New Account" button would fail.
 
+If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
+
+### Deploying to DBOS Cloud
+
+### Further Reading
 If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
