@@ -27,7 +27,7 @@ export class BankEndpoints {
 
     // Check the header for a specific UUID for the workflow.
     const txnUUID = ctx.koaContext.get("dbos-workflowuuid");
-    return ctx.invoke(BankTransactionHistory, txnUUID).depositWorkflow(data).then(x => x.getResult());
+    return ctx.invokeWorkflow(BankTransactionHistory, txnUUID).depositWorkflow(data);
   }
 
   // Withdraw.
@@ -43,7 +43,7 @@ export class BankEndpoints {
 
     // Check the header for a specific UUID for the workflow.
     const txnUUID = ctx.koaContext.get("dbos-workflowuuid");
-    return ctx.invoke(BankTransactionHistory, txnUUID).withdrawWorkflow(data).then(x => x.getResult());
+    return ctx.invokeWorkflow(BankTransactionHistory, txnUUID).withdrawWorkflow(data);
   }
 
   // Internal transfer

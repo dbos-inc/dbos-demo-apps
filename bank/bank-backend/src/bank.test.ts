@@ -48,24 +48,21 @@ describe("bank-tests", () => {
 
     // Run deposit.
     let res = await testRuntime
-      .invoke(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
-      .depositWorkflow(convertTransactionHistory({ fromLocation: "cash", toAccountId: acctId, toLocation: "local", amount: 100 } as TransactionHistory))
-      .then((x) => x.getResult());
+      .invokeWorkflow(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
+      .depositWorkflow(convertTransactionHistory({ fromLocation: "cash", toAccountId: acctId, toLocation: "local", amount: 100 } as TransactionHistory));
     expect(res).toBe("Deposit succeeded!");
 
     // Run withdraw.
     res = await testRuntime
-      .invoke(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
-      .withdrawWorkflow(convertTransactionHistory({ toLocation: "cash", fromAccountId: acctId, fromLocation: "local", amount: 50 } as TransactionHistory))
-      .then((x) => x.getResult());
+      .invokeWorkflow(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
+      .withdrawWorkflow(convertTransactionHistory({ toLocation: "cash", fromAccountId: acctId, fromLocation: "local", amount: 50 } as TransactionHistory));
     expect(res).toBe("Withdraw succeeded!");
 
     // Try to overdraw.
     await expect(
       testRuntime
-        .invoke(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
+        .invokeWorkflow(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
         .withdrawWorkflow(convertTransactionHistory({ toLocation: "cash", fromAccountId: acctId, fromLocation: "local", amount: 100 } as TransactionHistory))
-        .then((x) => x.getResult())
     ).rejects.toThrow("Not enough balance!");
   });
 });
