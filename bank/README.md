@@ -1,9 +1,44 @@
 # DBOS Bank Demo App
 
-This is a simplified bank application that uses [DBOS](https://github.com/dbos-inc/dbos-sdk) as the backend framework.
-It requires Node 20.x or later and Docker.
+DBOS Bank Demo App is a simplified bank application that uses [DBOS Transact](https://github.com/dbos-inc/dbos-sdk) as the backend framework.
+
+This demo shows authentication using [Keycloak](https://www.keycloak.org/), simple database operations using [Prisma](https://www.prisma.io), integration with an [Angular](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.
+
+The demo requires Node 20.x or later and uses Docker to simplify setup.
+
+## Demo Overview
+
+### Application Components
+TODO: The DBOS Bank Demo App presents simplified ...
+
+### Introduction To Bank Transfer Operations
+The transfer of funds between banks has never relied on [distributed transactions](https://en.wikipedia.org/wiki/Distributed_transaction) in the academic sense.
+Nor is it possible to use mechanisms such as [two-phase-commit](https://en.wikipedia.org/wiki/Two-phase_commit_protocol) to implement the behavior of the banking system, which accomodates paper checks, fraud protections, and so on.
+
+Accurate, reliable interbank transfers [predate widespread electronic systems by over a century](https://cacm.acm.org/opinion/victorian-data-processing/).
+Many features (such as the ability to write checks on paper) along with associated artifacts (bad checks, disputed charges, and processes to deal with them) remain in modern banking.
+So, banking remains a system of requests, reconciliation, and compensating actions, rather than a system of near-instant ACID transactions.
+
+### DBOS Bank Transfer Model
+
+Many interbank transactions rely on a third-party [clearing house](https://en.wikipedia.org/wiki/Automated_clearing_house).
+However, this DBOS Bank Demo App acts more like a [wire transfer](https://en.wikipedia.org/wiki/Wire_transfer), where banks send messages to each other directly.
+
+Of course the demo is simplified: it does not use [SWIFT](https://en.wikipedia.org/wiki/SWIFT) or a similar standard network for messaging, nor is the reconclliation (wherein the sending bank transfers some real assets to the receiving bank) implemented.
+
+The demo does, however:
+
+* Verify the identity of the sender
+* Verify that the sender has funds available to send
+* Put a hold on funds during the course of transfer
+* Send the transfer request to another bank server
+* Credit the recipients account and deduct from the sender's account
+
+The DBOS Bank Demo App ensures that either both accounts are affected, or neither is, regardless of any functional or non-functional errors.  This is done with very little error-handling code, and the error-handling code that exists is in support of business requirements (sender must actually have the money) rather than for handling hardware or environmental issues.
 
 ## Run the Demo
+
+TODO!
 
 ### Pre-requisites
 
@@ -22,7 +57,7 @@ We use Keycloak to manage user authentication for our bank application.
 ```shell
 ./scripts/start_keycloak_docker.sh
 ```
-You can visit `http://localhost:8083/` to view the admin console for the Keyclock server.
+You can visit `http://localhost:8083/` to view the admin console for the Keycloak server.
 We import a default [dbos-realm](./scripts/dbos-realm.json) with the admin name and password (you can use it to log in Keycloak's admin console):
 ```
 dbos-admin / dbos-pass
