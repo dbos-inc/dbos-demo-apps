@@ -65,8 +65,8 @@ import { TransactionHistory } from "./app.service";
                   <thead>
                   <tr>
                     <th>Time</th>
-                    <th>From Account# @ Bank</th>
-                    <th>To Account# @ Bank</th>
+                    <th>From Account# &#64; Bank</th>
+                    <th>To Account# &#64; Bank</th>
                     <th>Amount</th>
                   </tr>
                   </thead>
@@ -77,13 +77,13 @@ import { TransactionHistory } from "./app.service";
                       <td>Cash</td>
                     </ng-template>
                     <ng-template #showFromAccount>
-                      <td>{{txh.from_account_id}} @ {{txh.from_location}}</td>
+                      <td>{{txh.from_account_id}} &#64; {{txh.from_location}}</td>
                     </ng-template>
                     <ng-template [ngIf]="txh.to_account_id == -1" [ngIfElse]="showToAccount">
                       <td>Cash</td>
                     </ng-template>
                     <ng-template #showToAccount>
-                      <td>{{txh.to_account_id}} @ {{txh.to_location}}</td>
+                      <td>{{txh.to_account_id}} &#64; {{txh.to_location}}</td>
                     </ng-template>
                     <ng-template [ngIf]="txh.to_account_id == txnHistoryAccount && txh.to_location == 'local'" [ngIfElse]="showNegative">
                       <td><strong class="text-success">+\${{(txh.amount / 100.0).toFixed(2)}}</strong></td>
