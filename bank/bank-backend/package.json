@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "types": "dist/main.d.js",
   "scripts": {
-    "build": "node generate_env.js && npx prisma generate && tsc",
+    "build": "npx prisma generate && tsc",
     "start": "node .",
     "test": "npm run build && npx dbos migrate && jest --detectOpenHandles",
     "lint-fix": "eslint --ext .ts --fix .",

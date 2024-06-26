@@ -7,7 +7,7 @@ database:
   password: ${PGPASSWORD}
   app_db_client: "prisma"
   migrate:
-    - npx prisma migrate deploy
+    - node generate_env.js && npx prisma migrate deploy
 runtimeConfig:
   port: 8081
 application:
