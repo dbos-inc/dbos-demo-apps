@@ -4,11 +4,11 @@ import { GetApi, PostApi, HandlerContext, KoaMiddleware } from "@dbos-inc/dbos-s
 import { DBOSError } from '@dbos-inc/dbos-sdk/dist/src/error';
 import KoaViews from '@ladjs/koa-views';
 
-const JWT_SECRET = 'your-secret';
+const JWT_SECRET = process.env['MOCK_OAUTH_SECRET'] || 'your-secret-goes-here';
 
 // http://localhost:8083/realms/dbos/protocol/openid-connect/auth?response_type=code&&scope=openid&client_id=newClient&redirect_uri=http://localhost:8089/
 
-@KoaMiddleware(KoaViews(`${__dirname}/views`, { extension: 'ejs' }))
+@KoaMiddleware(KoaViews(`${__dirname}/../src/views`, { extension: 'ejs' }))
 export class MockAuth
 {
   @GetApi('/realms/:realm/protocol/openid-connect/auth')
@@ -17,7 +17,7 @@ export class MockAuth
     if (realm !== 'dbos' || scope !== 'openid' || response_type !== 'code') {
       throw new DBOSError("Invalid request to mock auth service.");
     }
-    await ctx.koaContext.render('mockauth', {client_id, redirect_uri, scope});
+    await ctx.koaContext.render('mockauth', {client_id, redirect_uri});
   }
 
   @PostApi('/login')

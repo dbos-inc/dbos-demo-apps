@@ -100,6 +100,10 @@ npx dbos-sdk start -p 8083
 
 ### Start the frontend
 
+#### Changing the environment
+
+../bank-frontend/src/environments/environment.ts
+
 To start the frontend, enter the `bank-frontend/` directory and run:
 ```bash
 npm install
