@@ -36,13 +36,12 @@ export class HomeComponent {
   selectedBankId: number = 1;
   selectBankHost: string = this._service.bankHosts[0];
 
-  constructor(
-        public _service:AppService){}
+  constructor(public _service:AppService){}
 
   ngOnInit(){
     this.isLoggedIn = this._service.checkCredentials();
     const i = window.location.href.indexOf('code');
-    if(!this.isLoggedIn && i != -1){
+    if (!this.isLoggedIn && i != -1){
       this._service.retrieveToken(window.location.href.substring(i + 5));
     }
   }
