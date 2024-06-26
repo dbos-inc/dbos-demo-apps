@@ -1,14 +1,13 @@
 database:
   hostname: 'localhost'
   port: 5432
-  username: 'bank'
+  username: 'bank_a'
   connectionTimeoutMillis: 3000
-  app_db_name: 'bank'
+  app_db_name: 'bank_a'
   password: ${PGPASSWORD}
   app_db_client: "prisma"
 runtimeConfig:
   port: 8081
 application:
-  bankname: "testbank - ${BANK_SCHEMA}"
+  bankname: "testbank"
   bankport: '8091'
-  bankschema: ${BANK_SCHEMA}

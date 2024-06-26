@@ -1,9 +1,9 @@
 database:
   hostname: 'localhost'
   port: 5432
-  username: 'bank'
+  username: ${CURRENT_BANK}
   connectionTimeoutMillis: 3000
-  app_db_name: 'bank'
+  app_db_name: ${CURRENT_BANK}
   password: ${PGPASSWORD}
   app_db_client: "prisma"
   migrate:
@@ -11,6 +11,6 @@ database:
 runtimeConfig:
   port: 8081
 application:
-  bankname: "DBOS Bank - ${BANK_SCHEMA}"
+  bankname: "DBOS Bank - ${CURRENT_BANK}"
   bankport: '8081'
   bankschema: public
