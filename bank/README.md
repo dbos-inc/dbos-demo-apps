@@ -38,10 +38,14 @@ The DBOS Bank Demo App ensures that either both accounts are affected, or neithe
 
 ## Run the Demo Locally
 
-### Pre-requisites
+### Start PostgreSQL
 
-#### Start PostgreSQL
 First, let's set up a database for each bank.  Each bank app can have its own database server, but, to simplify deployment, we will put both bank databases in the same Postgres instance.
+
+The demo provides two ways to set up Postgres:
+* A script set up a Docker container with Postgres configured.  If you have an existing p
+
+#### Using Docker for Postgres
 
 Set the `PGPASSWORD` environment variable to whatever you'd like, then start Postgres in a Docker container using the `start_postgres_docker` script:
 ```shell
@@ -50,6 +54,16 @@ export PGPASSWORD=<database password>
 ./scripts/start_postgres_docker.sh
 ```
 This script sets up two new Postgres users: `bank_a` that owns the database `bank_a`, and `bank_b` that owns database `bank_b`.
+
+#### Use an Existing Postgres
+```sql
+CREATE USER bank_a PASSWORD 'postgres'; -- Feel free to change the passwords
+ALTER USER bank_a CREATEDB;
+CREATE DATABASE bank_a OWNER bank_a;
+CREATE USER bank_b PASSWORD 'postgres';
+ALTER USER bank_b CREATEDB;
+CREATE DATABASE bank_b OWNER bank_b;
+```
 
 ### Start two backend servers
 In this tutorial, we'll start two bank servers, respresenting two different banks, and do transactions across them.
@@ -81,7 +95,7 @@ export BANK_SCHEMA=bank2
 # Create tables under the bank2 schema.
 npx prisma migrate dev --name initbank2
 
-npx dbos-sdk start -p 8082
+npx dbos-sdk start -p 8083
 ```
 
 ### Start the frontend
@@ -107,7 +121,7 @@ mike@other.com / pass
 ```
 
 Once you successfully log in, the frontend should re-direct you to the home page of the bank user.
-The drop-down menu at the top allows you to switch between two bank servers (bank1 at port 8081 and bank2 at port 8082) we just started.
+The drop-down menu at the top allows you to switch between two bank servers (bank1 at port 8081 and bank2 at port 8083) we just started.
 There are three buttons in the middle:
 - "New Greeting Message" fetches a greeting message from the backend and displays it in the "Message from Bank" banner above.
 - "Create a New Account" creates a new checking account for the current user. 
