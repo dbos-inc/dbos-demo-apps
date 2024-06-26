@@ -40,7 +40,7 @@ async function waitForMessageTest(command: ChildProcess, port: string) {
 
 describe("runtime-tests", () => {
   beforeAll(() => {
-    const bankSchema = process.env.BANK_SCHEMA;
+    const bankSchema = process.env.BANK_SCHEMA || 'public';
     if (!bankSchema) {
       throw new Error("Env 'BANK_SCHEMA' not set!");
     }

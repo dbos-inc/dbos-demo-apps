@@ -9,7 +9,7 @@ describe("bank-tests", () => {
   let bankSchema: string;
 
   beforeAll(async () => {
-    bankSchema = process.env.BANK_SCHEMA ?? "";
+    bankSchema = process.env.BANK_SCHEMA ?? "public";
     if (!bankSchema) {
       throw new Error("Env 'BANK_SCHEMA' not set!");
     }
