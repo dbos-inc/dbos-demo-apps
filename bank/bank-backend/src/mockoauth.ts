@@ -69,7 +69,8 @@ export class MockAuth
     });
   }
 
-  // Handle logout
+  // Handle logout; should be POST but GET also OK since we do nothing
+  @GetApi('/realms/:realm/protocol/openid-connect/logout')
   @PostApi('/realms/:realm/protocol/openid-connect/logout')
   static async doLogout(_ctx: HandlerContext) {
     return Promise.resolve("Logged Out");
