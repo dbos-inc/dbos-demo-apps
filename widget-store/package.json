@@ -9,14 +9,14 @@
     "lint-fix": "eslint --fix src"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.14.13",
+    "@dbos-inc/dbos-cloud": "^1.15.9",
     "@dbos-inc/eslint-plugin": "^0.0.6",
     "@types/uuid": "^9.0.8",
     "eslint": "^8.57.0",
     "typescript": "~5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^1.14.13",
+    "@dbos-inc/dbos-sdk": "^1.15.9",
     "liquidjs": "^10.10.1",
     "uuid": "^9.0.1"
   }
