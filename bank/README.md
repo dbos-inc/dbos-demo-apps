@@ -2,7 +2,7 @@
 
 DBOS Bank Demo App is a simplified bank application that uses [DBOS Transact](https://github.com/dbos-inc/dbos-sdk) as the backend framework.
 
-This demo shows simple database operations using [Prisma](https://www.prisma.io), integration with an [Angular](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.  Digging slightly deeper, the demo also shows DBOS role-based security, and how to integrate with OAuth-based single-sign-on.
+This demo shows simple database operations using [Prisma](https://www.prisma.io), integration with an [AngularJS](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.  Digging slightly deeper, the demo also shows DBOS role-based security, and how to integrate with OAuth-based single-sign-on.
 
 The demo requires Node 20.x or later and optionally uses Docker to simplify setup.
 
@@ -158,14 +158,20 @@ Select the "Choose an Action" drop-down menu next to each account, you will see 
 Once you have created accounts in both banks, and deposited money into at least one of them, you should be able to transfer money to the other bank with the "Deposit" and "Withdraw" actions.
 
 ### (Optional) Visualize Tracing
-We use [Jaeger Tracing](https://www.jaegertracing.io/) to visualize traces of DBOS operations. We provide a script to automatically start it in a docker container:
+During development, you can use [Jaeger Tracing](https://www.jaegertracing.io/) to visualize traces of DBOS operations.  We provide a script to automatically start it in a docker container:
 ```bash
 ./scripts/start_jaeger_docker.sh
 ```
 
-Once it starts, you will see traces via the Jaeger UI: http://localhost:16686/
+Once it starts, you will need to add the following to `dbos-config.yaml` and restart your bank servers:
+```yaml
+telemetry:
+    OTLPExporter:
+        tracesEndpoint: http://localhost:4318/v1/traces
+```
 
-TODO: This starts, but what instructions are necessary to get DBOS traces to appear?  I think there must be a bit of `dbos-config.yaml` missing.
+Then, to see traces via the Jaeger UI, open http://localhost:16686/.
+
 
 ## Under the Covers
 
@@ -390,5 +396,12 @@ npm start
 ```
 
 ## Further Reading
-TODO!
+To get started with DBOS Transact, check out the [quickstart](https://docs.dbos.dev/getting-started/quickstart) and [docs](https://docs.dbos.dev/).
+
+DBOS [concepts](https://docs.dbos.dev/explanations/core-concepts) are their execution guarantees covered in depth in the [workflow tutorial](https://docs.dbos.dev/tutorials/workflow-tutorial).
+
+For a quick introduction to [DBOS Cloud](https://www.dbos.dev/dbos-cloud), see [the tutorials](https://docs.dbos.dev/category/dbos-cloud-tutorials).  Of particular interest is [Time Travel Debugging](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging), which allows you to replay past workflows in the debugger.  TODO: Dashboard!
+
+For more information on [Prisma](https://www.prisma.io) as an ORM in DBOS, see [Using Prisma](https://docs.dbos.dev/tutorials/using-prisma).
+
 If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
