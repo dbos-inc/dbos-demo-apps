@@ -44,9 +44,9 @@ jobs:
       - name: "Setup postgres config"
         run: |
           docker ps
-          docker exec bankdb psql -U postgres -c "CREATE USER bank WITH PASSWORD '${PGPASSWORD}';"
-          docker exec bankdb psql -U postgres -c "ALTER USER bank CREATEDB;"
-          docker exec bankdb psql -U postgres -c "CREATE DATABASE bank OWNER bank;"
+          docker exec bankdb psql -U postgres -c "CREATE USER bank_a WITH PASSWORD '${PGPASSWORD}';"
+          docker exec bankdb psql -U postgres -c "ALTER USER bank_a CREATEDB;"
+          docker exec bankdb psql -U postgres -c "CREATE DATABASE bank_a OWNER bank_a;"
         env:
           PGPASSWORD: bank
       - name: Checkout demo app
@@ -63,7 +63,7 @@ jobs:
           npm ci
           npm run lint
           npm run build
-          npm test
+          npm run test
         env:
           PGPASSWORD: bank
           # The hostname used to communicate with the PostgreSQL service container
@@ -73,4 +73,4 @@ jobs:
           BANK_PORT: 8081
           # CB 6/6/2024 - temporary limitation
           BANK_SCHEMA: public
-          CURRENT_BANK: bank
+          CURRENT_BANK: bank_a
