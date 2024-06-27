@@ -2,14 +2,14 @@
 
 DBOS Bank Demo App is a simplified bank application that uses [DBOS Transact](https://github.com/dbos-inc/dbos-sdk) as the backend framework.
 
-This demo shows simple database operations using [Prisma](https://www.prisma.io), integration with an [Angular](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.
+This demo shows simple database operations using [Prisma](https://www.prisma.io), integration with an [Angular](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.  Digging slightly deeper, the demo also shows how to integrate with OAuth-based single-sign-on.
 
 The demo requires Node 20.x or later and uses Docker to simplify setup.
 
 ## Demo Overview
 
 ### Application Components
-TODO: The DBOS Bank Demo App presents simplified ...
+The DBOS Bank Demo App simulates a simplified bank teller interface, allowing account creation, deposit, withdrawal, and funds transfer between accounts.
 
 ### Introduction To Bank Transfer Operations
 The transfer of funds between banks has never relied on [distributed transactions](https://en.wikipedia.org/wiki/Distributed_transaction) in the academic sense.
@@ -28,8 +28,7 @@ Of course the demo is simplified: it does not use [SWIFT](https://en.wikipedia.o
 
 The demo does, however:
 
-* Verify the identity of the sender
-* Verify that the sender has funds available to send
+* Verify that the sending account has funds available to send
 * Put a hold on funds during the course of transfer
 * Send the transfer request to another bank server
 * Credit the recipients account and deduct from the sender's account
@@ -65,7 +64,7 @@ ALTER USER bank_b CREATEDB;
 CREATE DATABASE bank_b OWNER bank_b;
 ```
 
-### Start two backend servers
+### Start Two DBOS Bank Servers
 In this tutorial, we'll start two bank servers, respresenting two different banks, and do transactions across them.
 First, build the bank application.  In the `bank-backend/` directory, run:
 
@@ -74,36 +73,48 @@ npm install
 npm run build
 ```
 
-Next, use [Prisma](https://www.prisma.io/) to create a schema for the first bank server then launch it:
+Do a quick review of `dbos-config.yaml`, to make sure the information is correct, especially if you are not using the default database port.
+
+Next, execute database migrations and launch the first bank.  The first command will use [Prisma](https://www.prisma.io/) to create a schema for the first bank; the second command launches it.
+
+Note that this setup uses the same Postgres server process for both databases for simplicity, but they can easily be separated.
 
 ```bash
 export PGPASSWORD=<database password>
-export BANK_SCHEMA=bank1
+export CURRENT_BANK=bank_a
 
-# Create tables under the bank1 schema.
-npx prisma migrate dev --name initbank1
+# Create tables on the bank_a database.
+npx dbos-sdk migrate
 
+# Start the bank server on port 8081
 npx dbos-sdk start -p 8081
 ```
 
-Then, in a second terminal window, launch the second bank server, using an identical but differently-named schema:
+Then, in a second terminal window, launch the second bank server, using slightly different environment variables:
 
 ```bash
 export PGPASSWORD=<database password>
-export BANK_SCHEMA=bank2
+export CURRENT_BANK=bank_b
 
-# Create tables under the bank2 schema.
-npx prisma migrate dev --name initbank2
+# Create tables on the bank_b database
+npx dbos-sdk migrate
 
+# Start a second bank server on port 8083
 npx dbos-sdk start -p 8083
 ```
 
-### Start the frontend
+### Starting The Frontend
 
-#### Changing the environment
+#### Checking the Frontent Environment
 
-../bank-frontend/src/environments/environment.ts
+First, review the settings in `bank-frontend/src/environments/environment.ts`.
+This file contains settings that let the frontend find the bank server(s), so editing it is especially important if you have used any non-default port numbers or URLs:
 
+* bankHosts - this list of strings should provide URLs to the servers and ports that were started above
+* authUrl - the bank servers provide a mockup of an OAuth single-sign-on service, so this URL should point to one of them for demo purposes.  A different OAuth service can be specified.
+* redirectUrl - the URL for returning to the frontend server, should match the Angular server that will be started next
+
+#### Starting the Angular Server
 To start the frontend, enter the `bank-frontend/` directory and run:
 ```bash
 npm install
@@ -114,29 +125,34 @@ npm start
 ```
 
 ## Demo Walkthrough
+In the walkthrough, we will create some accounts deposit some funds, and transfer money between banks.
+It may help to think of the users of DBOS Bank as tellers and managers, not as end-customers visiting their personal account pages.
 
-Once you finish all previous steps, navigate to http://localhost:8089/
+Once you finish all previous steps, navigate to http://localhost:8089/.
 You will be presented with a welcome page.
-Press the `Login` button and the webpage should redirect to a login page from Keycloak.
+Press the `Login` button and the webpage should redirect to a login page from the OAuth provider.
 
-You can use the following email and password to log in:
+If you are using the mock OAuth built into the DBOS Bank server, you can use the following usernames and passwords to log in:
 ```
-mike@other.com / pass
+Alice / password  - App User
+Bob / password    - App User
+Carol / password  - App Administrator (needed to create new accounts)
 ```
 
 Once you successfully log in, the frontend should re-direct you to the home page of the bank user.
-The drop-down menu at the top allows you to switch between two bank servers (bank1 at port 8081 and bank2 at port 8083) we just started.
+The drop-down menu at the top allows you to switch between the bank servers (bank\_a at port 8081 and bank\_b at port 8083) we just started.
 There are three buttons in the middle:
 - "New Greeting Message" fetches a greeting message from the backend and displays it in the "Message from Bank" banner above.
-- "Create a New Account" creates a new checking account for the current user. 
+- "Create a New Account" creates a new checking account for the current user.  (This is available to administrators only.)
 - "Refresh Accounts" refreshes the list of accounts of the current user.
 
 Now, once you click "Create a New Account" several times in both bank1 and bank2, you will see a list of accounts displayed with their `Account ID`, `Balance`, `Type`, and `Actions`. Initially, all accounts have zero balance.
+
 Select the "Choose an Action" drop-down menu next to each account, you will see several options:
 - "Transaction History" displays a list of past transactions from latest to oldest.
 - "Deposit" allows you to deposit either from cash or an account in another bank backend.
 - "Withdraw" allows you to withdraw either to cash or an account in another bank backend.
-- "Internal Transfer" allows you to transfer between your own accounts within the same bank backend.
+- "Internal Transfer" allows you to transfer between accounts within the same bank backend.
 
 Sometimes the JWT token would expire and cause failures. You can refresh the page and try again. Refreshing the webpage obtains a new token.
 
@@ -236,9 +252,9 @@ DBOS guarantees that this workflow runs to completion and every operation execut
 
 ### Authentication and Authorization
 
-In Bank, users authenticate with the frontend via an external Keycloak service, and then authenticate with the backend via JWT tokens.
+In Bank, users authenticate with the frontend via an external OAuth service (or an internal mockup), and then authenticate with the backend via JWT tokens.
 Authentication and authorization in the backend proceeds in three steps:
-1. Verify the JWT token with Keycloak using a Koa middleware.
+1. Verify the JWT token from the OAuth server using a Koa middleware.
 2. Use an authentication middleware to extract user and role information set by the Koa middleware in step 1.
 3. The framework checks the authenticated user and roles against the required roles of the target operation.
 
@@ -321,6 +337,7 @@ If you logged in as `john@test.com`, pressing the "Create a New Account" button 
 If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
 
 ### Deploying to DBOS Cloud
+TODO!
 
 ### Further Reading
 If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
