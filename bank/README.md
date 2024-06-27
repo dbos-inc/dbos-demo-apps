@@ -2,7 +2,7 @@
 
 DBOS Bank Demo App is a simplified bank application that uses [DBOS Transact](https://github.com/dbos-inc/dbos-sdk) as the backend framework.
 
-This demo shows simple database operations using [Prisma](https://www.prisma.io), integration with an [AngularJS](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.  Digging slightly deeper, the demo also shows DBOS role-based security, and how to integrate with OAuth-based single-sign-on.
+This demo shows simple database operations using [Prisma](https://www.prisma.io), integration with an [AngularJS](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.  Digging slightly deeper, the demo also shows DBOS role-based security, and how to integrate with OAuth-based single-sign-on, and use of [Jaeger](https://www.jaegertracing.io/) for tracing during development.
 
 The demo requires Node 20.x or later and optionally uses Docker to simplify setup.
 
