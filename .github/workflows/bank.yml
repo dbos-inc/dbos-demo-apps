@@ -73,3 +73,4 @@ jobs:
           BANK_PORT: 8081
           # CB 6/6/2024 - temporary limitation
           BANK_SCHEMA: public
+          CURRENT_BANK: bank
