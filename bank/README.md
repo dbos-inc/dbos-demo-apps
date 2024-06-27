@@ -2,19 +2,18 @@
 
 DBOS Bank Demo App is a simplified bank application that uses [DBOS Transact](https://github.com/dbos-inc/dbos-sdk) as the backend framework.
 
-This demo shows simple database operations using [Prisma](https://www.prisma.io), integration with an [Angular](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.  Digging slightly deeper, the demo also shows how to integrate with OAuth-based single-sign-on.
+This demo shows simple database operations using [Prisma](https://www.prisma.io), integration with an [Angular](https://angularjs.org/) front end, and highlights use of workflows to keep two databases (owned by different entities) in sync without distributed transactions.  Digging slightly deeper, the demo also shows DBOS role-based security, and how to integrate with OAuth-based single-sign-on.
 
-The demo requires Node 20.x or later and uses Docker to simplify setup.
+The demo requires Node 20.x or later and optionally uses Docker to simplify setup.
 
 ## Demo Overview
 
-### Application Components
-The DBOS Bank Demo App simulates a simplified bank teller interface, allowing account creation, deposit, withdrawal, and funds transfer between accounts.
+The DBOS Bank Demo App simulates a simplified bank teller interface, allowing account creation, deposit, withdrawal, and funds transfer between accounts and banks.  There regular users, which can handle deposit, withdrawal, and transfer, as well as administrators, who can additionally create accounts.
 
 ### Introduction To Bank Transfer Operations
-The transfer of funds between banks has never relied on [distributed transactions](https://en.wikipedia.org/wiki/Distributed_transaction) in the academic sense.
-Nor is it possible to use mechanisms such as [two-phase-commit](https://en.wikipedia.org/wiki/Two-phase_commit_protocol) to implement the behavior of the banking system, which accomodates paper checks, fraud protections, and so on.
 
+The transfer of funds between banks has never relied on [distributed transactions](https://en.wikipedia.org/wiki/Distributed_transaction) in the academic sense.
+Nor is it possible to use mechanisms such as [two-phase-commit](https://en.wikipedia.org/wiki/Two-phase_commit_protocol) to implement the behavior of the banking system, which accomodates paper checks, fraud protections, and so on, that leave work outstanding for several days.
 Accurate, reliable interbank transfers [predate widespread electronic systems by over a century](https://cacm.acm.org/opinion/victorian-data-processing/).
 Many features (such as the ability to write checks on paper) along with associated artifacts (bad checks, disputed charges, and processes to deal with them) remain in modern banking.
 So, banking remains a system of requests, settlements/reconciliation, and compensating actions, rather than a system of near-instant ACID transactions.
@@ -33,28 +32,31 @@ The demo does, however:
 * Send the transfer request to another bank server
 * Credit the recipients account and deduct from the sender's account
 
-The DBOS Bank Demo App ensures that either both accounts are affected, or neither is, regardless of any functional or non-functional errors.  This is done with very little error-handling code, and the error-handling code that exists is in support of business requirements (sender must actually have the money) rather than for handling hardware or environmental issues.
+The DBOS Bank Demo App ensures that either both accounts are affected, or neither is, regardless of any functional or non-functional errors.  This is done with very little error-handling code, and the error-handling code that exists is in support of business requirements (accounts must exist, sender must actually have the money, etc.) rather than for handling hardware or environmental issues.  This means that all the error handling code in DBOS Bank can be easily tested in automated tests; environmental errors are handled by the framework.
 
 ## Run the Demo Locally
 
 ### Start PostgreSQL
 
-First, let's set up a database for each bank.  Each bank app can have its own database server, but, to simplify deployment, we will put both bank databases in the same Postgres instance.
+First, let's set up a database for each bank.  Each bank app can have its own database server, but, to simplify deployment, we will put both bank databases under the same Postgres server process.
 
 The demo provides two ways to set up Postgres:
-* A script set up a Docker container with Postgres configured.  If you have an existing p
+* A script set up a Docker container with Postgres configured
+* Use of a preexisting Postgres server
 
 #### Using Docker for Postgres
 
 Set the `PGPASSWORD` environment variable to whatever you'd like, then start Postgres in a Docker container using the `start_postgres_docker` script:
 ```shell
-export PGPORT=5432 # Optional; can be set to a non-default value
+export PGPORT=5432 # Optional; can be set to a non-default value, but make adjustments below
 export PGPASSWORD=<database password>
 ./scripts/start_postgres_docker.sh
 ```
 This script sets up two new Postgres users: `bank_a` that owns the database `bank_a`, and `bank_b` that owns database `bank_b`.
 
 #### Use an Existing Postgres
+
+If you have an existing Postgres, the following commands can be issued to set up the two bank databases:
 ```sql
 CREATE USER bank_a PASSWORD 'postgres'; -- Feel free to change the passwords
 ALTER USER bank_a CREATEDB;
@@ -73,11 +75,9 @@ npm install
 npm run build
 ```
 
-Do a quick review of `dbos-config.yaml`, to make sure the information is correct, especially if you are not using the default database port.
+Do a quick review of `dbos-config.yaml`, to make sure the information is correct, especially if you are not using the default database port.  Note that this setup uses the same Postgres server process for both databases for simplicity, but they can easily be separated by making additional changes here.
 
-Next, execute database migrations and launch the first bank.  The first command will use [Prisma](https://www.prisma.io/) to create a schema for the first bank; the second command launches it.
-
-Note that this setup uses the same Postgres server process for both databases for simplicity, but they can easily be separated.
+Next, execute database migrations and launch the first bank.  The first command below uses [Prisma](https://www.prisma.io/) to create a schema for the first bank; the second command launches the bank.
 
 ```bash
 export PGPASSWORD=<database password>
@@ -90,7 +90,7 @@ npx dbos-sdk migrate
 npx dbos-sdk start -p 8081
 ```
 
-Then, in a second terminal window, launch the second bank server, using slightly different environment variables:
+Then, in a second terminal window, launch the second bank server, using different values for the environment variables:
 
 ```bash
 export PGPASSWORD=<database password>
@@ -125,12 +125,12 @@ npm start
 ```
 
 ## Demo Walkthrough
-In the walkthrough, we will create some accounts deposit some funds, and transfer money between banks.
+In the walkthrough, we will create some accounts, deposit some funds, and transfer money between banks.
 It may help to think of the users of DBOS Bank as tellers and managers, not as end-customers visiting their personal account pages.
 
 Once you finish all previous steps, navigate to http://localhost:8089/.
 You will be presented with a welcome page.
-Press the `Login` button and the webpage should redirect to a login page from the OAuth provider.
+Press the `Login` button and the webpage should redirect to a login page from the OAuth single-sign-on provider.
 
 If you are using the mock OAuth built into the DBOS Bank server, you can use the following usernames and passwords to log in:
 ```
@@ -139,14 +139,15 @@ Bob / password    - App User
 Carol / password  - App Administrator (needed to create new accounts)
 ```
 
+As there are no accounts initially, and start by logging in as an administrator (Carol, using the mock authenticator).  
 Once you successfully log in, the frontend should re-direct you to the home page of the bank user.
 The drop-down menu at the top allows you to switch between the bank servers (bank\_a at port 8081 and bank\_b at port 8083) we just started.
 There are three buttons in the middle:
 - "New Greeting Message" fetches a greeting message from the backend and displays it in the "Message from Bank" banner above.
-- "Create a New Account" creates a new checking account for the current user.  (This is available to administrators only.)
+- "Create a New Account" creates a new checking account for the current user.  (While the button exists for everyone, it works for administrators only.  For a description of why we left it that way, see [Authentication and Authorization](#authentication-and-authorization) below.)
 - "Refresh Accounts" refreshes the list of accounts of the current user.
 
-Now, once you click "Create a New Account" several times in both bank1 and bank2, you will see a list of accounts displayed with their `Account ID`, `Balance`, `Type`, and `Actions`. Initially, all accounts have zero balance.
+Now, once you click "Create a New Account" several times in both bank1 and bank2, you will see a list of accounts displayed with their `Account ID`, `Owner Name`, `Balance`, `Type`, and `Actions`. Initially, all accounts have zero balance.
 
 Select the "Choose an Action" drop-down menu next to each account, you will see several options:
 - "Transaction History" displays a list of past transactions from latest to oldest.
@@ -154,14 +155,17 @@ Select the "Choose an Action" drop-down menu next to each account, you will see 
 - "Withdraw" allows you to withdraw either to cash or an account in another bank backend.
 - "Internal Transfer" allows you to transfer between accounts within the same bank backend.
 
-Sometimes the JWT token would expire and cause failures. You can refresh the page and try again. Refreshing the webpage obtains a new token.
+Once you have created accounts in both banks, and deposited money into at least one of them, you should be able to transfer money to the other bank with the "Deposit" and "Withdraw" actions.
 
 ### (Optional) Visualize Tracing
 We use [Jaeger Tracing](https://www.jaegertracing.io/) to visualize traces of DBOS operations. We provide a script to automatically start it in a docker container:
 ```bash
 ./scripts/start_jaeger_docker.sh
 ```
+
 Once it starts, you will see traces via the Jaeger UI: http://localhost:16686/
+
+TODO: This starts, but what instructions are necessary to get DBOS traces to appear?  I think there must be a bit of `dbos-config.yaml` missing.
 
 ## Under the Covers
 
@@ -252,7 +256,11 @@ DBOS guarantees that this workflow runs to completion and every operation execut
 
 ### Authentication and Authorization
 
-In Bank, users authenticate with the frontend via an external OAuth service (or an internal mockup), and then authenticate with the backend via JWT tokens.
+The mock authenticator provides users "Alice" and "Bob" who only have the "appUser" role and are not authorized to create new accounts.  However, the frontend developers accidentally\* left the "Create a New Account" button in the frontend for all users.  Fortunately, the backend developers used DBOS Transact's role-based security, and if you logged in as `Alice` or `Bob`, the "Create a New Account" button will fail to create an account.
+
+\*In a real application, the "Create a New Account" button may not exist, but if `Alice` or `Bob` has hacker inclinations, they may find ways to make the same backend calls, so "client-based security" is not what we want.  We left the "Create a New Account" button in there so you can test out the security protections with minimal work.
+
+Let's take a deeper look at how this is implemented.  In Bank, users authenticate with the frontend via an external OAuth service (or an internal mockup), and then authenticate with the backend via JWT tokens.
 Authentication and authorization in the backend proceeds in three steps:
 1. Verify the JWT token from the OAuth server using a Koa middleware.
 2. Use an authentication middleware to extract user and role information set by the Koa middleware in step 1.
@@ -263,13 +271,7 @@ First, the bank backend uses the [`koa-jwt`](https://github.com/koajs/jwt) middl
 import jwt from "koa-jwt";
 
 export const bankJwt = jwt({
-  secret: koaJwtSecret({
-    jwksUri: `http://${process.env.BANK_HOST || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos/protocol/openid-connect/certs`,
-    cache: true,
-    cacheMaxEntries: 5,
-    cacheMaxAge: 600000,
-  }),
-  issuer: `http://${process.env.BANK_HOST || "localhost"}:${process.env.AUTH_PORT || "8083"}/realms/dbos`,
+  secret: {"..."}
 });
 ```
 
@@ -278,9 +280,9 @@ We declaratively use this Koa middleware (along with a [`koa-logger`](https://gi
 @KoaMiddleware(koaLogger, bankJwt)
 export class BankEndpoints {...}
 ```
+
 These two middleware functions are applied to each request from left to right: first, the `koaLogger` middleware logs the request and wraps all subsequent functions so it can correctly log the response; second, the `bankJwt` middleware verifies the JWT token and rejects a request with a `401` status code if the token is invalid.
 If the token is valid, the `bankJwt` middleware sets a `state.user` object in the Koa context, which can be used by later middleware -- in our case, the authentication middleware.
-
 
 In the second step, we write a custom authentication middleware to extract authenticated user and role information set by the Koa middleware:
 ```ts
@@ -331,8 +333,27 @@ We use the `@RequiredRole()` decorator to override the defaults.
 static async createAccountFunc(txnCtxt: PrismaContext, ownerName: string, type: string, @ArgOptional balance?: number) {...}
 ```
 
-For example, we configure another test user, email and password `john@test.com / 123`, to only have an "appUser" role and is not authorized to create a new account.
-If you logged in as `john@test.com`, pressing the "Create a New Account" button would fail.
+We can quickly review our assignment of roles to endpoints by reviewing the information DBOS presents at startup:
+```
+2024-06-27 14:15:23 [info]: Workflow executor initialized 
+2024-06-27 14:15:23 [info]: HTTP endpoints supported: 
+2024-06-27 14:15:23 [info]:     GET     :  /api/list_accounts/:ownerName 
+2024-06-27 14:15:23 [info]:         Required Roles: ["appUser"] 
+2024-06-27 14:15:23 [info]:     GET     :  /api/list_all_accounts 
+2024-06-27 14:15:23 [info]:         Required Roles: ["appUser"] 
+2024-06-27 14:15:23 [info]:     POST    :  /api/create_account 
+2024-06-27 14:15:23 [info]:         Required Roles: ["appAdmin"] <-- One of these things is not like the others
+2024-06-27 14:15:23 [info]:     GET     :  /api/greeting 
+2024-06-27 14:15:23 [info]:         Required Roles: ["appUser"] 
+2024-06-27 14:15:23 [info]:     POST    :  /api/deposit 
+2024-06-27 14:15:23 [info]:         Required Roles: ["appUser"] 
+2024-06-27 14:15:23 [info]:     POST    :  /api/withdraw 
+2024-06-27 14:15:23 [info]:         Required Roles: ["appUser"] 
+2024-06-27 14:15:23 [info]:     POST    :  /api/transfer 
+2024-06-27 14:15:23 [info]:         Required Roles: ["appUser"] 
+2024-06-27 14:15:23 [info]:     GET     :  /api/transaction_history/:accountId 
+2024-06-27 14:15:23 [info]:         Required Roles: ["appUser"] 
+```
 
 If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
 
@@ -340,4 +361,5 @@ If you are interested in learning more about declarative security in DBOS, pleas
 TODO!
 
 ### Further Reading
+TODO!
 If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
