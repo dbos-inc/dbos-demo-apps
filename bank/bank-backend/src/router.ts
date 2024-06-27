@@ -11,7 +11,7 @@ export class BankEndpoints {
   // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/api/greeting")
   static async greeting(ctx: HandlerContext) {
-    return { msg: "Hello from " + ctx.getConfig<string>("bankname") };
+    return "Hello from " + ctx.getConfig<string>("bankname");
   }
 
   // Deposit.

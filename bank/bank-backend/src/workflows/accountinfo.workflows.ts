@@ -24,6 +24,16 @@ export class BankAccountInfo {
   }
 
   @Transaction()
+  @GetApi("/api/list_all_accounts")
+  static async listAllAccountsFunc(txnCtxt: PrismaContext) {
+    return txnCtxt.client.accountInfo.findMany({
+      orderBy: {
+        accountId: "asc",
+      },
+    });
+  }
+
+  @Transaction()
   @PostApi("/api/create_account")
   @RequiredRole(["appAdmin"]) // Only an admin can create a new account.
   static async createAccountFunc(txnCtxt: PrismaContext, ownerName: string, type: string, @ArgOptional balance?: number) {

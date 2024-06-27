@@ -1,7 +1,11 @@
 import { Component, Input, SimpleChanges } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+
 import { AppService } from './app.service';
 import { BankAccountInfo } from "./app.service";
 import { TransactionHistory } from "./app.service";
+
+import { OwnerNameDialogComponent } from './owner-name-dialog/owner-name-dialog.component';
 
 @Component({
   selector: 'bank-details',
@@ -23,6 +27,7 @@ import { TransactionHistory } from "./app.service";
         <thead>
           <tr>
             <th>Account ID</th>
+            <th>Account Owner</th>
             <th>Balance</th>
             <th>Type</th>
             <th>Actions</th>
@@ -31,6 +36,7 @@ import { TransactionHistory } from "./app.service";
         <tbody>
           <tr *ngFor="let acct of this.accounts">
             <td>{{acct.account_id}}</td>
+            <td>{{acct.owner_name}}</td>
             <td>\${{(acct.balance / 100.0).toFixed(2)}}</td>
             <td>{{acct.type}}</td>
             <td>
@@ -275,7 +281,7 @@ export class BankComponent {
       selectedTransferSource: string = "cash";
       externalAccountId: number = -1;
 
-      constructor(public _service:AppService) {
+      constructor(private dialog: MatDialog, public _service:AppService) {
       }
 
       ngOnInit() {
@@ -305,24 +311,30 @@ export class BankComponent {
       }
 
       createNewAccount(): void {
-        const newAcct = {
-          ownerName: this.ownerName,
-          type: 'checking',
-          balance: 0.0,
-          uuid: 'angulartest123'
-        }
-        this._service.postResource(this.bankUrl + "/api/create_account",
-          JSON.stringify(newAcct))
-          .subscribe({
-            next: (data: any) => {this.bankmsg = 'Successfully created an account! Account ID: ' + data;
-              this.getAccounts();},
-            error: (err: any) => { this.bankmsg = 'Failed to create a new account' }
-          });
+        const dialogRef = this.dialog.open(OwnerNameDialogComponent);
+
+        dialogRef.afterClosed().subscribe(result => {
+          if (result) {
+            const newAcct = {
+              ownerName: result,
+              type: 'checking',
+              balance: 0.0,
+            };
+            this._service.postResource(this.bankUrl + "/api/create_account", JSON.stringify(newAcct))
+              .subscribe({
+                next: (data: any) => {this.bankmsg = 'Successfully created an account! Account ID: ' + data;
+                  this.getAccounts();},
+                error: (err: any) => { this.bankmsg = 'Failed to create a new account' }
+              });
+          } else {
+            this.bankmsg = 'Account creation cancelled by the user.';
+          }
+        });
       }
 
-      // List all accounts list_accounts
+      // List all accounts
       getAccounts(){
-        this._service.getResource(this.bankUrl + "/api/list_accounts/" + this.ownerName)
+        this._service.getResource(this.bankUrl + "/api/list_all_accounts")
           .subscribe({
             next: (data: any) => {
               // this.bankmsg = 'Fetched accounts!'
