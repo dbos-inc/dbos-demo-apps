@@ -357,9 +357,38 @@ We can quickly review our assignment of roles to endpoints by reviewing the info
 
 If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
 
-### Deploying to DBOS Cloud
-TODO!
+## Deploying to DBOS Cloud
+We can make some quick changes to deploy the DBOS Bank backend in the cloud, using the free "DBOS Starter" hosting tier.
 
-### Further Reading
+### Registration / Login
+First, from the `bank-backend/` directory, execute `npx dbos-cloud register -u <username>` to register an account with DBOS cloud, or, if you are already registered execute `npx dbos-cloud login`.  This will allow you to log in securely in your browser, or create an account if you do not already have one.
+
+### Creating Cloud Database
+After logging in, create a Postgres server using `npx dbos-cloud database provision --username <pg db admin username> dbosbankdb`, changing the username and password as desired.  You will be prompted for the database password.
+
+### Deploying DBOS Bank Backend
+Deploying the first bank is straightforward:
+- Register the bank app with `npx dbos-cloud app register -d dbosbankdb bank_a`.
+- Deploy the app with `CURRENT_BANK=bank_a npx dbos-cloud app deploy bank_a`.
+- Make a note of the `Access your application at` URL displayed, as this will be necessary for configuring the frontend.
+
+Deploying the second bank similarly:
+- Register the bank app with `npx dbos-cloud app register -d dbosbankdb bank_b`.
+- Deploy the app with `CURRENT_BANK=bank_b npx dbos-cloud app deploy bank_b`.
+- Make a note of the `Access your application at` URL displayed, as this will be necessary for configuring the frontend.
+
+### Configuring and Launching Frontend
+
+The frontend AngularJS is not hosted in DBOS Cloud; we will just continue to use the local server for the demo.
+
+Edit the settings in `bank-frontend/src/environments/environment.ts` so that the frontend can find the bank servers.  Be sure to change both `bankHosts` and the `authUrl`, using the URLs provided from the deployment above.
+
+After configuration, you should be able to start the frontend from the `bank-frontend` directory as before:
+```bash
+npm install
+npm start
+```
+
+## Further Reading
 TODO!
 If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
