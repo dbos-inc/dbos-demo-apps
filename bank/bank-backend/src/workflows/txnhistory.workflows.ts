@@ -190,7 +190,7 @@ export class BankTransactionHistory {
 
   @Workflow()
   static async depositWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
-    // Deposite locally first.
+    // Deposit locally first.
     const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, true);
 
     // Then, Contact remote DB to withdraw.
