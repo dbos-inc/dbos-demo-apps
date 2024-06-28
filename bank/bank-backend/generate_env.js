@@ -6,7 +6,7 @@ const path = require('node:path');
 const [dbosConfig, ] = parseConfigFile();
 
 // Write out the .env file
-const databaseURL = `postgresql://${dbosConfig.poolConfig.user}:${dbosConfig.poolConfig.password}@${dbosConfig.poolConfig.host}:${dbosConfig.poolConfig.port}/${dbosConfig.poolConfig.database}?schema='public'`;
+const databaseURL = `postgresql://${dbosConfig.poolConfig.user}:${dbosConfig.poolConfig.password}@${dbosConfig.poolConfig.host}:${dbosConfig.poolConfig.port}/${dbosConfig.poolConfig.database}?schema=public`;
 
 try {
   fs.writeFileSync(path.join(process.cwd(), 'prisma', '.env'), `DATABASE_URL="${databaseURL}"`);
