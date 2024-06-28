@@ -399,14 +399,14 @@ npm start
 
 ### Monitoring and Debugging
 
-DBOS Cloud comes with a [monitoring dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard) automatically.  To find the URL for your dashboard, execute `npx dbos-cloud dashboard url`.  The dashboard includes execution traces and the ability to run workflows under the [Time Travel Debugger](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging).
+DBOS Cloud comes with a [monitoring dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard) automatically.  To find the URL for your dashboard, execute `npx dbos-cloud dashboard url`.  The dashboard includes execution traces.
 
 ## Further Reading
 To get started with DBOS Transact, check out the [quickstart](https://docs.dbos.dev/getting-started/quickstart) and [docs](https://docs.dbos.dev/).
 
 DBOS [concepts](https://docs.dbos.dev/explanations/core-concepts) and their execution guarantees covered in depth in the [workflow tutorial](https://docs.dbos.dev/tutorials/workflow-tutorial).
 
-For a quick introduction to [DBOS Cloud](https://www.dbos.dev/dbos-cloud), see [the tutorials](https://docs.dbos.dev/category/dbos-cloud-tutorials).  Of particular interest is the [DBOS Cloud Monitoring Dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard) and [Time Travel Debugging](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging), which allows you to replay past workflows in the debugger.
+For a quick introduction to [DBOS Cloud](https://www.dbos.dev/dbos-cloud), see [the tutorials](https://docs.dbos.dev/category/dbos-cloud-tutorials).  Of particular interest is the [DBOS Cloud Monitoring Dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
 
 For more information on [Prisma](https://www.prisma.io) as an ORM in DBOS, see [Using Prisma](https://docs.dbos.dev/tutorials/using-prisma).
 
