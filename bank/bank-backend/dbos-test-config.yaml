@@ -10,4 +10,4 @@ runtimeConfig:
   port: 8081
 application:
   bankname: "testbank"
-  bankport: '8091'
+  bankport: '8081'

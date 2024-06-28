@@ -79,7 +79,7 @@ npm run build
 
 Do a quick review of `dbos-config.yaml`, to make sure the information is correct, especially if you are not using the default database port.  Note that this setup uses the same Postgres server process for both databases for simplicity, but they can easily be separated by making additional changes here.
 
-Next, execute database migrations and launch the first bank.  The first command below uses [Prisma](https://www.prisma.io/) to create a schema for the first bank; the second command launches the bank.
+Next, execute database migrations and launch the first bank.  The first command below uses [Prisma](https://www.prisma.io/) to create tables for the first bank; the second command launches the bank.
 
 ```bash
 export PGPASSWORD=<database password>
