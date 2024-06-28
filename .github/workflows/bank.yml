@@ -71,6 +71,4 @@ jobs:
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
           BANK_PORT: 8081
-          # CB 6/6/2024 - temporary limitation
-          BANK_SCHEMA: public
           CURRENT_BANK: bank_a
