@@ -6,12 +6,10 @@ import { convertTransactionHistory } from "./router";
 
 describe("bank-tests", () => {
   let testRuntime: TestingRuntime;
-  let bankSchema: string;
 
   beforeAll(async () => {
-    bankSchema = "public";
     testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "dbos-test-config.yaml");
-    await testRuntime.queryUserDB<void>(`delete from ${bankSchema}."AccountInfo" where "ownerName"=$1;`, "alice");
+    await testRuntime.queryUserDB<void>(`delete from "AccountInfo" where "ownerName"=$1;`, "alice");
   });
 
   afterAll(async () => {
@@ -30,7 +28,7 @@ describe("bank-tests", () => {
       type: "saving",
     });
 
-    const res = await testRuntime.queryUserDB<AccountInfo>(`select * from ${bankSchema}."AccountInfo" where "ownerName" = $1;`, "alice");
+    const res = await testRuntime.queryUserDB<AccountInfo>(`select * from "AccountInfo" where "ownerName" = $1;`, "alice");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(res[0].ownerName).toBe("alice");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
