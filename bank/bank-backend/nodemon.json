@@ -1,0 +1,7 @@
+{
+  "watch": ["src/","migrations/","prisma/"],
+  "ext": "ts,json,ejs,prisma",
+  "ignore": ["src/**/*.test.ts"],
+  "exec": "npm run build && npx dbos migrate && npm run start"
+}
+

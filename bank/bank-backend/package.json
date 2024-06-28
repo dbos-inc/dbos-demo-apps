@@ -2,11 +2,10 @@
   "name": "bank-backend",
   "version": "0.0.2",
   "description": "Bank backend built with DBOS",
-  "main": "dist/main.js",
-  "types": "dist/main.d.js",
   "scripts": {
     "build": "npx prisma generate && tsc",
-    "start": "node .",
+    "dev": "nodemon",
+    "start": "npx dbos start",
     "test": "npm run build && npx dbos migrate && jest --detectOpenHandles",
     "lint-fix": "eslint --ext .ts --fix .",
     "lint": "eslint --ext .ts ."
@@ -43,6 +42,7 @@
     "@types/supertest": "^2.0.14",
     "eslint": "^8.56.0",
     "jest": "^29.6.1",
+    "nodemon": "^3.1.4",
     "supertest": "^7.0.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.1.6",
