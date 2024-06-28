@@ -9,10 +9,7 @@ describe("bank-tests", () => {
   let bankSchema: string;
 
   beforeAll(async () => {
-    bankSchema = process.env.BANK_SCHEMA ?? "public";
-    if (!bankSchema) {
-      throw new Error("Env 'BANK_SCHEMA' not set!");
-    }
+    bankSchema = "public";
     testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "dbos-test-config.yaml");
     await testRuntime.queryUserDB<void>(`delete from ${bankSchema}."AccountInfo" where "ownerName"=$1;`, "alice");
   });

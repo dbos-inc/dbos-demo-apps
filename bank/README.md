@@ -54,6 +54,8 @@ node ./scripts/start_postgres_docker.js
 ```
 This script sets up two new Postgres users: `bank_a` that owns the database `bank_a`, and `bank_b` that owns database `bank_b`.
 
+Our script uses the same `$PGPASSWORD` for both banks to make things easier to remember for development.  The passwords can be changed in the script if desired.
+
 #### Use an Existing Postgres
 
 If you have an existing Postgres, the following commands can be issued to set up the two bank databases:
