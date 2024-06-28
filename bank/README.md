@@ -50,7 +50,7 @@ Set the `PGPASSWORD` environment variable to whatever you'd like, then start Pos
 ```shell
 export PGPORT=5432 # Optional; can be set to a non-default value, but make adjustments below
 export PGPASSWORD=<database password>
-./scripts/start_postgres_docker.sh
+node ./scripts/start_postgres_docker.js
 ```
 This script sets up two new Postgres users: `bank_a` that owns the database `bank_a`, and `bank_b` that owns database `bank_b`.
 
