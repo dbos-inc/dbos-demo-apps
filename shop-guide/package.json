@@ -15,6 +15,7 @@
   "devDependencies": {
     "@dbos-inc/dbos-cloud": "^1.15.9",
     "@dbos-inc/eslint-plugin": "0.0.6",
+    "@types/koa-bodyparser": "^4.3.12",
     "eslint": "^8.56.0",
     "typescript": "^5.2.2"
   }
