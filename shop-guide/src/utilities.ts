@@ -130,7 +130,7 @@ export class ShopUtilities {
     const req = ctxt.koaContext.request;
 
     type Session = { session_id: string; client_reference_id?: string; payment_status: string };
-    const payload = req.body as Session; // eslint-disable-line @typescript-eslint/no-unsafe-member-access
+    const payload = req.body as Session;
 
     if (!payload.client_reference_id) {
       ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
