@@ -74,7 +74,7 @@ export class Shop {
     return orderURL;
   }
 
-  @PostApi('/crash_application') // eslint-disable-next-line @typescript-eslint/require-await
+  @PostApi('/crash_application')
   static async crashApplication(_ctxt: HandlerContext) {
 
     // For testing and demo purposes :)
