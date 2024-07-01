@@ -1,0 +1,19 @@
+database:
+  hostname: 'localhost'
+  port: 5432
+  username: ${CURRENT_BANK}
+  connectionTimeoutMillis: 3000
+  app_db_name: ${CURRENT_BANK}
+  password: ${PGPASSWORD}
+  app_db_client: "prisma"
+  migrate:
+    - node generate_env.js && npx prisma migrate deploy
+runtimeConfig:
+  port: 8081
+#telemetry:
+#    OTLPExporter:
+#        tracesEndpoint: http://localhost:4318/v1/traces
+application:
+  bankname: "DBOS Bank - ${CURRENT_BANK}"
+  bankport: '8081'
+  bankschema: public
