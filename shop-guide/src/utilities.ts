@@ -127,7 +127,6 @@ export class ShopUtilities {
 
   @PostApi('/payment_webhook')
   static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const req = ctxt.koaContext.request;
 
     type Session = { session_id: string; client_reference_id?: string; payment_status: string };
