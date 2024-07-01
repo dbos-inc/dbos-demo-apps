@@ -242,7 +242,7 @@ export class Shop {
     // Coupled with the `finally` block, this will ensure that an event is sent out of the workflow.
     const event = new EventSender(ctxt, checkout_url_topic);
     const undos = new UndoList(ctxt);
-  
+
     try {
       const productDetails = await ctxt.invoke(Shop).getCart(username);
       if (productDetails.length === 0) {
@@ -268,6 +268,7 @@ export class Shop {
         return;
       }
 
+      // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
       await event.setEvent(paymentSession.url);
       const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
       let orderIsPaid = false;
@@ -306,8 +307,8 @@ export class Shop {
       ctxt.logger.debug(`Checkout for ${username}: workflow complete`);
     }
     finally {
-      await undos.atCompletion();
-      await event.atCompletion();
+      await undos.atCompletion(); // eslint-disable-line @dbos-inc/detect-nondeterministic-calls
+      await event.atCompletion(); // eslint-disable-line @dbos-inc/detect-nondeterministic-calls
     }
   }
 

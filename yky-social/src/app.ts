@@ -113,9 +113,8 @@ async function authMiddleware (ctx: MiddlewareContext) {
 ])
 export class YKY
 {
-  // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi('/')
-  @RequiredRole([])
+  @RequiredRole([]) // eslint-disable-next-line @typescript-eslint/require-await
   static async hello(_ctx: HandlerContext) {
     return {message: "Welcome to YKY (Yakky not Yucky)!"};
   }

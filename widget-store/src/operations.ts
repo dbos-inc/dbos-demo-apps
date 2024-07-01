@@ -74,13 +74,10 @@ export class Shop {
     return orderURL;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  @PostApi('/crash_application')
+  @PostApi('/crash_application') // eslint-disable-next-line @typescript-eslint/require-await
   static async crashApplication(_ctxt: HandlerContext) {
 
-    // For testing and demo purposes :) 
+    // For testing and demo purposes :)
     process.exit(1);
   }
 }
-
-

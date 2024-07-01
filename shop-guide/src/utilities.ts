@@ -127,10 +127,11 @@ export class ShopUtilities {
 
   @PostApi('/payment_webhook')
   static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const req = ctxt.koaContext.request;
 
     type Session = { session_id: string; client_reference_id?: string; payment_status: string };
-    const payload = req.body as Session;
+    const payload = req.body as Session; // eslint-disable-line @typescript-eslint/no-unsafe-member-access
 
     if (!payload.client_reference_id) {
       ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);

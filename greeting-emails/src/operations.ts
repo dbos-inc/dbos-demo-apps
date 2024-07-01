@@ -1,13 +1,14 @@
 import {
   TransactionContext, Transaction,
-  HandlerContext, GetApi,
-  CommunicatorContext, Communicator,
-  WorkflowContext, Workflow,
+  GetApi, CommunicatorContext,
+  Communicator, WorkflowContext,
+  Workflow,
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
 
 export class Greetings {
   @Communicator()
+  // eslint-disable-next-line @typescript-eslint/require-await
   static async SendGreetingEmail(ctxt: CommunicatorContext, friend: string, content: string) {
       ctxt.logger.info(`Sending email "${content}" to ${friend}...`);
       // Code omitted for simplicity
