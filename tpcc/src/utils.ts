@@ -1,9 +1,9 @@
-// eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
+// eslint-disable-next-line @dbos-inc/dbos-static-analysis
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function getRandomInt(max: number, noMatch?: number): number {
   while (true) {
-    // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
+    // eslint-disable-next-line @dbos-inc/dbos-static-analysis
     const value = Math.floor(Math.random() * max);
     if (value !== noMatch) {
       return value;
