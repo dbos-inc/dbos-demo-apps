@@ -14,7 +14,7 @@ export class TPCC {
     const w_id = getRandomInt(warehouses) + 1;
     const d_id = getRandomInt(DIST_PER_WAREHOUSE) + 1;
     let c_d_id, c_w_id;
-    // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
+    // eslint-disable-next-line @dbos-inc/dbos-static-analysis
     if (Math.random() <= 0.85) {
       c_d_id = d_id;
       c_w_id = w_id;
@@ -25,7 +25,7 @@ export class TPCC {
 
     // 60% lookups by last name
     let customer;
-    // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
+    // eslint-disable-next-line @dbos-inc/dbos-static-analysis
     if (Math.random() <= 0.6) {
       customer = getCustomerName();
     } else {
@@ -54,9 +54,9 @@ export class TPCC {
     const orderLines = new Array<{ itemID: number, supplierWarehouseID: number, quantity: number, }>(itemCount);
   
     for (let i = 0; i < itemCount; i++) {
-      // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
+      // eslint-disable-next-line @dbos-inc/dbos-static-analysis
       const itemID = Math.floor(Math.random() * NUM_ITEMS) + 1;
-      // eslint-disable-next-line @dbos-inc/detect-nondeterministic-calls
+      // eslint-disable-next-line @dbos-inc/dbos-static-analysis
       const quantity = Math.floor(Math.random() * 10) + 1;
       const supplierWarehouseID = warehouses > 1 ? getRandomInt(warehouses, w_id - 1) + 1 : w_id;
       orderLines[i] = { itemID, supplierWarehouseID, quantity };
