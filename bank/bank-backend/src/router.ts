@@ -67,7 +67,7 @@ export class BankEndpoints {
 // For demo purposes
 export class CrashEndpoint {
  @GetApi('/crash_application')
-  static async crashApplication(ctx: HandlerContext) {
+  static async crashApplication(_ctx: HandlerContext) {
     // For testing and demo purposes :)
     process.exit(1);
     return Promise.resolve();
