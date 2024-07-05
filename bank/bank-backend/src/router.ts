@@ -70,6 +70,7 @@ export class CrashEndpoint {
   static async crashApplication(ctx: HandlerContext) {
     // For testing and demo purposes :)
     process.exit(1);
+    return Promise.resolve();
   }
 }
 
