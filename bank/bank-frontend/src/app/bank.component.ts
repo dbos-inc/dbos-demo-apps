@@ -20,7 +20,7 @@ import { OwnerNameDialogComponent } from './owner-name-dialog/owner-name-dialog.
           <button class="button-grey" (click)="getMsg()" type="submit">New Greeting Message</button>
           <button  class="button-green" (click)="createNewAccount()" type="submit">Create a New Account</button>
           <button  class="button" (click)="getAccounts()" type="submit">Refresh Accounts</button>
-
+          <button  class="button-red" (click)="crashApp()" type="submit">Crash!</button>
       </div>
 
       <table class="table table-striped">
@@ -430,5 +430,10 @@ export class BankComponent {
             },
             error: (err: any) => { this.bankmsg = 'Failed to transfer! '; }
           });
+      }
+
+      //In response to the "Crash" button - for demo purposes
+      crashApp(){
+        this._service.getResource(this.bankUrl + "/crash_application").subscribe()
       }
 }
