@@ -64,6 +64,16 @@ export class BankEndpoints {
   }
 }
 
+// For demo purposes
+export class CrashEndpoint {
+ @GetApi('/crash_application')
+  static async crashApplication(_ctx: HandlerContext) {
+    // For testing and demo purposes :)
+    process.exit(1);
+    return Promise.resolve();
+  }
+}
+
 // Helper functions to convert to the correct data types.
 // Especially convert the bigint.
 export function convertTransactionHistory(data: TransactionHistory): TransactionHistory {

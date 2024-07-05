@@ -226,7 +226,6 @@ export class BankTransactionHistory {
   static async withdrawWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
     // Withdraw first.
     const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, false);
-
     // Then, contact remote DB to deposit.
     if (data.toLocation && !(data.toLocation === "cash") && !data.toLocation.startsWith(REMOTEDB_PREFIX)) {
       ctxt.logger.info("Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
@@ -240,12 +239,26 @@ export class BankTransactionHistory {
       };
       const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory, ctxt.workflowUUID + '-deposit');
       if (!remoteRes) {
-        // Undo transaction is a deposit.
+        
+        ///////////////////////////////
+        // Example sleep Window. For a reliability test, uncomment the below
+        // Then, start a transfer to a nonexistent bank, (i.e. stop bank b).
+        // Wait for app to go into sleep and then crash it. The DBOS workflow 
+        // recovery will ensure the undo transaction below is executed when 
+        // the app restarts
+        //
+        // for (let i = 0; i < 10; i++) {
+        //  ctxt.logger.info("Sleeping")
+        //  await ctxt.sleepms(1000)
+        // }
+        ///////////////////////////////
+        
+        // Undo withdrawal with a deposit.
         const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, true, result);
         if (undoRes !== result) {
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
         }
-        throw new Error("Failed to deposit to remote bank.");
+        throw new Error("Failed to deposit to remote bank; transaction reversed");
       }
     } else {
       ctxt.logger.info("Deposit to: " + data.fromLocation);

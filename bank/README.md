@@ -406,6 +406,43 @@ npm start
 
 DBOS Cloud comes with a [monitoring dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard) automatically.  To find the URL for your dashboard, execute `npx dbos-cloud dashboard url`.  The dashboard includes execution traces.
 
+## A Demo of Workflow Recovery
+
+We can simulate a catastrophic failure during a transfer. Namely the following case:
+1. we try to send a transfer from Bank A to Bank B
+1. we make the transfer fail, as if bank B went offline
+2. we crash Bank A before it has a chance to recover and undo the transfer
+
+DBOS workflows are guaranteed to continue where they left off. This means that when Bank A is restarted, it will continue undoing the transfer. Shortly after restart, Bank A returns to a consistent state with the funds back in the source account.
+
+To replicate this, perform the following:
+1. in `withdrawWorkflow` (bank-backend/src/workflows/txnhistory.workflows.ts) uncomment the sleep block like so:
+```ts
+      if (!remoteRes) {
+        // Sleep for 10 seconds before undoing the transaction
+        for (let i = 0; i < 10; i++) {
+          ctxt.logger.info("Sleeping")
+          await ctxt.sleepms(1000)
+        }
+
+        // Undo withdrawal with a deposit.
+        const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, true, result);
+        if (undoRes !== result) {
+          throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
+        }
+        throw new Error("Failed to deposit to remote bank; transaction reversed");
+      }
+```
+2. Restart or redeploy Bank A with this change.
+3. Stop Bank B: `CTRL+C` the app if running locally or something like `npx dbos-cloud app delete bank_b` if in the cloud.
+
+This demo is time sensitive as you'll have a 10-second sleep window to crash Bank A. Adjust the above `sleep` loop if you nee more time. Read these steps ahead of time to get a sense for what to do:
+1. Initiate a withdrawal from Bank A to Bank B
+2. Because of the above `sleep` loop, you won't see the effect. You can quickly close the "Withdraw" window and refresh the browser to see that the funds left the account. Now, quickly press the red "Crash!" button.
+3. If running in DBOS cloud, wait a few seconds. If you are running locally, restart Bank A by hand.
+4. After restarting the app, log in again to `https://localhost:8089`. Observe the funds returning to the sender account.
+5. In the log for the app, you should see the failed transfer. The 10 `Sleeping` statements, interrupted by a crash, then restart, workflow recovery and finally the "transaction reversed" error message.
+
 ## Further Reading
 To get started with DBOS Transact, check out the [quickstart](https://docs.dbos.dev/getting-started/quickstart) and [docs](https://docs.dbos.dev/).
 
