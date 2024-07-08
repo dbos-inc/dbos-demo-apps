@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fulfill Order</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Welcome, {{ name }}</h1>
+  <p>Fulfill the order below:</p>
+  <p>Order Details: <!-- Insert order details here --></p>
+  <div id="timer">Time Remaining: <span id="countdown">60</span> seconds</div>
+  <form action="/fulfill/cancel" method="POST">
+    <button type="submit">Cancel</button>
+  </form>
+  <form action="/fulfill/fulfilled" method="POST">
+    <button type="submit">Fulfilled</button>
+  </form>
+  <form action="/fulfill/more_time" method="POST">
+    <input type="hidden" name="name" value="{{ name }}">
+    <button type="submit">More Time</button>
+  </form>
+  <script>
+    let countdownElement = document.getElementById('countdown');
+    let timeLeft = parseInt(countdownElement.innerText);
+
+    const timer = setInterval(() => {
+      timeLeft--;
+      countdownElement.innerText = timeLeft;
+
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        alert('Time is up!');
+        // Redirect or handle timeout
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
