@@ -1,6 +1,6 @@
 import { GetApi, HandlerContext, PostApi } from "@dbos-inc/dbos-sdk";
 import path from 'path';
-import { ShopUtilities, OrderStatus } from "./utilities";
+//import { ShopUtilities, OrderStatus } from "./utilities";
 import { Liquid } from "liquidjs";
 
 const engine = new Liquid({

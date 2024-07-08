@@ -1,22 +1,34 @@
+// Our schema
+//
+// A packer table
+//  name
+//  current_order
+//  expiration
+//  
+// An order_packer table - that is populated by incoming Kafka messages.
+//  order_id
+//  order_status
+//  product_id
+//  product
+//  packer_name
+
 exports.up = async function(knex) {
-  await knex.schema.createTable('products', table => {
-    table.integer('product_id').primary();
-    table.string('product', 255).unique().notNullable();
-    table.text('description').notNullable();
-    table.integer('inventory').notNullable();
-    table.float('price').notNullable();
+  await knex.schema.createTable('packer', table => {
+    table.string('packer_name', 255).primary();
+    table.integer('order_id').unique();
+    table.datetime('expiration').defaultTo(null);
   });
 
-  await knex.schema.createTable('orders', table => {
-    table.increments('order_id').primary();
+  await knex.schema.createTable('order_packer', table => {
+    table.integer('order_id').primary();
     table.integer('order_status').notNullable();
-    table.datetime('last_update_time').notNullable().defaultTo(knex.fn.now());
     table.integer('product_id').notNullable();
-    table.foreign('product_id').references('products.product_id');
+    table.string('product', 255).defaultTo('');
+    table.string('packer_name', 255).defaultTo(null);
   });
 };
 
 exports.down = async function(knex) {
-  await knex.schema.dropTable('products');
-  await knex.schema.dropTable('orders');
+  await knex.schema.dropTable('order_packer');
+  await knex.schema.dropTable('packer');
 };
