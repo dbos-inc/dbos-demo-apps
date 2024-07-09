@@ -101,7 +101,7 @@ export class FulfillUtilities {
 
   // This will return null if the assignment expired, or the expiration if an unexpired assignment exists
   @Transaction()
-  static async checkExpiredAssignment(ctx: KnexTransactionContext, packer_name: string, currentDate: Date) : Promise<Date | null> {
+  static async checkForExpiredAssignment(ctx: KnexTransactionContext, packer_name: string, currentDate: Date) : Promise<Date | null> {
     const packers = await ctx.client<Packer>('packer').where({packer_name}).select();
     if (!packers.length) {
       throw new Error(`No packer ${packer_name}`);

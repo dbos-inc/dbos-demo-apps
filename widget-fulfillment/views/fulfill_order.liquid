@@ -51,13 +51,15 @@
 </head>
 <body>
   <h1>Welcome, {{ name }}</h1>
-  <p>Fulfill the order below:</p>
-  <p>Order Details: <!-- Insert order details here --></p>
-  <div id="timer">Time Remaining: <span id="countdown">60</span> seconds</div>
+  <p>Fulfill the order below by packing the following fabulous item:</p>
+  <p>Order Details: {{ userRec.product }}</p>
+  <div id="timer">Time Remaining: <span id="countdown">{{ expirationSecs }}</span> seconds</div>
   <form action="/fulfill/cancel" method="POST">
+    <input type="hidden" name="name" value="{{ name }}">
     <button type="submit">Cancel</button>
   </form>
   <form action="/fulfill/fulfilled" method="POST">
+    <input type="hidden" name="name" value="{{ name }}">
     <button type="submit">Fulfilled</button>
   </form>
   <form action="/fulfill/more_time" method="POST">

@@ -1,4 +1,4 @@
-import { WorkflowContext, Workflow } from '@dbos-inc/dbos-sdk';
+import { WorkflowContext, Workflow, PostApi, HandlerContext } from '@dbos-inc/dbos-sdk';
 import { FulfillUtilities, OrderStatus, OrderWithProduct } from './utilities';
 import { Kafka, KafkaConfig, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
@@ -33,6 +33,15 @@ export class Fulfillment {
       await ctxt.invoke(FulfillUtilities).addOrder(detail);
     }
 
+    return Promise.resolve();
+  }
+
+
+  @PostApi('/crash_application')
+  static async crashApplication(_ctxt: HandlerContext) {
+
+    // For testing and demo purposes :)
+    process.exit(1);
     return Promise.resolve();
   }
 }
