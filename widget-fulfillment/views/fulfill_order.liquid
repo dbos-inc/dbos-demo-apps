@@ -52,7 +52,8 @@
 <body>
   <h1>Welcome, {{ name }}</h1>
   <p>Fulfill the order below by packing the following fabulous item:</p>
-  <p>Order Details: {{ userRec.product }}</p>
+  <p>Product: {{ order[0].product }}</p>
+  <p>Order ID: {{ packer.order_id }}</p>
   <div id="timer">Time Remaining: <span id="countdown">{{ expirationSecs }}</span> seconds</div>
   <form action="/fulfill/cancel" method="POST">
     <input type="hidden" name="name" value="{{ name }}">

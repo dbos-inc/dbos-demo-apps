@@ -48,12 +48,14 @@ export class FulfillUtilities {
   @Transaction()
   static async getUserAssignment(ctx: KnexTransactionContext, packer_name: string, expiration: Date) {
     let packers = await ctx.client<Packer>('packer').where({packer_name}).select();
+    let newAssignment = false;
     if (!packers.length) {
       await ctx.client<Packer>('packer').insert({packer_name, order_id: null, expiration: null});
       packers = await ctx.client<Packer>('packer').where({packer_name}).select();
     }
     if (packers[0].order_id) {
       // Extend time
+      ctx.logger.info(`Extending time for ${packer_name} on ${packers[0].order_id}`);
       if (packers[0].expiration?.getTime() ?? 0 < expiration.getTime()) {
         packers[0].expiration = expiration;
         await ctx.client<Packer>('packer').where({packer_name}).update({expiration});
@@ -69,9 +71,15 @@ export class FulfillUtilities {
         packers[0].expiration = expiration;
         await ctx.client<Packer>('packer').where({packer_name}).update({order_id, expiration});
         await ctx.client<OrderPacker>('order_packer').where({order_id}).update({packer_name});
+        newAssignment = true;
+        ctx.logger.info(`New Assignment for ${packer_name}: ${order_id}`);
       }
     }
-    return packers[0];
+    let order : OrderPacker[] = [];
+    if (packers[0].order_id) {
+      order = await ctx.client<OrderPacker>('order_packer').where({order_id: packers[0].order_id}).select();
+    }
+    return {packer: packers[0], newAssignment, order};
   }
 
   @Transaction()
@@ -109,7 +117,10 @@ export class FulfillUtilities {
     if (!packers[0].order_id) {
       return null;
     }
-    if (packers[0].expiration?.getTime() ?? 0 > currentDate.getTime()) return packers[0].expiration;
+    if ((packers[0].expiration?.getTime() ?? 0) > currentDate.getTime()) {
+      ctx.logger.info(`Not yet expired: ${packers[0].expiration?.getTime()} > ${currentDate.getTime()}`);
+      return packers[0].expiration;
+    }
     await ctx.client<OrderPacker>('order_packer').where({order_id: packers[0].order_id}).update({packer_name: null});
     await ctx.client<Packer>('packer').where({packer_name}).update({order_id: null, expiration: null});
     return null;
