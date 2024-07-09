@@ -1,5 +1,5 @@
 {
-  "watch": ["src/","migrations/"],
+  "watch": ["src/","migrations/","views/"],
   "ext": "ts,json,liquid,js",
   "ignore": ["src/**/*.test.ts"],
   "exec": "npm run build && npx dbos migrate && npm run start"

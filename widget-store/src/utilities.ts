@@ -24,6 +24,14 @@ export interface Order {
   product_id: number,
 }
 
+export interface OrderWithProduct {
+  order_id: number;
+  order_status: number;
+  last_update_time: Date;
+  product_id: number;
+  product: string;
+}
+
 export const PRODUCT_ID = 1;
 
 export class ShopUtilities {
@@ -89,5 +97,14 @@ export class ShopUtilities {
       throw new Error(`Order ${order_id} not found`);
     }
     return item[0];
+  }
+
+  @Transaction({ readOnly: true })
+  static async retrieveOrderDetails(ctxt: KnexTransactionContext, order_id: number): Promise<OrderWithProduct[]> {
+    const items = await ctxt.client<Order>('orders')
+      .join<Product>('products', 'orders.product_id', 'products.product_id')
+      .select('orders.*', 'products.product')
+      .where({order_id});
+    return items as OrderWithProduct[];
   }
 }

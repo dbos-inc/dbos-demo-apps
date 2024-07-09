@@ -16,3 +16,5 @@ database:
 telemetry:
   logs:
     logLevel: 'info'
+env:
+  KAFKA_BROKER: ${KAFKA_BROKER}
