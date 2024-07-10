@@ -92,10 +92,8 @@ export class Shop {
     if (notification && notification === 'paid') {
       ctxt.logger.info(`Payment successful!`);
       if (fulfillKafkaCfg) {
-        await ctxt.invoke(ShopUtilities).fulfillOrder(orderID);
-        // What happens if this fails?
-        //  Should we keep trying?
-        //  Should we restore payment + inventory (ie cancel order)
+        ctxt.logger.info(`Notify fulfillment department.`);
+        await ctxt.invoke(ShopUtilities).markOrderPaid(orderID);
         await ctxt.invoke(fulfillKafkaCfg).sendMessage(
           {
             value: JSON.stringify({
@@ -105,6 +103,7 @@ export class Shop {
           }
         );
       }
+      await ctxt.invoke(ShopUtilities).fulfillOrder(orderID);
     } else {
       ctxt.logger.warn(`Payment failed...`);
       await ctxt.invoke(ShopUtilities).errorOrder(orderID);

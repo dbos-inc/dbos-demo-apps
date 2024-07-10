@@ -6,6 +6,7 @@ type KnexTransactionContext = TransactionContext<Knex>;
 export enum OrderStatus {
   PENDING = 0,
   FULFILLED = 1,
+  PAID = 2,
   CANCELLED = -1,
 }
 

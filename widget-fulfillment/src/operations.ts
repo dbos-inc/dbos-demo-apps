@@ -40,7 +40,7 @@ export class Fulfillment {
     ctxt.logger.info(`Received order: ${JSON.stringify(payload)}`);
 
     for (const detail of payload.details) {
-      if (detail.order_status !== OrderStatus.FULFILLED) continue;
+      if (detail.order_status !== OrderStatus.PAID) continue;
       await ctxt.invoke(FulfillUtilities).addOrder(detail);
     }
 

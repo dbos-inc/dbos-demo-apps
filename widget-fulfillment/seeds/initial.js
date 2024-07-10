@@ -1,5 +1,5 @@
 exports.seed = async function(knex) {
-  // Deletes ALL existing entries
-  await knex("order_packer").del();
-  await knex("packer").del();
+  // Deletes ALL existing entries, if desired
+  //await knex("order_packer").del();
+  //await knex("packer").del();
 };

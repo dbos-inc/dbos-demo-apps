@@ -6,6 +6,7 @@ type KnexTransactionContext = TransactionContext<Knex>;
 export enum OrderStatus {
   PENDING = 0,
   FULFILLED = 1,
+  PAID = 2,
   CANCELLED = -1,
 }
 
@@ -75,12 +76,21 @@ export class ShopUtilities {
   }
 
   @Transaction()
+  static async markOrderPaid(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
+    await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
+      order_status: OrderStatus.PAID,
+      last_update_time: ctxt.client.fn.now()
+    });
+  }
+
+  @Transaction()
   static async fulfillOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
     await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
       order_status: OrderStatus.FULFILLED,
       last_update_time: ctxt.client.fn.now()
     });
   }
+
 
   @Transaction()
   static async errorOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
