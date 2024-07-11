@@ -66,7 +66,7 @@ export class Fulfillment {
         ctime = curDate.getTime();
         const nextTime = await ctxt.invoke(FulfillUtilities).checkForExpiredAssignment(name, curDate);
         if (!nextTime) {
-          ctxt.logger.info(`Assignment for ${name} canceled`);
+          ctxt.logger.info(`Assignment for ${name} ended; no longer watching.`);
           break;
         }
         expirationMS = nextTime.getTime();
