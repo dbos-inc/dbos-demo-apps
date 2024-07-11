@@ -30,7 +30,7 @@ export interface OrderPackerInfo
 export class Fulfillment {
   @Workflow()
   @KafkaConsume(fulfillTopic)
-  static async testWorkflow(ctxt: WorkflowContext, topic: string, _partition: number, message: KafkaMessage) {
+  static async inboundOrderWorkflow(ctxt: WorkflowContext, topic: string, _partition: number, message: KafkaMessage) {
     if (topic !== fulfillTopic) return; // Error
 
     const payload = JSON.parse(message.value!.toString()) as {

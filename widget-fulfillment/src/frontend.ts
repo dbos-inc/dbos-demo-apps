@@ -1,7 +1,7 @@
 import { GetApi, HandlerContext, PostApi } from "@dbos-inc/dbos-sdk";
 import path from 'path';
 import { Liquid } from "liquidjs";
-import { FulfillUtilities } from "./utilities";
+import { FulfillUtilities, OrderStatus } from "./utilities";
 import { Fulfillment, OrderPackerInfo } from "./operations";
 
 const engine = new Liquid({
@@ -45,6 +45,16 @@ export class Frontend {
     });
   }
   
+  @GetApi('/dashboard')
+  static async dashboard(ctxt: HandlerContext) {
+    const {orders, packers} = await ctxt.invoke(FulfillUtilities).popDashboard();
+    return render("dashboard", {
+      orders,
+      packers,
+      fulfilled: OrderStatus.FULFILLED,
+    });
+  }
+  
   @PostApi('/fulfill/cancel')
   static async cancelFulfill(ctxt: HandlerContext, name: string) {
     await ctxt.invoke(FulfillUtilities).packerAbandonAssignment(name);
@@ -63,6 +73,20 @@ export class Frontend {
   static async extendFulfill(ctxt: HandlerContext, name: string) {
     // Handle request for more time - this is basically a page reload...
     ctxt.koaContext.redirect(`/fulfill?name=${encodeURIComponent(name)}`);
+    return Promise.resolve();
+  }
+
+  @PostApi('/dashboard/cleanorders')
+  static async cleanOrders(ctxt: HandlerContext) {
+    await ctxt.invoke(FulfillUtilities).cleanOrders();
+    ctxt.koaContext.redirect(`/dashboard`);
+    return Promise.resolve();
+  }
+
+  @PostApi('/dashboard/cleanstaff')
+  static async cleanStaff(ctxt: HandlerContext) {
+    await ctxt.invoke(FulfillUtilities).cleanStaff();
+    ctxt.koaContext.redirect(`/dashboard`);
     return Promise.resolve();
   }
 

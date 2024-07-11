@@ -7,6 +7,7 @@ export enum OrderStatus {
   PENDING = 0,
   FULFILLED = 1,
   PAID = 2,
+  ASSIGNED = 3,
   CANCELLED = -1,
 }
 
@@ -18,7 +19,7 @@ export interface Packer {
 
 export interface OrderPacker {
   order_id: number;
-  order_status: number;
+  order_status: OrderStatus;
   product_id: number;
   product: string;
   packer_name: string | null;
@@ -35,6 +36,28 @@ export interface OrderWithProduct {
 export const PRODUCT_ID = 1;
 
 export class FulfillUtilities {
+  @Transaction({readOnly: true})
+  static async popDashboard(ctx: KnexTransactionContext) {
+    const orders = await ctx.client<OrderPacker>('order_packer').select().orderBy(['order_id']);
+    const packers = await ctx.client<Packer>('packer').select().orderBy(['packer_name']);
+    for (const o of orders) {
+      if (o.order_status === OrderStatus.PAID && o.packer_name) {
+        o.order_status = OrderStatus.ASSIGNED;
+      }
+    }
+    return {orders, packers};
+  }  
+
+  @Transaction()
+  static async cleanStaff(ctx: KnexTransactionContext) {
+    await ctx.client<Packer>('packer').whereNull('order_id').delete();
+  }
+
+  @Transaction()
+  static async cleanOrders(ctx: KnexTransactionContext) {
+    await ctx.client<OrderPacker>('order_packer').where({order_status: OrderStatus.FULFILLED}).delete();
+  }
+
   @Transaction()
   static async addOrder(ctx: KnexTransactionContext, product: OrderWithProduct) {
     await ctx.client<OrderPacker>('order_packer').insert({
@@ -92,6 +115,7 @@ export class FulfillUtilities {
     if (!packers[0].order_id) {
       throw new Error(`Packer ${packer_name} completed an assignment that did not exist`);
     }
+    await ctx.client<OrderPacker>('order_packer').where({order_id: packers[0].order_id}).update({order_status: OrderStatus.FULFILLED});
     await ctx.client<Packer>('packer').where({packer_name}).update({order_id: null, expiration: null});
   }
 
