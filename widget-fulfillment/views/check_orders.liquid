@@ -42,11 +42,53 @@
             align-items: center;
             padding: 20px;
         }
+
+        .logo {
+            width: 200px;
+            height: auto;
+        }
+
+        .product {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .product img {
+            max-width: 60%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .form-text {
+            font-size: 24px;
+            color: #333;
+            margin: 20px 0;
+        }
+
     </style>
     </head>
 <body>
-  <h1>Welcome, {{ name }}</h1>
-  <p>There are no orders right now.  Waiting for orders...</p>
+  <div class="container">
+      <img src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png" alt="DBOS Logo" class="logo">
+      <div class="product">
+          <img src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/WidgetWaitPatiently.webp" alt="Employee awaiting orders">
+          <h1>Welcome, {{ name }}</h1>
+          <p class="form-text">There are no orders right now.  Waiting for orders...</p>
+      </div>
+  </div>
+  <div>
+      <a href="/dashboard">I'm in charge here!</a>
+  </div>
+  <div>
+      <a href="/crash">I'm feeling mischevious!</a>
+  </div>
+
   <script>
     setTimeout(() => {
       window.location.href = `/fulfill?name={{ name }}`;
