@@ -94,17 +94,14 @@ export class Shop {
       if (fulfillKafkaCfg) {
         ctxt.logger.info(`Notify fulfillment department.`);
         await ctxt.invoke(ShopUtilities).markOrderPaid(orderID);
-        // We can send the message a few times; nothing bad happens
-        for (let i=0; i<2; ++i) {
-          await ctxt.invoke(fulfillKafkaCfg).sendMessage(
-            {
-              value: JSON.stringify({
-                order_id: orderID,
-                details: await ctxt.invoke(ShopUtilities).retrieveOrderDetails(orderID),
-              })
-            }
-          );
-        }
+        await ctxt.invoke(fulfillKafkaCfg).sendMessage(
+          {
+            value: JSON.stringify({
+              order_id: orderID,
+              details: await ctxt.invoke(ShopUtilities).retrieveOrderDetails(orderID),
+            })
+          }
+        );
       }
       await ctxt.invoke(ShopUtilities).fulfillOrder(orderID);
     } else {
