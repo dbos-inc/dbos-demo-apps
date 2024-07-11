@@ -16,7 +16,7 @@ const kafkaConfig: KafkaConfig = {
   logLevel: logLevel.NOTHING, // FOR TESTING
 };
 
-const timeToPackOrder = 60;
+const timeToPackOrder = 30;
 
 export interface OrderPackerInfo
 {
