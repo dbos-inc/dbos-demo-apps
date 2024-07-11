@@ -149,12 +149,16 @@
                 <thead>
                     <tr>
                         <th>Packer Name</th>
+                        <th>Order ID</th>
+                        <th>Time Left</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for packer in packers %}
                     <tr>
                         <td>{{ packer.packer_name }}</td>
+                        <td>{{ packer.order_id }}</td>
+                        <td>{{ packer.timeLeft }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

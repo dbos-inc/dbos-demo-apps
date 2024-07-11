@@ -15,6 +15,7 @@ export interface Packer {
   packer_name: string;
   order_id: number | null;
   expiration: Date | null;
+  timeLeft?: number;
 }
 
 export interface OrderPacker {
@@ -43,6 +44,11 @@ export class FulfillUtilities {
     for (const o of orders) {
       if (o.order_status === OrderStatus.PAID && o.packer_name) {
         o.order_status = OrderStatus.ASSIGNED;
+      }
+    }
+    for (const p of packers) {
+      if (p.expiration) {
+        p.timeLeft = Math.round((p.expiration.getTime() - new Date().getTime())/1000);
       }
     }
     return {orders, packers};
