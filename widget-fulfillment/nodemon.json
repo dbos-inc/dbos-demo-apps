@@ -2,6 +2,7 @@
   "watch": ["src/","migrations/","views/"],
   "ext": "ts,json,liquid,js",
   "ignore": ["src/**/*.test.ts"],
+  "exitcrash": true,
   "exec": "npm run build && npx dbos migrate && npm run start"
 }
 
