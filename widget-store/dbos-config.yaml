@@ -16,3 +16,14 @@ database:
 telemetry:
   logs:
     logLevel: 'info'
+application:
+  ses_from_address: ${REPORT_EMAIL_FROM_ADDRESS}
+  ses_to_address: ${REPORT_EMAIL_TO_ADDRESS}
+  aws_config:
+    aws_region: ${AWS_REGION}
+    aws_access_key_id: ${AWS_ACCESS_KEY_ID}
+    aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+env:
+  # If you want email reports nightly, set these
+  REPORT_EMAIL_FROM_ADDRESS: ${REPORT_EMAIL_FROM_ADDRESS}
+  REPORT_EMAIL_TO_ADDRESS: ${REPORT_EMAIL_TO_ADDRESS}
