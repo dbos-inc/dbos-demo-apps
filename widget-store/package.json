@@ -11,7 +11,7 @@
     "dev": "nodemon"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.16.12",
+    "@dbos-inc/dbos-cloud": "^1.17.14",
     "@dbos-inc/eslint-plugin": "^1.1.5",
     "@types/uuid": "^9.0.8",
     "eslint": "^8.57.0",
@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-kafkajs": "1.17.11-preview.g5f42092e6b",
-    "@dbos-inc/dbos-sdk": "^1.16.12",
+    "@dbos-inc/communicator-email-ses": "^1.17.14",
+    "@dbos-inc/dbos-sdk": "^1.17.14",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
