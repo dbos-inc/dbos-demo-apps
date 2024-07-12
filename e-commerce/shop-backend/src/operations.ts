@@ -3,7 +3,6 @@ import {
   GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
 } from '@dbos-inc/dbos-sdk';
 import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
-export { BcryptCommunicator };
 import { Knex } from 'knex';
 import { Request } from 'koa';
 
@@ -87,20 +86,20 @@ function getHostConfig(ctxt: DBOSContext) {
 class EventSender<T>
 {
   completed: boolean = false;
-  constructor(readonly ctxt: WorkflowContext, readonly topic: string) { }
+  constructor(readonly topic: string) { }
 
-  async setEvent(result: T|null) : Promise<void> {
+  async setEvent(ctxt: WorkflowContext, result: T|null) : Promise<void> {
     if (this.completed) {
-      this.ctxt.logger.debug(`Programmer error - setEvent called twice for topic ${this.topic} in workflow ${this.ctxt.workflowUUID}`);
+      ctxt.logger.debug(`Programmer error - setEvent called twice for topic ${this.topic} in workflow ${ctxt.workflowUUID}`);
       return;
     }
     this.completed = true;
-    return this.ctxt.setEvent(this.topic, result);
+    return ctxt.setEvent(this.topic, result);
   }
 
-  async atCompletion() : Promise<void> {
+  async atCompletion(ctxt: WorkflowContext) : Promise<void> {
     if (!this.completed) {
-      return this.setEvent(null);
+      return this.setEvent(ctxt, null);
     }
   }
 }
@@ -109,27 +108,27 @@ class EventSender<T>
  * This class ensures that an undo is executed unless canceled
  */
 class UndoList {
-  constructor(readonly ctxt: WorkflowContext) {}
+  constructor() {}
 
   undos: Map<string, () => Promise<void> > = new Map();
   registerUndo(name: string, fn: () => Promise<void>) {
     this.undos.set(name, fn);
   }
-  cancelUndo(name: string) {
+  cancelUndo(ctxt: WorkflowContext, name: string) {
     if (!this.undos.has(name)) {
-      this.ctxt.logger.debug(`Node: undo named ${name} is not registered`);
+      ctxt.logger.debug(`Node: undo named ${name} is not registered`);
     }
     this.undos.delete(name);
   }
 
-  async atCompletion() {
+  async atCompletion(ctxt: WorkflowContext) {
     for (const [_name, fn] of this.undos) {
       try {
         await fn();
       }
       catch (e) {
         const err = e as Error;
-        this.ctxt.logger.debug(`Unexpected error in undo function ${err.message}`);
+        ctxt.logger.debug(`Unexpected error in undo function ${err.message}`);
       }
     }
   }
@@ -241,9 +240,9 @@ export class Shop {
   @Workflow()
   static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
     // Coupled with the `finally` block, this will ensure that an event is sent out of the workflow.
-    const event = new EventSender(ctxt, checkout_url_topic);
-    const undos = new UndoList(ctxt);
-  
+    const event = new EventSender(checkout_url_topic);
+    const undos = new UndoList();
+
     try {
       const productDetails = await ctxt.invoke(Shop).getCart(username);
       if (productDetails.length === 0) {
@@ -269,7 +268,7 @@ export class Shop {
         return;
       }
 
-      await event.setEvent(paymentSession.url);
+      await event.setEvent(ctxt, paymentSession.url);
       const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
       let orderIsPaid = false;
 
@@ -299,7 +298,7 @@ export class Shop {
 
       if (orderIsPaid) {
         await ctxt.invoke(Shop).fulfillOrder(orderID);
-        undos.cancelUndo('inventory');
+        undos.cancelUndo(ctxt, 'inventory');
         await ctxt.invoke(Shop).clearCart(username);
       } else {
         await ctxt.invoke(Shop).errorOrder(orderID);
@@ -307,8 +306,8 @@ export class Shop {
       ctxt.logger.debug(`Checkout for ${username}: workflow complete`);
     }
     finally {
-      await undos.atCompletion();
-      await event.atCompletion();
+      await undos.atCompletion(ctxt);
+      await event.atCompletion(ctxt);
     }
   }
 

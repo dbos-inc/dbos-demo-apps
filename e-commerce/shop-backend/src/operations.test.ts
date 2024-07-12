@@ -11,7 +11,7 @@ describe("operations", () => {
   let testRuntime: TestingRuntime;
 
   beforeAll(async () => {
-    testRuntime = await createTestingRuntime([Shop, BcryptCommunicator], undefined);
+    testRuntime = await createTestingRuntime();
     await testRuntime.queryUserDB<void>(`delete from users;`);
   });
 

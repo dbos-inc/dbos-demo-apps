@@ -1,9 +1,6 @@
 import { WorkflowContext, Workflow, HandlerContext, PostApi, ArgOptional } from '@dbos-inc/dbos-sdk';
 import { ShopUtilities } from './utilities';
-import { Frontend } from './frontend';
-
-export { ShopUtilities };
-export { Frontend };
+export { Frontend } from './frontend';
 
 export const PAYMENT_TOPIC = "payment";
 export const PAYMENT_URL_EVENT = "payment_url";
@@ -77,11 +74,11 @@ export class Shop {
     return orderURL;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   @PostApi('/crash_application')
   static async crashApplication(_ctxt: HandlerContext) {
 
-    // For testing and demo purposes :) 
+    // For testing and demo purposes :)
     process.exit(1);
+    return Promise.resolve();
   }
 }

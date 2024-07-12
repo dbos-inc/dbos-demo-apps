@@ -1,6 +1,5 @@
 import { WorkflowContext, Workflow, HandlerContext, PostApi, ArgOptional} from '@dbos-inc/dbos-sdk';
 import { ShopUtilities, payment_complete_topic, generatePaymentUrls } from './utilities';
-export { ShopUtilities } from './utilities'; // Required to register methods
 
 export const session_topic = "payment_session_id";
 

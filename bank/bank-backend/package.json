@@ -1,0 +1,51 @@
+{
+  "name": "bank-backend",
+  "version": "0.0.2",
+  "description": "Bank backend built with DBOS",
+  "scripts": {
+    "build": "npx prisma generate && tsc",
+    "dev": "nodemon",
+    "start": "npx dbos start",
+    "test": "npm run build && npx dbos migrate && jest --detectOpenHandles",
+    "lint-fix": "eslint --ext .ts --fix .",
+    "lint": "eslint --ext .ts ."
+  },
+  "author": "",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "@dbos-inc/dbos-sdk": "^1.16.12",
+    "@koa/bodyparser": "^5.0.0",
+    "@koa/cors": "^5.0.0",
+    "@koa/router": "^12.0.0",
+    "@ladjs/koa-views": "^9.0.0",
+    "@prisma/client": "^5.1.1",
+    "axios": "^1.4.0",
+    "ejs": "^3.1.10",
+    "json-bigint-patch": "^0.0.8",
+    "jwks-rsa": "^3.0.1",
+    "koa": "^2.14.2",
+    "koa-jwt": "^4.0.4",
+    "koa-logger": "^3.2.1",
+    "lodash": "^4.17.21",
+    "prisma": "^5.1.1"
+  },
+  "devDependencies": {
+    "@dbos-inc/dbos-cloud": "^1.15.9",
+    "@dbos-inc/eslint-plugin": "^1.1.5",
+    "@types/jest": "^29.5.3",
+    "@types/koa__cors": "^4.0.1",
+    "@types/koa__router": "^12.0.1",
+    "@types/koa-bodyparser": "4.3.10",
+    "@types/koa-logger": "^3.1.2",
+    "@types/lodash": "^4.14.197",
+    "@types/supertest": "^2.0.14",
+    "eslint": "^8.56.0",
+    "jest": "^29.6.1",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.1.6",
+    "uuid": "^9.0.0"
+  }
+}

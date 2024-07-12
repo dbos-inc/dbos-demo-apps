@@ -1,8 +1,8 @@
 import {
   TransactionContext, Transaction,
-  HandlerContext, GetApi,
-  CommunicatorContext, Communicator,
-  WorkflowContext, Workflow,
+  GetApi, CommunicatorContext,
+  Communicator, WorkflowContext,
+  Workflow,
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
 
@@ -12,6 +12,7 @@ export class Greetings {
       ctxt.logger.info(`Sending email "${content}" to ${friend}...`);
       // Code omitted for simplicity
       ctxt.logger.info("Email sent!");
+      return Promise.resolve();
   }
 
   @Transaction()

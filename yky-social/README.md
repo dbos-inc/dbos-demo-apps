@@ -43,7 +43,7 @@ Additionally, to allow media storage, S3 access keys must be placed in the envir
 * AWS\_SECRET\_ACCESS\_KEY
 * S3\_BUCKET\_NAME (Unkless your bucket is called `yky-social-photos`)
 
-There are manu ways to set up the S3 bucket, including the following:
+There are many ways to set up the S3 bucket, including the following:
 
 Block all public access.
 

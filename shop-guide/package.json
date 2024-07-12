@@ -9,12 +9,13 @@
     "lint-fix": "eslint --fix src"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^1.13.9",
+    "@dbos-inc/dbos-sdk": "^1.15.9",
     "knex": "^3.1.0"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.13.9",
-    "@dbos-inc/eslint-plugin": "0.0.6",
+    "@dbos-inc/dbos-cloud": "^1.15.9",
+    "@dbos-inc/eslint-plugin": "^1.1.5",
+    "@types/koa-bodyparser": "^4.3.12",
     "eslint": "^8.56.0",
     "typescript": "^5.2.2"
   }
