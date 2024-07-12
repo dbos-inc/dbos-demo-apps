@@ -105,6 +105,7 @@ export class ShopUtilities {
     const sales = await ctx.invoke(ShopUtilities).getDailySales(yesterday);
     await ShopUtilities.sendStatusEmail(ctx, yesterday, sales);
   }
+
   @Transaction({readOnly: true})
   static async getDailySales(ctx: KnexTransactionContext, day: Date) {
     const startOfDay = new Date(day.setHours(0, 0, 0, 0));
