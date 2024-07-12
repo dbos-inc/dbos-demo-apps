@@ -27,7 +27,9 @@ export interface Order {
 
 export const PRODUCT_ID = 1;
 
-const reportSes = configureInstance(SendEmailCommunicator, 'reportSES', {awscfgname: 'aws_config'});
+const reportSes = (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])
+  ? configureInstance(SendEmailCommunicator, 'reportSES', {awscfgname: 'aws_config'})
+  : undefined;
 
 export class ShopUtilities {
   @Transaction()
@@ -119,9 +121,10 @@ export class ShopUtilities {
   }
 
   static async sendStatusEmail(ctx: WorkflowContext, yd: Date, sales: SalesSummary) {
+    if (!reportSes) return;
     await ctx.invoke(reportSes).sendEmail({
-      to: ['manager@widgetstore.dbos.dev'],
-      from: 'reportbot@widgetstore.dbos.dev',
+      to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
+      from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
       subject: `Daily report for ${yd.toDateString()}`,
       bodyText: `Yesterday we had ${sales.order_count} orders, selling ${sales.product_count} units, for a total of ${sales.total_price} dollars`,
     });
