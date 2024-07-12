@@ -1,4 +1,4 @@
-import { GetApi, HandlerContext, PostApi } from "@dbos-inc/dbos-sdk";
+import { ArgOptional, GetApi, HandlerContext, PostApi } from "@dbos-inc/dbos-sdk";
 import path from 'path';
 import { Liquid } from "liquidjs";
 import { FulfillUtilities, OrderStatus } from "./utilities";
@@ -27,8 +27,8 @@ export class Frontend {
   }
 
   @GetApi('/fulfill')
-  static async fulfillment(ctxt: HandlerContext, name: string) {
-    const userRecWF = await ctxt.startWorkflow(Fulfillment).userAssignmentWorkflow(name);
+  static async fulfillment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
+    const userRecWF = await ctxt.startWorkflow(Fulfillment).userAssignmentWorkflow(name, more_time);
     const userRec = await ctxt.getEvent<OrderPackerInfo>(userRecWF.getWorkflowUUID(), 'rec');
     if (!userRec) {
       ctxt.koaContext.redirect('/');
@@ -41,7 +41,7 @@ export class Frontend {
       name,
       packer: userRec.packer,
       order: userRec.order,
-      expirationSecs: userRec.expirationSecs,
+      expirationSecs: Math.round(userRec.expirationSecs),
     });
   }
   
@@ -72,7 +72,7 @@ export class Frontend {
   @PostApi('/fulfill/more_time')
   static async extendFulfill(ctxt: HandlerContext, name: string) {
     // Handle request for more time - this is basically a page reload...
-    ctxt.koaContext.redirect(`/fulfill?name=${encodeURIComponent(name)}`);
+    ctxt.koaContext.redirect(`/fulfill?name=${encodeURIComponent(name)}&more_time=true`);
     return Promise.resolve();
   }
 

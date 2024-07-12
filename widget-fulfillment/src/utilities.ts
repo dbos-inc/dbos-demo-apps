@@ -1,4 +1,4 @@
-import { Transaction, TransactionContext} from '@dbos-inc/dbos-sdk';
+import { ArgOptional, Transaction, TransactionContext} from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -76,19 +76,19 @@ export class FulfillUtilities {
   }
 
   @Transaction()
-  static async getUserAssignment(ctx: KnexTransactionContext, packer_name: string, expiration: Date) {
+  static async getUserAssignment(ctx: KnexTransactionContext, packer_name: string, expiration: Date, @ArgOptional more_time: boolean | undefined) {
     let packers = await ctx.client<Packer>('packer').where({packer_name}).select();
     let newAssignment = false;
     if (!packers.length) {
       await ctx.client<Packer>('packer').insert({packer_name, order_id: null, expiration: null});
       packers = await ctx.client<Packer>('packer').where({packer_name}).select();
     }
-    if (packers[0].order_id) {
+    if (packers[0].order_id && more_time) {
       // Extend time
       ctx.logger.info(`Extending time for ${packer_name} on ${packers[0].order_id}`);
       if (packers[0].expiration?.getTime() ?? 0 < expiration.getTime()) {
-        packers[0].expiration = expiration;
-        await ctx.client<Packer>('packer').where({packer_name}).update({expiration});
+       packers[0].expiration = expiration;
+       await ctx.client<Packer>('packer').where({packer_name}).update({expiration});
       }
     }
     else {

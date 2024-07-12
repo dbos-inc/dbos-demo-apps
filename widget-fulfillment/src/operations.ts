@@ -1,4 +1,4 @@
-import { WorkflowContext, Workflow, PostApi, HandlerContext } from '@dbos-inc/dbos-sdk';
+import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional } from '@dbos-inc/dbos-sdk';
 import { FulfillUtilities, OrderPacker, OrderStatus, OrderWithProduct, Packer } from './utilities';
 import { Kafka, KafkaConfig, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
@@ -9,11 +9,7 @@ const fulfillTopic = 'widget-fulfill-topic';
 const kafkaConfig: KafkaConfig = {
   clientId: 'dbos-kafka-test',
   brokers: [`${process.env['KAFKA_BROKER'] ?? 'localhost:9092'}`],
-  requestTimeout: 100, // FOR TESTING
-  retry: { // FOR TESTING
-    retries: 5
-  },
-  logLevel: logLevel.NOTHING, // FOR TESTING
+  logLevel: logLevel.ERROR
 };
 
 const timeToPackOrder = 30;
@@ -48,10 +44,10 @@ export class Fulfillment {
   }
 
   @Workflow()
-  static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string) {
+  static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
     let ctime = await ctxt.invoke(CurrentTimeCommunicator).getCurrentTime();
     const expiration = ctime + timeToPackOrder*1000;
-    const userRec = await ctxt.invoke(FulfillUtilities).getUserAssignment(name, new Date(expiration));
+    const userRec = await ctxt.invoke(FulfillUtilities).getUserAssignment(name, new Date(expiration), more_time);
     const expirationSecs = userRec.packer.expiration ? (userRec.packer.expiration!.getTime()-ctime) / 1000 : null;
     await ctxt.setEvent<OrderPackerInfo>('rec', {...userRec, expirationSecs});
       
