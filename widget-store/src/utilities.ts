@@ -6,7 +6,8 @@ type KnexTransactionContext = TransactionContext<Knex>;
 
 export enum OrderStatus {
   PENDING = 0,
-  FULFILLED = 1,
+  DISPATCHED = 1,
+  PAID = 2,
   CANCELLED = -1,
 }
 
@@ -23,6 +24,14 @@ export interface Order {
   order_status: number,
   last_update_time: Date,
   product_id: number,
+}
+
+export interface OrderWithProduct {
+  order_id: number;
+  order_status: number;
+  last_update_time: Date;
+  product_id: number;
+  product: string;
 }
 
 export const PRODUCT_ID = 1;
@@ -72,12 +81,21 @@ export class ShopUtilities {
   }
 
   @Transaction()
-  static async fulfillOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
+  static async markOrderPaid(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
     await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
-      order_status: OrderStatus.FULFILLED,
+      order_status: OrderStatus.PAID,
       last_update_time: ctxt.client.fn.now()
     });
   }
+
+  @Transaction()
+  static async fulfillOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
+    await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
+      order_status: OrderStatus.DISPATCHED,
+      last_update_time: ctxt.client.fn.now()
+    });
+  }
+
 
   @Transaction()
   static async errorOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
@@ -94,6 +112,15 @@ export class ShopUtilities {
       throw new Error(`Order ${order_id} not found`);
     }
     return item[0];
+  }
+
+  @Transaction({ readOnly: true })
+  static async retrieveOrderDetails(ctxt: KnexTransactionContext, order_id: number): Promise<OrderWithProduct[]> {
+    const items = await ctxt.client<Order>('orders')
+      .join<Product>('products', 'orders.product_id', 'products.product_id')
+      .select('orders.*', 'products.product')
+      .where({order_id});
+    return items as OrderWithProduct[];
   }
 
   @Scheduled({crontab: '0 0 * * *'}) // Every midnight
