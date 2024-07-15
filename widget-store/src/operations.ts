@@ -14,7 +14,7 @@ const kafkaConfig: KafkaConfig = {
   retry: { // FOR TESTING
     retries: 5
   },
-  logLevel: logLevel.NOTHING, // FOR TESTING
+  logLevel: logLevel.ERROR, // FOR TESTING
 };
 
 const fulfillTopic = 'widget-fulfill-topic';
