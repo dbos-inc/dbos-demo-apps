@@ -33,3 +33,32 @@ To enable the features, set up your email accounts in [SES](https://us-east-2.co
 * REPORT\_EMAIL\_FROM\_ADDRESS - Email `From` address; this needs to be a registered identity in SES
 * REPORT\_EMAIL\_TO\_ADDRESS - Email `To` address; if you are in SES sandbox mode this must also be a verified address in your identities list
 
+## Widget Fulfillment Department (Optional)
+
+The Widget Store has a companion [Widget Fulfillment app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/widget-fulfillment) that demonstrates a simple packing and shipping station system.
+
+In order to use the fulfillment app, a Kafka broker must be set up to publish orders from the store.  If you do not have a kafka broker, one can be set up with the following `docker-compose` script:
+
+```
+version: "3.7"
+services:
+  broker:
+      image: bitnami/kafka:latest
+      hostname: broker
+      container_name: broker
+      ports:
+        - '9092:9092'
+        - '29093:29093'
+        - '19092:19092'
+      environment:
+        KAFKA_CFG_NODE_ID: 1
+        KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+        KAFKA_CFG_ADVERTISED_LISTENERS: 'PLAINTEXT_HOST://localhost:9092,PLAINTEXT://broker:19092'
+        KAFKA_CFG_PROCESS_ROLES: 'broker,controller'
+        KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
+        KAFKA_CFG_LISTENERS: 'CONTROLLER://:29093,PLAINTEXT_HOST://:9092,PLAINTEXT://:19092'
+        KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+        KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+```
+
+After Kafka is running, set the `KAFKA_BROKER` (use `localhost:9092` for the local broker above) environment variable and restart the widget store app.  Orders will then be automatically published to Kafka for consumption by other apps, such as fulfillment.
