@@ -2,7 +2,7 @@
 
 Visit the main [widget store](../widget-store/README.md) app for an opportunity to buy a widget!
 
-After payment is complete, your order comes here for fulfillment (if you have Kafka working, that is, so see the instructions in the Widget Store for setting it up).
+After payment is complete, your order comes here for fulfillment (if you set up Kafka as shown at https://github.com/dbos-inc/dbos-demo-apps/tree/main/widget-store#readme).
 
 Currently, it is easiest to run the Widget Store and Widget Fulfillment Department app locally, with a local Kafka.
 
