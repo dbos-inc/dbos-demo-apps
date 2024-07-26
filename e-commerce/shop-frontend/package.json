@@ -21,7 +21,7 @@
     "react-hook-form": "^7.45.1"
   },
   "devDependencies": {
-    "@dbos-inc/eslint-plugin": "^1.1.5",
+    "@dbos-inc/eslint-plugin": "^3.0.0",
     "@types/node": "20.3.3",
     "@types/pg": "^8.10.2",
     "@types/react": "18.2.14",
