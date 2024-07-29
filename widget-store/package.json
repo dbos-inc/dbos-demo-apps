@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@dbos-inc/dbos-cloud": "^1.17.14",
-    "@dbos-inc/eslint-plugin": "^3.0.0",
+    "@dbos-inc/eslint-plugin": "^3.1.0",
     "@types/uuid": "^9.0.8",
     "eslint": "^8.57.0",
     "nodemon": "^3.1.4",

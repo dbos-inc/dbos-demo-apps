@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@dbos-inc/dbos-cloud": "^1.15.9",
-    "@dbos-inc/eslint-plugin": "^3.0.0",
+    "@dbos-inc/eslint-plugin": "^3.1.0",
     "@types/jest": "^29.5.3",
     "@types/koa__cors": "^4.0.1",
     "@types/koa__router": "^12.0.1",
