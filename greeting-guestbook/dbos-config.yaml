@@ -8,10 +8,10 @@ database:
   port: 5432
   username: 'postgres'
   password: ${PGPASSWORD}
-  app_db_name: 'hello'
+  app_db_name: 'hello_guestbook'
   connectionTimeoutMillis: 3000
   app_db_client: 'knex'
   migrate: ['npx knex migrate:latest']
   rollback: ['npx knex migrate:rollback']
 env:
-  GUESTBOOK_KEY: 'YOUR_KEY_HERE' #visit https://demo-guestbook.cloud.dbos.dev/key to create a key
+  GUESTBOOK_KEY: '2e71444b-e19e-4f6b-ad70-4556a847e114' #visit https://demo-guestbook.cloud.dbos.dev/key to create a key

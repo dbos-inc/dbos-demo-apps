@@ -1,6 +1,6 @@
 import {
     TransactionContext, Transaction, CommunicatorContext, Communicator,
-    WorkflowContext, Workflow, GetApi, HandlerContext
+    WorkflowContext, Workflow, GetApi, HandlerContext, DBOSResponseError
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
 import axios from 'axios';
@@ -28,8 +28,8 @@ export class Greetings {
 
   @Communicator()
   static async SignGuestbook(ctxt: CommunicatorContext, name: string) {
-    const key = process.env.GUESTBOOK_KEY
-    if (key.length != 36) {
+    const key = process.env.GUESTBOOK_KEY;
+    if (!key || key.length !== 36) {
       throw new DBOSResponseError("Please set the guestbook key in dbos-config.yaml", 401);
     }
     const url = 'https://demo-guestbook.cloud.dbos.dev/record_greeting';

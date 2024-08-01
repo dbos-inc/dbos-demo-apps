@@ -1,6 +1,6 @@
-# DBOS Hello
+# DBOS Guestbook Hello App
 
-This is a [DBOS app](https://docs.dbos.dev/) bootstrapped with `dbos init`.
+This is the app described in the [DBOS Programming Guide](https://docs.dbos.dev/getting-started/quickstart-programming)
 
 ## Getting Started
 
@@ -13,8 +13,6 @@ export PGPASSWORD=dbos
 ```
 
 Then, create some database tables.
-In this quickstart, we use [knex.js](https://knexjs.org/) to manage database migrations.
-Run our provided migration to create a database table:
 
 ```bash
 npx dbos migrate
@@ -27,14 +25,13 @@ npm run build
 npx dbos start
 ```
 
+Then, visit the guestbook key generator at [https://demo-guestbook.cloud.dbos.dev/key](https://demo-guestbook.cloud.dbos.dev/key) and save your key to `dbos-config.yaml`
+
 Finally, curl the server to see that it's working!
 
 ```bash
  curl http://localhost:3000/greeting/dbos
 ```
-
-You can add more functionality to the app by modifying `src/operations.ts`, then re-building and re-starting it.
-We can help you get started in our [programming quickstart](https://docs.dbos.dev/getting-started/quickstart-programming-1).
 
 ## Learn More
 
