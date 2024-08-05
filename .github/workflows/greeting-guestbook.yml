@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: Setup Postgres
-        run: docker exec postgres psql -U postgres -c "CREATE DATABASE hello;"
+        run: docker exec postgres psql -U postgres -c "CREATE DATABASE hello_guestbook;"
         env:
           PGPASSWORD: dbos
       - name: Checkout demo app
