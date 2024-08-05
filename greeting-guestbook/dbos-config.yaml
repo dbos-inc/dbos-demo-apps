@@ -14,5 +14,5 @@ database:
   migrate: ['npx knex migrate:latest']
   rollback: ['npx knex migrate:rollback']
 env:
-  GUESTBOOK_KEY: 'f1fda8b7-9f35-45c7-bee8-155f7ec2c130' #visit https://demo-guestbook.cloud.dbos.dev/key to create a key
+  GUESTBOOK_KEY: 'your-key-here' #visit https://demo-guestbook.cloud.dbos.dev/key to create a key
 
