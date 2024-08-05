@@ -4,12 +4,16 @@ This is the app described in the [DBOS Programming Guide](https://docs.dbos.dev/
 
 ## Getting Started
 
-First, start the database.
-DBOS workflow works with any Postgres database, but to make things easier, we've provided a nifty script that starts Postgres locally in a Docker container and creates a database:
+First, install all the app dependencies
+```bash
+npm install
+```
+
+Start the database. You can use any Postgres DB. If you don't have one, we've provided a script that starts Postgres locally in a Docker container and creates a database:
 
 ```bash
-export PGPASSWORD=dbos
-./start_postgres_docker.sh
+export PGPASSWORD=dbos  #set PGPASSWORD=dbos on Windows
+node start_postgres_docker.js
 ```
 
 Then, create some database tables.

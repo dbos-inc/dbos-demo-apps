@@ -3,7 +3,6 @@ import {
     WorkflowContext, Workflow, GetApi, HandlerContext, DBOSResponseError
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
-import axios from 'axios';
 
 interface GreetingRecord {
   name: string;
@@ -28,24 +27,26 @@ export class Greetings {
 
   @Communicator()
   static async SignGuestbook(ctxt: CommunicatorContext, name: string) {
-    const key = process.env.GUESTBOOK_KEY;
+    const key = process.env.GUESTBOOK_KEY;  //set in dbos-config.yaml
     if (!key || key.length !== 36) {
       throw new DBOSResponseError("Please set the guestbook key in dbos-config.yaml", 401);
     }
-    const url = 'https://demo-guestbook.cloud.dbos.dev/record_greeting';
-    const payload = {
-      'key':  process.env.GUESTBOOK_KEY, //set in dbos-config.yaml
-      'name': name
-    };
-    const headers = { 'Content-Type': 'application/json' };
-    const response = await axios.post(url, payload, { headers: headers });
-    ctxt.logger.info(`Signed the Guestbook: ${JSON.stringify(response.data)}`);
+    const response = await fetch('https://demo-guestbook.cloud.dbos.dev/record_greeting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json'},
+      body: JSON.stringify({ 'key':  key, 'name': name})
+    });
+    const responseStr = JSON.stringify(await response.json());
+    if (!response.ok) {
+      throw new DBOSResponseError(responseStr);
+    }
+    ctxt.logger.info(`>>> STEP 1: Signed the Guestbook: ${responseStr}`);
   }
 
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
     await ctxt.client('greetings').insert(gr);
-    ctxt.logger.info(`Greeting to ${gr.name} recorded in the database!`);
+    ctxt.logger.info(`>>> STEP 2: Greeting to ${gr.name} recorded in the database!`);
   }
 
   @Workflow()
