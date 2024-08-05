@@ -4,8 +4,8 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'greeting-emails/**'
-      - '.github/workflows/greeting-emails.yml'
+      - 'greeting-guestbook/**'
+      - '.github/workflows/greeting-guestbook.yml'
   pull_request:
     types:
       - ready_for_review
@@ -13,8 +13,8 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'greeting-emails/**'
-      - '.github/workflows/greeting-emails.yml'
+      - 'greeting-guestbook/**'
+      - '.github/workflows/greeting-guestbook.yml'
   workflow_dispatch:
 
 jobs:
@@ -54,7 +54,7 @@ jobs:
         with:
           node-version: 20
       - name: Compile Hello World
-        working-directory: dbos-demo-apps/greeting-emails
+        working-directory: dbos-demo-apps/greeting-guestbook
         run: |
           npm install
           npx knex migrate:latest
