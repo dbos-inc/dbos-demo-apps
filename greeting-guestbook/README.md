@@ -22,14 +22,14 @@ Then, create some database tables.
 npx dbos migrate
 ```
 
+Then, visit the guestbook key generator at [https://demo-guestbook.cloud.dbos.dev/key](https://demo-guestbook.cloud.dbos.dev/key) and save your key to `dbos-config.yaml`
+
 Next, build and run the app:
 
 ```bash
 npm run build
 npx dbos start
 ```
-
-Then, visit the guestbook key generator at [https://demo-guestbook.cloud.dbos.dev/key](https://demo-guestbook.cloud.dbos.dev/key) and save your key to `dbos-config.yaml`
 
 Finally, curl the server to see that it's working!
 
