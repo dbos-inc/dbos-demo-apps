@@ -1,4 +1,4 @@
-name: CI for greeting emails example
+name: CI for greeting guestbook example
 
 on:
   push:
