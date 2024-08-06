@@ -1,11 +1,11 @@
-name: CI for greeting emails example
+name: CI for greeting guestbook example
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - 'greeting-emails/**'
-      - '.github/workflows/greeting-emails.yml'
+      - 'greeting-guestbook/**'
+      - '.github/workflows/greeting-guestbook.yml'
   pull_request:
     types:
       - ready_for_review
@@ -13,8 +13,8 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'greeting-emails/**'
-      - '.github/workflows/greeting-emails.yml'
+      - 'greeting-guestbook/**'
+      - '.github/workflows/greeting-guestbook.yml'
   workflow_dispatch:
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: Setup Postgres
-        run: docker exec postgres psql -U postgres -c "CREATE DATABASE hello;"
+        run: docker exec postgres psql -U postgres -c "CREATE DATABASE hello_guestbook;"
         env:
           PGPASSWORD: dbos
       - name: Checkout demo app
@@ -54,7 +54,7 @@ jobs:
         with:
           node-version: 20
       - name: Compile Hello World
-        working-directory: dbos-demo-apps/greeting-emails
+        working-directory: dbos-demo-apps/greeting-guestbook
         run: |
           npm install
           npx knex migrate:latest
