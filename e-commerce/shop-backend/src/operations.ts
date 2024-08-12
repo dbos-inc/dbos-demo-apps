@@ -313,14 +313,15 @@ export class Shop {
 
   @Transaction()
   static async createOrder(ctxt: KnexTransactionContext, username: string, products: Product[]): Promise<number> {
-    const orders = await ctxt.client<Order>('orders').insert({ username, order_status: OrderStatus.PENDING, last_update_time: 0n }).returning('order_id');
-    const orderID = orders[0].order_id;
+    const orders = await ctxt.client<Order>('orders')
+      .insert({ username, order_status: OrderStatus.PENDING, last_update_time: 0n })
+      .returning('order_id');
+    const order_id = orders[0].order_id;
 
-    for (const product of products) {
-      await ctxt.client<OrderItem>('order_items').insert({ order_id: orderID, product_id: product.product_id, price: product.price, quantity: product.inventory });
-    }
+    const items = products.map(p => ({ order_id, product_id: p.product_id, price: p.price, quantity: p.inventory}));
+    await ctxt.client<OrderItem>('order_items').insert(items);
 
-    return orderID;
+    return order_id;
   }
 
   @Transaction()
