@@ -11,13 +11,13 @@
     "start": "npx dbos start"
   },
   "dependencies": {
-    "@dbos-inc/communicator-bcrypt": "^1.15.9",
-    "@dbos-inc/dbos-sdk": "^1.15.9",
+    "@dbos-inc/communicator-bcrypt": "^1.20.20",
+    "@dbos-inc/dbos-sdk": "^1.20.20",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.15.9",
-    "@dbos-inc/dbos-openapi": "^1.18.8",
+    "@dbos-inc/dbos-cloud": "^1.20.20",
+    "@dbos-inc/dbos-openapi": "^1.20.20",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.5",
