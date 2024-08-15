@@ -1,6 +1,6 @@
 import {
-  TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
-  GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
+  TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext, StoredProcedure, StoredProcedureContext,
+  GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext,
 } from '@dbos-inc/dbos-sdk';
 import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
 import { Knex } from 'knex';
@@ -83,12 +83,11 @@ function getHostConfig(ctxt: DBOSContext) {
  * This class sets a workflow event exactly once.
  *   (Provided that it is used in a "finally" clause or similar)
  */
-class EventSender<T>
-{
+class EventSender<T> {
   completed: boolean = false;
   constructor(readonly topic: string) { }
 
-  async setEvent(ctxt: WorkflowContext, result: T|null) : Promise<void> {
+  async setEvent(ctxt: WorkflowContext, result: T | null): Promise<void> {
     if (this.completed) {
       ctxt.logger.debug(`Programmer error - setEvent called twice for topic ${this.topic} in workflow ${ctxt.workflowUUID}`);
       return;
@@ -97,7 +96,7 @@ class EventSender<T>
     return ctxt.setEvent(this.topic, result);
   }
 
-  async atCompletion(ctxt: WorkflowContext) : Promise<void> {
+  async atCompletion(ctxt: WorkflowContext): Promise<void> {
     if (!this.completed) {
       return this.setEvent(ctxt, null);
     }
@@ -108,9 +107,9 @@ class EventSender<T>
  * This class ensures that an undo is executed unless canceled
  */
 class UndoList {
-  constructor() {}
+  constructor() { }
 
-  undos: Map<string, () => Promise<void> > = new Map();
+  undos: Map<string, () => Promise<void>> = new Map();
   registerUndo(name: string, fn: () => Promise<void>) {
     this.undos.set(name, fn);
   }
@@ -133,6 +132,8 @@ class UndoList {
     }
   }
 }
+
+type OrderProduct = Pick<Product, 'product_id' | 'price' | 'inventory'>;
 
 export class Shop {
 
@@ -256,7 +257,7 @@ export class Shop {
         // This is a transaction that either completes or leaves the system as it was.
         //  If it completes, the order must be sent or the subtraction must be undone.
         await ctxt.invoke(Shop).subtractInventory(productDetails);
-        undos.registerUndo('inventory', ()=>{return ctxt.invoke(Shop).undoSubtractInventory(productDetails);});
+        undos.registerUndo('inventory', () => { return ctxt.invoke(Shop).undoSubtractInventory(productDetails); });
       } catch (error) {
         ctxt.logger.error(`Checkout for ${username} failed: insufficient inventory`);
         return;
@@ -312,14 +313,29 @@ export class Shop {
   }
 
   @Transaction()
-  static async createOrder(ctxt: KnexTransactionContext, username: string, products: Product[]): Promise<number> {
+  static async createOrderTx(ctxt: KnexTransactionContext, username: string, products: OrderProduct[]): Promise<number> {
     const orders = await ctxt.client<Order>('orders')
       .insert({ username, order_status: OrderStatus.PENDING, last_update_time: 0n })
       .returning('order_id');
     const order_id = orders[0].order_id;
 
-    const items = products.map(p => ({ order_id, product_id: p.product_id, price: p.price, quantity: p.inventory}));
+    const items = products.map(p => ({ order_id, product_id: p.product_id, price: p.price, quantity: p.inventory }));
     await ctxt.client<OrderItem>('order_items').insert(items);
+
+    return order_id;
+  }
+
+  @StoredProcedure()
+  static async createOrder(ctx: StoredProcedureContext, username: string, products: OrderProduct[]): Promise<number> {
+
+    const query = "INSERT INTO orders (last_update_time, order_status, username) VALUES ($1, $2, $3) RETURNING order_id";
+    const orders = await ctx.query<Pick<Order, 'order_id'>>(query, [0n, OrderStatus.PENDING, username]);
+    const order_id = orders.rows[0].order_id;
+
+    for (const product of products) {
+      const query = "INSERT INTO order_items (order_id, product_id, price, quantity) VALUES ($1, $2, $3, $4)";
+      await ctx.query(query, [order_id, product.product_id, product.price, product.inventory]);
+    }
 
     return order_id;
   }
@@ -332,9 +348,9 @@ export class Shop {
   static async subtractInventoryInternal(ctxt: KnexTransactionContext, products: Product[]): Promise<void> {
     for (const product of products) {
       const numAffected = await ctxt.client<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
-      .update({
-        inventory: ctxt.client.raw('inventory - ?', [product.inventory])
-      });
+        .update({
+          inventory: ctxt.client.raw('inventory - ?', [product.inventory])
+        });
       if (numAffected <= 0) {
         throw new Error("Insufficient Inventory");
       }

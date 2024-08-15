@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@dbos-inc/dbos-cloud": "^1.20.21",
+    "@dbos-inc/dbos-compiler": "^1.20.21",
     "@dbos-inc/dbos-openapi": "^1.20.21",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/bcryptjs": "^2.4.6",

@@ -1,6 +1,6 @@
 import { CommunicatorContext, TestingRuntime, TransactionContext, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
-import { Shop, Product, checkout_url_topic } from "./operations";
+import { Shop, Product, checkout_url_topic, Order, OrderItem } from "./operations";
 import request from "supertest";
 import { Knex } from 'knex';
 
@@ -59,6 +59,20 @@ describe("operations", () => {
     const bpresp2 = await request(testRuntime.getHandlersCallback())
       .get(`/api/products/9801`);
     expect(bpresp2.status).toBe(204);
+  });
+
+  test("createOrder", async () => {
+    await testRuntime.invokeWorkflow(Shop).register('createOrderShopper', 'password');
+
+    const orderID = await testRuntime.invoke(Shop).createOrder('createOrderShopper', [
+      { product_id: 1, inventory: 2, price: 100 },
+      { product_id: 2, inventory: 3, price: 100 },
+    ]);
+
+    const order = await testRuntime.queryUserDB<Order>('select * from orders where order_id = ?', orderID);
+    const items = await testRuntime.queryUserDB<OrderItem>('select * from order_items where order_id = ?', orderID);
+    expect(order).toBeDefined();
+    expect(items.length).toBe(2);
   });
 
   test("shopping", async () => {

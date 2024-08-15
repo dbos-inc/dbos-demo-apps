@@ -11,7 +11,7 @@ database:
   app_db_name: 'shop'
   connectionTimeoutMillis: 3000
   app_db_client: 'knex'
-  migrate: ['npx knex migrate:latest','npx knex seed:run']
+  migrate: ['npx knex migrate:latest','npx knex seed:run', 'npx dbosc deploy']
   rollback: ['npx knex migrate:rollback']
 runtimeConfig:
   port: 8082
