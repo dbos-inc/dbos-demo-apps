@@ -1,6 +1,6 @@
 # OpenApi specification generated for application
 
-openapi: 3.0.3
+openapi: 3.1.3
 info:
   title: shop-backend
   version: 0.0.1
