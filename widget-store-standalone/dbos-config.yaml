@@ -4,18 +4,18 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact/main/dbos-config.schema.json
 
 database:
-  hostname: 'localhost'
+  hostname: "localhost"
   port: 5432
-  username: 'postgres'
+  username: "postgres"
   password: ${PGPASSWORD}
-  app_db_name: 'widget_store'
+  app_db_name: "widget_store_standalone"
   connectionTimeoutMillis: 3000
-  app_db_client: 'knex'
-  migrate: ['npx knex migrate:latest','npx knex seed:run']
-  rollback: ['npx knex migrate:rollback']
+  app_db_client: "knex"
+  migrate: ["npx knex migrate:latest", "npx knex seed:run"]
+  rollback: ["npx knex migrate:rollback"]
 telemetry:
   logs:
-    logLevel: 'info'
+    logLevel: "info"
 application:
   ses_from_address: ${REPORT_EMAIL_FROM_ADDRESS}
   ses_to_address: ${REPORT_EMAIL_TO_ADDRESS}
@@ -27,4 +27,3 @@ env:
   # If you want email reports nightly, set these
   REPORT_EMAIL_FROM_ADDRESS: ${REPORT_EMAIL_FROM_ADDRESS}
   REPORT_EMAIL_TO_ADDRESS: ${REPORT_EMAIL_TO_ADDRESS}
-  KAFKA_BROKER: ${KAFKA_BROKER}

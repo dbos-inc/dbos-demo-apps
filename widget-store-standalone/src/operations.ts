@@ -1,39 +1,31 @@
-import { WorkflowContext, Workflow, HandlerContext, PostApi, ArgOptional, configureInstance } from '@dbos-inc/dbos-sdk';
-import { ShopUtilities } from './utilities';
-import { KafkaConfig, KafkaProduceCommunicator, Partitioners, logLevel } from '@dbos-inc/dbos-kafkajs';
-export { Frontend } from './frontend';
+import {
+  WorkflowContext,
+  Workflow,
+  HandlerContext,
+  PostApi,
+  ArgOptional,
+} from "@dbos-inc/dbos-sdk";
+import { ShopUtilities } from "./utilities";
+export { Frontend } from "./frontend";
 
 export const PAYMENT_TOPIC = "payment";
 export const PAYMENT_URL_EVENT = "payment_url";
 export const ORDER_URL_EVENT = "order_url";
 
-const kafkaConfig: KafkaConfig = {
-  clientId: 'dbos-kafka-test',
-  brokers: [`${process.env['KAFKA_BROKER'] ?? 'localhost:9092'}`],
-  requestTimeout: 100, // FOR TESTING
-  retry: { // FOR TESTING
-    retries: 5
-  },
-  logLevel: logLevel.ERROR, // FOR TESTING
-};
-
-const fulfillTopic = 'widget-fulfill-topic';
-
-const fulfillKafkaCfg: KafkaProduceCommunicator | undefined = process.env['KAFKA_BROKER']
-  ? configureInstance(KafkaProduceCommunicator, 'wfKafka', kafkaConfig, fulfillTopic, {
-    createPartitioner: Partitioners.DefaultPartitioner
-  })
-  : undefined;
-
 export class Shop {
-
-  @PostApi('/checkout/:key?')
-  static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
+  @PostApi("/checkout/:key?")
+  static async webCheckout(
+    ctxt: HandlerContext,
+    @ArgOptional key: string
+  ): Promise<string> {
     // Start the workflow (below): this gives us the handle immediately and continues in background
     const handle = await ctxt.startWorkflow(Shop, key).paymentWorkflow();
 
     // Wait for the workflow to create the payment URL; return that to the user
-    const paymentURL = await ctxt.getEvent<string>(handle.getWorkflowUUID(), PAYMENT_URL_EVENT);
+    const paymentURL = await ctxt.getEvent<string>(
+      handle.getWorkflowUUID(),
+      PAYMENT_URL_EVENT
+    );
     if (paymentURL === null) {
       ctxt.logger.error("workflow failed");
       return "/error";
@@ -63,20 +55,8 @@ export class Shop {
     const notification = await ctxt.recv<string>(PAYMENT_TOPIC, 120);
 
     // If the money is good - fulfill the order. Else, cancel:
-    if (notification && notification === 'paid') {
+    if (notification && notification === "paid") {
       ctxt.logger.info(`Payment successful!`);
-      if (fulfillKafkaCfg) {
-        ctxt.logger.info(`Notify fulfillment department.`);
-        await ctxt.invoke(ShopUtilities).markOrderPaid(orderID);
-        await ctxt.invoke(fulfillKafkaCfg).sendMessage(
-          {
-            value: JSON.stringify({
-              order_id: orderID,
-              details: await ctxt.invoke(ShopUtilities).retrieveOrderDetails(orderID),
-            })
-          }
-        );
-      }
       await ctxt.invoke(ShopUtilities).fulfillOrder(orderID);
     } else {
       ctxt.logger.warn(`Payment failed...`);
@@ -88,9 +68,12 @@ export class Shop {
     await ctxt.setEvent(ORDER_URL_EVENT, `/order/${orderID}`);
   }
 
-  @PostApi('/payment_webhook/:key/:status')
-  static async paymentWebhook(ctxt: HandlerContext, key: string, status: string): Promise<string> {
-
+  @PostApi("/payment_webhook/:key/:status")
+  static async paymentWebhook(
+    ctxt: HandlerContext,
+    key: string,
+    status: string
+  ): Promise<string> {
     // Send payment status to the workflow above
     await ctxt.send(key, status, PAYMENT_TOPIC);
 
@@ -105,9 +88,8 @@ export class Shop {
     return orderURL;
   }
 
-  @PostApi('/crash_application')
+  @PostApi("/crash_application")
   static async crashApplication(_ctxt: HandlerContext) {
-
     // For testing and demo purposes :)
     process.exit(1);
     return Promise.resolve();
