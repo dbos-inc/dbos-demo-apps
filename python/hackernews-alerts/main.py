@@ -3,7 +3,7 @@
 # In this example, we use DBOS to deploy a cron job that periodically searches Hacker News
 # for new posts about serverless computing and posts them to a Slack channel.
 
-# First, let's import dependencies and create a DBOS app.
+# First, let's do imports and create a DBOS app.
 
 import html
 import os
@@ -38,7 +38,7 @@ def search_hackernews(query: str, window_size_hours: int):
 
     hits = []
     for hit in response["hits"]:
-        # Reformat the comment by unescaping HTML, adding new lines, and removing tags
+        # Reformat the comment by unescaping HTML, adding newlines, and removing HTML tags
         comment = hit["comment_text"]
         comment = re.sub("<p>", "\n", html.unescape(comment))
         comment = re.sub("<[^<]+?>", "", comment)
@@ -56,11 +56,7 @@ def search_hackernews(query: str, window_size_hours: int):
 
 @dbos.communicator()
 def post_to_slack(comment: str, url: str):
-    message = f"""
-    {comment}
-
-    {url}
-    """
+    message = f"{comment}\n\n{url}"
     client = slack_sdk.WebClient(token=os.environ["SLACK_HN_BOT_OAUTH_TOKEN"])
     client.chat_postMessage(
         channel="hacker-news-alerts",
