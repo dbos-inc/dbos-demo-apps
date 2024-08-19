@@ -51,6 +51,7 @@ def post_to_slack(comment: str, url: str):
 
 
 @dbos.scheduled("0 * * * *")
+@dbos.workflow()
 def run_hourly(scheduled_time: datetime, actual_time: datetime):
     results = search_hackernews("serverless", window_size_hours=1)
     for comment, url in results:
