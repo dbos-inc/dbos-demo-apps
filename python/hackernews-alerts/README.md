@@ -1,6 +1,6 @@
 ## Hacker News Slackbot
 
-This app (inspired by [Modal](https://github.com/modal-labs/modal-examples/blob/main/05_scheduling/hackernews_alerts.py)) uses DBOS to deploy a cron job that periodically searches Hacker News for people commenting about serverless computing and posts the comments to Slack.
+This app (inspired by [Modal](https://modal.com/docs/examples/hackernews_alerts)) uses DBOS to deploy a cron job that periodically searches Hacker News for people commenting about serverless computing and posts the comments to Slack.
 
 To run the app, you need a Slack bot token.
 Follow this tutorial to generate one: https://api.slack.com/tutorials/tracks/getting-a-token
