@@ -2,7 +2,7 @@
 
 # This app uses DBOS to deploy a cron job that periodically searches Hacker News
 # for people commenting about serverless computing and posts the comments to Slack.
-# This demo is inspired by Modal: https://modal.com/docs/examples/hackernews_alerts
+# Kudos to Modal for the idea: https://modal.com/docs/examples/hackernews_alerts
 
 # First, let's do imports and create a DBOS app.
 
