@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-py/main/dbos/dbos-config.schema.json
+
+name: hackernews-alerts
+language: python
+runtimeConfig:
+  start:
+    - "python3 main.py"
+database:
+  hostname: localhost
+  port: 5432
+  username: postgres
+  password: ${PGPASSWORD}
+  app_db_name: hackernews_alerts
+  migrate:
+    - echo "No migrations"
+telemetry:
+  logs:
+    logLevel: INFO
+env:
+  SLACK_HN_BOT_OAUTH_TOKEN: ${SLACK_HN_BOT_OAUTH_TOKEN}
