@@ -49,7 +49,8 @@ def search_hackernews(query: str, window_size_hours: int):
 
 # Next, let's write a function that posts a Hacker News comment and its URL to Slack.
 
-# This requires a Slack bot token. Follow this tutorial to generate one: https://api.slack.com/tutorials/tracks/getting-a-token
+# This function requires a Slack bot token.
+# Follow this tutorial to generate one: https://api.slack.com/tutorials/tracks/getting-a-token
 # Your token should start with "xoxb". Set it as an environment variable like so:
 # export SLACK_HN_BOT_OAUTH_TOKEN=your_token
 
@@ -67,7 +68,7 @@ def post_to_slack(comment: str, url: str):
 
 
 # Finally, let's write a cron job that runs the search every hour.
-# The @dbos.scheduled() decorator tells DBOS to run a function on a cron schedule.
+# The @dbos.scheduled() decorator tells DBOS to run this function on a cron schedule.
 # For more information on cron syntax, see: https://docs.gitlab.com/ee/topics/cron/
 
 

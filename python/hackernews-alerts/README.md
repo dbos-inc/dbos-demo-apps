@@ -20,10 +20,7 @@ pip install -r requirements.txt
 dbos start
 ```
 
-Of course, you don't want to host a cron job locally!
-Keeping it running would be a lot of work :)
-
-Instead, to deploy this app as a persistent cron job to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
+To deploy this app as a persistent cron job to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
 
 ```
 npm i -g @dbos-inc/dbos-cloud
