@@ -138,4 +138,18 @@ dist
 
 # Editor temp/recovery files
 *.swp
+
+# Devenv
 *.swo
+.devenv*
+devenv.local.nix
+# Devenv temporary
+devenv.nix
+devenv.yaml
+.envrc
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
