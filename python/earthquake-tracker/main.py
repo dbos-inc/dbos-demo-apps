@@ -61,17 +61,14 @@ def get_earthquake_data(
         )
 
 
+@dbos.scheduled('* * * * *')
 @dbos.workflow()
-def run_hourly(scheduled_time: datetime, actual_time: datetime):
+def run_every_minute(scheduled_time: datetime, actual_time: datetime):
     end_time = scheduled_time
-    start_time = scheduled_time - timedelta(hours=1)
+    start_time = scheduled_time - timedelta(minutes=1)
     earthquakes = get_earthquake_data(start_time, end_time)
     if len(earthquakes) == 0:
         DBOS.logger.info(f"No earthquakes recorded between {start_time} and {end_time}")
     for earthquake in earthquakes:
         record_earthquake_data(earthquake)
         DBOS.logger.info(f"Recorded earthquake: {earthquake}")
-
-
-if __name__ == "__main__":
-    run_hourly(datetime.now(UTC), 0)
