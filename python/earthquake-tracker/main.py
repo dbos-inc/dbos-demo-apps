@@ -4,43 +4,22 @@ import requests
 from dbos import DBOS
 from schema import earthquake_tracker
 
-
 class EarthquakeData(TypedDict):
     place: str
     magnitude: float
     timestamp: str
 
-# Create SQLAlchemy engine
-
 
 dbos = DBOS()
-
-# Streamlit app
-# def main():
-#     st.title("Postgres Table Display")
-
-#     query = "SELECT * FROM dbos.workflow_status"
-
-#     # Fetch data
-#     df = pd.read_sql(query, engine)
-
-
-#     # Display the dataframe as a table
-#     st.table(df)
-
 
 @dbos.transaction()
 def record_earthquake_data(data: EarthquakeData):
     DBOS.sql_session.execute(earthquake_tracker.insert().values(**data))
 
 @dbos.communicator()
-def get_earthquake_data() -> list[EarthquakeData]:
+def get_earthquake_data(start_time: datetime, end_time: datetime) -> list[EarthquakeData]:
     # USGS API endpoint for earthquake data
     url = "https://earthquake.usgs.gov/fdsnws/event/1/query"
-
-    # Get the current time and calculate one hour ago
-    end_time = datetime.now(UTC)
-    start_time = end_time - timedelta(hours=1)
 
     # Format times for the API request
     end_time_str = end_time.strftime("%Y-%m-%dT%H:%M:%S")
@@ -51,13 +30,13 @@ def get_earthquake_data() -> list[EarthquakeData]:
         "format": "geojson",
         "starttime": start_time_str,
         "endtime": end_time_str,
-        "minmagnitude": 2.0  # Only get earthquakes with magnitude 2.5 or greater
+        "minmagnitude": 1.5
     }
 
     # Make the API request
     response = requests.get(url, params=params)
 
-    # Check if the request was successful
+    # Return the output of the request
     if response.status_code == 200:
         data = response.json()
         earthquakes = []
@@ -73,11 +52,18 @@ def get_earthquake_data() -> list[EarthquakeData]:
         raise Exception(f"Error fetching data from USGS: {response.status_code} {response.text}")
 
 
+@dbos.workflow()
+def run_hourly(scheduled_time: datetime, actual_time: datetime):
+    end_time = scheduled_time
+    start_time = scheduled_time - timedelta(hours=1)
+    earthquakes = get_earthquake_data(start_time, end_time)
+    if len(earthquakes) == 0:
+        DBOS.logger.info(f"No earthquakes recorded between {start_time} and {end_time}")
+    for earthquake in earthquakes:
+        record_earthquake_data(earthquake)
+        DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 
 if __name__ == "__main__":
-    earthquakes = get_earthquake_data()
-    for e in earthquakes:
-        print(e)
-        record_earthquake_data(e)
+    run_hourly(datetime.now(UTC), 0)
 
 

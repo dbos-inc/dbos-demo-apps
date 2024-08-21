@@ -5,8 +5,6 @@ from schema import earthquake_tracker
 from dbos.dbos_config import load_config, ConfigFile
 
 config: ConfigFile = load_config()
-
-# Database connection parameters
 db_params = {
     'host': config["database"]["hostname"],
     'database': config["database"]["app_db_name"],
@@ -14,20 +12,16 @@ db_params = {
     'password': config["database"]["password"],
     'port': config["database"]["port"]
 }
-
 engine = create_engine(f"postgresql://{db_params['user']}:{db_params['password']}@{db_params['host']}:{db_params['port']}/{db_params['database']}")
 
+st.title("Earthquake Tracker")
 
-if __name__ == "__main__":
-    st.title("Postgres Table Display")
+query = select(earthquake_tracker).order_by(desc(earthquake_tracker.c.timestamp)).limit(1000)
+df = pd.read_sql(query, engine)
 
-    query = select(earthquake_tracker).order_by(desc(earthquake_tracker.c.timestamp)).limit(1000)
+df['timestamp'] = pd.to_numeric(df['timestamp'], errors='coerce')
+df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+df = df.rename(columns={'timestamp': 'UTC Timestamp', 'magnitude': "Magnitude", 'place': "Place"})
+df = df.drop(columns=['id'])
 
-    # Fetch data
-    df = pd.read_sql(query, engine)
-    df['timestamp'] = pd.to_numeric(df['timestamp'], errors='coerce')
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-    df = df.drop(columns=['id'])
-
-    # Display the dataframe as a table
-    st.table(df)
+st.table(df)
