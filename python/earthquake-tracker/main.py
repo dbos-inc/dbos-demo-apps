@@ -84,7 +84,7 @@ def record_earthquake_data(data: EarthquakeData):
 
 # Finally, let's write a cron job that records earthquakes every minute.
 # Because earthquake data is sometimes updated later, we run over the last hour of data,
-# recording new earthquakes and updating records of other earthquakes.
+# recording new earthquakes and updating records of existing earthquakes.
 # The @dbos.scheduled() decorator tells DBOS to run this function on a cron schedule.
 # The @dbos.workflow() decorator tells DBOS to run this function as a reliable workflow,
 # so it runs exactly-once per minute and you'll never miss an earthquake or record a duplicate.
