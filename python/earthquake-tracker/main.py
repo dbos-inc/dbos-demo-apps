@@ -71,15 +71,17 @@ def get_earthquake_data(
 
 # Next, let's use a DBOS transaction to record each earthquake in Postgres.
 # If the earthquake is already recorded, update its record with new data.
+# Return true if we inserted a new earthquake, false if we updated an existing one.
 
 
 @dbos.transaction()
-def record_earthquake_data(data: EarthquakeData):
-    DBOS.sql_session.execute(
+def record_earthquake_data(data: EarthquakeData) -> bool:
+    return DBOS.sql_session.execute(
         insert(earthquake_tracker)
         .values(**data)
         .on_conflict_do_update(index_elements=["id"], set_=data)
-    )
+        .returning(earthquake_tracker.inserted)
+    ).scalar_one()
 
 
 # Finally, let's write a cron job that records earthquakes every minute.
@@ -99,8 +101,9 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
     if len(earthquakes) == 0:
         DBOS.logger.info(f"No earthquakes recorded between {start_time} and {end_time}")
     for earthquake in earthquakes:
-        record_earthquake_data(earthquake)
-        DBOS.logger.info(f"Recorded earthquake: {earthquake}")
+        new_earthquake = record_earthquake_data(earthquake)
+        if new_earthquake:
+            DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 
 
 # To deploy this app to the cloud as a persistent cron job and dashboard, run `dbos-cloud app deploy`
