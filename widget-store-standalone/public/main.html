@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DBOS Widget Store</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+  </head>
+  <body class="h-full m-0 p-0 bg-neutral-100 font-sans">
+    <div class="flex flex-col items-center p-5">
+      <h1 x-data="{ message: 'I ❤️ Alpine' }" x-text="message"></h1>
+      <img
+        src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
+        alt="DBOS Logo"
+        class="w-48 h-auto"
+      />
+
+      <div
+        class="bg-white border border-gray-300 rounded-lg p-5 my-5 w-4/5 max-w-xl text-center"
+      >
+        <img
+          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
+          alt="Widget Image"
+          class="max-w-[50%] rounded-lg mx-auto"
+        />
+        <div class="text-2xl text-gray-800 my-5">
+          placeholder &#8212; Only <b>placeholder</b> left!
+        </div>
+        <p>placeholder</p>
+        <button
+          class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg"
+          id="purchaseButton"
+        >
+          Buy Now for $placeholder
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("purchaseButton")
+        .addEventListener("click", async function () {
+          try {
+            const response = await fetch("/checkout/placeholder", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (response.ok) {
+              const url = await response.text();
+              window.location.href = url;
+            } else {
+              const errorText = await response.text();
+              console.error("Error:", errorText);
+              window.location.href = "/error";
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            window.location.href = "/error";
+          }
+        });
+    </script>
+  </body>
+</html>
