@@ -1,7 +1,7 @@
 # Earthquake Tracker
 
-# This app uses DBOS to deploy a cron job that streams earthquake data from the USGS into
-# Postgres then displays it using streamlit.
+# This app uses DBOS to stream earthquake data from the USGS into
+# Postgres then displays it using Streamlit.
 
 # First, let's do imports and create a DBOS app.
 
@@ -76,12 +76,15 @@ def get_earthquake_data(
 
 @dbos.transaction()
 def record_earthquake_data(data: EarthquakeData) -> bool:
-    return DBOS.sql_session.execute(
-        insert(earthquake_tracker)
-        .values(**data)
-        .on_conflict_do_update(index_elements=["id"], set_=data)
-        .returning(earthquake_tracker.inserted)
-    ).scalar_one()
+    return (
+        DBOS.sql_session.execute(
+            insert(earthquake_tracker)
+            .values(**data)
+            .on_conflict_do_update(index_elements=["id"], set_=data)
+            .returning(earthquake_tracker.c.id)
+        ).scalar_one()
+        is not None
+    )
 
 
 # Finally, let's write a cron job that records earthquakes every minute.
@@ -98,8 +101,6 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
     end_time = scheduled_time
     start_time = scheduled_time - timedelta(hours=1)
     earthquakes = get_earthquake_data(start_time, end_time)
-    if len(earthquakes) == 0:
-        DBOS.logger.info(f"No earthquakes recorded between {start_time} and {end_time}")
     for earthquake in earthquakes:
         new_earthquake = record_earthquake_data(earthquake)
         if new_earthquake:
