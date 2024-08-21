@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from typing import TypedDict
+
 import requests
 from dbos import DBOS
+
 from schema import earthquake_tracker
 
 

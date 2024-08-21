@@ -1,8 +1,9 @@
-import streamlit as st
 import pandas as pd
+from dbos.dbos_config import ConfigFile, load_config
 from sqlalchemy import create_engine, desc, select
+
+import streamlit as st
 from schema import earthquake_tracker
-from dbos.dbos_config import load_config, ConfigFile
 
 config: ConfigFile = load_config()
 db_params = {
