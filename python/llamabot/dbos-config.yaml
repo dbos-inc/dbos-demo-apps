@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-py/main/dbos/dbos-config.schema.json
+
+name: llamabot
+language: python
+runtimeConfig:
+  start:
+    - "fastapi run"
+database:
+  hostname: localhost
+  port: 5432
+  username: postgres
+  password: ${PGPASSWORD}
+  app_db_name: llamabot
+  migrate:
+    - python3 migrate.py
+telemetry:
+  logs:
+    logLevel: INFO
+env:
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+  SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}

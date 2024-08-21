@@ -8,7 +8,10 @@ authors = [
 dependencies = [
     "llama-index>=0.10.67.post1",
     "slack-bolt>=1.20.0",
-    "fastapi>=0.112.1",
+    "fastapi[standard]>=0.112.1",
+    "dbos>=0.3.0a7",
+    "llama-index-vector-stores-postgres>=0.1.14",
+    "asyncio>=3.4.3",
 ]
 requires-python = ">=3.9"
 readme = "README.md"
@@ -17,3 +20,21 @@ license = {text = "MIT"}
 
 [tool.pdm]
 distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "mypy>=1.11.1",
+    "black>=24.8.0",
+    "isort>=5.13.2",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+filter_files = true
+atomic = true
+
+[tool.mypy]
+strict = false
