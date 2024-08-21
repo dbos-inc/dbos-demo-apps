@@ -5,79 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DBOS Widget Store</title>
     <link rel="icon" type="image/x-icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico">
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .logo {
-            width: 200px;
-            height: auto;
-        }
-
-        .product {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            width: 80%;
-            max-width: 600px;
-            text-align: center;
-        }
-
-        .product img {
-            max-width: 50%;
-            border-radius: 8px;
-        }
-
-        .product-title {
-            font-size: 24px;
-            color: #333;
-            margin: 20px 0;
-        }
-
-        .purchase-button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 15px 30px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 30px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: background-color 0.3s, box-shadow 0.3s;
-            margin-top: 20px;
-        }
-
-        .purchase-button:hover {
-            background-color: #45a049;
-            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body>
+<body class="h-full m-0 p-0 bg-neutral-100 font-sans">
 
-<div class="container">
-    <img src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png" alt="DBOS Logo" class="logo">
-    <div class="product">
-        <img src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png" alt="Widget Image">
-        <div class="product-title">{{product}} &#8212; Only <b>{{inventory}}</b> left!</div>
+<div class="flex flex-col items-center p-5">
+    <h1 x-data="{ message: 'I ❤️ Alpine' }" x-text="message"></h1>
+    <img src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png" alt="DBOS Logo" class="w-48 h-auto">
+
+    <div class="bg-white border border-gray-300 rounded-lg p-5 my-5 w-4/5 max-w-xl text-center">
+        <img src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png" alt="Widget Image" class="max-w-[50%] rounded-lg mx-auto">
+        <div class="text-2xl text-gray-800 my-5">{{product}} &#8212; Only <b>{{inventory}}</b> left!</div>
         <p>{{description}}</p>
-        <button class="purchase-button" id="purchaseButton">Buy Now for ${{price}}</button>
+        <button class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg" id="purchaseButton">Buy Now for ${{price}}</button>
     </div>
 </div>
 

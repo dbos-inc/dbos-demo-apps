@@ -33,7 +33,7 @@ export class Frontend {
       uuid: key,
     });
   }
-  
+
   @GetApi('/error')
   static error(_ctxt: HandlerContext) {
     return render("error", {});
@@ -53,5 +53,5 @@ export class Frontend {
       time: order.last_update_time
     });
   }
-  
+
 }
