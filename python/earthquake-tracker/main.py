@@ -10,17 +10,19 @@ from typing import TypedDict
 
 import requests
 from dbos import DBOS
+from sqlalchemy.dialects.postgresql import insert
 
 from schema import earthquake_tracker
 
 dbos = DBOS()
 
 # Then, let's write a function that queries the USGS for information on recent earthquakes.
-# Our function will take in a time range and return the place, magnitude, and timestamp
+# Our function will take in a time range and return the id, place, magnitude, and timestamp
 # of all earthquakes that occured in that time range.
 
 
 class EarthquakeData(TypedDict):
+    id: str
     place: str
     magnitude: float
     timestamp: str
@@ -54,6 +56,7 @@ def get_earthquake_data(
         earthquakes = []
         for item in data["features"]:
             earthquake: EarthquakeData = {
+                "id": item["id"],
                 "place": item["properties"]["place"],
                 "magnitude": item["properties"]["mag"],
                 "timestamp": item["properties"]["time"],
@@ -67,14 +70,21 @@ def get_earthquake_data(
 
 
 # Next, let's use a DBOS transaction to record each earthquake in Postgres.
+# If the earthquake is already recorded, update its record with new data.
 
 
 @dbos.transaction()
 def record_earthquake_data(data: EarthquakeData):
-    DBOS.sql_session.execute(earthquake_tracker.insert().values(**data))
+    DBOS.sql_session.execute(
+        insert(earthquake_tracker)
+        .values(**data)
+        .on_conflict_do_update(index_elements=["id"], set_=data)
+    )
 
 
 # Finally, let's write a cron job that records earthquakes every minute.
+# Because earthquake data is sometimes updated later, we run over the last hour of data,
+# recording new earthquakes and updating records of other earthquakes.
 # The @dbos.scheduled() decorator tells DBOS to run this function on a cron schedule.
 # The @dbos.workflow() decorator tells DBOS to run this function as a reliable workflow,
 # so it runs exactly-once per minute and you'll never miss an earthquake or record a duplicate.
@@ -84,7 +94,7 @@ def record_earthquake_data(data: EarthquakeData):
 @dbos.workflow()
 def run_every_minute(scheduled_time: datetime, actual_time: datetime):
     end_time = scheduled_time
-    start_time = scheduled_time - timedelta(minutes=1)
+    start_time = scheduled_time - timedelta(hours=1)
     earthquakes = get_earthquake_data(start_time, end_time)
     if len(earthquakes) == 0:
         DBOS.logger.info(f"No earthquakes recorded between {start_time} and {end_time}")
