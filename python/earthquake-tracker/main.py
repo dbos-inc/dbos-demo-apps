@@ -37,7 +37,7 @@ def get_earthquake_data(
         "format": "geojson",
         "starttime": start_time_str,
         "endtime": end_time_str,
-        "minmagnitude": 1.5,
+        "minmagnitude": 1.0,
     }
 
     # Make the API request
