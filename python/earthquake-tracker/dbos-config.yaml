@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-py/main/dbos/dbos-config.schema.json
 
-name: stock-ticker
+name: earthquake-tracker
 language: python
 runtimeConfig:
   start:
@@ -10,9 +10,9 @@ database:
   port: 5432
   username: postgres
   password: ${PGPASSWORD}
-  app_db_name: stock_ticker
+  app_db_name: earthquake_tracker
   migrate:
-    - echo "No migrations"
+    - alembic upgrade head
 telemetry:
   logs:
     logLevel: INFO
