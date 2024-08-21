@@ -4,7 +4,7 @@ name: earthquake-tracker
 language: python
 runtimeConfig:
   start:
-    - fastapi run
+    - python3 main.py & streamlit run streamlit.py
 database:
   hostname: localhost
   port: 5432

@@ -1,20 +1,8 @@
 from datetime import datetime, timedelta, UTC
 from typing import TypedDict
 import requests
-# import streamlit as st
-# import pandas as pd
-from sqlalchemy import create_engine
 from dbos import DBOS
 from schema import earthquake_tracker
-
-# Database connection parameters
-db_params = {
-    'host': 'localhost',
-    'database': 'earthquake_tracker',
-    'user': 'postgres',
-    'password': 'dbos',
-    'port': '5432'
-}
 
 
 class EarthquakeData(TypedDict):
@@ -23,7 +11,7 @@ class EarthquakeData(TypedDict):
     timestamp: str
 
 # Create SQLAlchemy engine
-engine = create_engine(f"postgresql://{db_params['user']}:{db_params['password']}@{db_params['host']}:{db_params['port']}/{db_params['database']}")
+
 
 dbos = DBOS()
 
@@ -91,7 +79,5 @@ if __name__ == "__main__":
     for e in earthquakes:
         print(e)
         record_earthquake_data(e)
-    dbos.destroy()
-
 
 
