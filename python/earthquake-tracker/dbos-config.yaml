@@ -4,7 +4,7 @@ name: earthquake-tracker
 language: python
 runtimeConfig:
   start:
-    - python3 main.py & streamlit run streamlit.py --server.port 8000 --server.enableCORS=false
+    - python3 main.py & streamlit run streamlit.py --server.port 8000 --server.enableCORS=false --server.enableXsrfProtection=false --browser.gatherUsageStats=false
 database:
   hostname: localhost
   port: 5432
