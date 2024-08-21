@@ -42,11 +42,11 @@ dbos = DBOS()
 
 
 @dbos.transaction()
-def record_earthquake_data(data):
+def record_earthquake_data(data: EarthquakeData):
     DBOS.sql_session.execute(earthquake_tracker.insert().values(**data))
 
 @dbos.communicator()
-def get_earthquake_data():
+def get_earthquake_data() -> list[EarthquakeData]:
     # USGS API endpoint for earthquake data
     url = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 
@@ -72,7 +72,15 @@ def get_earthquake_data():
     # Check if the request was successful
     if response.status_code == 200:
         data = response.json()
-        return data["features"]
+        earthquakes = []
+        for item in data["features"]:
+            earthquake: EarthquakeData = {
+                "place": item["properties"]["place"],
+                "magnitude": item["properties"]["mag"],
+                "timestamp": item["properties"]["time"]
+            }
+            earthquakes.append(earthquake)
+        return earthquakes
     else:
         raise Exception(f"Error fetching data from USGS: {response.status_code} {response.text}")
 
@@ -82,6 +90,8 @@ if __name__ == "__main__":
     earthquakes = get_earthquake_data()
     for e in earthquakes:
         print(e)
+        record_earthquake_data(e)
+    dbos.destroy()
 
 
 
