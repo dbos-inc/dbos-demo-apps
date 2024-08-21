@@ -4,6 +4,7 @@ import requests
 from dbos import DBOS
 from schema import earthquake_tracker
 
+
 class EarthquakeData(TypedDict):
     place: str
     magnitude: float
@@ -12,12 +13,16 @@ class EarthquakeData(TypedDict):
 
 dbos = DBOS()
 
+
 @dbos.transaction()
 def record_earthquake_data(data: EarthquakeData):
     DBOS.sql_session.execute(earthquake_tracker.insert().values(**data))
 
+
 @dbos.communicator()
-def get_earthquake_data(start_time: datetime, end_time: datetime) -> list[EarthquakeData]:
+def get_earthquake_data(
+    start_time: datetime, end_time: datetime
+) -> list[EarthquakeData]:
     # USGS API endpoint for earthquake data
     url = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 
@@ -30,7 +35,7 @@ def get_earthquake_data(start_time: datetime, end_time: datetime) -> list[Earthq
         "format": "geojson",
         "starttime": start_time_str,
         "endtime": end_time_str,
-        "minmagnitude": 1.5
+        "minmagnitude": 1.5,
     }
 
     # Make the API request
@@ -44,12 +49,14 @@ def get_earthquake_data(start_time: datetime, end_time: datetime) -> list[Earthq
             earthquake: EarthquakeData = {
                 "place": item["properties"]["place"],
                 "magnitude": item["properties"]["mag"],
-                "timestamp": item["properties"]["time"]
+                "timestamp": item["properties"]["time"],
             }
             earthquakes.append(earthquake)
         return earthquakes
     else:
-        raise Exception(f"Error fetching data from USGS: {response.status_code} {response.text}")
+        raise Exception(
+            f"Error fetching data from USGS: {response.status_code} {response.text}"
+        )
 
 
 @dbos.workflow()
@@ -63,7 +70,6 @@ def run_hourly(scheduled_time: datetime, actual_time: datetime):
         record_earthquake_data(earthquake)
         DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 
+
 if __name__ == "__main__":
     run_hourly(datetime.now(UTC), 0)
-
-

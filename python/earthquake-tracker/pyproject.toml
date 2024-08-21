@@ -13,3 +13,10 @@ license = {text = "MIT"}
 
 [tool.pdm]
 distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "black>=24.8.0",
+    "mypy>=1.11.1",
+    "isort>=5.13.2",
+]
