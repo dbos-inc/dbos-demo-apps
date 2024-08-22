@@ -5,13 +5,14 @@ import {
   PostApi,
   ArgOptional,
   GetApi,
+  DBOSResponseError,
 } from "@dbos-inc/dbos-sdk";
 import { ShopUtilities } from "./utilities";
 export { Frontend } from "./frontend";
 
 export const PAYMENT_TOPIC = "payment";
 export const PAYMENT_URL_EVENT = "payment_url";
-export const ORDER_URL_EVENT = "order_url";
+export const ORDER_ID_EVENT = "order_url";
 
 export class Shop {
   @PostApi("/checkout/:key?")
@@ -66,7 +67,7 @@ export class Shop {
     }
 
     // Return the finished order ID back to paymentWebhook (below)
-    await ctxt.setEvent(ORDER_URL_EVENT, `/order/${orderID}`);
+    await ctxt.setEvent(ORDER_ID_EVENT, orderID);
   }
 
   @PostApi("/payment_webhook/:key/:status")
@@ -79,14 +80,14 @@ export class Shop {
     await ctxt.send(key, status, PAYMENT_TOPIC);
 
     // Wait for workflow to give us the order URL
-    const orderURL = await ctxt.getEvent<string>(key, ORDER_URL_EVENT);
-    if (orderURL === null) {
-      ctxt.logger.error("retreving order URL failed");
-      return "/error";
+    const orderID = await ctxt.getEvent<string>(key, ORDER_ID_EVENT);
+    if (orderID === null) {
+      ctxt.logger.error("retreving order ID failed");
+      throw new DBOSResponseError("Error retreving order ID", 500);
     }
 
     // Return the order status URL to the client
-    return orderURL;
+    return orderID;
   }
 
   @PostApi("/crash_application")
@@ -98,7 +99,16 @@ export class Shop {
 
   @GetApi("/product")
   static async product(ctxt: HandlerContext) {
-    const product = await ctxt.invoke(ShopUtilities).retrieveProduct();
-    return product;
+    return ctxt.invoke(ShopUtilities).retrieveProduct();
+  }
+
+  @GetApi("/order/:order_id")
+  static async order(ctxt: HandlerContext, order_id: number) {
+    return ctxt.invoke(ShopUtilities).retrieveOrder(order_id);
+  }
+
+  @GetApi("/orders")
+  static async orders(ctxt: HandlerContext) {
+    return ctxt.invoke(ShopUtilities).retrieveOrders();
   }
 }

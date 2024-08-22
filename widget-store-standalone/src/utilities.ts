@@ -115,12 +115,8 @@ export class ShopUtilities {
   }
 
   @Transaction({ readOnly: true })
-  static async retrieveOrderDetails(ctxt: KnexTransactionContext, order_id: number): Promise<OrderWithProduct[]> {
-    const items = await ctxt.client<Order>('orders')
-      .join<Product>('products', 'orders.product_id', 'products.product_id')
-      .select('orders.*', 'products.product')
-      .where({order_id});
-    return items as OrderWithProduct[];
+  static async retrieveOrders(ctxt: KnexTransactionContext) {
+    return ctxt.client<Order>('orders').select("*");
   }
 
   @Scheduled({crontab: '0 0 * * *'}) // Every midnight

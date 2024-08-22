@@ -1,7 +1,7 @@
 import { GetApi, HandlerContext } from "@dbos-inc/dbos-sdk";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { ShopUtilities, OrderStatus } from "./utilities";
+import { ShopUtilities } from "./utilities";
 import { Liquid } from "liquidjs";
 
 const engine = new Liquid({
@@ -48,13 +48,13 @@ export class Frontend {
     return render("crash", {});
   }
 
-  @GetApi("/order/:order_id")
-  static async order(ctxt: HandlerContext, order_id: number) {
-    const order = await ctxt.invoke(ShopUtilities).retrieveOrder(order_id);
-    return await render("order_status", {
-      order_id: order.order_id,
-      status: OrderStatus[order.order_status],
-      time: order.last_update_time,
-    });
-  }
+  // @GetApi("/order/:order_id")
+  // static async order(ctxt: HandlerContext, order_id: number) {
+  //   const order = await ctxt.invoke(ShopUtilities).retrieveOrder(order_id);
+  //   return await render("order_status", {
+  //     order_id: order.order_id,
+  //     status: OrderStatus[order.order_status],
+  //     time: order.last_update_time,
+  //   });
+  // }
 }
