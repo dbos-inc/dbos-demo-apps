@@ -16,58 +16,204 @@
     ></script>
   </head>
   <script>
+    let nanoidLazy = null;
     function widgetStore() {
       return {
         uuid: null,
-        inventory: null,
-        product: null,
-        description: null,
-        price: null,
-        fetchProduct: async function () {
-          const { nanoid } = await import(
-            "https://cdn.jsdelivr.net/npm/nanoid/nanoid.js"
-          );
-          const response = await fetch("/product");
-          const prod = await response.json();
-          this.uuid = nanoid();
-          this.inventory = prod.inventory;
-          this.product = prod.product;
-          this.description = prod.description;
-          this.price = prod.price;
+        product: {
+          inventory: null,
+          product: null,
+          description: null,
+          price: null,
         },
+        state: "idle", // idle, paying
+
+        get isIdle() {
+          return this.state === "idle";
+        },
+        get isPaying() {
+          return this.state === "paying";
+        },
+
         init: function () {
-          this.fetchProduct();
+          import("https://cdn.jsdelivr.net/npm/nanoid/nanoid.js").then(
+            ({ nanoid }) => {
+              nanoidLazy = nanoid;
+              this.resetId();
+            }
+          );
+          this.fetchInventory();
+        },
+        fetchInventory: async function () {
+          const response = await fetch("/product");
+          this.product = await response.json();
+        },
+        resetId: function () {
+          this.uuid = nanoidLazy(10);
+        },
+        purchase: async function (uuid) {
+          try {
+            const response = await fetch("/checkout/" + uuid, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (response.ok) {
+              const url = await response.text();
+              await this.fetchInventory();
+              this.state = "paying";
+            } else {
+              const errorText = await response.text();
+              console.error("Error:", errorText);
+              window.location.href = "/error";
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            window.location.href = "/error";
+          }
+        },
+        sendPaymentRequest: async function (uuid, status) {
+          try {
+            const response = await fetch(`/payment_webhook/${uuid}/${status}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status }),
+            });
+            if (response.ok) {
+              window.location.href = await response.text();
+            } else {
+              const errorText = await response.text();
+              console.log("Error", errorText);
+              window.location.href = "/error";
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            window.location.href = "/error";
+          }
         },
       };
     }
   </script>
-  <body class="h-full m-0 p-0 bg-neutral-100 font-sans">
-    <div x-data="widgetStore()" class="flex flex-col items-center p-5">
-      <img
-        src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
-        alt="DBOS Logo"
-        class="w-48 h-auto"
-      />
+  <body class="h-full p-1 bg-neutral-100 font-sans">
+    <div x-data="widgetStore()" class="grid grid-cols-3 gap-1">
       <div
-        class="bg-white border border-gray-300 rounded-lg p-5 my-5 w-4/5 max-w-xl text-center"
+        class="flex flex-col gap-3 items-center p-5 bg-white rounded-lg border border-gray-300"
       >
-        <img
-          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
-          alt="Widget Image"
-          class="max-w-[50%] rounded-lg mx-auto"
-        />
-        <div class="text-2xl text-gray-800 my-5">
-          <span x-text="product"></span> &#8212; Only
-          <b x-text="inventory"></b> left!
+        <h2 class="text-3xl">Shop internals</h2>
+        <div class="flow-root w-full">
+          <h3 class="text-2xl mb-2">Inventory</h3>
+          <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div
+              class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
+            >
+              <div
+                class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+              >
+                <table class="min-w-full divide-y divide-gray-300">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th
+                        scope="col"
+                        class="relative w-12 py-3.5 pl-3 pr-4 sm:pr-6"
+                      >
+                        <span class="sr-only">Image</span>
+                      </th>
+                      <th
+                        scope="col"
+                        class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                      >
+                        Product
+                      </th>
+                      <th
+                        scope="col"
+                        class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      >
+                        Available
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200 bg-white">
+                    <tr>
+                      <td>
+                        <img
+                          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
+                          alt="Widget Image"
+                          class="rounded-lg"
+                        />
+                      </td>
+                      <td
+                        x-text="product.product"
+                        class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                      ></td>
+                      <td
+                        x-text="product.inventory"
+                        class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                      ></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
-        <p x-text="description"></p>
-        <button
-          class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg"
-          id="purchaseButton"
-        >
-          Buy Now for $<span x-text="price"></span>
-        </button>
       </div>
+
+      <template x-if="isIdle">
+        <div
+          class="bg-white border border-gray-300 rounded-lg p-5 text-center col-span-1"
+        >
+          <img
+            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
+            alt="Widget Image"
+            class="max-w-[50%] rounded-lg mx-auto"
+          />
+          <div class="text-2xl text-gray-800 my-5">
+            <span x-text="product.product"></span> &#8212; Only
+            <b x-text="product.inventory"></b> left!
+          </div>
+          <p x-text="product.description"></p>
+          <button
+            class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg"
+            id="purchaseButton"
+            x-on:click="purchase(uuid)"
+          >
+            Buy Now for $<span x-text="product.price"></span>
+          </button>
+        </div>
+      </template>
+
+      <template x-if="isPaying">
+        <div
+          class="bg-white border border-gray-300 rounded-lg p-5 text-center col-span-1"
+        >
+          <img
+            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
+            alt="DBOS Logo"
+            class="mx-auto mb-4 w-64"
+          />
+          <div class="text-center">
+            <div class="text-xl font-semibold mb-4">
+              Do you want to confirm payment?
+            </div>
+            <div class="space-x-4">
+              <button
+                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                x-on:click="sendPaymentRequest(uuid, 'paid')"
+              >
+                Confirm Payment
+              </button>
+              <button
+                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                x-on:click="sendPaymentRequest(uuid, 'failed')"
+              >
+                Deny Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
   </body>
 </html>
