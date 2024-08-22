@@ -1,11 +1,11 @@
 # Each time the app is re-deployed, reset the database.
 
-from sqlalchemy import URL
-from widget_store import schema
-from dbos.dbos_config import load_config
-from sqlalchemy import create_engine, Table, MetaData, delete, insert
 from decimal import Decimal
 
+from dbos.dbos_config import load_config
+from sqlalchemy import URL, MetaData, Table, create_engine, delete, insert
+
+from widget_store import schema
 
 dbos_config = load_config("dbos-config.yaml")
 db_url = URL.create(
@@ -24,13 +24,14 @@ with engine.connect() as connection:
     connection.execute(delete(schema.products))
 
     # Insert seed entry
-    connection.execute(insert(schema.products).values(
-        product="Premium Quality Widget",
-        description="Enhance your productivity with our top-rated widgets!",
-        inventory=100,
-        price=Decimal('99.99')
-    ))
+    connection.execute(
+        insert(schema.products).values(
+            product="Premium Quality Widget",
+            description="Enhance your productivity with our top-rated widgets!",
+            inventory=100,
+            price=Decimal("99.99"),
+        )
+    )
 
     # Commit the transaction
     connection.commit()
-
