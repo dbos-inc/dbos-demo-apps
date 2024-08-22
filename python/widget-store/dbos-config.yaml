@@ -13,6 +13,7 @@ database:
   app_db_name: widget_store
   migrate:
     - alembic upgrade head
+    - python3 -m migrations.reset_database
 telemetry:
   logs:
     logLevel: INFO
