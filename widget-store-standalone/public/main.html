@@ -16,6 +16,7 @@
     ></script>
   </head>
   <script>
+    const divider = `<div class="relative inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div>`;
     const getOrderStatus = (status) => {
       switch (status) {
         case 0:
@@ -43,6 +44,7 @@
         view: "store",
         orderId: null,
         orders: [],
+        divider,
 
         get showStoreView() {
           return this.view === "store";
@@ -169,10 +171,9 @@
     />
     <div x-data="widgetStore()" class="grid grid-cols-3 gap-1">
       <div>
-        <div
-          class="flex flex-col gap-6 items-center p-5 bg-white rounded-lg border border-gray-300"
-        >
-          <h2 class="text-3xl">Shop internals</h2>
+        <div class="flex flex-col gap-6 border border-gray-300 rounded-lg p-5">
+          <h2 class="text-3xl text-center">Shop internals</h2>
+          <div x-html="divider"></div>
           <div class="flow-root w-full">
             <h3 class="text-2xl mb-2">Inventory</h3>
             <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -275,34 +276,34 @@
       </div>
 
       <div>
-        <template x-if="showStoreView">
-          <div
-            class="bg-white border border-gray-300 rounded-lg p-5 text-center col-span-1"
-          >
-            <img
-              src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
-              alt="Widget Image"
-              class="max-w-[50%] rounded-lg mx-auto"
-            />
-            <div class="text-2xl text-gray-800 my-5">
-              <span x-text="product.product"></span> &#8212; Only
-              <b x-text="product.inventory"></b> left!
+        <div
+          class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
+        >
+          <h2 class="text-3xl">Widget Store</h2>
+          <div x-html="divider"></div>
+          <template x-if="showStoreView">
+            <div>
+              <img
+                src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
+                alt="Widget Image"
+                class="max-w-[50%] rounded-lg mx-auto"
+              />
+              <div class="text-2xl text-gray-800 my-5">
+                <span x-text="product.product"></span> &#8212; Only
+                <b x-text="product.inventory"></b> left!
+              </div>
+              <p x-text="product.description"></p>
+              <button
+                class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg"
+                id="purchaseButton"
+                x-on:click="purchase(uuid)"
+              >
+                Buy Now for $<span x-text="product.price"></span>
+              </button>
             </div>
-            <p x-text="product.description"></p>
-            <button
-              class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg"
-              id="purchaseButton"
-              x-on:click="purchase(uuid)"
-            >
-              Buy Now for $<span x-text="product.price"></span>
-            </button>
-          </div>
-        </template>
+          </template>
 
-        <template x-if="showPaymentView">
-          <div
-            class="bg-white border border-gray-300 rounded-lg p-5 text-center col-span-1"
-          >
+          <template x-if="showPaymentView">
             <div
               class="text-center flex flex-col items-center justify-center h-full"
             >
@@ -324,29 +325,42 @@
                 </button>
               </div>
             </div>
-          </div>
-        </template>
+          </template>
 
-        <template x-if="showOrderStatusView">
-          <div
-            x-data="retrieveOrder(orderId)"
-            class="bg-white border border-gray-300 rounded-lg p-5 text-center col-span-1"
-          >
-            <div class="p-4">
-              <div class="text-lg font-semibold mb-2">
-                Order ID: <span x-text="order.id"></span><br />Status:
-                <span x-text="order.status"></span><br />
-                <span x-text="order.last_update_time"></span>
+          <template x-if="showOrderStatusView">
+            <div x-data="retrieveOrder(orderId)">
+              <div class="p-4">
+                <div class="text-lg font-semibold mb-2">
+                  Order ID: <span x-text="order.id"></span><br />Status:
+                  <span x-text="order.status"></span><br />
+                  <span x-text="order.last_update_time"></span>
+                </div>
+                <button
+                  x-on:click="resetView()"
+                  class="mt-4 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
+                >
+                  Continue Shopping
+                </button>
               </div>
-              <button
-                x-on:click="resetView()"
-                class="mt-4 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
-              >
-                Continue Shopping
-              </button>
             </div>
+          </template>
+        </div>
+      </div>
+
+      <div>
+        <div
+          class="flex flex-col gap-6 border border-gray-300 rounded-lg p-5 text-center"
+        >
+          <h2 class="text-3xl text-center">Server Tools</h2>
+          <div x-html="divider"></div>
+          <div>
+            <button
+              class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl font-bold cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-red-700 hover:shadow-lg"
+            >
+              💣 Crash the Application
+            </button>
           </div>
-        </template>
+        </div>
       </div>
     </div>
   </body>
