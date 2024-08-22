@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from .frontend import router
 from dbos import DBOS
 from . import schema
-from sqlalchemy import select
 
 app = FastAPI()
 app.include_router(router)
