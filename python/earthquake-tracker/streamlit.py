@@ -8,7 +8,7 @@
 # We separate the Streamlit script from the DBOS ingestion code
 # because Streamlit re-runs the entire script every time it's viewed.
 
-# First, let's do imports, including streamlit.
+# First, let's do imports.
 
 import pandas as pd
 from dbos.dbos_config import ConfigFile, load_config
@@ -18,7 +18,7 @@ import streamlit as st
 from schema import earthquake_tracker
 
 # Then, let's load database connection information from dbos-config.yaml
-# and use it to create a database connection for Streamlit.
+# and use it to create a database connection using sqlalchemy.
 
 config: ConfigFile = load_config()
 db_params = {
@@ -53,5 +53,6 @@ df = df.drop(columns=["id"])
 
 # Finally, we display our dataframe using Streamlit.
 
+st.set_page_config(page_title="DBOS Earthquake Tracker")
 st.title("Earthquake Tracker")
 st.table(df)
