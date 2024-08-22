@@ -1,7 +1,7 @@
 # Earthquake Tracker
 
-# This app uses DBOS to stream earthquake data from the USGS into
-# Postgres then displays it using Streamlit.
+# This app uses DBOS to stream earthquake data from the USGS
+# into Postgres then displays it using Streamlit.
 
 # First, let's do imports and create a DBOS app.
 
