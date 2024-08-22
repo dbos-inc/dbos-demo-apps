@@ -356,6 +356,7 @@
           <div>
             <button
               class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl font-bold cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-red-700 hover:shadow-lg"
+              x-on:click="fetch('/crash_application', {'method': 'POST'})"
             >
               💣 Crash the Application
             </button>
