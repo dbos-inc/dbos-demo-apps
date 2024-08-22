@@ -168,104 +168,106 @@
       class="w-52 mx-auto"
     />
     <div x-data="widgetStore()" class="grid grid-cols-3 gap-1">
-      <div
-        class="flex flex-col gap-6 items-center p-5 bg-white rounded-lg border border-gray-300"
-      >
-        <h2 class="text-3xl">Shop internals</h2>
-        <div class="flow-root w-full">
-          <h3 class="text-2xl mb-2">Inventory</h3>
-          <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div
-              class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
-            >
+      <div>
+        <div
+          class="flex flex-col gap-6 items-center p-5 bg-white rounded-lg border border-gray-300"
+        >
+          <h2 class="text-3xl">Shop internals</h2>
+          <div class="flow-root w-full">
+            <h3 class="text-2xl mb-2">Inventory</h3>
+            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div
-                class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
               >
-                <table class="min-w-full divide-y divide-gray-300">
-                  <thead class="bg-gray-50">
-                    <tr>
-                      <th scope="col" class="w-12">
-                        <span class="sr-only">Image</span>
-                      </th>
-                      <th
-                        scope="col"
-                        class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                      >
-                        Product
-                      </th>
-                      <th
-                        scope="col"
-                        class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                      >
-                        Available
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-200 bg-white">
-                    <tr>
-                      <td class="p-1">
-                        <img
-                          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
-                          alt="Widget Image"
-                          class="rounded-lg"
-                        />
-                      </td>
-                      <td
-                        x-text="product.product"
-                        class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
-                      ></td>
-                      <td
-                        x-text="product.inventory"
-                        class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
-                      ></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="flow-root w-full">
-          <h3 class="text-2xl mb-2">Orders</h3>
-          <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div
-              class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
-            >
-              <div
-                class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
-              >
-                <table class="min-w-full divide-y divide-gray-300">
-                  <thead class="bg-gray-50">
-                    <tr>
-                      <th
-                        scope="col"
-                        class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                      >
-                        Order ID
-                      </th>
-                      <th
-                        scope="col"
-                        class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                      >
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-200 bg-white">
-                    <template x-for="order in orders" :key="order.order_id">
+                <div
+                  class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                >
+                  <table class="min-w-full divide-y divide-gray-300">
+                    <thead class="bg-gray-50">
                       <tr>
+                        <th scope="col" class="w-12">
+                          <span class="sr-only">Image</span>
+                        </th>
+                        <th
+                          scope="col"
+                          class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                        >
+                          Product
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                        >
+                          Available
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                      <tr>
+                        <td class="p-1">
+                          <img
+                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
+                            alt="Widget Image"
+                            class="rounded-lg"
+                          />
+                        </td>
                         <td
-                          x-text="order.order_id"
+                          x-text="product.product"
                           class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
                         ></td>
                         <td
-                          x-text="order.order_status"
+                          x-text="product.inventory"
                           class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
                         ></td>
                       </tr>
-                    </template>
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flow-root w-full">
+            <h3 class="text-2xl mb-2">Orders</h3>
+            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div
+                class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
+              >
+                <div
+                  class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                >
+                  <table class="min-w-full divide-y divide-gray-300">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th
+                          scope="col"
+                          class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                        >
+                          Order ID
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                        >
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                      <template x-for="order in orders" :key="order.order_id">
+                        <tr>
+                          <td
+                            x-text="order.order_id"
+                            class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                          ></td>
+                          <td
+                            x-text="order.order_status"
+                            class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                          ></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
