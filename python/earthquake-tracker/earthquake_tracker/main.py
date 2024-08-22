@@ -98,6 +98,8 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
     end_time = scheduled_time
     start_time = scheduled_time - timedelta(hours=1)
     earthquakes = get_earthquake_data(start_time, end_time)
+    if len(earthquakes) == 0:
+        DBOS.logger.info(f"No earthquakes found between {start_time} and {end_time}")
     for earthquake in earthquakes:
         new_earthquake = record_earthquake_data(earthquake)
         if new_earthquake:
