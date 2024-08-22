@@ -1,3 +1,6 @@
+from datetime import datetime
+from decimal import Decimal
+from typing import TypedDict
 from sqlalchemy import Table, Column, Integer, String, Text, DECIMAL, DateTime, ForeignKey, MetaData
 from sqlalchemy.sql import func
 
@@ -17,3 +20,16 @@ orders = Table('orders', metadata,
     Column('last_update_time', DateTime, nullable=False, server_default=func.now()),
     Column('product_id', Integer, ForeignKey('products.product_id'), nullable=False)
 )
+
+class product(TypedDict):
+    product_id: int
+    product: str
+    description: str
+    inventory: int
+    price: Decimal
+
+class order(TypedDict):
+    order_id: int
+    order_status: int
+    last_update_time: datetime
+    product_id: int

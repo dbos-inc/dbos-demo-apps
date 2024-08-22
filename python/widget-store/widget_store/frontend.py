@@ -13,12 +13,14 @@ def render(file, context={}):
 
 @router.get("/")
 def frontend():
+    from .main import getProduct
+    product = getProduct()
     context = {
         "uuid": str(uuid.uuid4()),
-        "inventory": 1,
-        "product": "Widgets",
-        "description": "Good widgets",
-        "price": "99.99"
+        "inventory": product["inventory"],
+        "product": product["product"],
+        "description": product["description"],
+        "price": str(product["price"])
 
     }
     return HTMLResponse(render('purchase.liquid', context))
