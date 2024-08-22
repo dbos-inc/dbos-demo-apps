@@ -13,7 +13,7 @@ async function render(file: string, ctx?: object): Promise<string> {
 export class Frontend {
   @GetApi("/")
   static frontend(_ctxt: HandlerContext) {
-    return render("main.html", {});
+    return render("app.html", {});
   }
 
   @GetApi("/error")
