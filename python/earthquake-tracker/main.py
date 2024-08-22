@@ -77,14 +77,12 @@ def get_earthquake_data(
 
 @dbos.transaction()
 def record_earthquake_data(data: EarthquakeData) -> bool:
-    return (
-        DBOS.sql_session.execute(
-            insert(earthquake_tracker)
-            .values(**data)
-            .on_conflict_do_update(index_elements=["id"], set_=data)
-            .returning(text("xmax = 0 AS inserted"))
-        ).scalar_one()
-    )
+    return DBOS.sql_session.execute(
+        insert(earthquake_tracker)
+        .values(**data)
+        .on_conflict_do_update(index_elements=["id"], set_=data)
+        .returning(text("xmax = 0 AS inserted"))
+    ).scalar_one()
 
 
 # Finally, let's write a cron job that records earthquakes every minute.
