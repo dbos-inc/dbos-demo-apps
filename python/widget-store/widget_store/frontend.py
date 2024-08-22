@@ -56,4 +56,4 @@ def order(order_id: int):
         "status": OrderStatus(order["order_status"]).name,
         "time": str(order["last_update_time"]),
     }
-    return HTMLResponse(render("order_status.liquid"))
+    return HTMLResponse(render("order_status.liquid"), context)
