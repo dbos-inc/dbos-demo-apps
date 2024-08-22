@@ -19,3 +19,11 @@ dev = [
     "black>=24.8.0",
     "isort>=5.13.2",
 ]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+filter_files = true
+atomic = true

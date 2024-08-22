@@ -11,11 +11,10 @@
 # First, let's do imports.
 
 import pandas as pd
-from dbos.dbos_config import ConfigFile, load_config
-from sqlalchemy import create_engine, desc, select
-
 import streamlit as st
+from dbos.dbos_config import ConfigFile, load_config
 from schema import earthquake_tracker
+from sqlalchemy import create_engine, desc, select
 
 # Then, let's load database connection information from dbos-config.yaml
 # and use it to create a database connection using sqlalchemy.
