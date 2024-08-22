@@ -29,7 +29,7 @@ try:
             "-p",
             f"{port}:5432",
             "-d",
-            "ankane/pgvector",
+            "pgvector/pgvector:pg16",
         ],
         check=True,
     )
