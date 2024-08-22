@@ -164,14 +164,18 @@
     }
   </script>
   <body class="h-full p-1 bg-neutral-100 font-sans">
-    <img
-      src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
-      alt="DBOS Logo"
-      class="w-52 mx-auto"
-    />
+    <div class="w-full flex justify-between mb-2">
+      <div></div>
+      <img
+        src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
+        alt="DBOS Logo"
+        class="w-40"
+      />
+      <div></div>
+    </div>
     <div x-data="widgetStore()" class="grid grid-cols-3 gap-1">
       <div>
-        <div class="flex flex-col gap-6 border border-gray-300 rounded-lg p-5">
+        <div class="flex flex-col gap-6 p-5">
           <h2 class="text-3xl text-center">Shop internals</h2>
           <div x-html="divider"></div>
           <div class="flow-root w-full">
@@ -348,14 +352,12 @@
       </div>
 
       <div>
-        <div
-          class="flex flex-col gap-6 border border-gray-300 rounded-lg p-5 text-center"
-        >
+        <div class="flex flex-col gap-6 p-5 text-center">
           <h2 class="text-3xl text-center">Server Tools</h2>
           <div x-html="divider"></div>
           <div>
             <button
-              class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl font-bold cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-red-700 hover:shadow-lg"
+              class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-red-700 hover:shadow-lg"
               x-on:click="fetch('/crash_application', {'method': 'POST'})"
             >
               💣 Crash the Application
