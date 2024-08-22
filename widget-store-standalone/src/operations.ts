@@ -4,6 +4,7 @@ import {
   HandlerContext,
   PostApi,
   ArgOptional,
+  GetApi,
 } from "@dbos-inc/dbos-sdk";
 import { ShopUtilities } from "./utilities";
 export { Frontend } from "./frontend";
@@ -93,5 +94,11 @@ export class Shop {
     // For testing and demo purposes :)
     process.exit(1);
     return Promise.resolve();
+  }
+
+  @GetApi("/product")
+  static async product(ctxt: HandlerContext) {
+    const product = await ctxt.invoke(ShopUtilities).retrieveProduct();
+    return product;
   }
 }

@@ -15,15 +15,39 @@
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
   </head>
+  <script>
+    function widgetStore() {
+      return {
+        uuid: null,
+        inventory: null,
+        product: null,
+        description: null,
+        price: null,
+        fetchProduct: async function () {
+          const { nanoid } = await import(
+            "https://cdn.jsdelivr.net/npm/nanoid/nanoid.js"
+          );
+          const response = await fetch("/product");
+          const prod = await response.json();
+          this.uuid = nanoid();
+          this.inventory = prod.inventory;
+          this.product = prod.product;
+          this.description = prod.description;
+          this.price = prod.price;
+        },
+        init: function () {
+          this.fetchProduct();
+        },
+      };
+    }
+  </script>
   <body class="h-full m-0 p-0 bg-neutral-100 font-sans">
-    <div class="flex flex-col items-center p-5">
-      <h1 x-data="{ message: 'I ❤️ Alpine' }" x-text="message"></h1>
+    <div x-data="widgetStore()" class="flex flex-col items-center p-5">
       <img
         src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
         alt="DBOS Logo"
         class="w-48 h-auto"
       />
-
       <div
         class="bg-white border border-gray-300 rounded-lg p-5 my-5 w-4/5 max-w-xl text-center"
       >
@@ -33,43 +57,17 @@
           class="max-w-[50%] rounded-lg mx-auto"
         />
         <div class="text-2xl text-gray-800 my-5">
-          placeholder &#8212; Only <b>placeholder</b> left!
+          <span x-text="product"></span> &#8212; Only
+          <b x-text="inventory"></b> left!
         </div>
-        <p>placeholder</p>
+        <p x-text="description"></p>
         <button
           class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg"
           id="purchaseButton"
         >
-          Buy Now for $placeholder
+          Buy Now for $<span x-text="price"></span>
         </button>
       </div>
     </div>
-
-    <script>
-      document
-        .getElementById("purchaseButton")
-        .addEventListener("click", async function () {
-          try {
-            const response = await fetch("/checkout/placeholder", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            });
-
-            if (response.ok) {
-              const url = await response.text();
-              window.location.href = url;
-            } else {
-              const errorText = await response.text();
-              console.error("Error:", errorText);
-              window.location.href = "/error";
-            }
-          } catch (error) {
-            console.error("Error:", error);
-            window.location.href = "/error";
-          }
-        });
-    </script>
   </body>
 </html>
