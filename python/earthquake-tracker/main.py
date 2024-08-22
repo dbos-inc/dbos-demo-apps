@@ -10,6 +10,7 @@ from typing import TypedDict
 
 import requests
 from dbos import DBOS
+from sqlalchemy import literal_column, text
 from sqlalchemy.dialects.postgresql import insert
 
 from schema import earthquake_tracker
@@ -81,9 +82,8 @@ def record_earthquake_data(data: EarthquakeData) -> bool:
             insert(earthquake_tracker)
             .values(**data)
             .on_conflict_do_update(index_elements=["id"], set_=data)
-            .returning(earthquake_tracker.c.id)
+            .returning(text("xmax = 0 AS inserted"))
         ).scalar_one()
-        is not None
     )
 
 
