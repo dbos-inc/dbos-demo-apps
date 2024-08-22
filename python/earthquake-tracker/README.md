@@ -8,13 +8,13 @@ Check out the source code for the data ingestion in `main.py` and the Streamlit 
 
 To deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
 
-```
+```shell
 npm i -g @dbos-inc/dbos-cloud
 ```
 
 Then, run this command to deploy your app:
 
-```
+```shell
 dbos-cloud app deploy
 ```
 
@@ -39,4 +39,4 @@ dbos migrate
 dbos start
 ```
 
-Visit `http://localhost:8000` to see some earthquakes!
+Visit [`http://localhost:8000`](http://localhost:8000) to see some earthquakes!
