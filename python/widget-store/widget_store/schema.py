@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from enum import IntEnum
 from typing import TypedDict
 
 from sqlalchemy import (
@@ -33,7 +34,6 @@ orders = Table(
     Column("order_id", Integer, primary_key=True, autoincrement=True),
     Column("order_status", Integer, nullable=False),
     Column("last_update_time", DateTime, nullable=False, server_default=func.now()),
-    Column("product_id", Integer, ForeignKey("products.product_id"), nullable=False),
 )
 
 
@@ -49,4 +49,10 @@ class order(TypedDict):
     order_id: int
     order_status: int
     last_update_time: datetime
-    product_id: int
+
+
+class OrderStatus(IntEnum):
+    CANCELLED = -1
+    PENDING = 0
+    DISPATCHED = 1
+    PAID = 2
