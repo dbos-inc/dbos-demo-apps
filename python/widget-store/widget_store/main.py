@@ -22,6 +22,7 @@ def getProduct() -> schema.product:
     )
 
 
+@dbos.transaction()
 def getOrder(order_id: str) -> schema.order:
     row = DBOS.sql_session.execute(
         schema.orders.select().where(schema.orders.c.id == order_id)
@@ -31,3 +32,5 @@ def getOrder(order_id: str) -> schema.order:
         order_status=row.order_status,
         last_update_time=row.last_update_time,
     )
+
+
