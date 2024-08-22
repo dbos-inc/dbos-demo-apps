@@ -1,6 +1,5 @@
 import os
 import datetime
-import asyncio
 import uuid
 
 from llama_index.vector_stores.postgres import PGVectorStore
@@ -15,6 +14,7 @@ from fastapi import Request as FastAPIRequest
 from dbos import DBOS
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
+from slack_bolt.adapter.starlette.handler import to_bolt_request
 
 app = FastAPI()
 dbos = DBOS()
@@ -99,7 +99,7 @@ def slack_challenge(request: FastAPIRequest, body: dict = Body(...)):
     else:
         DBOS.logger.info("Incoming event:")
         DBOS.logger.info(body)
-    return asyncio.run(handler.handle(request))
+    return slackapp.dispatch(to_bolt_request(request, request._body))
 
 # this handles any incoming message the bot can hear
 # right now it's only in one channel so it's every message in that channel
@@ -128,7 +128,12 @@ def reply(message, say):
                                     # the user is asking the bot a question
                                     query = element.get('text')
                                     response = answer_question(query,message)
-                                    say(str(response))
+                                    # say(str(response))
+                                    slackapp.client.chat_postMessage(
+                                        channel=message.get('channel'),
+                                        text=str(response),
+                                        thread_ts=message.get('thread_ts')
+                                    )
                                     return
     # if it's not a question, it might be a threaded reply
     # if it's a reply to the bot, we treat it as if it were a question
