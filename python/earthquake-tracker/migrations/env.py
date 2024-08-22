@@ -31,7 +31,7 @@ db_url = URL.create(
 config.set_main_option("sqlalchemy.url", db_url.render_as_string(hide_password=False))
 
 # Import our schema for migration autogeneration
-from schema import metadata
+from earthquake_tracker.schema import metadata
 
 target_metadata = metadata
 
