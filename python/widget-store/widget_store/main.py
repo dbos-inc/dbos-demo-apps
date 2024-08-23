@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from dbos import DBOS, SetWorkflowUUID
@@ -81,9 +82,9 @@ def update_order_status(order_id: str, status: int) -> None:
 
 
 @app.post("/checkout/{key}")
-def checkoutEndpoint(key: str) -> Response:
+def checkout_endpoint(key: str) -> Response:
     with SetWorkflowUUID(key):
-        handle = dbos.start_workflow(paymentWorkflow)
+        handle = dbos.start_workflow(payment_workflow)
     payment_url = dbos.get_event(handle.workflow_uuid, PAYMENT_URL_EVENT)
     if payment_url is None:
         return Response("/error")
@@ -91,7 +92,7 @@ def checkoutEndpoint(key: str) -> Response:
 
 
 @app.post("/payment_webhook/{key}/{status}")
-def paymentEndpoint(key: str, status: str) -> Response:
+def payment_endpoint(key: str, status: str) -> Response:
     dbos.send(key, status, PAYMENT_TOPIC)
     order_url = dbos.get_event(key, ORDER_URL_EVENT)
     if order_url is None:
@@ -100,7 +101,7 @@ def paymentEndpoint(key: str, status: str) -> Response:
 
 
 @dbos.workflow()
-def paymentWorkflow():
+def payment_workflow():
     order_id = create_order()
     inventory_reserved = reserve_inventory()
     if not inventory_reserved:
@@ -122,3 +123,8 @@ def paymentWorkflow():
             order_id=order_id, status=schema.OrderStatus.CANCELLED.value
         )
     dbos.set_event(ORDER_URL_EVENT, f"/order/{order_id}")
+
+
+@app.post("/crash_application")
+def crash_application():
+    os._exit(1)
