@@ -1,5 +1,5 @@
-from dbos import DBOS
-from fastapi import FastAPI
+from dbos import DBOS, SetWorkflowUUID
+from fastapi import FastAPI, Response
 
 from . import schema
 from .frontend import router
@@ -9,9 +9,13 @@ app.include_router(router)
 
 dbos = DBOS(app)
 
+PAYMENT_TOPIC = "payment"
+PAYMENT_URL_EVENT = "payment_url"
+ORDER_URL_EVENT = "order_url"
+
 
 @dbos.transaction()
-def getProduct() -> schema.product:
+def get_product() -> schema.product:
     row = DBOS.sql_session.execute(schema.products.select()).fetchone()
     return schema.product(
         product_id=row.product_id,
@@ -23,7 +27,7 @@ def getProduct() -> schema.product:
 
 
 @dbos.transaction()
-def getOrder(order_id: str) -> schema.order:
+def get_order(order_id: str) -> schema.order:
     row = DBOS.sql_session.execute(
         schema.orders.select().where(schema.orders.c.id == order_id)
     ).fetchone()
@@ -34,3 +38,20 @@ def getOrder(order_id: str) -> schema.order:
     )
 
 
+@app.post("/checkout/{key}")
+def checkoutEndpoint(key: str) -> Response:
+    with SetWorkflowUUID(key):
+        handle = dbos.start_workflow(paymentWorkflow)
+    payment_url = dbos.get_event(handle.workflow_uuid, PAYMENT_URL_EVENT)
+    if payment_url is None:
+        return "/error"
+    return Response(payment_url)
+
+
+def paymentEndpoint(key: str, status: str):
+    dbos.send(key, status, PAYMENT_TOPIC)
+
+
+@dbos.workflow()
+def paymentWorkflow():
+    dbos.set_event(PAYMENT_URL_EVENT, f"/payment/{DBOS.workflow_id}")

@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:24f3223cea25d854257a56418e6ee4223977c79ef3e6c3a46ee7a479673611c8"
+content_hash = "sha256:f4dc2b3ced3e24ec900dc45c166f6248e1a05e3945be28930e53548c18b820ea"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -201,7 +201,7 @@ files = [
 
 [[package]]
 name = "dbos"
-version = "0.4.0a0"
+version = "0.4.0a3"
 requires_python = ">=3.9"
 summary = "A Python framework for backends that scale"
 groups = ["default"]
@@ -219,8 +219,8 @@ dependencies = [
     "typing-extensions>=4.12.2; python_version < \"3.10\"",
 ]
 files = [
-    {file = "dbos-0.4.0a0-py3-none-any.whl", hash = "sha256:861ada2e5fa17cf37e4901da9271b8af4d6a593acb1201869aaa1230bf76c305"},
-    {file = "dbos-0.4.0a0.tar.gz", hash = "sha256:446c4537d43b58230bf3ff6ae115181cf95e8e68ee124b4ed9ab39fde11d101d"},
+    {file = "dbos-0.4.0a3-py3-none-any.whl", hash = "sha256:f35d84dbb9619b05b6ce425ef453f805fd8fa53d96505476cdddffaec07e5e20"},
+    {file = "dbos-0.4.0a3.tar.gz", hash = "sha256:49176549ddd08bd441b70eb2c55463a5798a53f20fc0abaa52958e4da12dd56e"},
 ]
 
 [[package]]

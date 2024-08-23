@@ -18,9 +18,9 @@ def render(file, context={}):
 
 @router.get("/")
 def frontend():
-    from .main import getProduct
+    from .main import get_product
 
-    product = getProduct()
+    product = get_product()
     context = {
         "uuid": str(uuid.uuid4()),
         "inventory": product["inventory"],
@@ -48,9 +48,9 @@ def crash():
 
 @router.get("/order/{order_id}")
 def order(order_id: int):
-    from .main import getOrder
+    from .main import get_order
 
-    order = getOrder(order_id)
+    order = get_order(order_id)
     context = {
         "order_id": order["order_id"],
         "status": OrderStatus(order["order_status"]).name,
