@@ -1,3 +1,7 @@
+# Here we implement a simple frontend, rendering some Liquid HTML templates
+# and serving them via FastAPI HTTP handlers.  In production, we recommend using
+# DBOS primarily for the backend, with your frontend deployed elsewhere.
+
 import uuid
 
 from fastapi import APIRouter
@@ -6,7 +10,7 @@ from liquid import Template
 
 from .schema import OrderStatus
 
-router = APIRouter()
+frontend_router = APIRouter()
 
 
 def render(file, context={}):
@@ -16,7 +20,7 @@ def render(file, context={}):
     return template.render(context)
 
 
-@router.get("/")
+@frontend_router.get("/")
 def frontend():
     from .main import get_product
 
@@ -31,22 +35,22 @@ def frontend():
     return HTMLResponse(render("purchase.liquid", context))
 
 
-@router.get("/payment/{key}")
+@frontend_router.get("/payment/{key}")
 def payment(key: str):
     return HTMLResponse(render("payment.liquid", {"uuid": key}))
 
 
-@router.get("/error")
+@frontend_router.get("/error")
 def error():
     return HTMLResponse(render("error.liquid"))
 
 
-@router.get("/crash")
+@frontend_router.get("/crash")
 def crash():
     return HTMLResponse(render("crash.liquid"))
 
 
-@router.get("/order/{order_id}")
+@frontend_router.get("/order/{order_id}")
 def order(order_id: int):
     from .main import get_order
 

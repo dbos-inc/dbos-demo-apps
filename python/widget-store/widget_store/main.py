@@ -12,11 +12,11 @@ from typing import Optional
 from dbos import DBOS, SetWorkflowUUID
 from fastapi import FastAPI, Response
 
-from .frontend import router
+from .frontend import frontend_router
 from .schema import OrderStatus, order, orders, product, products
 
 app = FastAPI()
-app.include_router(router)
+app.include_router(frontend_router)
 
 dbos = DBOS(app)
 
@@ -161,6 +161,7 @@ def get_product() -> product:
         inventory=row.inventory,
         price=row.price,
     )
+
 
 # To deploy this app to the cloud, run `dbos-cloud app deploy`.
 # Visit its URL to see it in action!
