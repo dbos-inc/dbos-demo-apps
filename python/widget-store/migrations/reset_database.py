@@ -26,6 +26,7 @@ with engine.connect() as connection:
     # Insert seed entry
     connection.execute(
         insert(schema.products).values(
+            product_id=1,
             product="Premium Quality Widget",
             description="Enhance your productivity with our top-rated widgets!",
             inventory=100,
