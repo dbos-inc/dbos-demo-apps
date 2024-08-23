@@ -42,6 +42,19 @@ def get_order(order_id: str) -> Optional[schema.order]:
     )
 
 
+@dbos.transaction()
+def create_order() -> int:
+    result = DBOS.sql_session.execute(
+        schema.orders.insert().values(order_status=schema.OrderStatus.PENDING.value)
+    )
+    return result.inserted_primary_key[0]
+
+
+# @dbos.transaction()
+# def update_order_status(status: int) -> None:
+#     DBOS.sql_session.execute(schema.)
+
+
 @app.post("/checkout/{key}")
 def checkoutEndpoint(key: str) -> Response:
     with SetWorkflowUUID(key):
@@ -65,5 +78,5 @@ def paymentEndpoint(key: str, status: str) -> Response:
 def paymentWorkflow():
     dbos.set_event(PAYMENT_URL_EVENT, f"/payment/{DBOS.workflow_id}")
     dbos.recv(PAYMENT_TOPIC)
-    order_id = 1
+    order_id = create_order()
     dbos.set_event(ORDER_URL_EVENT, f"/order/{order_id}")
