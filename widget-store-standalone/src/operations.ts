@@ -11,7 +11,7 @@ import { ShopUtilities } from "./utilities";
 export { Frontend } from "./frontend";
 
 export const PAYMENT_TOPIC = "payment";
-export const PAYMENT_URL_EVENT = "payment_url";
+export const PAYMENT_ID_EVENT = "payment_url";
 export const ORDER_ID_EVENT = "order_url";
 
 export class Shop {
@@ -23,16 +23,16 @@ export class Shop {
     // Start the workflow (below): this gives us the handle immediately and continues in background
     const handle = await ctxt.startWorkflow(Shop, key).paymentWorkflow();
 
-    // Wait for the workflow to create the payment URL; return that to the user
-    const paymentURL = await ctxt.getEvent<string>(
+    // Wait for the workflow to create the payment ID; return that to the user
+    const paymentID = await ctxt.getEvent<string>(
       handle.getWorkflowUUID(),
-      PAYMENT_URL_EVENT
+      PAYMENT_ID_EVENT
     );
-    if (paymentURL === null) {
+    if (paymentID === null) {
       ctxt.logger.error("workflow failed");
-      return "/error";
+      return "";
     }
-    return paymentURL;
+    return paymentID;
   }
 
   @Workflow()
@@ -42,13 +42,13 @@ export class Shop {
       await ctxt.invoke(ShopUtilities).subtractInventory();
     } catch (error) {
       ctxt.logger.error("Failed to update inventory");
-      await ctxt.setEvent(PAYMENT_URL_EVENT, null);
+      await ctxt.setEvent(PAYMENT_ID_EVENT, null);
       return;
     }
     const orderID = await ctxt.invoke(ShopUtilities).createOrder();
 
-    // Provide the paymentURL back to webCheckout (above)
-    await ctxt.setEvent(PAYMENT_URL_EVENT, `/payment/${ctxt.workflowUUID}`);
+    // Provide the paymentID back to webCheckout (above)
+    await ctxt.setEvent(PAYMENT_ID_EVENT, ctxt.workflowUUID);
 
     // Wait for a payment notification from paymentWebhook (below)
     // This simulates a communicator waiting on a payment processor

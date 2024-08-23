@@ -16,6 +16,10 @@
     ></script>
   </head>
   <script>
+    const VIEW_QUERY_PARAM = "view";
+    const ORDER_ID_QUERY_PARAM = "order";
+    const PAYMENT_ID_QUERY_PARAM = "payment";
+    let nanoidLazy = null;
     const divider = `<div class="relative inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div>`;
     const getOrderStatus = (status) => {
       switch (status) {
@@ -31,7 +35,30 @@
           throw new Error("Invalid order status");
       }
     };
-    let nanoidLazy = null;
+    async function fetchOrderStatus(orderId) {
+      const response = await fetch(`/order/${orderId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return getOrderStatus(data.order_status);
+      } else {
+        const errorText = await response.text();
+        console.error("Error:", errorText);
+        throw new Error(errorText);
+      }
+    }
+    const setURLQueryParam = (key, value) => {
+      const url = new URL(window.location.href);
+      if (value === null) {
+        url.searchParams.delete(key);
+      } else {
+        url.searchParams.set(key, value);
+      }
+      window.history.replaceState({}, "", url);
+    };
+    const getURLQueryParam = (key) => {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(key);
+    };
     function widgetStore() {
       return {
         uuid: null,
@@ -42,7 +69,6 @@
           price: null,
         },
         view: "store",
-        orderId: null,
         orders: [],
         divider,
 
@@ -55,12 +81,27 @@
         get showOrderStatusView() {
           return this.view === "status";
         },
+        get orderId() {
+          return getURLQueryParam(ORDER_ID_QUERY_PARAM);
+        },
 
         init: function () {
           import("https://cdn.jsdelivr.net/npm/nanoid/nanoid.js").then(
             ({ nanoid }) => {
               nanoidLazy = nanoid;
-              this.resetView();
+              this.resetId();
+              this.updateShopInternals();
+
+              const paymentId = getURLQueryParam(PAYMENT_ID_QUERY_PARAM);
+              if (paymentId !== null) {
+                this.view = "payment";
+                return;
+              }
+
+              const orderId = getURLQueryParam(ORDER_ID_QUERY_PARAM);
+              if (orderId !== null) {
+                this.view = "status";
+              }
             }
           );
         },
@@ -74,6 +115,8 @@
         resetView: function () {
           this.resetId();
           this.updateShopInternals();
+          setURLQueryParam(ORDER_ID_QUERY_PARAM, null);
+          setURLQueryParam(PAYMENT_ID_QUERY_PARAM, null);
           this.view = "store";
         },
         updateShopInternals: function () {
@@ -90,9 +133,10 @@
             });
 
             if (response.ok) {
-              const url = await response.text();
-              await this.updateShopInternals();
+              const paymentId = await response.text();
+              setURLQueryParam(PAYMENT_ID_QUERY_PARAM, paymentId);
               this.view = "payment";
+              await this.updateShopInternals();
             } else {
               const errorText = await response.text();
               console.error("Error:", errorText);
@@ -103,25 +147,31 @@
             window.location.href = "/error";
           }
         },
-        sendPaymentRequest: async function (uuid, status) {
+        sendPaymentRequest: async function (status) {
+          const paymentId = getURLQueryParam(PAYMENT_ID_QUERY_PARAM);
           try {
-            const response = await fetch(`/payment_webhook/${uuid}/${status}`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status }),
-            });
+            const response = await fetch(
+              `/payment_webhook/${paymentId}/${status}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status }),
+              }
+            );
             if (response.ok) {
-              this.orderId = await response.text();
+              const orderId = await response.text();
+              setURLQueryParam(ORDER_ID_QUERY_PARAM, orderId);
+              setURLQueryParam(PAYMENT_ID_QUERY_PARAM, null);
               this.view = "status";
               await this.updateShopInternals();
             } else {
               const errorText = await response.text();
               console.log("Error", errorText);
-              window.location.href = "/error";
+              //window.location.href = "/error";
             }
           } catch (error) {
             console.error("Error:", error);
-            window.location.href = "/error";
+            //window.location.href = "/error";
           }
         },
         updateOrders: async function () {
@@ -323,13 +373,13 @@
               <div class="space-x-4">
                 <button
                   class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                  x-on:click="sendPaymentRequest(uuid, 'paid')"
+                  x-on:click="sendPaymentRequest('paid')"
                 >
                   Confirm Payment
                 </button>
                 <button
                   class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                  x-on:click="sendPaymentRequest(uuid, 'failed')"
+                  x-on:click="sendPaymentRequest('failed')"
                 >
                   Deny Payment
                 </button>
