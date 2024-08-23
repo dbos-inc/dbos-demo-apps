@@ -1,7 +1,6 @@
-from dbos.dbos_config import load_config
-from sqlalchemy import URL
-
+from dbos import load_config
 from llama_index.vector_stores.postgres import PGVectorStore
+from sqlalchemy import URL
 
 dbos_config = load_config()
 
@@ -21,7 +20,7 @@ vector_store = PGVectorStore.from_params(
     port=str(db_url.port),
     user=db_url.username,
     embed_dim=1536,  # openai embedding dimension
-    perform_setup=True, # Set up the schema and tables
+    perform_setup=True,  # Set up the schema and tables
 )
 
 vector_store._initialize()
