@@ -3,16 +3,7 @@ from decimal import Decimal
 from enum import IntEnum
 from typing import TypedDict
 
-from sqlalchemy import (
-    DECIMAL,
-    Column,
-    DateTime,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    Text,
-)
+from sqlalchemy import DECIMAL, Column, DateTime, Integer, MetaData, String, Table, Text
 from sqlalchemy.sql import func
 
 metadata = MetaData()

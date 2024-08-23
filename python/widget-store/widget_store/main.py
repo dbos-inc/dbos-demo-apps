@@ -11,6 +11,7 @@ app.include_router(router)
 
 dbos = DBOS(app)
 
+WIDGET_ID = 1
 PAYMENT_TOPIC = "payment"
 PAYMENT_URL_EVENT = "payment_url"
 ORDER_URL_EVENT = "order_url"
@@ -25,6 +26,26 @@ def get_product() -> schema.product:
         description=row.description,
         inventory=row.inventory,
         price=row.price,
+    )
+
+
+@dbos.transaction()
+def reserve_inventory() -> bool:
+    rows_affected = DBOS.sql_session.execute(
+        schema.products.update()
+        .where(schema.products.c.product_id == WIDGET_ID)
+        .where(schema.products.c.inventory > 0)
+        .values(inventory=schema.products.c.inventory - 1)
+    ).rowcount
+    return rows_affected > 0
+
+
+@dbos.transaction()
+def undo_reserve_inventory() -> None:
+    DBOS.sql_session.execute(
+        schema.products.update()
+        .where(schema.products.c.product_id == WIDGET_ID)
+        .values(inventory=schema.products.c.inventory + 1)
     )
 
 
@@ -52,7 +73,11 @@ def create_order() -> int:
 
 @dbos.transaction()
 def update_order_status(order_id: str, status: int) -> None:
-    DBOS.sql_session.execute(schema.orders.update().where(schema.orders.c.order_id == order_id).values(order_status=status))
+    DBOS.sql_session.execute(
+        schema.orders.update()
+        .where(schema.orders.c.order_id == order_id)
+        .values(order_status=status)
+    )
 
 
 @app.post("/checkout/{key}")
@@ -77,7 +102,23 @@ def paymentEndpoint(key: str, status: str) -> Response:
 @dbos.workflow()
 def paymentWorkflow():
     order_id = create_order()
+    inventory_reserved = reserve_inventory()
+    if not inventory_reserved:
+        DBOS.logger.error(f"Failed to reserve inventory for order {order_id}")
+        update_order_status(
+            order_id=order_id, status=schema.OrderStatus.CANCELLED.value
+        )
+        dbos.set_event(PAYMENT_URL_EVENT, None)
+        return
     dbos.set_event(PAYMENT_URL_EVENT, f"/payment/{DBOS.workflow_id}")
-    dbos.recv(PAYMENT_TOPIC)
-    update_order_status(order_id=order_id, status=schema.OrderStatus.PAID.value)
+    notification = dbos.recv(PAYMENT_TOPIC)
+    if notification is not None and notification == "paid":
+        DBOS.logger.info(f"Payment successful for order {order_id}")
+        update_order_status(order_id=order_id, status=schema.OrderStatus.PAID.value)
+    else:
+        DBOS.logger.warn(f"Payment failed for order {order_id}")
+        undo_reserve_inventory()
+        update_order_status(
+            order_id=order_id, status=schema.OrderStatus.CANCELLED.value
+        )
     dbos.set_event(ORDER_URL_EVENT, f"/order/{order_id}")
