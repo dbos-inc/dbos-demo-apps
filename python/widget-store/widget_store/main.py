@@ -3,8 +3,8 @@ from typing import Optional
 
 from dbos import DBOS, SetWorkflowUUID
 from fastapi import FastAPI, Response
+from .schema import OrderStatus, order, orders, product, products
 
-from . import schema
 from .frontend import router
 
 app = FastAPI()
@@ -19,9 +19,9 @@ ORDER_URL_EVENT = "order_url"
 
 
 @dbos.transaction()
-def get_product() -> schema.product:
-    row = DBOS.sql_session.execute(schema.products.select()).fetchone()
-    return schema.product(
+def get_product() -> product:
+    row = DBOS.sql_session.execute(products.select()).fetchone()
+    return product(
         product_id=row.product_id,
         product=row.product,
         description=row.description,
@@ -33,10 +33,10 @@ def get_product() -> schema.product:
 @dbos.transaction()
 def reserve_inventory() -> bool:
     rows_affected = DBOS.sql_session.execute(
-        schema.products.update()
-        .where(schema.products.c.product_id == WIDGET_ID)
-        .where(schema.products.c.inventory > 0)
-        .values(inventory=schema.products.c.inventory - 1)
+        products.update()
+        .where(products.c.product_id == WIDGET_ID)
+        .where(products.c.inventory > 0)
+        .values(inventory=products.c.inventory - 1)
     ).rowcount
     return rows_affected > 0
 
@@ -44,20 +44,20 @@ def reserve_inventory() -> bool:
 @dbos.transaction()
 def undo_reserve_inventory() -> None:
     DBOS.sql_session.execute(
-        schema.products.update()
-        .where(schema.products.c.product_id == WIDGET_ID)
-        .values(inventory=schema.products.c.inventory + 1)
+        products.update()
+        .where(products.c.product_id == WIDGET_ID)
+        .values(inventory=products.c.inventory + 1)
     )
 
 
 @dbos.transaction()
-def get_order(order_id: str) -> Optional[schema.order]:
+def get_order(order_id: str) -> Optional[order]:
     row = DBOS.sql_session.execute(
-        schema.orders.select().where(schema.orders.c.order_id == order_id)
+        orders.select().where(orders.c.order_id == order_id)
     ).fetchone()
     if row is None:
         return None
-    return schema.order(
+    return order(
         order_id=row.order_id,
         order_status=row.order_status,
         last_update_time=row.last_update_time,
@@ -67,7 +67,7 @@ def get_order(order_id: str) -> Optional[schema.order]:
 @dbos.transaction()
 def create_order() -> int:
     result = DBOS.sql_session.execute(
-        schema.orders.insert().values(order_status=schema.OrderStatus.PENDING.value)
+        orders.insert().values(order_status=OrderStatus.PENDING.value)
     )
     return result.inserted_primary_key[0]
 
@@ -75,9 +75,7 @@ def create_order() -> int:
 @dbos.transaction()
 def update_order_status(order_id: str, status: int) -> None:
     DBOS.sql_session.execute(
-        schema.orders.update()
-        .where(schema.orders.c.order_id == order_id)
-        .values(order_status=status)
+        orders.update().where(orders.c.order_id == order_id).values(order_status=status)
     )
 
 
@@ -106,22 +104,18 @@ def payment_workflow():
     inventory_reserved = reserve_inventory()
     if not inventory_reserved:
         DBOS.logger.error(f"Failed to reserve inventory for order {order_id}")
-        update_order_status(
-            order_id=order_id, status=schema.OrderStatus.CANCELLED.value
-        )
+        update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
         dbos.set_event(PAYMENT_URL_EVENT, None)
         return
     dbos.set_event(PAYMENT_URL_EVENT, f"/payment/{DBOS.workflow_id}")
     notification = dbos.recv(PAYMENT_TOPIC)
     if notification is not None and notification == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
-        update_order_status(order_id=order_id, status=schema.OrderStatus.PAID.value)
+        update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
     else:
         DBOS.logger.warn(f"Payment failed for order {order_id}")
         undo_reserve_inventory()
-        update_order_status(
-            order_id=order_id, status=schema.OrderStatus.CANCELLED.value
-        )
+        update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
     dbos.set_event(ORDER_URL_EVENT, f"/order/{order_id}")
 
 
