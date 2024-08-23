@@ -1,3 +1,11 @@
+# Widget Store
+
+# This app uses DBOS to deploy an online storefront that's resilient to any failure.
+# The focus of this app is on the checkout workflow that manages order status,
+# product inventory, and payment.
+
+# First, let's do imports and create a DBOS app.
+
 import os
 from typing import Optional
 
@@ -13,54 +21,85 @@ app.include_router(router)
 dbos = DBOS(app)
 
 WIDGET_ID = 1
-PAYMENT_TOPIC = "payment"
-PAYMENT_URL_EVENT = "payment_url"
-ORDER_URL_EVENT = "order_url"
+PAYMENT_STATUS = "payment"
+PAYMENT_URL = "payment_url"
+ORDER_URL = "order_url"
+
+# Next, let's write the checkout workflow.
+# This workflow is triggered whenever a customer buys a widget.
+# It first creates a new order, then reserves inventory, processes payment,
+# and finally marks the order as complete. If any step fails, it backs out,
+# returning reserved inventory and marking the order as cancelled.
+
+# DBOS makes this workflow reliable: each of its steps executes exactly-once and
+# if it's ever interrupted, it automatically resumes from where it left off.
+# You can try this yourself--start an order and press the crash button at any time.
+# Within seconds, your app will recover to exactly the state it was in before the crash.
 
 
 @dbos.workflow()
-def payment_workflow():
+def checkout_workflow():
     order_id = create_order()
     inventory_reserved = reserve_inventory()
     if not inventory_reserved:
         DBOS.logger.error(f"Failed to reserve inventory for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
-        dbos.set_event(PAYMENT_URL_EVENT, None)
+        dbos.set_event(PAYMENT_URL, None)
         return
-    dbos.set_event(PAYMENT_URL_EVENT, f"/payment/{DBOS.workflow_id}")
-    notification = dbos.recv(PAYMENT_TOPIC)
-    if notification is not None and notification == "paid":
+    dbos.set_event(PAYMENT_URL, f"/payment/{DBOS.workflow_id}")
+    payment_status = dbos.recv(PAYMENT_STATUS)
+    if payment_status is not None and payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
     else:
         DBOS.logger.warn(f"Payment failed for order {order_id}")
         undo_reserve_inventory()
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
-    dbos.set_event(ORDER_URL_EVENT, f"/order/{order_id}")
+    dbos.set_event(ORDER_URL, f"/order/{order_id}")
+
+
+# Next, let's use FastAPI to write the HTTP endpoints for checkout.
+
+# This endpoint receives a request when a customer presses the "Buy Now" button.
+# It starts the checkout workflow in the background, then waits for the workflow
+# to generate and send it a payment link. It then returns the payment link
+# so the browser can redirect the customer to the payments page.
 
 
 @app.post("/checkout/{key}")
 def checkout_endpoint(key: str) -> Response:
     with SetWorkflowUUID(key):
-        handle = dbos.start_workflow(payment_workflow)
-    payment_url = dbos.get_event(handle.workflow_uuid, PAYMENT_URL_EVENT)
+        handle = dbos.start_workflow(checkout_workflow)
+    payment_url = dbos.get_event(handle.workflow_uuid, PAYMENT_URL)
     if payment_url is None:
         return Response("/error")
     return Response(payment_url)
 
 
+# This is the HTTP endpoint for the payments page. It signals the payment workflow
+# whether the payment succeeded or failed.
+
+
 @app.post("/payment_webhook/{key}/{status}")
 def payment_endpoint(key: str, status: str) -> Response:
-    dbos.send(key, status, PAYMENT_TOPIC)
-    order_url = dbos.get_event(key, ORDER_URL_EVENT)
+    dbos.send(key, status, PAYMENT_STATUS)
+    order_url = dbos.get_event(key, ORDER_URL)
     if order_url is None:
         return Response("/error")
     return Response(order_url)
 
 
+# This is the crash endpoint. It crashes your app. For demonstration purposes only. :)
+
+
 @app.post("/crash_application")
 def crash_application():
     os._exit(1)
+
+
+# Finally, let's write our database operations. Each of these functions performs a simple
+# CRUD operation. We apply the @dbos.transaction() decorator to each of them to give them
+# access to a SQLAlchemy database connection.
 
 
 @dbos.transaction()
@@ -122,3 +161,6 @@ def get_product() -> product:
         inventory=row.inventory,
         price=row.price,
     )
+
+# To deploy this app to the cloud, run `dbos-cloud app deploy`.
+# Visit its URL to see it in action!
