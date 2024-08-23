@@ -71,6 +71,7 @@
         view: "store",
         orders: [],
         divider,
+        mobileVisiblePanel: "store", // internals | store | tools
 
         get showStoreView() {
           return this.view === "store";
@@ -213,7 +214,10 @@
       };
     }
   </script>
-  <body class="h-full p-1 bg-neutral-100 font-sans">
+  <body
+    x-data="widgetStore()"
+    class="h-svh md:p-1 bg-neutral-100 font-sans flex flex-col"
+  >
     <div class="w-full flex justify-between mb-2">
       <div></div>
       <img
@@ -223,8 +227,8 @@
       />
       <div></div>
     </div>
-    <div x-data="widgetStore()" class="grid grid-cols-3 gap-1">
-      <div>
+    <div class="md:grid md:grid-cols-3 md:gap-1 grow">
+      <div :class="mobileVisiblePanel === 'internals' || 'hidden md:block'">
         <div class="flex flex-col gap-6 p-5">
           <h2 class="text-3xl text-center">Shop internals</h2>
           <div x-html="divider"></div>
@@ -335,12 +339,13 @@
         </div>
       </div>
 
-      <div>
+      <div :class="mobileVisiblePanel === 'store' || 'hidden md:block'">
         <div
           class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
         >
           <h2 class="text-3xl">Widget Store</h2>
           <div x-html="divider"></div>
+
           <template x-if="showStoreView">
             <div>
               <img
@@ -407,7 +412,7 @@
         </div>
       </div>
 
-      <div>
+      <div :class="mobileVisiblePanel === 'tools' || 'hidden md:block'">
         <div class="flex flex-col gap-6 p-5 text-center">
           <h2 class="text-3xl text-center">Server Tools</h2>
           <div x-html="divider"></div>
@@ -421,6 +426,35 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div
+      class="md:hidden w-full grid grid-cols-3 font-semibold font-mono bg-neutral-200"
+    >
+      <button
+        class="py-1 flex flex-col text-center hover:cursor-pointer border-t border-black border-r"
+        :class="mobileVisiblePanel === 'internals' && 'bg-neutral-300'"
+        x-on:click="mobileVisiblePanel = 'internals'"
+      >
+        <span>Shop</span>
+        <span>Internals</span>
+      </button>
+      <button
+        class="py-1 flex flex-col text-center hover:cursor-pointer border-t border-black border-r"
+        :class="mobileVisiblePanel === 'store' && 'bg-neutral-300'"
+        x-on:click="mobileVisiblePanel = 'store'"
+      >
+        <span>Widget</span>
+        <span>Store</span>
+      </button>
+      <button
+        class="py-1 flex flex-col text-center hover:cursor-pointer border-t border-black"
+        :class="mobileVisiblePanel === 'tools' && 'bg-neutral-300'"
+        x-on:click="mobileVisiblePanel = 'tools'"
+      >
+        <span>Server</span>
+        <span>Tools</span>
+      </button>
     </div>
   </body>
 </html>
