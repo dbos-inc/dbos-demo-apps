@@ -2,7 +2,7 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
-from dbos.dbos_config import load_config
+from dbos import load_config
 from sqlalchemy import URL, engine_from_config, pool
 
 # this is the Alembic Config object, which provides

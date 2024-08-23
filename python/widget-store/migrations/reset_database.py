@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 
-from dbos.dbos_config import load_config
+from dbos import load_config
 from sqlalchemy import URL, create_engine, delete, insert
 
 from widget_store import schema
