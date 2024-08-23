@@ -1,3 +1,5 @@
+from typing import Optional
+
 from dbos import DBOS, SetWorkflowUUID
 from fastapi import FastAPI, Response
 
@@ -27,10 +29,12 @@ def get_product() -> schema.product:
 
 
 @dbos.transaction()
-def get_order(order_id: str) -> schema.order:
+def get_order(order_id: str) -> Optional[schema.order]:
     row = DBOS.sql_session.execute(
-        schema.orders.select().where(schema.orders.c.id == order_id)
+        schema.orders.select().where(schema.orders.c.order_id == order_id)
     ).fetchone()
+    if row is None:
+        return None
     return schema.order(
         order_id=row.order_id,
         order_status=row.order_status,
@@ -44,14 +48,22 @@ def checkoutEndpoint(key: str) -> Response:
         handle = dbos.start_workflow(paymentWorkflow)
     payment_url = dbos.get_event(handle.workflow_uuid, PAYMENT_URL_EVENT)
     if payment_url is None:
-        return "/error"
+        return Response("/error")
     return Response(payment_url)
 
 
-def paymentEndpoint(key: str, status: str):
+@app.post("/payment_webhook/{key}/{status}")
+def paymentEndpoint(key: str, status: str) -> Response:
     dbos.send(key, status, PAYMENT_TOPIC)
+    order_url = dbos.get_event(key, ORDER_URL_EVENT)
+    if order_url is None:
+        return Response("/error")
+    return Response(order_url)
 
 
 @dbos.workflow()
 def paymentWorkflow():
     dbos.set_event(PAYMENT_URL_EVENT, f"/payment/{DBOS.workflow_id}")
+    dbos.recv(PAYMENT_TOPIC)
+    order_id = 1
+    dbos.set_event(ORDER_URL_EVENT, f"/order/{order_id}")

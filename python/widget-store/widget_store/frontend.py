@@ -51,6 +51,8 @@ def order(order_id: int):
     from .main import get_order
 
     order = get_order(order_id)
+    if order is None:
+        return HTMLResponse(render("error.liquid"))
     context = {
         "order_id": order["order_id"],
         "status": OrderStatus(order["order_status"]).name,
