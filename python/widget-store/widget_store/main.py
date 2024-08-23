@@ -50,9 +50,9 @@ def create_order() -> int:
     return result.inserted_primary_key[0]
 
 
-# @dbos.transaction()
-# def update_order_status(status: int) -> None:
-#     DBOS.sql_session.execute(schema.)
+@dbos.transaction()
+def update_order_status(order_id: str, status: int) -> None:
+    DBOS.sql_session.execute(schema.orders.update().where(schema.orders.c.order_id == order_id).values(order_status=status))
 
 
 @app.post("/checkout/{key}")
@@ -76,7 +76,8 @@ def paymentEndpoint(key: str, status: str) -> Response:
 
 @dbos.workflow()
 def paymentWorkflow():
+    order_id = create_order()
     dbos.set_event(PAYMENT_URL_EVENT, f"/payment/{DBOS.workflow_id}")
     dbos.recv(PAYMENT_TOPIC)
-    order_id = create_order()
+    update_order_status(order_id=order_id, status=schema.OrderStatus.PAID.value)
     dbos.set_event(ORDER_URL_EVENT, f"/order/{order_id}")
