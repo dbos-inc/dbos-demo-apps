@@ -84,7 +84,7 @@
 <script>
     document.getElementById('crashButton').addEventListener('click', async function() {
         try {
-            const response = await fetch('/crash_application/', {
+            const response = await fetch('/crash_application', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
