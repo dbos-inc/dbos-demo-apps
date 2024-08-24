@@ -11,10 +11,9 @@ from llama_index.core.postprocessor import FixedRecencyPostprocessor
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.schema import NodeRelationship, RelatedNodeInfo, TextNode
 from llama_index.vector_stores.postgres import PGVectorStore
-from slack_bolt import App, BoltRequest
+from slack_bolt import App, BoltRequest, BoltResponse
 from slack_bolt.adapter.starlette.handler import to_bolt_request
 from slack_sdk.web import SlackResponse
-
 app = FastAPI()
 dbos = DBOS(fastapi=app)
 
@@ -37,7 +36,6 @@ index = VectorStoreIndex([], storage_context=storage_context)
 
 # Initialize the slack app
 slackapp = App(
-    logger=DBOS.logger,
     token=os.environ.get("SLACK_BOT_TOKEN"),
     signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
 )
@@ -50,7 +48,7 @@ bot_user_id = auth_response["user_id"]
 
 # Define a post endpoint to handle slack events
 @app.post("/")
-def slack_challenge(request: FastAPIRequest, body: Dict[str, Any] = Body(...)) -> Any:
+def slack_challenge(request: FastAPIRequest, body: Dict[str, Any] = Body(...)): # type: ignore
     if "challenge" in body:
         DBOS.logger.info("Received challenge")
         return {"challenge": body["challenge"]}
@@ -158,7 +156,7 @@ def answer_question(
 ) -> Any:
     who_is_asking = get_user_name(message["user"])
     replies_stanza = ""
-    if replies is not None:
+    if (replies is not None):
         replies_stanza = "In addition to the context above, the question you're about to answer has been discussed in the following chain of replies:\n"
         for reply in replies["messages"]:
             replies_stanza += get_user_name(reply["user"]) + ": " + reply["text"] + "\n"
