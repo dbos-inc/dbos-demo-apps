@@ -4,7 +4,7 @@ name: llamabot
 language: python
 runtimeConfig:
   start:
-    - "fastapi run"
+    - "fastapi run llamabot/main.py"
 database:
   hostname: localhost
   port: 5432
@@ -12,7 +12,7 @@ database:
   password: ${PGPASSWORD}
   app_db_name: llamabot
   migrate:
-    - python3 migrate.py
+    - python3 migrations/migrate.py
 telemetry:
   logs:
     logLevel: INFO

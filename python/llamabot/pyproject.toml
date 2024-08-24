@@ -36,4 +36,4 @@ filter_files = true
 atomic = true
 
 [tool.mypy]
-strict = false
+strict = true
