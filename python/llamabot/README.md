@@ -42,3 +42,37 @@ Then, run this command to deploy your app:
 ```shell
 dbos-cloud app deploy
 ```
+
+This command outputs a URL -- this is webhook endpoint for your Slack app!
+Go to `Event Subscriptions > Enable Events` to enable it, and set `Request URL` to your app's URL.
+It should show as `Verified`.
+Now you can use your app from Slack!
+
+You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
+
+
+### Running Locally
+
+To run this app locally, you need a Postgres database.
+If you have Docker, you can start one with:
+
+```shell
+export PGPASSWORD=dbos
+python3 start_postgres_docker.py
+```
+
+Then run:
+
+```shell
+pip install -r requirements.txt
+dbos migrate
+dbos start
+```
+
+Then, on another terminal window, we'll use [ngrok](https://ngrok.com/) to setup an endpoint for your local webhook.
+
+```shell
+ngrok http 8000
+```
+
+Use this URL in your Slack app for local development and testing.
