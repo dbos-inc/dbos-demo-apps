@@ -1,0 +1,33 @@
+[project]
+name = "widget-store"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Peter Kraft", email = "petereliaskraft@gmail.com"},
+]
+dependencies = [
+    "dbos>=0.4.0a5",
+    "fastapi[standard]>=0.112.1",
+    "python-liquid>=1.12.1",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "black>=24.8.0",
+    "isort>=5.13.2",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+filter_files = true
+atomic = true
