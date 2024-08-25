@@ -39,13 +39,12 @@ index = VectorStoreIndex([], storage_context=storage_context)
 slackapp = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
     signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
+    logger=DBOS.logger,
 )
 
 # Get my own slack ID
 auth_response = slackapp.client.auth_test()
-DBOS.logger.info(auth_response)
 bot_user_id = auth_response["user_id"]
-
 
 # Define a post endpoint to handle slack events
 @app.post("/")
