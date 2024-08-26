@@ -8,7 +8,6 @@ export enum OrderStatus {
   PENDING = 0,
   DISPATCHED = 1,
   PAID = 2,
-  DELIVERED = 3,
   CANCELLED = -1,
 }
 
@@ -97,15 +96,6 @@ export class ShopUtilities {
   }
 
   @Transaction()
-  static async fulfillOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
-    await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
-      order_status: OrderStatus.DISPATCHED,
-      last_update_time: ctxt.client.fn.now()
-    });
-  }
-
-
-  @Transaction()
   static async errorOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
     await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
       order_status: OrderStatus.CANCELLED,
@@ -128,18 +118,18 @@ export class ShopUtilities {
   }
 
   @Transaction({ readOnly: true })
-  static async retrieveDispatchedOrders(ctxt: KnexTransactionContext) {
-    return ctxt.client<Order>('orders').select("*").where({ order_status: OrderStatus.DISPATCHED });
+  static async retrievePaidOrders(ctxt: KnexTransactionContext) {
+    return ctxt.client<Order>('orders').select("*").where({ order_status: OrderStatus.PAID });
   }
 
   @Transaction()
-  static async makeProgressOnDispatchedOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
+  static async makeProgressOnPaidOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
     const orders = await ctxt.client<Order>('orders').where({
       order_id: order_id,
-      order_status: OrderStatus.DISPATCHED,
+      order_status: OrderStatus.PAID,
     });
     if (!orders.length) {
-      throw new Error(`No DISPATCHED order with ID ${order_id} found`);
+      throw new Error(`No PAID order with ID ${order_id} found`);
     }
 
     const order = orders[0];
@@ -147,7 +137,7 @@ export class ShopUtilities {
       await ctxt.client<Order>('orders').where({ order_id: order_id }).update({ progress_remaining: order.progress_remaining - 1 });
     } else {
       await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
-        order_status: OrderStatus.DELIVERED,
+        order_status: OrderStatus.DISPATCHED,
         progress_remaining: 0
       });
     }
@@ -165,10 +155,10 @@ export class ShopUtilities {
 
   @Scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '* * * * * *'}) // Every second
   @Workflow()
-  static async makeProgressOnAllDispatchedOrders(ctx: WorkflowContext, _schedDate: Date, _curdate: Date) {
-    const orders = await ctx.invoke(ShopUtilities).retrieveDispatchedOrders();
+  static async makeProgressOnAllPaidOrders(ctx: WorkflowContext, _schedDate: Date, _curdate: Date) {
+    const orders = await ctx.invoke(ShopUtilities).retrievePaidOrders();
     for (const order of orders) {
-      await ctx.invoke(ShopUtilities).makeProgressOnDispatchedOrder(order.order_id);
+      await ctx.invoke(ShopUtilities).makeProgressOnPaidOrder(order.order_id);
     }
   }
 

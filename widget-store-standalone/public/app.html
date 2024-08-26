@@ -50,8 +50,6 @@
           return "DISPATCHED";
         case 2:
           return "PAID";
-        case 3:
-          return "DELIVERED";
         case -1:
           return "CANCELLED";
         default:
@@ -129,7 +127,7 @@
                 this.view = "status";
               }
 
-              // While we have dispatched orders that we know of, we check for updates every 0.5 seconds
+              // While we have paid orders that we know of, we check for updates every 0.5 seconds
               this.startUpdateOrdersInterval();
 
               // Otherwise, check every 3 seconds in case an order came in from a different client
@@ -236,9 +234,8 @@
 
             if (
               this.updateOrdersInterval !== null &&
-              !this.orders.filter(
-                (order) => order.order_status === "DISPATCHED"
-              ).length
+              !this.orders.filter((order) => order.order_status === "PAID")
+                .length
             ) {
               clearInterval(this.updateOrdersInterval);
               this.updateOrdersInterval = null;
@@ -413,7 +410,7 @@
                             scope="col"
                             class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                           >
-                            Shipping time
+                            Time to dispatch
                           </th>
                         </tr>
                       </thead>
@@ -429,7 +426,7 @@
                               class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
                             ></td>
                             <td
-                              x-text="order.order_status === 'DISPATCHED' ? order.progress_remaining : ''"
+                              x-text="order.order_status === 'PAID' ? order.progress_remaining : ''"
                               class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
                             ></td>
                           </tr>

@@ -58,7 +58,7 @@ export class Shop {
     // If the money is good - fulfill the order. Else, cancel:
     if (notification && notification === "paid") {
       ctxt.logger.info(`Payment successful!`);
-      await ctxt.invoke(ShopUtilities).fulfillOrder(orderID);
+      await ctxt.invoke(ShopUtilities).markOrderPaid(orderID);
     } else {
       ctxt.logger.warn(`Payment failed...`);
       await ctxt.invoke(ShopUtilities).errorOrder(orderID);
