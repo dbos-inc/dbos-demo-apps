@@ -62,6 +62,11 @@ export class ShopUtilities {
     await ctxt.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory: ctxt.client.raw('inventory + ?', 1) });
   }
 
+  @Transaction()
+  static async setInventory(ctxt: KnexTransactionContext, inventory: number): Promise<void> {
+    await ctxt.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
+  }
+
   @Transaction({ readOnly: true })
   static async retrieveProduct(ctxt: KnexTransactionContext): Promise<Product> {
     const item = await ctxt.client<Product>('products').select("*").where({ product_id: PRODUCT_ID });

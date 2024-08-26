@@ -247,6 +247,24 @@
             this.connectionLost = true;
           }
         },
+        restockInventory: async function () {
+          try {
+            const response = await fetch("/restock", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            if (response.ok) {
+              this.fetchInventory();
+            } else {
+              const errorText = await response.text();
+              console.error("Error:", errorText);
+            }
+          } catch (error) {
+            console.error("Error:", error);
+          }
+        },
       };
     }
     function retrieveOrder(orderId) {
@@ -299,7 +317,15 @@
           <h2 class="text-3xl text-center">Shop internals</h2>
           <div x-html="divider"></div>
           <div class="flow-root w-full">
-            <h3 class="text-2xl mb-2">Inventory</h3>
+            <div class="flex justify-between pb-1">
+              <h3 class="text-2xl mb-2">Inventory</h3>
+              <button
+                x-on:click="restockInventory"
+                class="px-4 rounded-lg text-sm border border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-gray-300 focus:outline-none"
+              >
+                Restock
+              </button>
+            </div>
             <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div
                 class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
@@ -331,7 +357,7 @@
                       <tr>
                         <td class="p-1">
                           <img
-                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
+                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
                             alt="Widget Image"
                             class="rounded-lg"
                           />
@@ -425,7 +451,7 @@
           <template x-if="showStoreView">
             <div>
               <img
-                src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget.png"
+                src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
                 alt="Widget Image"
                 class="max-w-[50%] rounded-lg mx-auto"
               />

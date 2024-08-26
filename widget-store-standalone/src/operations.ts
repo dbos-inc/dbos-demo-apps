@@ -110,4 +110,9 @@ export class Shop {
   static async orders(ctxt: HandlerContext) {
     return ctxt.invoke(ShopUtilities).retrieveOrders();
   }
+
+  @PostApi("/restock")
+  static restock(ctxt: HandlerContext) {
+    return ctxt.invoke(ShopUtilities).setInventory(12);
+  }
 }
