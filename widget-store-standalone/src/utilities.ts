@@ -1,5 +1,5 @@
 import { SendEmailCommunicator } from '@dbos-inc/communicator-email-ses';
-import { Scheduled, Transaction, TransactionContext, Workflow, WorkflowContext, configureInstance} from '@dbos-inc/dbos-sdk';
+import { Scheduled, SchedulerMode, Transaction, TransactionContext, Workflow, WorkflowContext, configureInstance} from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -8,6 +8,7 @@ export enum OrderStatus {
   PENDING = 0,
   DISPATCHED = 1,
   PAID = 2,
+  DELIVERED = 3,
   CANCELLED = -1,
 }
 
@@ -24,6 +25,7 @@ export interface Order {
   order_status: number,
   last_update_time: Date,
   product_id: number,
+  progress_remaining: number,
 }
 
 export interface OrderWithProduct {
@@ -74,7 +76,8 @@ export class ShopUtilities {
     const orders = await ctxt.client<Order>('orders').insert({
       order_status: OrderStatus.PENDING,
       product_id: PRODUCT_ID,
-      last_update_time: ctxt.client.fn.now()
+      last_update_time: ctxt.client.fn.now(),
+      progress_remaining: 10,
     }).returning('order_id');
     const orderID = orders[0].order_id;
     return orderID;
@@ -119,6 +122,32 @@ export class ShopUtilities {
     return ctxt.client<Order>('orders').select("*");
   }
 
+  @Transaction({ readOnly: true })
+  static async retrieveDispatchedOrders(ctxt: KnexTransactionContext) {
+    return ctxt.client<Order>('orders').select("*").where({ order_status: OrderStatus.DISPATCHED });
+  }
+
+  @Transaction()
+  static async makeProgressOnDispatchedOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
+    const orders = await ctxt.client<Order>('orders').where({
+      order_id: order_id,
+      order_status: OrderStatus.DISPATCHED,
+    });
+    if (!orders.length) {
+      throw new Error(`No DISPATCHED order with ID ${order_id} found`);
+    }
+
+    const order = orders[0];
+    if (order.progress_remaining > 1) {
+      await ctxt.client<Order>('orders').where({ order_id: order_id }).update({ progress_remaining: order.progress_remaining - 1 });
+    } else {
+      await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
+        order_status: OrderStatus.DELIVERED,
+        progress_remaining: 0
+      });
+    }
+  }
+
   @Scheduled({crontab: '0 0 * * *'}) // Every midnight
   @Workflow()
   static async nightlyReport(ctx: WorkflowContext, schedDate: Date, _curdate: Date) {
@@ -127,6 +156,15 @@ export class ShopUtilities {
 
     const sales = await ctx.invoke(ShopUtilities).getDailySales(yesterday);
     await ShopUtilities.sendStatusEmail(ctx, yesterday, sales);
+  }
+
+  @Scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '* * * * * *'}) // Every second
+  @Workflow()
+  static async makeProgressOnAllDispatchedOrders(ctx: WorkflowContext, _schedDate: Date, _curdate: Date) {
+    const orders = await ctx.invoke(ShopUtilities).retrieveDispatchedOrders();
+    for (const order of orders) {
+      await ctx.invoke(ShopUtilities).makeProgressOnDispatchedOrder(order.order_id);
+    }
   }
 
   @Transaction({readOnly: true})

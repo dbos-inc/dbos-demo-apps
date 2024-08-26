@@ -13,6 +13,7 @@ exports.up = async function(knex) {
     table.datetime('last_update_time').notNullable().defaultTo(knex.fn.now());
     table.integer('product_id').notNullable();
     table.foreign('product_id').references('products.product_id');
+    table.integer('progress_remaining').notNullable().defaultTo(10);
   });
 };
 
