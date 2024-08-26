@@ -74,6 +74,8 @@
         orders: [],
         divider,
         mobileVisiblePanel: "store", // internals | store | tools
+        updateOrdersInterval: null,
+        showConnectionLostBanner: false,
 
         get showStoreView() {
           return this.view === "store";
@@ -105,6 +107,14 @@
               if (orderId !== null) {
                 this.view = "status";
               }
+
+              // While we have dispatched orders that we know of, we check for updates every 0.5 seconds
+              this.startUpdateOrdersInterval();
+
+              // Otherwise, check every 3 seconds in case an order came in from a different client
+              setInterval(() => {
+                this.startUpdateOrdersInterval();
+              }, 3000);
             }
           );
         },
@@ -165,6 +175,7 @@
               setURLQueryParam(PAYMENT_ID_QUERY_PARAM, null);
               this.view = "status";
               await this.updateShopInternals();
+              this.startUpdateOrdersInterval();
             } else {
               const errorText = await response.text();
               console.log("Error", errorText);
@@ -173,18 +184,41 @@
             console.error("Error:", error);
           }
         },
+        startUpdateOrdersInterval: function () {
+          if (this.updateOrdersInterval === null) {
+            this.updateOrdersInterval = setInterval(() => {
+              this.updateOrders();
+            }, 500);
+          }
+        },
         updateOrders: async function () {
           try {
             const response = await fetch("/orders");
+            if (response.status !== 200) {
+              throw new Error("Failed to fetch orders");
+            }
+            this.showConnectionLostBanner = false;
             const orders = await response.json();
-            this.orders = orders.map((order) => {
-              return {
-                ...order,
-                order_status: getOrderStatus(order.order_status),
-              };
-            });
+            this.orders = orders
+              .map((order) => {
+                return {
+                  ...order,
+                  order_status: getOrderStatus(order.order_status),
+                };
+              })
+              .sort((a, b) => b.order_id - a.order_id);
+
+            if (
+              this.updateOrdersInterval !== null &&
+              !this.orders.filter(
+                (order) => order.order_status === "DISPATCHED"
+              ).length
+            ) {
+              clearInterval(this.updateOrdersInterval);
+              this.updateOrdersInterval = null;
+            }
           } catch (error) {
-            console.error("Error:", error);
+            this.showConnectionLostBanner = true;
           }
         },
       };
@@ -317,7 +351,7 @@
                           scope="col"
                           class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                         >
-                          Progress
+                          Time Remaining
                         </th>
                       </tr>
                     </thead>
