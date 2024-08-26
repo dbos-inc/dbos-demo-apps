@@ -523,21 +523,17 @@
             <h2 class="text-3xl text-center">Server Tools</h2>
             <div x-html="divider"></div>
             <p class="text-left text-gray-500">
-              Crash the application at any time to simulate a server failure.
-              After crashing, any in-progress payment page will momentarily
-              become inaccessible but then recover to its appropriate state,
-              allowing you to continue where you left off.
-              <br />
-              Any orders that have been paid and are still being proceessed
-              until they can be dispatched will continue to be processed once
-              the application is restarted.
+              Crash the application at any time to simulate a server failure or
+              service interruption. After crashing, the application will
+              momentarily become inaccessible but then resume from exactly where
+              it left off before the crash. Try it and see!
             </p>
             <div>
               <button
                 class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl cursor-pointer rounded-lg transition duration-300 hover:bg-red-700 hover:shadow-lg"
                 x-on:click="fetch('/crash_application', {'method': 'POST'})"
               >
-                💣 Crash the Application
+                Crash the Application
               </button>
             </div>
           </div>
@@ -549,7 +545,7 @@
       class="md:hidden w-full grid grid-cols-3 font-semibold font-mono bg-neutral-200"
     >
       <button
-        class="py-1 flex flex-col text-center hover:cursor-pointer border-t border-black border-r"
+        class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black border-r"
         :class="visiblePanelOnMobile === 'internals' && 'bg-neutral-300'"
         x-on:click="visiblePanelOnMobile = 'internals'"
       >
@@ -557,7 +553,7 @@
         <span>Internals</span>
       </button>
       <button
-        class="py-1 flex flex-col text-center hover:cursor-pointer border-t border-black border-r"
+        class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black border-r"
         :class="visiblePanelOnMobile === 'store' && 'bg-neutral-300'"
         x-on:click="visiblePanelOnMobile = 'store'"
       >
@@ -565,7 +561,7 @@
         <span>Store</span>
       </button>
       <button
-        class="py-1 flex flex-col text-center hover:cursor-pointer border-t border-black"
+        class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black"
         :class="visiblePanelOnMobile === 'tools' && 'bg-neutral-300'"
         x-on:click="visiblePanelOnMobile = 'tools'"
       >
