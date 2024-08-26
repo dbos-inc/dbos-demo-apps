@@ -29,6 +29,8 @@
           return "DISPATCHED";
         case 2:
           return "PAID";
+        case 3:
+          return "DELIVERED";
         case -1:
           return "CANCELLED";
         default:
@@ -141,11 +143,9 @@
             } else {
               const errorText = await response.text();
               console.error("Error:", errorText);
-              window.location.href = "/error";
             }
           } catch (error) {
             console.error("Error:", error);
-            window.location.href = "/error";
           }
         },
         sendPaymentRequest: async function (status) {
@@ -168,11 +168,9 @@
             } else {
               const errorText = await response.text();
               console.log("Error", errorText);
-              //window.location.href = "/error";
             }
           } catch (error) {
             console.error("Error:", error);
-            //window.location.href = "/error";
           }
         },
         updateOrders: async function () {
@@ -315,6 +313,12 @@
                         >
                           Status
                         </th>
+                        <th
+                          scope="col"
+                          class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                        >
+                          Progress
+                        </th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
@@ -326,6 +330,10 @@
                           ></td>
                           <td
                             x-text="order.order_status"
+                            class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                          ></td>
+                          <td
+                            x-text="order.order_status === 'DISPATCHED' ? order.progress_remaining : ''"
                             class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
                           ></td>
                         </tr>
