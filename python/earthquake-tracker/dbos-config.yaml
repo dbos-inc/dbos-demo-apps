@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-py/main/dbos/dbos-config.schema.json
+
+name: earthquake-tracker
+language: python
+runtimeConfig:
+  start:
+    - python3 earthquake_tracker/main.py & streamlit run earthquake_tracker/streamlit.py --server.port 8000 --server.enableCORS=false --server.enableXsrfProtection=false --browser.gatherUsageStats=false
+database:
+  hostname: localhost
+  port: 5432
+  username: postgres
+  password: ${PGPASSWORD}
+  app_db_name: earthquake_tracker
+  migrate:
+    - alembic upgrade head
+telemetry:
+  logs:
+    logLevel: INFO
