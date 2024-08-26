@@ -1,44 +1,37 @@
-import { WorkflowContext, Workflow, HandlerContext, PostApi, ArgOptional, configureInstance } from '@dbos-inc/dbos-sdk';
-import { ShopUtilities } from './utilities';
-import { KafkaConfig, KafkaProduceCommunicator, Partitioners, logLevel } from '@dbos-inc/dbos-kafkajs';
-export { Frontend } from './frontend';
+import {
+  WorkflowContext,
+  Workflow,
+  HandlerContext,
+  PostApi,
+  ArgOptional,
+  GetApi,
+  DBOSResponseError,
+} from "@dbos-inc/dbos-sdk";
+import { ShopUtilities } from "./utilities";
+export { Frontend } from "./frontend";
 
 export const PAYMENT_TOPIC = "payment";
-export const PAYMENT_URL_EVENT = "payment_url";
-export const ORDER_URL_EVENT = "order_url";
-
-const kafkaConfig: KafkaConfig = {
-  clientId: 'dbos-kafka-test',
-  brokers: [`${process.env['KAFKA_BROKER'] ?? 'localhost:9092'}`],
-  requestTimeout: 100, // FOR TESTING
-  retry: { // FOR TESTING
-    retries: 5
-  },
-  logLevel: logLevel.ERROR, // FOR TESTING
-};
-
-const fulfillTopic = 'widget-fulfill-topic';
-
-const fulfillKafkaCfg: KafkaProduceCommunicator | undefined = process.env['KAFKA_BROKER']
-  ? configureInstance(KafkaProduceCommunicator, 'wfKafka', kafkaConfig, fulfillTopic, {
-    createPartitioner: Partitioners.DefaultPartitioner
-  })
-  : undefined;
+export const PAYMENT_ID_EVENT = "payment_url";
+export const ORDER_ID_EVENT = "order_url";
 
 export class Shop {
-
-  @PostApi('/checkout/:key?')
-  static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
+  @PostApi("/checkout/:key?")
+  static async webCheckout(
+    ctxt: HandlerContext,
+    @ArgOptional key: string
+  ): Promise<string | null> {
     // Start the workflow (below): this gives us the handle immediately and continues in background
     const handle = await ctxt.startWorkflow(Shop, key).paymentWorkflow();
 
-    // Wait for the workflow to create the payment URL; return that to the user
-    const paymentURL = await ctxt.getEvent<string>(handle.getWorkflowUUID(), PAYMENT_URL_EVENT);
-    if (paymentURL === null) {
+    // Wait for the workflow to create the payment ID; return that to the user
+    const paymentID = await ctxt.getEvent<string | null>(
+      handle.getWorkflowUUID(),
+      PAYMENT_ID_EVENT
+    );
+    if (paymentID === null) {
       ctxt.logger.error("workflow failed");
-      return "/error";
     }
-    return paymentURL;
+    return paymentID;
   }
 
   @Workflow()
@@ -48,13 +41,13 @@ export class Shop {
       await ctxt.invoke(ShopUtilities).subtractInventory();
     } catch (error) {
       ctxt.logger.error("Failed to update inventory");
-      await ctxt.setEvent(PAYMENT_URL_EVENT, null);
+      await ctxt.setEvent(PAYMENT_ID_EVENT, null);
       return;
     }
     const orderID = await ctxt.invoke(ShopUtilities).createOrder();
 
-    // Provide the paymentURL back to webCheckout (above)
-    await ctxt.setEvent(PAYMENT_URL_EVENT, `/payment/${ctxt.workflowUUID}`);
+    // Provide the paymentID back to webCheckout (above)
+    await ctxt.setEvent(PAYMENT_ID_EVENT, ctxt.workflowUUID);
 
     // Wait for a payment notification from paymentWebhook (below)
     // This simulates a communicator waiting on a payment processor
@@ -63,21 +56,9 @@ export class Shop {
     const notification = await ctxt.recv<string>(PAYMENT_TOPIC, 120);
 
     // If the money is good - fulfill the order. Else, cancel:
-    if (notification && notification === 'paid') {
+    if (notification && notification === "paid") {
       ctxt.logger.info(`Payment successful!`);
-      if (fulfillKafkaCfg) {
-        ctxt.logger.info(`Notify fulfillment department.`);
-        await ctxt.invoke(ShopUtilities).markOrderPaid(orderID);
-        await ctxt.invoke(fulfillKafkaCfg).sendMessage(
-          {
-            value: JSON.stringify({
-              order_id: orderID,
-              details: await ctxt.invoke(ShopUtilities).retrieveOrderDetails(orderID),
-            })
-          }
-        );
-      }
-      await ctxt.invoke(ShopUtilities).fulfillOrder(orderID);
+      await ctxt.invoke(ShopUtilities).markOrderPaid(orderID);
     } else {
       ctxt.logger.warn(`Payment failed...`);
       await ctxt.invoke(ShopUtilities).errorOrder(orderID);
@@ -85,31 +66,53 @@ export class Shop {
     }
 
     // Return the finished order ID back to paymentWebhook (below)
-    await ctxt.setEvent(ORDER_URL_EVENT, `/order/${orderID}`);
+    await ctxt.setEvent(ORDER_ID_EVENT, orderID);
   }
 
-  @PostApi('/payment_webhook/:key/:status')
-  static async paymentWebhook(ctxt: HandlerContext, key: string, status: string): Promise<string> {
-
+  @PostApi("/payment_webhook/:key/:status")
+  static async paymentWebhook(
+    ctxt: HandlerContext,
+    key: string,
+    status: string
+  ): Promise<string> {
     // Send payment status to the workflow above
     await ctxt.send(key, status, PAYMENT_TOPIC);
 
     // Wait for workflow to give us the order URL
-    const orderURL = await ctxt.getEvent<string>(key, ORDER_URL_EVENT);
-    if (orderURL === null) {
-      ctxt.logger.error("retreving order URL failed");
-      return "/error";
+    const orderID = await ctxt.getEvent<string>(key, ORDER_ID_EVENT);
+    if (orderID === null) {
+      ctxt.logger.error("retreving order ID failed");
+      throw new DBOSResponseError("Error retreving order ID", 500);
     }
 
     // Return the order status URL to the client
-    return orderURL;
+    return orderID;
   }
 
-  @PostApi('/crash_application')
+  @PostApi("/crash_application")
   static async crashApplication(_ctxt: HandlerContext) {
-
     // For testing and demo purposes :)
     process.exit(1);
     return Promise.resolve();
+  }
+
+  @GetApi("/product")
+  static async product(ctxt: HandlerContext) {
+    return ctxt.invoke(ShopUtilities).retrieveProduct();
+  }
+
+  @GetApi("/order/:order_id")
+  static async order(ctxt: HandlerContext, order_id: number) {
+    return ctxt.invoke(ShopUtilities).retrieveOrder(order_id);
+  }
+
+  @GetApi("/orders")
+  static async orders(ctxt: HandlerContext) {
+    return ctxt.invoke(ShopUtilities).retrieveOrders();
+  }
+
+  @PostApi("/restock")
+  static restock(ctxt: HandlerContext) {
+    return ctxt.invoke(ShopUtilities).setInventory(12);
   }
 }

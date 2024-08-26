@@ -1,5 +1,5 @@
 import { SendEmailCommunicator } from '@dbos-inc/communicator-email-ses';
-import { Scheduled, Transaction, TransactionContext, Workflow, WorkflowContext, configureInstance} from '@dbos-inc/dbos-sdk';
+import { Scheduled, SchedulerMode, Transaction, TransactionContext, Workflow, WorkflowContext, configureInstance} from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
@@ -24,6 +24,7 @@ export interface Order {
   order_status: number,
   last_update_time: Date,
   product_id: number,
+  progress_remaining: number,
 }
 
 export interface OrderWithProduct {
@@ -60,6 +61,11 @@ export class ShopUtilities {
     await ctxt.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory: ctxt.client.raw('inventory + ?', 1) });
   }
 
+  @Transaction()
+  static async setInventory(ctxt: KnexTransactionContext, inventory: number): Promise<void> {
+    await ctxt.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
+  }
+
   @Transaction({ readOnly: true })
   static async retrieveProduct(ctxt: KnexTransactionContext): Promise<Product> {
     const item = await ctxt.client<Product>('products').select("*").where({ product_id: PRODUCT_ID });
@@ -74,7 +80,8 @@ export class ShopUtilities {
     const orders = await ctxt.client<Order>('orders').insert({
       order_status: OrderStatus.PENDING,
       product_id: PRODUCT_ID,
-      last_update_time: ctxt.client.fn.now()
+      last_update_time: ctxt.client.fn.now(),
+      progress_remaining: 10,
     }).returning('order_id');
     const orderID = orders[0].order_id;
     return orderID;
@@ -87,15 +94,6 @@ export class ShopUtilities {
       last_update_time: ctxt.client.fn.now()
     });
   }
-
-  @Transaction()
-  static async fulfillOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
-    await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
-      order_status: OrderStatus.DISPATCHED,
-      last_update_time: ctxt.client.fn.now()
-    });
-  }
-
 
   @Transaction()
   static async errorOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
@@ -115,12 +113,34 @@ export class ShopUtilities {
   }
 
   @Transaction({ readOnly: true })
-  static async retrieveOrderDetails(ctxt: KnexTransactionContext, order_id: number): Promise<OrderWithProduct[]> {
-    const items = await ctxt.client<Order>('orders')
-      .join<Product>('products', 'orders.product_id', 'products.product_id')
-      .select('orders.*', 'products.product')
-      .where({order_id});
-    return items as OrderWithProduct[];
+  static async retrieveOrders(ctxt: KnexTransactionContext) {
+    return ctxt.client<Order>('orders').select("*");
+  }
+
+  @Transaction({ readOnly: true })
+  static async retrievePaidOrders(ctxt: KnexTransactionContext) {
+    return ctxt.client<Order>('orders').select("*").where({ order_status: OrderStatus.PAID });
+  }
+
+  @Transaction()
+  static async makeProgressOnPaidOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
+    const orders = await ctxt.client<Order>('orders').where({
+      order_id: order_id,
+      order_status: OrderStatus.PAID,
+    });
+    if (!orders.length) {
+      throw new Error(`No PAID order with ID ${order_id} found`);
+    }
+
+    const order = orders[0];
+    if (order.progress_remaining > 1) {
+      await ctxt.client<Order>('orders').where({ order_id: order_id }).update({ progress_remaining: order.progress_remaining - 1 });
+    } else {
+      await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
+        order_status: OrderStatus.DISPATCHED,
+        progress_remaining: 0
+      });
+    }
   }
 
   @Scheduled({crontab: '0 0 * * *'}) // Every midnight
@@ -131,6 +151,15 @@ export class ShopUtilities {
 
     const sales = await ctx.invoke(ShopUtilities).getDailySales(yesterday);
     await ShopUtilities.sendStatusEmail(ctx, yesterday, sales);
+  }
+
+  @Scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '* * * * * *'}) // Every second
+  @Workflow()
+  static async makeProgressOnAllPaidOrders(ctx: WorkflowContext, _schedDate: Date, _curdate: Date) {
+    const orders = await ctx.invoke(ShopUtilities).retrievePaidOrders();
+    for (const order of orders) {
+      await ctx.invoke(ShopUtilities).makeProgressOnPaidOrder(order.order_id);
+    }
   }
 
   @Transaction({readOnly: true})
