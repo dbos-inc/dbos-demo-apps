@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@dbos-inc/communicator-email-ses": "^1.20.21",
-    "@dbos-inc/dbos-kafkajs": "1.17.11-preview.g5f42092e6b",
     "@dbos-inc/dbos-sdk": "^1.20.21",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
