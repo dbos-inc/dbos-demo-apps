@@ -94,7 +94,7 @@
         view: "store",
         orders: [],
         divider,
-        mobileVisiblePanel: "store", // internals | store | tools
+        visiblePanelOnMobile: "store", // internals | store | tools
         updateOrdersInterval: null,
         connectionLost: false,
 
@@ -302,229 +302,232 @@
       <span class="spinner ml-2"></span>
     </span>
 
-    <div class="w-full flex justify-between mb-2">
-      <div></div>
-      <img
-        src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
-        alt="DBOS Logo"
-        class="w-40"
-      />
-      <div></div>
-    </div>
-    <div class="md:grid md:grid-cols-3 md:gap-1 grow">
-      <div :class="mobileVisiblePanel === 'internals' || 'hidden md:block'">
-        <div class="flex flex-col gap-6 p-5">
-          <h2 class="text-3xl text-center">Shop internals</h2>
-          <div x-html="divider"></div>
-          <div class="flow-root w-full">
-            <div class="flex justify-between pb-1">
-              <h3 class="text-2xl mb-2">Inventory</h3>
-              <button
-                x-on:click="restockInventory"
-                class="px-4 rounded-lg text-sm border border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-gray-300 focus:outline-none"
-              >
-                Restock
-              </button>
-            </div>
-            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div
-                class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
-              >
-                <div
-                  class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+    <div class="flex flex-col grow overflow-scroll">
+      <div class="w-full flex justify-between mb-2">
+        <div></div>
+        <img
+          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
+          alt="DBOS Logo"
+          class="w-40"
+        />
+        <div></div>
+      </div>
+
+      <div class="md:grid md:grid-cols-3 md:gap-1 grow">
+        <div :class="visiblePanelOnMobile === 'internals' || 'hidden md:block'">
+          <div class="flex flex-col gap-6 p-5">
+            <h2 class="text-3xl text-center">Shop internals</h2>
+            <div x-html="divider"></div>
+            <div class="flow-root w-full">
+              <div class="flex justify-between pb-1">
+                <h3 class="text-2xl mb-2">Inventory</h3>
+                <button
+                  x-on:click="restockInventory"
+                  class="px-4 rounded-lg text-sm border border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-gray-300 focus:outline-none"
                 >
-                  <table class="min-w-full divide-y divide-gray-300">
-                    <thead class="bg-gray-50">
-                      <tr>
-                        <th scope="col" class="w-12">
-                          <span class="sr-only">Image</span>
-                        </th>
-                        <th
-                          scope="col"
-                          class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                        >
-                          Product
-                        </th>
-                        <th
-                          scope="col"
-                          class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
-                          Available
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                      <tr>
-                        <td class="p-1">
-                          <img
-                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
-                            alt="Widget Image"
-                            class="rounded-lg"
-                          />
-                        </td>
-                        <td
-                          x-text="product.product"
-                          class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
-                        ></td>
-                        <td
-                          x-text="product.inventory"
-                          class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
-                        ></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                  Restock
+                </button>
               </div>
-            </div>
-          </div>
-          <div class="flow-root w-full">
-            <h3 class="text-2xl mb-2">Orders</h3>
-            <p x-show="orders.length === 0" class="text-gray-500 text-center">
-              No orders in the system.
-            </p>
-            <div
-              x-show="orders.length > 0"
-              class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8"
-            >
-              <div
-                class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
-              >
+              <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                 <div
-                  class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                  class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
                 >
-                  <table class="min-w-full divide-y divide-gray-300">
-                    <thead class="bg-gray-50">
-                      <tr>
-                        <th
-                          scope="col"
-                          class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                        >
-                          Order ID
-                        </th>
-                        <th
-                          scope="col"
-                          class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
-                          Status
-                        </th>
-                        <th
-                          scope="col"
-                          class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                        >
-                          Shipping time
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                      <template x-for="order in orders" :key="order.order_id">
+                  <div
+                    class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                  >
+                    <table class="min-w-full divide-y divide-gray-300">
+                      <thead class="bg-gray-50">
                         <tr>
+                          <th scope="col" class="w-12">
+                            <span class="sr-only">Image</span>
+                          </th>
+                          <th
+                            scope="col"
+                            class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                          >
+                            Product
+                          </th>
+                          <th
+                            scope="col"
+                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                          >
+                            Available
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-200 bg-white">
+                        <tr>
+                          <td class="p-1">
+                            <img
+                              src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                              alt="Widget Image"
+                              class="rounded-lg"
+                            />
+                          </td>
                           <td
-                            x-text="order.order_id"
+                            x-text="product.product"
                             class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
                           ></td>
                           <td
-                            x-text="order.order_status"
-                            class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
-                          ></td>
-                          <td
-                            x-text="order.order_status === 'DISPATCHED' ? order.progress_remaining : ''"
+                            x-text="product.inventory"
                             class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
                           ></td>
                         </tr>
-                      </template>
-                    </tbody>
-                  </table>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flow-root w-full">
+              <h3 class="text-2xl mb-2">Orders</h3>
+              <p x-show="orders.length === 0" class="text-gray-500 text-center">
+                No orders in the system.
+              </p>
+              <div
+                x-show="orders.length > 0"
+                class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8"
+              >
+                <div
+                  class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
+                >
+                  <div
+                    class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                  >
+                    <table class="min-w-full divide-y divide-gray-300">
+                      <thead class="bg-gray-50">
+                        <tr>
+                          <th
+                            scope="col"
+                            class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                          >
+                            Order ID
+                          </th>
+                          <th
+                            scope="col"
+                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                          >
+                            Status
+                          </th>
+                          <th
+                            scope="col"
+                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                          >
+                            Shipping time
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-200 bg-white">
+                        <template x-for="order in orders" :key="order.order_id">
+                          <tr>
+                            <td
+                              x-text="order.order_id"
+                              class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                            ></td>
+                            <td
+                              x-text="order.order_status"
+                              class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                            ></td>
+                            <td
+                              x-text="order.order_status === 'DISPATCHED' ? order.progress_remaining : ''"
+                              class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                            ></td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div :class="mobileVisiblePanel === 'store' || 'hidden md:block'">
-        <div
-          class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
-        >
-          <h2 class="text-3xl">Widget Store</h2>
-          <div x-html="divider"></div>
+        <div :class="visiblePanelOnMobile === 'store' || 'hidden md:block'">
+          <div
+            class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
+          >
+            <h2 class="text-3xl">Widget Store</h2>
+            <div x-html="divider"></div>
 
-          <template x-if="showStoreView">
-            <div>
-              <img
-                src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
-                alt="Widget Image"
-                class="max-w-[50%] rounded-lg mx-auto"
-              />
-              <div class="text-2xl text-gray-800 my-5">
-                <span x-text="product.product"></span> &#8212; Only
-                <b x-text="product.inventory"></b> left!
+            <template x-if="showStoreView">
+              <div>
+                <img
+                  src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                  alt="Widget Image"
+                  class="max-w-[50%] rounded-lg mx-auto"
+                />
+                <div class="text-2xl text-gray-800 my-5">
+                  <span x-text="product.product"></span> &#8212; Only
+                  <b x-text="product.inventory"></b> left!
+                </div>
+                <p x-text="product.description"></p>
+                <button
+                  class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg"
+                  id="purchaseButton"
+                  x-on:click="purchase(uuid)"
+                >
+                  Buy Now for $<span x-text="product.price"></span>
+                </button>
               </div>
-              <p x-text="product.description"></p>
-              <button
-                class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg"
-                id="purchaseButton"
-                x-on:click="purchase(uuid)"
+            </template>
+
+            <template x-if="showPaymentView">
+              <div
+                class="text-center flex flex-col items-center justify-center h-full"
               >
-                Buy Now for $<span x-text="product.price"></span>
+                <div class="text-xl font-semibold mb-4">
+                  Do you want to confirm payment?
+                </div>
+                <div class="space-x-4">
+                  <button
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    x-on:click="sendPaymentRequest('paid')"
+                  >
+                    Confirm Payment
+                  </button>
+                  <button
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                    x-on:click="sendPaymentRequest('failed')"
+                  >
+                    Deny Payment
+                  </button>
+                </div>
+              </div>
+            </template>
+
+            <template x-if="showOrderStatusView">
+              <div x-data="retrieveOrder(orderId)">
+                <div class="p-4">
+                  <div class="text-lg font-semibold mb-2">
+                    Order ID: <span x-text="order.id"></span><br />Status:
+                    <span x-text="order.status"></span><br />
+                    <span x-text="order.last_update_time"></span>
+                  </div>
+                  <button
+                    x-on:click="resetView()"
+                    class="mt-4 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
+                  >
+                    Continue Shopping
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div :class="visiblePanelOnMobile === 'tools' || 'hidden md:block'">
+          <div class="flex flex-col gap-6 p-5 text-center">
+            <h2 class="text-3xl text-center">Server Tools</h2>
+            <div x-html="divider"></div>
+            <div>
+              <button
+                class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-red-700 hover:shadow-lg"
+                x-on:click="fetch('/crash_application', {'method': 'POST'})"
+              >
+                💣 Crash the Application
               </button>
             </div>
-          </template>
-
-          <template x-if="showPaymentView">
-            <div
-              class="text-center flex flex-col items-center justify-center h-full"
-            >
-              <div class="text-xl font-semibold mb-4">
-                Do you want to confirm payment?
-              </div>
-              <div class="space-x-4">
-                <button
-                  class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                  x-on:click="sendPaymentRequest('paid')"
-                >
-                  Confirm Payment
-                </button>
-                <button
-                  class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                  x-on:click="sendPaymentRequest('failed')"
-                >
-                  Deny Payment
-                </button>
-              </div>
-            </div>
-          </template>
-
-          <template x-if="showOrderStatusView">
-            <div x-data="retrieveOrder(orderId)">
-              <div class="p-4">
-                <div class="text-lg font-semibold mb-2">
-                  Order ID: <span x-text="order.id"></span><br />Status:
-                  <span x-text="order.status"></span><br />
-                  <span x-text="order.last_update_time"></span>
-                </div>
-                <button
-                  x-on:click="resetView()"
-                  class="mt-4 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
-                >
-                  Continue Shopping
-                </button>
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
-
-      <div :class="mobileVisiblePanel === 'tools' || 'hidden md:block'">
-        <div class="flex flex-col gap-6 p-5 text-center">
-          <h2 class="text-3xl text-center">Server Tools</h2>
-          <div x-html="divider"></div>
-          <div>
-            <button
-              class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-red-700 hover:shadow-lg"
-              x-on:click="fetch('/crash_application', {'method': 'POST'})"
-            >
-              💣 Crash the Application
-            </button>
           </div>
         </div>
       </div>
@@ -535,24 +538,24 @@
     >
       <button
         class="py-1 flex flex-col text-center hover:cursor-pointer border-t border-black border-r"
-        :class="mobileVisiblePanel === 'internals' && 'bg-neutral-300'"
-        x-on:click="mobileVisiblePanel = 'internals'"
+        :class="visiblePanelOnMobile === 'internals' && 'bg-neutral-300'"
+        x-on:click="visiblePanelOnMobile = 'internals'"
       >
         <span>Shop</span>
         <span>Internals</span>
       </button>
       <button
         class="py-1 flex flex-col text-center hover:cursor-pointer border-t border-black border-r"
-        :class="mobileVisiblePanel === 'store' && 'bg-neutral-300'"
-        x-on:click="mobileVisiblePanel = 'store'"
+        :class="visiblePanelOnMobile === 'store' && 'bg-neutral-300'"
+        x-on:click="visiblePanelOnMobile = 'store'"
       >
         <span>Widget</span>
         <span>Store</span>
       </button>
       <button
         class="py-1 flex flex-col text-center hover:cursor-pointer border-t border-black"
-        :class="mobileVisiblePanel === 'tools' && 'bg-neutral-300'"
-        x-on:click="mobileVisiblePanel = 'tools'"
+        :class="visiblePanelOnMobile === 'tools' && 'bg-neutral-300'"
+        x-on:click="visiblePanelOnMobile = 'tools'"
       >
         <span>Server</span>
         <span>Tools</span>
