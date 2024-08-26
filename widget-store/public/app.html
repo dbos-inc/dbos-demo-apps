@@ -481,13 +481,15 @@
                 </div>
                 <div class="space-x-4">
                   <button
-                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    x-bind:disabled="connectionLost"
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
                     x-on:click="sendPaymentRequest('paid')"
                   >
                     Confirm Payment
                   </button>
                   <button
-                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                    x-bind:disabled="connectionLost"
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
                     x-on:click="sendPaymentRequest('failed')"
                   >
                     Deny Payment
