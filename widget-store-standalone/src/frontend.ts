@@ -15,14 +15,4 @@ export class Frontend {
   static frontend(_ctxt: HandlerContext) {
     return render("app.html", {});
   }
-
-  @GetApi("/error")
-  static error(_ctxt: HandlerContext) {
-    return render("error.liquid", {});
-  }
-
-  @GetApi("/crash")
-  static crash(_ctxt: HandlerContext) {
-    return render("crash.liquid", {});
-  }
 }
