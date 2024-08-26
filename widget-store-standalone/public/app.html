@@ -520,9 +520,19 @@
           <div class="flex flex-col gap-6 p-5 text-center">
             <h2 class="text-3xl text-center">Server Tools</h2>
             <div x-html="divider"></div>
+            <p class="text-left text-gray-500">
+              Crash the application at any time to simulate a server failure.
+              After crashing, any in-progress payment page will momentarily
+              become inaccessible but then recover to its appropriate state,
+              allowing you to continue where you left off.
+              <br />
+              Any orders that have been paid and are still being proceessed
+              until they can be dispatched will continue to be processed once
+              the application is restarted.
+            </p>
             <div>
               <button
-                class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-red-700 hover:shadow-lg"
+                class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl cursor-pointer rounded-lg transition duration-300 hover:bg-red-700 hover:shadow-lg"
                 x-on:click="fetch('/crash_application', {'method': 'POST'})"
               >
                 💣 Crash the Application
