@@ -19,18 +19,17 @@ export class Shop {
   static async webCheckout(
     ctxt: HandlerContext,
     @ArgOptional key: string
-  ): Promise<string> {
+  ): Promise<string | null> {
     // Start the workflow (below): this gives us the handle immediately and continues in background
     const handle = await ctxt.startWorkflow(Shop, key).paymentWorkflow();
 
     // Wait for the workflow to create the payment ID; return that to the user
-    const paymentID = await ctxt.getEvent<string>(
+    const paymentID = await ctxt.getEvent<string | null>(
       handle.getWorkflowUUID(),
       PAYMENT_ID_EVENT
     );
     if (paymentID === null) {
       ctxt.logger.error("workflow failed");
-      return "";
     }
     return paymentID;
   }

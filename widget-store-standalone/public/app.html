@@ -14,6 +14,27 @@
       defer
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
+    <style>
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-block;
+        border-top: 3px solid #fff;
+        border-right: 3px solid transparent;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+      }
+
+      @keyframes rotation {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <script>
     const VIEW_QUERY_PARAM = "view";
@@ -75,7 +96,7 @@
         divider,
         mobileVisiblePanel: "store", // internals | store | tools
         updateOrdersInterval: null,
-        showConnectionLostBanner: false,
+        connectionLost: false,
 
         get showStoreView() {
           return this.view === "store";
@@ -147,6 +168,11 @@
 
             if (response.ok) {
               const paymentId = await response.text();
+
+              if (!paymentId) {
+                return;
+              }
+
               setURLQueryParam(PAYMENT_ID_QUERY_PARAM, paymentId);
               this.view = "payment";
               await this.updateShopInternals();
@@ -197,7 +223,7 @@
             if (response.status !== 200) {
               throw new Error("Failed to fetch orders");
             }
-            this.showConnectionLostBanner = false;
+            this.connectionLost = false;
             const orders = await response.json();
             this.orders = orders
               .map((order) => {
@@ -218,7 +244,7 @@
               this.updateOrdersInterval = null;
             }
           } catch (error) {
-            this.showConnectionLostBanner = true;
+            this.connectionLost = true;
           }
         },
       };
@@ -250,6 +276,14 @@
     x-data="widgetStore()"
     class="h-svh md:p-1 bg-neutral-100 font-sans flex flex-col"
   >
+    <span
+      x-show="connectionLost"
+      class="w-full flex justify-center items-center text-center bg-red-500 text-white p-2 md:p-4 rounded-lg"
+    >
+      Connection to server lost. Reconnecting...
+      <span class="spinner ml-2"></span>
+    </span>
+
     <div class="w-full flex justify-between mb-2">
       <div></div>
       <img
@@ -351,7 +385,7 @@
                           scope="col"
                           class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                         >
-                          Time Remaining
+                          Shipping time
                         </th>
                       </tr>
                     </thead>
