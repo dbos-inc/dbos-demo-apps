@@ -262,6 +262,9 @@
             console.error("Error:", error);
           }
         },
+        timeRemainingToPercentage: function (seconds) {
+          return `${100 - seconds * 10}%`;
+        },
       };
     }
     function retrieveOrder(orderId) {
@@ -410,7 +413,7 @@
                             scope="col"
                             class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                           >
-                            Time to dispatch
+                            Progress until dispatch
                           </th>
                         </tr>
                       </thead>
@@ -426,7 +429,7 @@
                               class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
                             ></td>
                             <td
-                              x-text="order.order_status === 'PAID' ? order.progress_remaining : ''"
+                              x-text="order.order_status === 'PAID' ? timeRemainingToPercentage(order.progress_remaining) : ''"
                               class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
                             ></td>
                           </tr>
