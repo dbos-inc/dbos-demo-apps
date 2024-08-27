@@ -5,11 +5,24 @@
   Powered by Together.ai and DBOS.
 </p>
 
-## Tech Stack
+## What does the app do
 
-- Application stack with DBOS
-- Inference API with Together.ai
-- Postgres + pgvector for vector database
+This application uses together.ai inference API to converse with academic papers.
+It uses DBOS Transact for workflow orchestration and is hosted on DBOS Cloud.
+
+### endpoint: upload a paper
+
+Implemented with a DBOS workflow, this endpoint accepts a paper title and URL. It:
+
+1. Records metadata about the paper in postgres
+2. Download the paper
+3. Uses together.ai to query embeddings for the paper and store them in postgres (using pgvector)
+
+If the program crashes, it will resume exactly where it left of. Each step is done exactly-once (transactions) or at-least-once (communicators).
+
+### summarize a paper
+
+---
 
 ## Setting up Together.ai
 
