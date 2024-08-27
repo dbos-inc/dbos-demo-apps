@@ -109,6 +109,10 @@ You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see yo
 Now you can use your app from Slack!
 Llamabot answers questions whenever you at the bot (`@Llamabot`) in your message or reply to a bot's message, and it stores any other messages as a "fact" in its vector store.
 
+An example conversation with the bot:
+
+<img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" data-canonical-src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" width="300"/>
+
 ## Running Locally
 
 To run this app locally, you need a Postgres database.
