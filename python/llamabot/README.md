@@ -60,10 +60,9 @@ Go to [Your Apps](https://api.slack.com/apps) and click "Create New App". Choose
 }
 ```
 
-:::info
-Note that the "request_url" under "event_subscriptions" is just a placeholder.
-You will replace it with a valid URL after you [deploy to DBOS Cloud](#deploying-to-the-cloud).
-:::
+> [!NOTE]
+> The "request_url" under "event_subscriptions" is a placeholder.
+> You will replace it with a valid URL after you [deploy to DBOS Cloud](#deploying-to-the-cloud).
 
 Once the app is created, you can get a slack signing secret so the app can verify that each request comes from Slack.
 You can find it under `Settings > Basic Information > Signing Secret` of your Slack app web UI. Set it as an environment variable like so:
