@@ -18,9 +18,15 @@ Implemented with a DBOS workflow, this endpoint accepts a paper title and URL. I
 2. Download the paper
 3. Uses together.ai to query embeddings for the paper and store them in postgres (using pgvector)
 
-If the program crashes, it will resume exactly where it left of. Each step is done exactly-once (transactions) or at-least-once (communicators).
+If the program crashes, it will resume exactly where it left of. Each step is done exactly-once (transactions) or at-least-once (communicators). For example, if the application has a bug and crashes after a paper's record was inserted in the database, DBOS Transact, upon restart, will automatically resume this workflow where it left off.
 
-### summarize a paper
+### endpoint: summarize a paper
+
+This endpoint uses a model hosted on together.ai to query a specific document.
+
+### endpoint: generate code from a paper [WIP]
+
+DBOS workflows are particularly useful for long lived operations, calling in different models
 
 ---
 
