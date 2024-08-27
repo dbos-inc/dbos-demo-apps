@@ -74,7 +74,7 @@ def record_paper_metadata(paper_title: str, paper_url: str, paper_id: uuid.UUID)
             url=paper_url,
         )
     )
-    print(f"Recorded metadata for {paper_title}")
+    DBOS.logger.info(f"Recorded metadata for {paper_title}")
 
 @dbos.communicator()
 def download_paper(paper_url: str) -> bytes:
@@ -91,15 +91,15 @@ def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
     )
 
     # Set the paper_id in the Document metadata
-    print(f"Chunking {len(pages)} pages")
+    DBOS.logger.info(f"Chunking {len(pages)} pages")
     metadatas = [{"id": str(paper_id)} for _ in pages]
     documents = text_splitter.create_documents(pages, metadatas=metadatas)
     split_pages = text_splitter.split_documents(documents) 
 
     # Feed our vector store
-    print(f"Storing {len(split_pages)} chunks of length 3000 with overlap 200")
+    DBOS.logger.info(f"Storing {len(split_pages)} chunks of length 3000 with overlap 200")
     vector_store.add_documents(split_pages)
-    print("Fed vector store")
+    DBOS.logger.info("Fed vector store")
 
 
 #### QUERY PAPERS ####
