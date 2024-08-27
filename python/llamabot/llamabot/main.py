@@ -2,7 +2,7 @@
 
 # This app uses DBOS to deploy a Slackbot that uses LlamaIndex to answer questions and store messages in a chat history to a Postgres database.
 # We use FastAPI to handle incoming requests and Slack Bolt to handle Slack events.
-# Thanks to LlamaIndex for the original codebase: https://github.com/run-llama/llamabot
+# Inspired by this app from LlamaIndex: https://github.com/run-llama/llamabot
 
 # First, let's do imports and create FastAPI and DBOS apps.
 
