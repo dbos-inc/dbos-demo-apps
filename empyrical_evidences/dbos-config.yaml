@@ -1,0 +1,18 @@
+language: node
+database:
+  hostname: userdb-257cbb1e-d285-464a-abe9-58268dbad05e.cvc4gmaa6qm9.us-east-1.rds.amazonaws.com
+  port: 5432
+  username: dbosadmin
+  password: ${PGPASSWORD}
+  app_db_name: empyrical_evidences
+  connectionTimeoutMillis: 3000
+  app_db_client: pg-node
+  migrate:
+    - npx knex migrate:latest
+  rollback:
+    - npx knex migrate:rollback
+runtimeConfig:
+  entrypoints:
+    - dist/operations.js
+env:
+  TOGETHER_AI_API_KEY: ${TOGETHER_AI_API_KEY}
