@@ -1,9 +1,17 @@
+# Llamabot: A Retrieval-Augmented GenAI Slackbot
+
+# This app uses DBOS to deploy a Slackbot that uses LlamaIndex to answer questions and store messages in a chat history to a Postgres database.
+# We use FastAPI to handle incoming requests and Slack Bolt to handle Slack events.
+# Thanks to LlamaIndex for the original codebase: https://github.com/run-llama/llamabot
+
+# First, let's do imports and create FastAPI and DBOS apps.
+
 import datetime
 import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, SetWorkflowUUID
+from dbos import DBOS, SetWorkflowUUID, load_config
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
@@ -18,69 +26,66 @@ from slack_sdk.web import SlackResponse
 app = FastAPI()
 dbos = DBOS(fastapi=app)
 
-# Initialize the LlamaIndex components
-PREVIOUS_NODE = None
-# Logs from LlamaIndex will be printed as the `DEBUG` level.
-set_global_handler("simple", logger=DBOS.logger)
-db_url = dbos.app_db.engine.url
+# Then, let's initialize LlamaIndex to use the app's Postgres database as the vector store.
+# Note that we don't set up the schema and tables because we've already done that in the schema migration step.
+set_global_handler("simple", logger=DBOS.logger) # Logs from LlamaIndex will be printed as the `DEBUG` level.
+dbos_config = load_config()
 vector_store = PGVectorStore.from_params(
-    database=db_url.database,
-    host=db_url.host,
-    password=db_url.password,
-    port=str(db_url.port),
-    user=db_url.username,
-    embed_dim=1536,  # openai embedding dimension
+    database=dbos_config["database"]["app_db_name"],
+    host=dbos_config["database"]["hostname"],
+    password=dbos_config["database"]["password"],
+    port=dbos_config["database"]["port"],
+    user=dbos_config["database"]["username"],
     perform_setup=False,  # Already setup through schema migration
 )
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
 index = VectorStoreIndex([], storage_context=storage_context)
 
-# Initialize the slack app
+# After that, let's initialize a Slack Bolt app that handles incoming events from Slack.
 slackapp = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
     signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
     logger=DBOS.logger,
 )
 
-# Get my own slack ID
+# Get this bot's own Slack ID
 auth_response = slackapp.client.auth_test()
 bot_user_id = auth_response["user_id"]
 
-# Define a post endpoint to handle slack events
+# Next, let's define a POST endpoint in FastAPI to handle incoming slack requests
 @app.post("/")
 def slack_challenge(request: FastAPIRequest, body: Dict[str, Any] = Body(...)):  # type: ignore
     if "challenge" in body:
+        # Respond to the Slack challenge request
         DBOS.logger.info("Received challenge")
         return {"challenge": body["challenge"]}
-    DBOS.logger.debug(f"Incoming event: {body}")
+    # Dispatch other incoming requests to the Slack Bolt app
     return slackapp.dispatch(to_bolt_request(request, request._body))
 
 
-# This handles any incoming message the bot can hear
+# Next, let's write a Slack Bolt event handler to listen to any incoming Slack messages the bot can hear.
+# By default, it filters out messages from the bot itself.
 @slackapp.message()
 def handle_message(request: BoltRequest) -> None:
     DBOS.logger.info(f"Received message: {request.body}")
     event_id = request.body["event_id"]
-    # Start the workflow and respond to Slack without waiting for the workflow to finish
     # Use the unique event_id to ensure that the workflow runs exactly once for each event
     with SetWorkflowUUID(event_id):
+        # Start the event processing workflow and respond to Slack without waiting for the workflow to finish, because Slack expects the endpoint to reply within 3 seconds.
+        # Docs: https://api.slack.com/apis/events-api#responding
         dbos.start_workflow(message_workflow, request.body["event"])
 
 
-# This is the main workflow that processes incoming messages
+# Now, let's write the main workflow function that processes incoming messages.
 @dbos.workflow()
 def message_workflow(message: Dict[str, Any]) -> None:
-    global PREVIOUS_NODE
-    # if message contains a "blocks" key
+    # Check if the message mentions the bot (@ the bot). If so, it is a question for the bot, and we answer the question and post the response back to the channel.
+    # If the message contains a "blocks" key
     #   then look for a "block" with the type "rich text"
-    #       if you find it
-    #       then look inside that block for an "elements" key
-    #           if you find it
+    #       if you find it, then look inside that block for an "elements" key
     #               then examine each one of those for an "elements" key
-    #               if you find it
     #                   then look inside each "element" for one with type "user"
-    #                   if you find it
-    #                   and if that user matches the bot_user_id
+    #                   if that user matches the bot_user_id
     #                   then it's a message for the bot
     if message.get("blocks") is not None:
         for block in message["blocks"]:
@@ -93,7 +98,7 @@ def message_workflow(message: Dict[str, Any]) -> None:
                         ):
                             for element in rich_text_section.get("elements"):
                                 if element.get("type") == "text":
-                                    # the user is asking the bot a question
+                                    # The user is asking the bot a question
                                     query: str = element["text"]
                                     response = answer_question(query, message)
                                     post_slack_message(
@@ -102,8 +107,8 @@ def message_workflow(message: Dict[str, Any]) -> None:
                                         message.get("thread_ts"),
                                     )
                                     return
-    # if it's not a question, it might be a threaded reply
-    # if it's a reply to the bot, we treat it as if it were a question
+    # If the message doesn't mention the bot, it might be a threaded reply
+    # If it's a reply to the bot, we treat it as if it were a question
     if message.get("thread_ts") is not None:
         if message.get("parent_user_id") == bot_user_id:
             query = message["text"]
@@ -112,20 +117,22 @@ def message_workflow(message: Dict[str, Any]) -> None:
             post_slack_message(str(response), message["channel"], message["thread_ts"])
             return
 
-    # if it's not any kind of question, we store it in the index along with all relevant metadata
+    # Otherwise, if it's not any kind of question, we store it in the index along with all relevant metadata
     user_name = get_user_name(message["user"])
 
-    # format timestamp as YYYY-MM-DD HH:MM:SS
+    # Format timestamp as YYYY-MM-DD HH:MM:SS
     dt_object = datetime.datetime.fromtimestamp(float(message["ts"]))
     formatted_time = dt_object.strftime("%Y-%m-%d %H:%M:%S")
 
-    # format full message
+    # Format full message
     text = message["text"]
 
-    # store the message in the index
+    # Store the message in LlamaIndex
     insert_node(text, user_name, formatted_time)
     DBOS.logger.info(f"Stored message: {text}")
 
+
+# Let's define some helper functions to interact with Slack.
 
 # Post a message to a slack channel, optionally in a thread
 @dbos.communicator()
@@ -148,8 +155,9 @@ def get_user_name(user_id: str) -> str:
     user_name: str = user_info["user"]["name"]
     return user_name
 
+# Let's define some helper functions to answer the question and store chat histories.
 
-# Given a query and a slack message, answer the question with LlamaIndex and return the response
+# Given a user's question and a slack message, answer the question with LlamaIndex and return the response
 @dbos.communicator()
 def answer_question(
     query: str, message: Dict[str, Any], replies: Optional[SlackResponse] = None
@@ -189,7 +197,11 @@ def answer_question(
     return query_engine.query(query)
 
 
-# Insert a node into LlamaIndex
+# Insert a Slack message as a node into LlamaIndex
+
+# Recording the previous node allows us to create a chain of messages
+PREVIOUS_NODE = None
+
 @dbos.communicator()
 def insert_node(text: str, user_name: str, formatted_time: str) -> None:
     global PREVIOUS_NODE
@@ -206,3 +218,5 @@ def insert_node(text: str, user_name: str, formatted_time: str) -> None:
         PREVIOUS_NODE = node
 
     index.insert_nodes([node])
+
+# To deploy this app to the cloud and get a public URL, run `dbos-cloud app deploy`
