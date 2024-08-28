@@ -1,48 +1,46 @@
-# DBOS Hello
+# Websockets samples
 
-This is a [DBOS app](https://docs.dbos.dev/) bootstrapped with `npx @dbos-inc/create` and using [Knex](https://docs.dbos.dev/tutorials/using-knex).
+The sample takes the application generated in the DBOS quick start[https://docs.dbos.dev/getting-started/quickstart] and add a websocket end point to it.
 
-## Getting Started
 
-Before you can launch your app, you need a database.
-DBOS works with any Postgres database, but to make things easier, we've provided a script that starts a Docker Postgres container and creates a database.
-Run:
+## Deploying the service
 
-```bash
-node start_postgres_docker.js
-```
+Follow the instructions in the quickstart[https://docs.dbos.dev/getting-started/quickstart] to deploy the app either to the cloud or run locally.
 
-If successful, the script should print `Database started successfully!`.
+On successfull deployment, you will see a message
 
-Next, build the app:
+2024-08-28 18:53:52 [info]: Access your application at https://someurl/ 
 
-```bash
-npm run build
-```
 
-Then, run a schema migration to create some tables:
+## Running the client
 
-```bash
-npx dbos-sdk migrate
-```
+Running it the first time, you need to install these packages by running
 
-If successful, the migration should print `Migration successful!`.
+pip3 install websockets
+pip3 install websocket-client
 
-Finally, run the app:
+This needs to done only once.
 
-```bash
-npx dbos-sdk start
-```
+export WEBSOCKET_URL=someurl
 
-To see that it's working, visit this URL in your browser: [`http://localhost:3000/greeting/dbos`](http://localhost:3000/greeting/dbos).
-You should get this message: `Hello, dbos! You have been greeted 1 times.`
-Each time you refresh the page, the counter should go up by one!
+run the client
 
-Congratulations! You just launched a DBOS application.
+python3 wsclient.py   
 
-## Next Steps
+You will see the following output:
+Connecting to wss://manoj-websockets.mj.dev.dbos.dev/ws
+WebSocket connection opened
+Received: 921152
+Received: Hello from server!
+Received: 325180
+Received: 565480
+Received: 768972
+Received: 269421
+Received: 222553
+Received: 222654
+Received: 339769
+Received: 886174
+Received: 737998
+.
+.
 
-- To add more functionality to this application, modify `src/operations.ts`, then rebuild and restart it.  Alternatively, `npm run dev` uses `nodemon` to automatically rebuild and restart the app when source files change, using instructions specified in `nodemon.json`.
-- For a detailed tutorial, check out our [programming quickstart](https://docs.dbos.dev/getting-started/quickstart-programming).
-- To learn how to deploy your application to DBOS Cloud, visit our [cloud quickstart](https://docs.dbos.dev/getting-started/quickstart-cloud/)
-- To learn more about DBOS, take a look at [our documentation](https://docs.dbos.dev/) or our [source code](https://github.com/dbos-inc/dbos-transact).
