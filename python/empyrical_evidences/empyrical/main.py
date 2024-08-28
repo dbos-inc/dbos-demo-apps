@@ -138,7 +138,7 @@ def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
 search_template = """ <s>[INST]
     You are the author of this research paper: {context}
 
-    Question: List the {question} most meaningful topics that represent this paper's contribution.
+    Question: {question}
    
     Format your answer as a list of at most 2 words strings. Do not add any additional information. For example:
     1. Topic 1
@@ -162,7 +162,8 @@ def search_paper(paper_id: str):
         | StrOutputParser()
     )
 
-    topics = chain.invoke("5").split("\n")
+    question = "List the 5 most meaningful topics that represent this paper's contribution."
+    topics = chain.invoke(question).split("\n")
     DBOS.logger.info(topics)
     results = search_topics(topics)
 
