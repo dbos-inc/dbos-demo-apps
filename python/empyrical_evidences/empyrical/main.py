@@ -151,34 +151,25 @@ search_prompt = ChatPromptTemplate.from_template(search_template)
 
 @app.get("/startSearch")
 def search_paper(paper_id: str):
+    # Query the paper for a list of topics
     retriever = vector_store.as_retriever(
         filter={"id": paper_id}
     )
-
     chain = (
         {"context": retriever, "question": RunnablePassthrough()}
         | search_prompt
         | model
         | StrOutputParser()
     )
-
     question = "List the 5 most meaningful topics that represent this paper's contribution."
     topics = chain.invoke(question).split("\n")
     DBOS.logger.info(topics)
+
+    # Search for hackernews comments on these topics
     results = search_topics(topics)
 
-    client = Together()
-    for topic, result in results.items():
-        if len(result) > 0:
-            response = client.rerank.create(
-                model="Salesforce/Llama-Rank-V1",
-                query="Select the comment most relevant to the topic_query",
-                documents=result,
-                top_n=1
-            )
-            most_relevant_comment = result[response.results[0].index]
-            DBOS.logger.info(most_relevant_comment['comment'])
-            DBOS.logger.info(most_relevant_comment['url'])
+    # Rank the comments
+    return rank_comments(results)
 
 def search_topics(topics: List[str]) -> Dict[str, List[Dict]]:
     results = {}
@@ -212,3 +203,19 @@ def search_hackernews(query: str, window_size_hours: int):
             "story_title": hit["story_title"],
         })
     return hits
+
+@dbos.communicator()
+def rank_comments(comments: Dict[str, List[Dict]]):
+    client = Together()
+    for topic, result in comments.items():
+        if len(result) > 0:
+            response = client.rerank.create(
+                model="Salesforce/Llama-Rank-V1",
+                query="Select the comment most relevant to the topic_query",
+                documents=result,
+                top_n=1
+            )
+            most_relevant_comment = result[response.results[0].index]
+    DBOS.logger.info(f"Most relevant comment for topic {topic}:")
+    DBOS.logger.info(most_relevant_comment['comment'])
+    DBOS.logger.info(most_relevant_comment['url'])
