@@ -179,25 +179,6 @@ def search_paper(paper_id: str):
             DBOS.logger.info(most_relevant_comment['comment'])
             DBOS.logger.info(most_relevant_comment['url'])
 
-    #run_hourly(scheduled_time=datetime.now(), actual_time=datetime.now(), topics=topics)
-
-'''
-@dbos.workflow()
-def run_hourly(scheduled_time: datetime, actual_time: datetime, topics: List[str]):
-    last_exec_time = None
-    while True:
-        # Run every hour
-        if last_exec_time is not None and datetime.now() - last_exec_time >= timedelta(hours=1):
-            for topic in topics:
-                results = search_hackernews(topic, window_size_hours=1)
-                for comment, url in results:
-                    DBOS.logger.info(comment, url)
-            DBOS.logger.info(f"Found {len(results)} comments at {str(actual_time)}")
-            last_exec_time = datetime.now()
-
-            # Call the SAlesforce model to rank the result and return the 3 most relevant
-'''
-
 def search_topics(topics: List[str]) -> Dict[str, List[Dict]]:
     results = {}
     for topic in topics:
