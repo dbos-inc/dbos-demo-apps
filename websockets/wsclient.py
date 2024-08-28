@@ -1,5 +1,6 @@
 import websocket
 import os
+import sys
 
 def on_message(ws, message):
     print(f"Received: {message}")
@@ -16,7 +17,7 @@ def on_open(ws):
 
 if __name__ == "__main__":
 
-    ws_url = os.getenv('WEBSOCKET_URL', 'ws://localhost:3000/ws')
+    ws_url = sys.argv[1] if len(sys.argv) > 1 else 'ws://localhost:3000/ws'
     # websocket.enableTrace(True) # Uncomment to enable trace
     print(f"Connecting to {ws_url}")
     ws = websocket.WebSocketApp(ws_url,

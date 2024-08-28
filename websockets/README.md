@@ -22,7 +22,7 @@ Follow the instructions in the quickstart[https://docs.dbos.dev/getting-started/
 
 On successfull deployment, you will see a message
 
-2024-08-28 18:53:52 [info]: Access your application at https://someurl/ 
+2024-08-28 18:53:52 [info]: Access your application at https://yourdomain/ 
 
 
 ## Running the client
@@ -34,14 +34,15 @@ pip3 install websocket-client
 
 This needs to done only once.
 
-export WEBSOCKET_URL=someurl
+The websocket url takes the form wss://yourdomain/ws
+let us call is wsurl
 
 run the client
 
-python3 wsclient.py   
+python3 wsclient.py wsurl   
 
 You will see the following output:
-Connecting to wss://manoj-websockets.mj.dev.dbos.dev/ws
+Connecting to wss://yourdomain/ws
 WebSocket connection opened
 Received: 921152
 Received: Hello from server!
