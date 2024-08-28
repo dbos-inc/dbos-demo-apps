@@ -47,8 +47,8 @@ model = ChatTogether(
 def upload_paper(paper_url: str, paper_title: str):
     paper_id = uuid.uuid4()
     with SetWorkflowUUID(str(uuid.uuid4())):
-        dbos.start_workflow(upload_paper_workflow, paper_url, paper_title, paper_id)
-    return {"paper_id": paper_id}
+        handle = dbos.start_workflow(upload_paper_workflow, paper_url, paper_title, paper_id)
+    return handle.get_result()
 
 @dbos.workflow()
 def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID):
@@ -113,7 +113,7 @@ def download_paper(paper_url: str) -> bytes:
         raise Exception(f"Failed to download paper: {response.status_code}")
     return response.content
 
-# FIXME: this should be a transaction, but PGVector managers its own connections
+# FIXME: this should be an only-once transaction, but PGVector managers its own connections
 @dbos.communicator()
 def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
     # Create large enough chunks to avoid beeing rate limited by together.ai
@@ -151,6 +151,14 @@ search_prompt = ChatPromptTemplate.from_template(search_template)
 
 @app.get("/startSearch")
 def search_paper(paper_id: str):
+    with SetWorkflowUUID(str(uuid.uuid4())):
+        handle = dbos.start_workflow(search_paper_workflow, paper_id)
+    comments = handle.get_result()
+    print(comments)
+    return comments
+
+@dbos.workflow()
+def search_paper_workflow(paper_id: str):
     # Query the paper for a list of topics
     retriever = vector_store.as_retriever(
         filter={"id": paper_id}
@@ -206,6 +214,7 @@ def search_hackernews(topic: str, window_size_hours: int):
 
 @dbos.communicator()
 def rank_comments(comments: Dict[str, List[Dict]]):
+    results = {}
     client = Together()
     for topic, result in comments.items():
         if len(result) > 0:
@@ -219,3 +228,4 @@ def rank_comments(comments: Dict[str, List[Dict]]):
             DBOS.logger.info(f"Most relevant comment for topic {topic}:")
             DBOS.logger.info(most_relevant_comment['comment'])
             DBOS.logger.info(most_relevant_comment['url'])
+            results[topic] = most_relevant_comment
