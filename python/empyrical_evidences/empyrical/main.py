@@ -186,7 +186,7 @@ def search_topics(topics: List[str]) -> Dict[str, List[Dict]]:
     return results
 
 @dbos.communicator()
-def search_hackernews(topic: str, window_size_hours: int):
+def search_hackernews(topic: str, window_size_hours: int) -> List[Dict[str, str]]:
     threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=window_size_hours)
 
     params = {
@@ -213,7 +213,7 @@ def search_hackernews(topic: str, window_size_hours: int):
     return hits
 
 @dbos.communicator()
-def rank_comments(comments: Dict[str, List[Dict]]):
+def rank_comments(comments: Dict[str, List[Dict]]) -> Dict[str, Dict]:
     results = {}
     client = Together()
     for topic, result in comments.items():
@@ -229,3 +229,4 @@ def rank_comments(comments: Dict[str, List[Dict]]):
             DBOS.logger.info(most_relevant_comment['comment'])
             DBOS.logger.info(most_relevant_comment['url'])
             results[topic] = most_relevant_comment
+    return results
