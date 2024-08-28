@@ -2,6 +2,19 @@
 
 The sample takes the application generated in the DBOS quick start[https://docs.dbos.dev/getting-started/quickstart] and add a websocket end point to it.
 
+## Code
+
+### Server
+
+The method sendToClient in src/operations.ts accepts the websocket connection request and continuosly
+sends a random number to the client every second
+
+
+### Client
+
+wsclient.py is the client code that requests a websocket connection. It will stay alive and continue
+to receive data from the server.
+
 
 ## Deploying the service
 

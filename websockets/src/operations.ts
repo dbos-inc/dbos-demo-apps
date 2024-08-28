@@ -34,7 +34,7 @@ export class Hello {
   }
 
   @GetApi('/ws') 
-  static async hello(ctx: HandlerContext) {
+  static async sendToClient(ctx: HandlerContext) {
     // const { req, socket, head } = ctx.request;
 
     // Upgrade the request to a WebSocket
