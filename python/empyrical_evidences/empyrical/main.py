@@ -170,14 +170,27 @@ def search_paper_workflow(paper_id: str):
         | StrOutputParser()
     )
     question = "List the 5 most meaningful topics that represent this paper's contribution."
-    topics = chain.invoke(question).split("\n")
+    try:
+        topics = chain.invoke(question).split("\n")
+    except Exception as e:
+        DBOS.logger.error(f"Failed to retrieve topics from the paper: {e}")
+        return
     DBOS.logger.info(topics)
 
     # Search for hackernews comments on these topics
-    results = search_topics(topics)
+    try:
+        results = search_topics(topics)
+    except Exception as e:
+        DBOS.logger.error(f"Failed to search for comments: {e}")
+        return
 
     # Rank the comments
-    return rank_comments(results)
+    try:
+        relevant_comments = rank_comments(results)
+    except Exception as e:
+        DBOS.logger.error(f"Failed to rank comments: {e}")
+        return
+    return relevant_comments
 
 def search_topics(topics: List[str]) -> Dict[str, List[Dict]]:
     results = {}
