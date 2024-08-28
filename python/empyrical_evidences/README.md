@@ -7,26 +7,59 @@
 
 ## What does the app do
 
-This application uses together.ai inference API to identity relevant topics in academic papers and rank the most relevant related comments from hackernews.
-It uses DBOS Transact for workflow orchestration and is hosted on DBOS Cloud.
+This application uses together.ai inference API to identity relevant topics in academic papers and rank the most relevant related comments from hackernews. It is orchestrated with DBOS Transact and demonstrates how DBOS:
+
+- Makes multi-agents workflow orchestration easy with lightweight annotations
+- Safeguards expensive steps like querying embeddings so they are run once, even in case of app failures
+- Makes deploying to the cloud super easy (one command, <30 seconds)
+
+The app is hosted on DBOS Cloud.
+DBOS has much more under the hood, like automatic OpenTelemetry traces generation and automatic collection of provenance / lineage data.
+
+### key DBOS concepts
+
+You will notice a small amount of annotations in the code. These are to make functions durable. Specifically:
+
+```python
+@dbos.workflow()
+```
+
+Marks a function as a workflow. Workflows are robust to faults and are resumed exactly where they left off.
+Workflows are sequence of transactional steps and networking steps that should be executed exactly-once or at-least-once, respectively.
+
+```python
+@dbos.transaction()
+```
+
+Makes a function transactional with exactly-once guarantees.
+
+```python
+@dbos.communicator()
+```
+
+Makes a function retriable with at-least-once guarantees.
+
+If the program is interrupted, the DBOS runtime will identity pending workflows and resume them where they left off.
 
 ### endpoint: upload a paper
 
-Implemented with a DBOS workflow, this endpoint accepts a paper title and URL. It:
+This endpoint starst a DBOS workflow that:
 
 1. Records metadata about the paper in postgres.
-2. Download the paper.
+2. Downloads the paper.
 3. Uses together.ai to query embeddings for the paper and store them in postgres (using pgvector).
 
-If the program crashes, it will resume exactly where it left of. Each step is done exactly-once (transactions) or at-least-once (communicators). For example, if the application has a bug and crashes after a paper's record was inserted in the database, DBOS Transact, upon restart, will automatically resume this workflow where it left off.
+If the workflow has to be retried, e.g., if the program crashes, DBOS will resume it from where it left off.
 
 ### endpoint: search hackernews comments and rank them
 
-This endpoint:
+This endpoint starts a DBOs workflow that:
 
 1. Uses `mistralai/Mixtral-8x7B-Instruct-v0.1` to search extract the 5 most relevant topics from a paper.
 2. Searches hackernews using a DBOS Communicator for comments related to the topics.
 3. Uses `Salesforce/Llama-Rank-V1` to select the most relevant comment for each topic.
+
+Likewise, DBOS will ensure that workflows can be retried where they left off. If the program crashes after the first two steps completed, it will only run the third step.
 
 ---
 
