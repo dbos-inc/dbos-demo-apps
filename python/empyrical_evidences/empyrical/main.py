@@ -183,7 +183,7 @@ def search_hackernews(topic: str, window_size_hours: int):
 
     params = {
         "tags": "comment",
-        "query": query,
+        "query": topic,
         "numericFilters": f"created_at_i>{threshold.timestamp()}",
     }
     response = requests.get("http://hn.algolia.com/api/v1/search", params).json()
