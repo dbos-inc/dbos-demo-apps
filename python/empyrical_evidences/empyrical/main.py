@@ -1,3 +1,6 @@
+import datetime
+import html
+import re
 from typing import List
 import requests
 import uuid
