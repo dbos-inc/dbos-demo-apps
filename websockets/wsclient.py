@@ -1,4 +1,5 @@
 import websocket
+import os
 
 def on_message(ws, message):
     print(f"Received: {message}")
@@ -15,9 +16,11 @@ def on_open(ws):
     ws.send("Hello Server from Python client!")
 
 if __name__ == "__main__":
+
+    ws_url = os.getenv('WEBSOCKET_URL', 'ws://localhost:3000/ws')
     # websocket.enableTrace(True)
-    # ws = websocket.WebSocketApp("ws://localhost:3000/ws",
-    ws = websocket.WebSocketApp("wss://manoj-websockets.mj.dev.dbos.dev/ws",
+    print(f"Connecting to {ws_url}")
+    ws = websocket.WebSocketApp(ws_url,
                                 on_open=on_open,
                                 on_message=on_message,
                                 on_error=on_error,
