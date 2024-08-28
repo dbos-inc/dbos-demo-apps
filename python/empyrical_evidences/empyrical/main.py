@@ -178,7 +178,7 @@ def search_topics(topics: List[str]) -> Dict[str, List[Dict]]:
     return results
 
 @dbos.communicator()
-def search_hackernews(query: str, window_size_hours: int):
+def search_hackernews(topic: str, window_size_hours: int):
     threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=window_size_hours)
 
     params = {
@@ -187,7 +187,7 @@ def search_hackernews(query: str, window_size_hours: int):
         "numericFilters": f"created_at_i>{threshold.timestamp()}",
     }
     response = requests.get("http://hn.algolia.com/api/v1/search", params).json()
-    DBOS.logger.info(f"Found {len(response['hits'])} comments on topic {query}")
+    DBOS.logger.info(f"Found {len(response['hits'])} comments on topic {topic}")
 
     hits = []
     for hit in response["hits"]:
@@ -197,7 +197,7 @@ def search_hackernews(query: str, window_size_hours: int):
         comment = re.sub("<[^<]+?>", "", comment)
         url = f"https://news.ycombinator.com/item?id={hit['objectID']}"
         hits.append({
-            "query_topic": query,
+            "query_topic": topic,
             "comment": comment,
             "url": url,
             "story_title": hit["story_title"],
@@ -216,6 +216,6 @@ def rank_comments(comments: Dict[str, List[Dict]]):
                 top_n=1
             )
             most_relevant_comment = result[response.results[0].index]
-    DBOS.logger.info(f"Most relevant comment for topic {topic}:")
-    DBOS.logger.info(most_relevant_comment['comment'])
-    DBOS.logger.info(most_relevant_comment['url'])
+            DBOS.logger.info(f"Most relevant comment for topic {topic}:")
+            DBOS.logger.info(most_relevant_comment['comment'])
+            DBOS.logger.info(most_relevant_comment['url'])
