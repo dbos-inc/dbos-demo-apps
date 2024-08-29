@@ -8,7 +8,7 @@
 ## What It Does
 
 This application uses Together.ai inference APIs to identify relevant topics in academic papers, search Hacker News for related comments and rank them.
-The app is hosted on DBOS Cloud.
+It is serverlessly hosted on DBOS Cloud.
 
 ## How It Works
 
