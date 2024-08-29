@@ -7,7 +7,8 @@
 
 ## What It Does
 
-This application uses Together.ai inference APIs to identify relevant topics in academic papers, search Hacker News for related comments and rank them.
+This application searches Hacker News for comments relevant to your favorite academic papers.
+Specifically, it uses the Together.ai inference APIs to identify key topics in papers, then searches Hacker News for related comments and ranks them.
 It is serverlessly hosted on DBOS Cloud.
 
 ## How It Works
