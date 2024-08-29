@@ -1,81 +1,39 @@
 <h1 align="center">Empyrical Evidences</h1>
 
 <p align="center">
-  Search hackernews for comment relevant to academic papers.
+  Search Hacker News for comment relevant to academic papers.
   Powered by Together.ai and DBOS.
 </p>
 
-## What does the app do
+## What Does It Do
 
-This application uses together.ai inference API to identity relevant topics in academic papers and rank the most relevant related comments from hackernews. It is orchestrated with DBOS Transact and demonstrates how DBOS:
-
-- Makes multi-agents workflow orchestration easy with lightweight annotations
-- Safeguards expensive steps like querying embeddings so they are run once, even in case of app failures
-- Makes deploying to the cloud super easy (one command, <30 seconds)
-
+This application uses together.ai inference APIs to identify relevant topics in academic papers, search Hacker News for related comments and rank them.
 The app is hosted on DBOS Cloud.
-DBOS has much more under the hood, like automatic OpenTelemetry traces generation and automatic collection of provenance / lineage data.
 
-### key DBOS concepts
+## How Does It Work
 
-You will notice a small amount of annotations in the code. These are to make functions durable. Specifically:
+- Upload a paper. The app uses together.ai API to query the paper's embeddings and store them in postgres/pgvector.
+- Search Hacker News. The app uses together.ai API to extract the paper's key topics; it then searchs Hacker News for relevant comments and rank them using together.ai API. This is a multi-models workflow.
 
-```python
-@dbos.workflow()
-```
+## Why Use DBOS
 
-Marks a function as a workflow. Workflows are robust to faults and are resumed exactly where they left off.
-Workflows are sequence of transactional steps and networking steps that should be executed exactly-once or at-least-once, respectively.
+- Fast Serverless deploy to the cloud.
+- Durable execution for AI workflows: if the application crashes, together.ai APIs will not be queried again for already-executed steps.
+- Capture provenance/lineage data for your workflows.
 
-```python
-@dbos.transaction()
-```
+## Setup Instructions
 
-Makes a function transactional with exactly-once guarantees.
+### Creating A Together.ai Account
 
-```python
-@dbos.communicator()
-```
-
-Makes a function retriable with at-least-once guarantees.
-
-If the program is interrupted, the DBOS runtime will identity pending workflows and resume them where they left off.
-
-### endpoint: upload a paper
-
-This endpoint starst a DBOS workflow that:
-
-1. Records metadata about the paper in postgres.
-2. Downloads the paper.
-3. Uses together.ai to query embeddings for the paper and store them in postgres (using pgvector).
-
-If the workflow has to be retried, e.g., if the program crashes, DBOS will resume it from where it left off.
-
-### endpoint: search hackernews comments and rank them
-
-This endpoint starts a DBOs workflow that:
-
-1. Uses `mistralai/Mixtral-8x7B-Instruct-v0.1` to search extract the 5 most relevant topics from a paper.
-2. Searches hackernews using a DBOS Communicator for comments related to the topics.
-3. Uses `Salesforce/Llama-Rank-V1` to select the most relevant comment for each topic.
-
-Likewise, DBOS will ensure that workflows can be retried where they left off. If the program crashes after the first two steps completed, it will only run the third step.
-
----
-
-## Setting up Together.ai
-
-### Creating a together.ai account
-
-Go to https://api.together.ai/ and sign-up
+Go to https://api.together.ai/ and sign-up.
 
 ### API key
 
-An API key will be provided for you when you register. You can always retrieve it in your [settings page](https://api.together.ai/settings/api-keys)
+An API key will be provided for you when you register. You can always retrieve it in your [settings page](https://api.together.ai/settings/api-keys).
 
-## Deploying to DBOS Cloud
+## Deploying To DBOS Cloud
 
-### Creating a DBOS Cloud account
+### Creating A DBOS Cloud Account
 
 Sign-up for [DBOS Cloud](https://console.dbos.dev/).
 
@@ -115,3 +73,25 @@ pip install -r requirements.txt
 dbos migrate
 dbos start
 ```
+
+## Usage
+
+## Uploading A Paper
+
+Call the `/uploadPaper` endpoint with query parameters `paper_url` (must be base64 encoded) and `paper_tile`. For example:
+
+```bash
+curl "localhost:8000/uploadPaper?paper_url=aHR0cHM6Ly9wZW9wbGUuY3NhaWwubWl0LmVkdS90ZGFuZm9yZC82ODMwcGFwZXJzL3N0b25lYnJha2VyLWNzdG9yZS5wZGYK&paper_title=cstore"
+```
+
+This will return a unique identifier for the paper. You will use that ID for your search.
+
+### Search Hacker News comments and rank them
+
+Call the `startSearch` endpoint with query parameter `paper_id`. For example:
+
+```bash
+curl "localhost:8000/searchPaper?paper_id=c75178c7-7168-497b-a41f-381d8a557270
+```
+
+The response will be in JSON.
