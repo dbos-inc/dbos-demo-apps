@@ -36,7 +36,7 @@ It is serverlessly hosted on DBOS Cloud.
 
 ## Setup Instructions
 
-### Creating A Together.ai Account
+### Creating a Together.ai Account
 
 Go to https://api.together.ai/ and sign-up.
 
