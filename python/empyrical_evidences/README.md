@@ -7,19 +7,19 @@
 
 ## What It Does
 
-This application uses together.ai inference APIs to identify relevant topics in academic papers, search Hacker News for related comments and rank them.
+This application uses Together.ai inference APIs to identify relevant topics in academic papers, search Hacker News for related comments and rank them.
 The app is hosted on DBOS Cloud.
 
 ## How It Works
 
-- Upload a paper. The app uses together.ai API to query the paper's embeddings and store them in postgres/pgvector.
-- Search Hacker News. The app uses a multi-agent workflow and Together.AI inference API. First, it extracts the paper's key topics. Second, it searchs Hacker News for relevant comments. Third, it ranks the comments using together.ai API. This is a multi-models workflow.
+- Upload a paper. The app uses Together.ai API to query the paper's embeddings and store them in postgres/pgvector.
+- Search Hacker News. The app uses a multi-agent workflow and Together.AI inference API. First, it extracts the paper's key topics. Second, it searchs Hacker News for relevant comments. Third, it ranks the comments using Together.ai API.
 
 ## Why Use DBOS
 
 - Fast Serverless deploy to the cloud.
-- Durable execution for AI workflows: if the application crashes, together.ai APIs will not be queried again for already-executed steps.
-- Capture provenance/lineage data for your workflows.
+- Durable execution: if the application crashes, workflows will be resumed where they left off and Together.ai APIs will not be queried again for already-executed steps.
+- Automatically capture provenance/lineage data for your workflows.
 
 ## Setup Instructions
 
@@ -27,7 +27,7 @@ The app is hosted on DBOS Cloud.
 
 Go to https://api.together.ai/ and sign-up.
 
-### API key
+### API Key
 
 An API key will be provided for you when you register. You can always retrieve it in your [settings page](https://api.together.ai/settings/api-keys).
 
@@ -76,7 +76,7 @@ dbos start
 
 ## Usage
 
-## Uploading A Paper
+### Uploading A Paper
 
 Call the `/uploadPaper` endpoint with query parameters `paper_url` (must be base64 encoded) and `paper_tile`. For example:
 
