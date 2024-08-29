@@ -14,15 +14,25 @@ It is serverlessly hosted on DBOS Cloud.
 ## How It Works
 
 - First, you upload an academic paper. The app uses the Together.ai API to query the paper's embeddings and store them in Postgres using pgvector.
-- Then, you search Hacker News for comments relevant to the paper. 
-The app does this with a multi-agent workflow that first extracts the paper's key topics, then searches Hacker News for relevant comments, then ranks the comments.
+- Then, you search Hacker News for comments relevant to the paper.
+  The app does this with a multi-agent workflow that first extracts the paper's key topics, then searches Hacker News for relevant comments, then ranks the comments.
 
 ## Why Use DBOS
 
-- Durable execution: if the application crashes, workflows will be resumed where they left off and Together.ai APIs will not be queried again for already-executed steps.
-- Develop your application locally and deploy within seconds to the cloud. DBOS Cloud handles scalability, reliability, observability and security at a fraction of the cost.
-- Automated tracing: DBOS applications generate and export OpenTelemetry traces by default.
-- Automatically capture provenance for your workflows. DBOS can trace all modifications to a database record, from the workflow identity to the database transaction.
+### Serverless
+
+- Go from local to production cloud deployment in 30 seconds with a single command.
+- [15x cheaper](https://www.dbos.dev/blog/dbos-vs-lambda-cost), [25x faster](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark). 0 devops.
+
+### Durable, transactional execution
+
+- Workflows are always resumed where they left off. Save money and time by not querying again for already-executed steps.
+- Workflows steps have exactly-once or at-least-once guarantees.
+
+### Observability
+
+- DBOS Transact applications automatically generate and export OpenTelemetry traces.
+- Get a full observability pipeline to export, collect and query your observability data.
 
 ## Setup Instructions
 
