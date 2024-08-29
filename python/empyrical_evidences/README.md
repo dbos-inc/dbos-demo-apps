@@ -14,7 +14,8 @@ It is serverlessly hosted on DBOS Cloud.
 ## How It Works
 
 - First, you upload an academic paper. The app uses the Together.ai API to query the paper's embeddings and store them in Postgres using pgvector.
-- Search Hacker News. The app uses a multi-agent workflow and Together.AI inference API. First, it extracts the paper's key topics. Second, it searchs Hacker News for relevant comments. Third, it ranks the comments using Together.ai API.
+- Then, you search Hacker News for comments relevant to the paper. 
+The app does this with a multi-agent workflow that first extracts the paper's key topics, then searches Hacker News for relevant comments, then ranks the comments.
 
 ## Why Use DBOS
 
