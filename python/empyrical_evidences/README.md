@@ -21,8 +21,8 @@ It is serverlessly hosted on DBOS Cloud.
 
 ### Serverless
 
-- Go from local to production cloud deployment in 30 seconds with a single command.
-- [15x cheaper](https://www.dbos.dev/blog/dbos-vs-lambda-cost), [25x faster](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark). 0 devops.
+- Deploy to the cloud in a single command. Scale automatically. No DevOps required.
+- [15x cheaper](https://www.dbos.dev/blog/dbos-vs-lambda-cost) and [25x faster](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark) than AWS Lambda/Step Functions.
 
 ### Durable, transactional execution
 
@@ -31,8 +31,8 @@ It is serverlessly hosted on DBOS Cloud.
 
 ### Observability
 
-- DBOS Transact applications automatically generate and export OpenTelemetry traces.
-- With DBOS Cloud, access a full observability pipeline exporting and collecting your observability data automatically. Access a dashboard to query your data.
+- DBOS automatically generates and exports OpenTelemetry traces for your application
+- In DBOS Cloud view your logs and traces from the [cloud console](https://console.dbos.dev/) or your [personal monitoring dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
 
 ## Setup Instructions
 
