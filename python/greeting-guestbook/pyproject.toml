@@ -1,0 +1,17 @@
+[project]
+name = "greeting-guestbook"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Peter Kraft", email = "petereliaskraft@gmail.com"},
+]
+dependencies = [
+    "dbos>=0.4.0a15",
+]
+requires-python = ">=3.9"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
