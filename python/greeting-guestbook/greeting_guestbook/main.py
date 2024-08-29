@@ -52,7 +52,7 @@ def sign_guestbook(name: str):
 @DBOS.transaction()
 def insert_greeting(name: str, note: str):
     DBOS.sql_session.execute(greetings.insert().values(name=name, note=note))
-    DBOS.logger.info(f">>> STEP 2: Greeting to {name} recorded in the database!");
+    DBOS.logger.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
 
 
 @DBOS.workflow()
