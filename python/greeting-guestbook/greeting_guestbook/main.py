@@ -58,6 +58,9 @@ def insert_greeting(name: str, note: str):
 @DBOS.workflow()
 def greeting_workflow(friend: str, note: str):
     sign_guestbook(friend)
+    for _ in range(5):
+        DBOS.logger.info("Press Control + C to stop the app...")
+        DBOS.sleep(1)
     insert_greeting(friend, note)
 
 
