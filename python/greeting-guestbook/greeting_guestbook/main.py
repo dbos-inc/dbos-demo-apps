@@ -39,10 +39,9 @@ def sign_guestbook(name: str):
     payload = {"key": key, "name": name}
 
     response = requests.post(url, headers=headers, json=payload)
-    response_str = json.dumps(response.json())
-
     if not response.ok:
-        raise Exception(f"DBOSResponseError: {response_str}")
+        raise Exception(f"Error signing guestbook: {response_str}")
+    response_str = json.dumps(response.json())
 
     DBOS.logger.info(f">>> STEP 1: Signed the Guestbook: {response_str}")
 
@@ -56,16 +55,16 @@ def insert_greeting(name: str, note: str):
 
 
 @DBOS.workflow()
-def greeting_workflow(friend: str, note: str):
-    sign_guestbook(friend)
+def greeting_workflow(name: str, note: str):
+    sign_guestbook(name)
     for _ in range(5):
         DBOS.logger.info("Press Control + C to stop the app...")
         DBOS.sleep(1)
-    insert_greeting(friend, note)
+    insert_greeting(name, note)
 
 
-@app.get("/greeting/{friend}")
-def greet(friend: str):
-    note = f"Thank you for being awesome, {friend}!"
-    DBOS.start_workflow(greeting_workflow, friend, note)
+@app.get("/greeting/{name}")
+def greet(name: str):
+    note = f"Thank you for being awesome, {name}!"
+    DBOS.start_workflow(greeting_workflow, name, note)
     return note
