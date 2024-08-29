@@ -16,11 +16,11 @@ export class Hello {
     const readme = `<html><body><p>
            Welcome to the DBOS Websockets demo app!<br><br>
 
-           This app demonstrates a simple WebSocket server that sends random events to the client.<br>
+           This app demonstrates a simple Websocket server that sends random events to the client.<br>
 
            Run the client wsclient.js or wsclient.py as per instructions in README.md to see websockets in action.<br>
-
-           For regular HTTP Visit the route /greeting/:name to be greeted!<br>
+            <br>
+           For the regular starter app and HTTP Visit the route /greeting/:name to be greeted!<br>
            For example, visit <a href="/greeting/dbos">/greeting/dbos</a>.<br>
            The counter increments with each page visit.<br>
            If you visit a new name like <a href="/greeting/alice">/greeting/alice</a>, the counter starts at 1.
