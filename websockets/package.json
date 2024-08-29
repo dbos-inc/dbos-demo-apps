@@ -25,7 +25,6 @@
   "dependencies": {
     "@dbos-inc/dbos-sdk": "^1.22.6",
     "knex": "3.1.0",
-    "tsc": "^2.0.4",
     "ws": "^8.18.0"
   }
 }

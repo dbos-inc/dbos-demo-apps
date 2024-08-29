@@ -14,8 +14,13 @@ export class Hello {
   @GetApi('/') // Serve a quick readme for the app
   static async readme(_ctxt: HandlerContext) {
     const readme = `<html><body><p>
-           Welcome to the DBOS Hello App!<br><br>
-           Visit the route /greeting/:name to be greeted!<br>
+           Welcome to the DBOS Websockets demo app!<br><br>
+
+           This app demonstrates a simple WebSocket server that sends random events to the client.<br>
+
+           Run the client wsclient.js or wsclient.py as per instructions in README.md to see websockets in action.<br>
+
+           For regular HTTP Visit the route /greeting/:name to be greeted!<br>
            For example, visit <a href="/greeting/dbos">/greeting/dbos</a>.<br>
            The counter increments with each page visit.<br>
            If you visit a new name like <a href="/greeting/alice">/greeting/alice</a>, the counter starts at 1.
@@ -35,7 +40,6 @@ export class Hello {
 
   @GetApi('/ws') 
   static async sendToClient(ctx: HandlerContext) {
-    // const { req, socket, head } = ctx.request;
 
     // Upgrade the request to a WebSocket
     const wss = new WebSocket.Server({ noServer: true });
@@ -52,7 +56,7 @@ export class Hello {
               if (event) {
                 ws.send(JSON.stringify(event)); // Send event to the client
               }
-              await Hello.sleep(1000);  // Pause for a second between polls
+              await Hello.sleep(1000);  // Pause for a second between polls for demonstration purposes
             }
           } catch (err) {
             console.error('Error during polling:', err);
