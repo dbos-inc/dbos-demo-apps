@@ -1,4 +1,4 @@
-import { HandlerContext, TransactionContext, Transaction, GetApi, ArgSource, ArgSources } from '@dbos-inc/dbos-sdk';
+import { HandlerContext, TransactionContext, Transaction, GetApi, ArgSource, ArgSources, Sleep } from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 import { WebSocket } from 'ws';
 
@@ -52,7 +52,7 @@ export class Hello {
               if (event) {
                 ws.send(JSON.stringify(event)); // Send event to the client
               }
-              await Hello.sleep(1000); // Pause for a second between polls
+              await Sleep(1000); // Pause for a second between polls
             }
           } catch (err) {
             console.error('Error during polling:', err);
@@ -72,10 +72,6 @@ export class Hello {
 
     ctx.koaContext.respond = false;
 
-  }
-
-  static sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
 }
