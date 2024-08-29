@@ -32,7 +32,7 @@ It is serverlessly hosted on DBOS Cloud.
 ### Observability
 
 - DBOS Transact applications automatically generate and export OpenTelemetry traces.
-- Get a full observability pipeline to export, collect and query your observability data.
+- With DBOS Cloud, access a full observability pipeline exporting and collecting your observability data automatically. Access a dashboard to query your data.
 
 ## Setup Instructions
 
