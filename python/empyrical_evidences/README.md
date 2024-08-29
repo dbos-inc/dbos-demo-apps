@@ -17,9 +17,10 @@ It is serverlessly hosted on DBOS Cloud.
 
 ## Why Use DBOS
 
-- Fast Serverless deploy to the cloud.
 - Durable execution: if the application crashes, workflows will be resumed where they left off and Together.ai APIs will not be queried again for already-executed steps.
-- Automatically capture provenance/lineage data for your workflows.
+- Develop your application locally and deploy within seconds to the cloud. DBOS Cloud handles scalability, reliability, observability and security at a fraction of the cost.
+- Automated tracing: DBOS applications generate and export OpenTelemetry traces by default.
+- Automatically capture provenance for your workflows. DBOS can trace all modifications to a database record, from the workflow identity to the database transaction.
 
 ## Setup Instructions
 
@@ -32,10 +33,6 @@ Go to https://api.together.ai/ and sign-up.
 An API key will be provided for you when you register. You can always retrieve it in your [settings page](https://api.together.ai/settings/api-keys).
 
 ## Deploying To DBOS Cloud
-
-### Creating A DBOS Cloud Account
-
-Sign-up for [DBOS Cloud](https://console.dbos.dev/).
 
 ### Setup DBOS Cloud CLI
 
