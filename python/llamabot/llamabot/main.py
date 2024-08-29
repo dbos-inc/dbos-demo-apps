@@ -24,7 +24,7 @@ from slack_bolt.adapter.starlette.handler import to_bolt_request
 from slack_sdk.web import SlackResponse
 
 app = FastAPI()
-dbos = DBOS(fastapi=app)
+DBOS(fastapi=app)
 
 # Then, let's initialize LlamaIndex to use the app's Postgres database as the vector store.
 # Note that we don't set up the schema and tables because we've already done that in the schema migration step.
@@ -73,11 +73,11 @@ def handle_message(request: BoltRequest) -> None:
     with SetWorkflowUUID(event_id):
         # Start the event processing workflow and respond to Slack without waiting for the workflow to finish, because Slack expects the endpoint to reply within 3 seconds.
         # Docs: https://api.slack.com/apis/events-api#responding
-        dbos.start_workflow(message_workflow, request.body["event"])
+        DBOS.start_workflow(message_workflow, request.body["event"])
 
 
 # Now, let's write the main workflow function that processes incoming messages.
-@dbos.workflow()
+@DBOS.workflow()
 def message_workflow(message: Dict[str, Any]) -> None:
     # Check if the message mentions the bot (@ the bot). If so, it is a question for the bot, and we answer the question and post the response back to the channel.
     # If the message contains a "blocks" key
@@ -135,7 +135,7 @@ def message_workflow(message: Dict[str, Any]) -> None:
 # Let's define some helper functions to interact with Slack.
 
 # Post a message to a slack channel, optionally in a thread
-@dbos.communicator()
+@DBOS.communicator()
 def post_slack_message(
     message: str, channel: str, thread_ts: Optional[str] = None
 ) -> None:
@@ -143,13 +143,13 @@ def post_slack_message(
 
 
 # Get all the replies in a Slack thread
-@dbos.communicator()
+@DBOS.communicator()
 def get_slack_replies(channel: str, thread_ts: str) -> SlackResponse:
     return slackapp.client.conversations_replies(channel=channel, ts=thread_ts)
 
 
 # Get a Slack user's username from their user id
-@dbos.communicator()
+@DBOS.communicator()
 def get_user_name(user_id: str) -> str:
     user_info = slackapp.client.users_info(user=user_id)
     user_name: str = user_info["user"]["name"]
@@ -158,7 +158,7 @@ def get_user_name(user_id: str) -> str:
 # Let's define some helper functions to answer the question and store chat histories.
 
 # Given a user's question and a slack message, answer the question with LlamaIndex and return the response
-@dbos.communicator()
+@DBOS.communicator()
 def answer_question(
     query: str, message: Dict[str, Any], replies: Optional[SlackResponse] = None
 ) -> Any:
@@ -202,7 +202,7 @@ def answer_question(
 # Recording the previous node allows us to create a chain of messages
 PREVIOUS_NODE = None
 
-@dbos.communicator()
+@DBOS.communicator()
 def insert_node(text: str, user_name: str, formatted_time: str) -> None:
     global PREVIOUS_NODE
     # create a node and apply metadata
