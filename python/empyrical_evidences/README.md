@@ -1,19 +1,19 @@
 <h1 align="center">Empyrical Evidences</h1>
 
 <p align="center">
-  Search Hacker News for comment relevant to academic papers.
+  Search Hacker News for comments relevant to your favorite academic papers.
   Powered by Together.ai and DBOS.
 </p>
 
-## What Does It Do
+## What It Does
 
 This application uses together.ai inference APIs to identify relevant topics in academic papers, search Hacker News for related comments and rank them.
 The app is hosted on DBOS Cloud.
 
-## How Does It Work
+## How It Works
 
 - Upload a paper. The app uses together.ai API to query the paper's embeddings and store them in postgres/pgvector.
-- Search Hacker News. The app uses together.ai API to extract the paper's key topics; it then searchs Hacker News for relevant comments and rank them using together.ai API. This is a multi-models workflow.
+- Search Hacker News. The app uses a multi-agent workflow and Together.AI inference API. First, it extracts the paper's key topics. Second, it searchs Hacker News for relevant comments. Third, it ranks the comments using together.ai API. This is a multi-models workflow.
 
 ## Why Use DBOS
 
@@ -67,8 +67,8 @@ python3 start_postgres_docker.py
 Then run:
 
 ```shell
-python3 -m venv dbos-empyrical-venv
-source dbos-empyrical-venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 dbos migrate
 dbos start
