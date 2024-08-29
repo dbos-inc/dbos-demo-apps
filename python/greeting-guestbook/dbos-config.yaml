@@ -19,3 +19,5 @@ database:
 telemetry:
   logs:
     logLevel: INFO
+env:
+  GUESTBOOK_KEY: 69471c89-1994-4eb4-bc84-798096f8a1f5

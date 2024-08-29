@@ -1,25 +1,68 @@
-import sqlalchemy as sa
-from fastapi import FastAPI
+import json
+import os
 
+import requests
 from dbos import DBOS
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from schema import greetings
 
 app = FastAPI()
 DBOS(app)
 
 
-@app.get("/greeting/{name}")
-@DBOS.workflow()
-def example_workflow(name: str) -> dict[str, str]:
-    DBOS.logger.info("Running workflow!")
-    output = example_transaction(name)
-    return {"name": output}
+@app.get("/")
+def readme() -> HTMLResponse:
+    readme = """<html><body><p>
+      Welcome! Visit the route /greeting/:name to be greeted!<br>
+      For example, visit <a href="/greeting/dbos">/greeting/dbos</a>.<br>
+      </p></body></html>
+      """
+    return HTMLResponse(readme)
+
+
+@app.get("/greetings")
+@DBOS.transaction()
+def all_greetings():
+    rows = DBOS.sql_session.execute(greetings.select())
+    return [dict(row) for row in rows.mappings()]
+
+
+@DBOS.communicator()
+def sign_guestbook(name: str):
+    key = os.environ.get("GUESTBOOK_KEY", None)
+    if key is None or len(key) != 36:
+        raise Exception("Please set the guestbook key in dbos-config.yaml")
+
+    url = "https://demo-guestbook.cloud.dbos.dev/record_greeting"
+    headers = {"Content-Type": "application/json"}
+    payload = {"key": key, "name": name}
+
+    response = requests.post(url, headers=headers, json=payload)
+    response_str = json.dumps(response.json())
+
+    if not response.ok:
+        raise Exception(f"DBOSResponseError: {response_str}")
+
+    DBOS.logger.info(f">>> STEP 1: Signed the Guestbook: {response_str}")
+
+    return response_str
 
 
 @DBOS.transaction()
-def example_transaction(name: str) -> str:
-    rows = DBOS.sql_session.execute(
-        sa.text(
-            "INSERT INTO dbos_hello (name, greet_count) VALUES ('dbos', 1) ON CONFLICT (name) DO UPDATE SET greet_count = dbos_hello.greet_count + 1 RETURNING greet_count;"
-        )
-    ).all()
-    return name + str(rows[0][0])
+def insert_greeting(name: str, note: str):
+    DBOS.sql_session.execute(greetings.insert().values(name=name, note=note))
+    DBOS.logger.info(f">>> STEP 2: Greeting to {name} recorded in the database!");
+
+
+@DBOS.workflow()
+def greeting_workflow(friend: str, note: str):
+    sign_guestbook(friend)
+    insert_greeting(friend, note)
+
+
+@app.get("/greeting/{friend}")
+def greet(friend: str):
+    note = f"Thank you for being awesome, {friend}!"
+    DBOS.start_workflow(greeting_workflow, friend, note)
+    return note
