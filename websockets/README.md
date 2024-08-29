@@ -27,6 +27,34 @@ On successfull deployment, you will see a message
 
 ## Running the client
 
+### Javascript client
+
+The websocket url takes the form wss://yourdomain/ws
+let us call is wsurl
+
+run the client
+
+node wsclient.js wsurl   
+
+You will see the following output:
+Connecting to wss://yourdomain/ws
+WebSocket connection opened
+Received: 921152
+Received: Hello from server!
+Received: 325180
+Received: 565480
+Received: 768972
+Received: 269421
+Received: 222553
+Received: 222654
+Received: 339769
+Received: 886174
+Received: 737998
+.
+.
+
+
+### Python client
 Running it the first time, you need to install these packages by running
 
 pip3 install websockets
@@ -48,13 +76,6 @@ Received: 921152
 Received: Hello from server!
 Received: 325180
 Received: 565480
-Received: 768972
-Received: 269421
-Received: 222553
-Received: 222654
-Received: 339769
-Received: 886174
-Received: 737998
 .
 .
 
