@@ -26,7 +26,7 @@ It is serverlessly hosted on DBOS Cloud.
 
 ### Durable, transactional execution
 
-- Workflows are always resumed where they left off. Save money and time by not querying APIs again for already-executed steps.
+- If your app is interrupted, workflows automatically resume from where they left off. Save money and time by not querying APIs again for already-executed steps.
 - Workflows steps have exactly-once or at-least-once guarantees.
 
 ### Observability
