@@ -21,13 +21,6 @@ def readme() -> HTMLResponse:
     return HTMLResponse(readme)
 
 
-@app.get("/greetings")
-@DBOS.transaction()
-def all_greetings():
-    rows = DBOS.sql_session.execute(greetings.select())
-    return [dict(row) for row in rows.mappings()]
-
-
 @DBOS.communicator()
 def sign_guestbook(name: str):
     key = os.environ.get("GUESTBOOK_KEY", None)
@@ -68,3 +61,10 @@ def greet(name: str):
     note = f"Thank you for being awesome, {name}!"
     DBOS.start_workflow(greeting_workflow, name, note)
     return note
+
+
+@app.get("/greetings")
+@DBOS.transaction()
+def get_greetings():
+    rows = DBOS.sql_session.execute(greetings.select())
+    return [dict(row) for row in rows.mappings()]
