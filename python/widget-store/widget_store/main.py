@@ -151,6 +151,7 @@ def update_order_status(order_id: str, status: int) -> None:
     )
 
 
+@app.get("/product")
 @DBOS.transaction()
 def get_product() -> product:
     row = DBOS.sql_session.execute(products.select()).fetchone()
@@ -161,6 +162,12 @@ def get_product() -> product:
         inventory=row.inventory,
         price=row.price,
     )
+
+@app.get("/orders")
+@DBOS.transaction()
+def get_orders():
+    rows = DBOS.sql_session.execute(orders.select())
+    return [dict(row) for row in rows.mappings()]
 
 
 # To deploy this app to the cloud, run `dbos-cloud app deploy`.
