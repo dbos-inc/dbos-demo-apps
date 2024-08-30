@@ -191,3 +191,7 @@ def update_order_progress(scheduled_time, actual_time):
         .where(orders.c.progress_remaining == 0)
         .values(order_status=OrderStatus.DISPATCHED.value)
     )
+
+
+# To deploy this app to the cloud, run `dbos-cloud app deploy`.
+# Visit its URL to see it in action!
