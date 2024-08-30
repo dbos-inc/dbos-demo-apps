@@ -10,7 +10,7 @@ import os
 from typing import Optional
 
 from dbos import DBOS, SetWorkflowID
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, HTTPException, Response
 
 from .frontend import frontend_router
 from .schema import OrderStatus, order, orders, product, products
@@ -76,7 +76,7 @@ def checkout_endpoint(idempotency_key: str) -> Response:
         handle = DBOS.start_workflow(checkout_workflow)
     payment_id = DBOS.get_event(handle.workflow_id, PAYMENT_ID)
     if payment_id is None:
-        return Response("/error")
+        raise HTTPException(status_code=404, detail="Checkout failed to start")
     return Response(payment_id)
 
 
@@ -89,7 +89,7 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
     DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
     order_url = DBOS.get_event(payment_id, ORDER_URL)
     if order_url is None:
-        return Response("/error")
+        raise HTTPException(status_code=404, detail="Payment failed to process")
     return Response(order_url)
 
 
