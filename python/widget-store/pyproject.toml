@@ -6,8 +6,7 @@ authors = [
     {name = "Peter Kraft", email = "petereliaskraft@gmail.com"},
 ]
 dependencies = [
-    "dbos>=0.4.0a18",
-    "fastapi[standard]>=0.112.1",
+    "dbos>=0.5.0a0",
     "python-liquid>=1.12.1",
 ]
 requires-python = ">=3.10"

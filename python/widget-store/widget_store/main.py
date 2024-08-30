@@ -9,7 +9,7 @@
 import os
 from typing import Optional
 
-from dbos import DBOS, SetWorkflowUUID
+from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI, Response
 
 from .frontend import frontend_router
@@ -68,9 +68,9 @@ def checkout_workflow():
 
 @app.post("/checkout/{key}")
 def checkout_endpoint(key: str) -> Response:
-    with SetWorkflowUUID(key):
+    with SetWorkflowID(key):
         handle = DBOS.start_workflow(checkout_workflow)
-    payment_url = DBOS.get_event(handle.workflow_uuid, PAYMENT_URL)
+    payment_url = DBOS.get_event(handle.workflow_id, PAYMENT_URL)
     if payment_url is None:
         return Response("/error")
     return Response(payment_url)
