@@ -20,6 +20,8 @@ distribution = false
 dev = [
     "black>=24.8.0",
     "isort>=5.13.2",
+    "mypy>=1.11.2",
+    "types-requests>=2.32.0.20240712",
 ]
 
 [tool.black]
@@ -29,3 +31,6 @@ line-length = 88
 profile = "black"
 filter_files = true
 atomic = true
+
+[tool.mypy]
+strict = true

@@ -5,7 +5,8 @@ import requests
 from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from schema import greetings
+
+from .schema import greetings
 
 app = FastAPI()
 DBOS(app)
@@ -39,13 +40,11 @@ def sign_guestbook(name: str):
     payload = {"key": key, "name": name}
 
     response = requests.post(url, headers=headers, json=payload)
+    response_str = json.dumps(response.json())
     if not response.ok:
         raise Exception(f"Error signing guestbook: {response_str}")
-    response_str = json.dumps(response.json())
 
     DBOS.logger.info(f">>> STEP 1: Signed the Guestbook: {response_str}")
-
-    return response_str
 
 
 @DBOS.transaction()
@@ -64,7 +63,7 @@ def greeting_workflow(name: str, note: str):
 
 
 @app.get("/greeting/{name}")
-def greet(name: str):
+def greet(name: str) -> str:
     note = f"Thank you for being awesome, {name}!"
     DBOS.start_workflow(greeting_workflow, name, note)
     return note
