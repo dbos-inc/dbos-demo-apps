@@ -55,7 +55,7 @@ def checkout_workflow():
         DBOS.logger.warn(f"Payment failed for order {order_id}")
         undo_reserve_inventory()
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
-    DBOS.set_event(ORDER_URL, f"/order/{order_id}")
+    DBOS.set_event(ORDER_URL, str(order_id))
 
 
 # Next, let's use FastAPI to write the HTTP endpoints for checkout.
@@ -130,6 +130,7 @@ def create_order() -> int:
     return result.inserted_primary_key[0]
 
 
+@app.get("/order/{order_id}")
 @DBOS.transaction()
 def get_order(order_id: str) -> Optional[order]:
     row = DBOS.sql_session.execute(
