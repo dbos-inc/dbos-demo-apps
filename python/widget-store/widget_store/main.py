@@ -21,20 +21,21 @@ app.include_router(frontend_router)
 DBOS(app)
 
 WIDGET_ID = 1
-PAYMENT_STATUS = "payment"
-PAYMENT_URL = "payment_url"
+PAYMENT_STATUS = "payment_status"
+PAYMENT_ID = "payment_id"
 ORDER_URL = "order_url"
 
 # Next, let's write the checkout workflow.
 # This workflow is triggered whenever a customer buys a widget.
-# It first creates a new order, then reserves inventory, processes payment,
-# and finally marks the order as complete. If any step fails, it backs out,
+# It creates a new order, then reserves inventory, then processes payment,
+# then marks the order as paid. If any step fails, it backs out,
 # returning reserved inventory and marking the order as cancelled.
 
 # DBOS makes this workflow reliable: each of its steps executes exactly-once and
 # if it's ever interrupted, it automatically resumes from where it left off.
 # You can try this yourself--start an order and press the crash button at any time.
-# Within seconds, your app will recover to exactly the state it was in before the crash.
+# Within seconds, your app will recover to exactly the state it was in before the crash
+# and continue as if nothing happened.
 
 
 @DBOS.workflow()
@@ -44,9 +45,9 @@ def checkout_workflow():
     if not inventory_reserved:
         DBOS.logger.error(f"Failed to reserve inventory for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
-        DBOS.set_event(PAYMENT_URL, None)
+        DBOS.set_event(PAYMENT_ID, None)
         return
-    DBOS.set_event(PAYMENT_URL, DBOS.workflow_id)
+    DBOS.set_event(PAYMENT_ID, DBOS.workflow_id)
     payment_status = DBOS.recv(PAYMENT_STATUS)
     if payment_status is not None and payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
@@ -62,28 +63,31 @@ def checkout_workflow():
 
 # This endpoint receives a request when a customer presses the "Buy Now" button.
 # It starts the checkout workflow in the background, then waits for the workflow
-# to generate and send it a payment link. It then returns the payment link
+# to generate and send it a unique payment ID. It then returns the payment ID
 # so the browser can redirect the customer to the payments page.
 
+# The request takes in an idempotency key so that even if the customer presses
+# "buy now" multiple times, only one checkout workflow is started.
 
-@app.post("/checkout/{key}")
-def checkout_endpoint(key: str) -> Response:
-    with SetWorkflowID(key):
+
+@app.post("/checkout/{idempotency_key}")
+def checkout_endpoint(idempotency_key: str) -> Response:
+    with SetWorkflowID(idempotency_key):
         handle = DBOS.start_workflow(checkout_workflow)
-    payment_url = DBOS.get_event(handle.workflow_id, PAYMENT_URL)
-    if payment_url is None:
+    payment_id = DBOS.get_event(handle.workflow_id, PAYMENT_ID)
+    if payment_id is None:
         return Response("/error")
-    return Response(payment_url)
+    return Response(payment_id)
 
 
-# This is the HTTP endpoint for the payments page. It signals the payment workflow
-# whether the payment succeeded or failed.
+# This is the HTTP endpoint for payments. It uses the payment ID to signal
+# the checkout workflow whether the payment succeeded or failed.
 
 
-@app.post("/payment_webhook/{key}/{status}")
-def payment_endpoint(key: str, status: str) -> Response:
-    DBOS.send(key, status, PAYMENT_STATUS)
-    order_url = DBOS.get_event(key, ORDER_URL)
+@app.post("/payment_webhook/{payment_id}/{payment_status}")
+def payment_endpoint(payment_id: str, payment_status: str) -> Response:
+    DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
+    order_url = DBOS.get_event(payment_id, ORDER_URL)
     if order_url is None:
         return Response("/error")
     return Response(order_url)
