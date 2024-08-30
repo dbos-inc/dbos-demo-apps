@@ -24,7 +24,7 @@ orders = Table(
     Column("order_id", Integer, primary_key=True, autoincrement=True),
     Column("order_status", Integer, nullable=False),
     Column("last_update_time", DateTime, nullable=False, server_default=func.now()),
-    Column("progress_remaining", Integer, nullable=False, server_default='10')
+    Column("progress_remaining", Integer, nullable=False, server_default="10"),
 )
 
 

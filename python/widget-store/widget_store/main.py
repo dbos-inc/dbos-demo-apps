@@ -164,11 +164,18 @@ def get_product() -> product:
         price=row.price,
     )
 
+
 @app.get("/orders")
 @DBOS.transaction()
 def get_orders():
     rows = DBOS.sql_session.execute(orders.select())
     return [dict(row) for row in rows.mappings()]
+
+
+@app.post("/restock")
+@DBOS.transaction()
+def restock():
+    DBOS.sql_session.execute(products.update().values(inventory=100))
 
 
 # To deploy this app to the cloud, run `dbos-cloud app deploy`.
