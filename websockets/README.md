@@ -1,18 +1,18 @@
 # Websockets samples
 
-The sample takes the application generated in the DBOS quick start[https://docs.dbos.dev/getting-started/quickstart] and add a websocket end point to it.
+The sample takes the application generated in the DBOS quick start[https://docs.dbos.dev/getting-started/quickstart] and adds a websocket endpoint to it.
 
 ## Code
 
 ### Server
 
-The method sendToClient in src/operations.ts accepts the websocket connection request and continuosly
+The method `sendToClient` in `src/operations.ts` accepts the websocket connection request and continuously
 sends a random number to the client every second
 
 
 ### Client
 
-wsclient.py is the client code that requests a websocket connection. It will stay alive and continue
+wslient.js and wsclient.py are the client scripts that requests a websocket connection. They will stay alive and continue
 to receive data from the server.
 
 
@@ -20,7 +20,7 @@ to receive data from the server.
 
 Follow the instructions in the quickstart[https://docs.dbos.dev/getting-started/quickstart] to deploy the app either to the cloud or run locally.
 
-On successfull deployment, you will see a message
+On successful deployment, you will see a message
 
 ```
 2024-08-28 18:53:52 [info]: Access your application at https://yourdomain/ 
