@@ -131,15 +131,10 @@ def create_order() -> int:
 @app.get("/order/{order_id}")
 @DBOS.transaction()
 def get_order(order_id: str) -> Optional[order]:
-    row = DBOS.sql_session.execute(
-        orders.select().where(orders.c.order_id == order_id)
-    ).fetchone()
-    if row is None:
-        return None
-    return order(
-        order_id=row.order_id,
-        order_status=row.order_status,
-        last_update_time=row.last_update_time,
+    return (
+        DBOS.sql_session.execute(orders.select().where(orders.c.order_id == order_id))
+        .mappings()
+        .first()
     )
 
 
@@ -152,15 +147,8 @@ def update_order_status(order_id: str, status: int) -> None:
 
 @app.get("/product")
 @DBOS.transaction()
-def get_product() -> product:
-    row = DBOS.sql_session.execute(products.select()).fetchone()
-    return product(
-        product_id=row.product_id,
-        product=row.product,
-        description=row.description,
-        inventory=row.inventory,
-        price=row.price,
-    )
+def get_product():
+    return DBOS.sql_session.execute(products.select()).mappings().first()
 
 
 @app.get("/orders")
