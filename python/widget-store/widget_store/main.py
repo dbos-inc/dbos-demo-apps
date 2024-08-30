@@ -178,5 +178,16 @@ def restock():
     DBOS.sql_session.execute(products.update().values(inventory=100))
 
 
-# To deploy this app to the cloud, run `dbos-cloud app deploy`.
-# Visit its URL to see it in action!
+@DBOS.scheduled("* * * * * *")
+@DBOS.transaction()
+def update_order_progress(scheduled_time, actual_time):
+    DBOS.sql_session.execute(
+        orders.update()
+        .where(orders.c.order_status == OrderStatus.PAID.value)
+        .values(progress_remaining=orders.c.progress_remaining - 1)
+    )
+    DBOS.sql_session.execute(
+        orders.update()
+        .where(orders.c.progress_remaining == 0)
+        .values(order_status=OrderStatus.DISPATCHED.value)
+    )
