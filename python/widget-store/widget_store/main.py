@@ -1,8 +1,8 @@
 # Widget Store
 
 # This app uses DBOS to deploy an online storefront that's resilient to any failure.
-# The focus of this app is on the checkout workflow that manages order status,
-# product inventory, and payment.
+# The focus of this app is on the checkout workflow, which durably manages order status,
+# product inventory, and payment to ensure every checkout completes correctly.
 
 # First, let's do imports and create a DBOS app.
 
@@ -23,7 +23,7 @@ DBOS(app)
 WIDGET_ID = 1
 PAYMENT_STATUS = "payment_status"
 PAYMENT_ID = "payment_id"
-ORDER_URL = "order_url"
+ORDER_ID = "order_id"
 
 # Next, let's write the checkout workflow.
 # This workflow is triggered whenever a customer buys a widget.
@@ -31,7 +31,7 @@ ORDER_URL = "order_url"
 # then marks the order as paid. If any step fails, it backs out,
 # returning reserved inventory and marking the order as cancelled.
 
-# DBOS makes this workflow reliable: each of its steps executes exactly-once and
+# DBOS durably executes this workflow: each of its steps executes exactly-once and
 # if it's ever interrupted, it automatically resumes from where it left off.
 # You can try this yourself--start an order and press the crash button at any time.
 # Within seconds, your app will recover to exactly the state it was in before the crash
@@ -56,10 +56,10 @@ def checkout_workflow():
         DBOS.logger.warn(f"Payment failed for order {order_id}")
         undo_reserve_inventory()
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
-    DBOS.set_event(ORDER_URL, str(order_id))
+    DBOS.set_event(ORDER_ID, str(order_id))
 
 
-# Next, let's use FastAPI to write the HTTP endpoints for checkout.
+# Now, let's use FastAPI to write the HTTP endpoint for checkout.
 
 # This endpoint receives a request when a customer presses the "Buy Now" button.
 # It starts the checkout workflow in the background, then waits for the workflow
@@ -82,28 +82,23 @@ def checkout_endpoint(idempotency_key: str) -> Response:
 
 # This is the HTTP endpoint for payments. It uses the payment ID to signal
 # the checkout workflow whether the payment succeeded or failed.
+# It then retrieves the order ID from the checkout workflow
+# so the browser can redirect the customer to the order status page.
 
 
 @app.post("/payment_webhook/{payment_id}/{payment_status}")
 def payment_endpoint(payment_id: str, payment_status: str) -> Response:
     DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
-    order_url = DBOS.get_event(payment_id, ORDER_URL)
+    order_url = DBOS.get_event(payment_id, ORDER_ID)
     if order_url is None:
         raise HTTPException(status_code=404, detail="Payment failed to process")
     return Response(order_url)
 
 
-# This is the crash endpoint. It crashes your app. For demonstration purposes only. :)
-
-
-@app.post("/crash_application")
-def crash_application():
-    os._exit(1)
-
-
-# Finally, let's write our database operations. Each of these functions performs a simple
+# Next, let's write some database operations. Each of these functions performs a simple
 # CRUD operation. We apply the @DBOS.transaction() decorator to each of them to give them
-# access to a SQLAlchemy database connection.
+# access to a SQLAlchemy database connection. We also make some of these functions
+# HTTP endpoints with FastAPI so the frontend can access them.
 
 
 @DBOS.transaction()
@@ -182,19 +177,34 @@ def restock():
     DBOS.sql_session.execute(products.update().values(inventory=100))
 
 
+# Now, let's write a scheduled job to dispatch orders that have been paid for.
+# Every second, it updates the progress of every outstanding paid order,
+# then dispatches orders that are fully progressed.
+
+
 @DBOS.scheduled("* * * * * *")
 @DBOS.transaction()
 def update_order_progress(scheduled_time, actual_time):
+    # Update the progress of paid orders.
     DBOS.sql_session.execute(
         orders.update()
         .where(orders.c.order_status == OrderStatus.PAID.value)
         .values(progress_remaining=orders.c.progress_remaining - 1)
     )
+    # Dispatch fully-progressed orders.
     DBOS.sql_session.execute(
         orders.update()
         .where(orders.c.progress_remaining == 0)
         .values(order_status=OrderStatus.DISPATCHED.value)
     )
+
+
+# Finally, here is the crash endpoint. It crashes your app. For demonstration purposes only. :)
+
+
+@app.post("/crash_application")
+def crash_application():
+    os._exit(1)
 
 
 # To deploy this app to the cloud, run `dbos-cloud app deploy`.
