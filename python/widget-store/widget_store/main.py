@@ -11,12 +11,11 @@ from typing import Optional
 
 from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI, HTTPException, Response
+from fastapi.responses import HTMLResponse
 
-from .frontend import frontend_router
 from .schema import OrderStatus, order, orders, product, products
 
 app = FastAPI()
-app.include_router(frontend_router)
 
 DBOS(app)
 
@@ -197,6 +196,18 @@ def update_order_progress(scheduled_time, actual_time):
         .where(orders.c.progress_remaining == 0)
         .values(order_status=OrderStatus.DISPATCHED.value)
     )
+
+
+# Next, let's serve the app's frontend from an HTML file using FastAPI.
+# In production, we recommend using DBOS primarily for the backend,
+# with your frontend deployed elsewhere.
+
+
+@app.get("/")
+def frontend():
+    with open(os.path.join("html", "app.html")) as file:
+        html = file.read()
+    return HTMLResponse(html)
 
 
 # Finally, here is the crash endpoint. It crashes your app. For demonstration purposes only. :)
