@@ -13,7 +13,7 @@ from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import HTMLResponse
 
-from .schema import OrderStatus, order, orders, product, products
+from .schema import OrderStatus, orders, products
 
 app = FastAPI()
 
@@ -130,7 +130,7 @@ def create_order() -> int:
 
 @app.get("/order/{order_id}")
 @DBOS.transaction()
-def get_order(order_id: str) -> Optional[order]:
+def get_order(order_id: str):
     return (
         DBOS.sql_session.execute(orders.select().where(orders.c.order_id == order_id))
         .mappings()
