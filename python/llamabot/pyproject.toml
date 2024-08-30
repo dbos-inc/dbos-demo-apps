@@ -10,7 +10,7 @@ dependencies = [
     "slack-bolt>=1.20.0",
     "fastapi[standard]>=0.112.1",
     "llama-index-vector-stores-postgres>=0.1.14",
-    "dbos>=0.4.0a11",
+    "dbos>=0.4.0a18",
 ]
 requires-python = ">=3.9"
 readme = "README.md"

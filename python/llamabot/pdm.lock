@@ -428,7 +428,7 @@ files = [
 
 [[package]]
 name = "dbos"
-version = "0.4.0a17"
+version = "0.4.0a18"
 requires_python = ">=3.9"
 summary = "A Python framework for backends that scale"
 groups = ["default"]
@@ -449,8 +449,8 @@ dependencies = [
     "typing-extensions>=4.12.2; python_version < \"3.10\"",
 ]
 files = [
-    {file = "dbos-0.4.0a17-py3-none-any.whl", hash = "sha256:ecc8bc0bdff43f4bb0a374ab5bef4938a50bcceed7fe1f8dabb3b95934077ea7"},
-    {file = "dbos-0.4.0a17.tar.gz", hash = "sha256:7368a5d38d90b61be8d0964217aded512d14d85f64112de463795ef7fdb41531"},
+    {file = "dbos-0.4.0a18-py3-none-any.whl", hash = "sha256:a8fdf932fe3afa2fd41c2dfbc7dd0a5273b21ca162403a7e30a14f4511c0378d"},
+    {file = "dbos-0.4.0a18.tar.gz", hash = "sha256:05be77a0903876eb6fdc8b357154b73778128fc98c942ab0fb1c3ea49b181e42"},
 ]
 
 [[package]]
