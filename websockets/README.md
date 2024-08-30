@@ -22,8 +22,9 @@ Follow the instructions in the quickstart[https://docs.dbos.dev/getting-started/
 
 On successfull deployment, you will see a message
 
+```
 2024-08-28 18:53:52 [info]: Access your application at https://yourdomain/ 
-
+```
 
 ## Running the client
 
@@ -34,6 +35,7 @@ let us call is wsurl
 
 run the client
 
+```
 node wsclient.js wsurl   
 
 You will see the following output:
@@ -53,7 +55,7 @@ Received: 737998
 .
 .
 
-
+```
 ### Python client
 Running it the first time, you need to install these packages by running
 
@@ -67,6 +69,7 @@ let us call is wsurl
 
 run the client
 
+```
 python3 wsclient.py wsurl   
 
 You will see the following output:
@@ -78,4 +81,4 @@ Received: 325180
 Received: 565480
 .
 .
-
+```
