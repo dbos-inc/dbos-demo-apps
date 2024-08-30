@@ -7,7 +7,6 @@ authors = [
 ]
 dependencies = [
     "dbos>=0.5.0a0",
-    "python-liquid>=1.12.1",
 ]
 requires-python = ">=3.10"
 readme = "README.md"

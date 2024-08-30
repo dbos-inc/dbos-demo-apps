@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:e70d194b527f290b6ed70ea2cbeed41f4db531b55c4e9257aaa0e50d08c7b839"
+content_hash = "sha256:04ddfbe70f7d1442d0cad4662b472cd633cd433e239a01c405b5783c0d60b61a"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -503,20 +503,6 @@ files = [
 ]
 
 [[package]]
-name = "importlib-resources"
-version = "6.4.4"
-requires_python = ">=3.8"
-summary = "Read resources from Python packages"
-groups = ["default"]
-dependencies = [
-    "zipp>=3.1.0; python_version < \"3.10\"",
-]
-files = [
-    {file = "importlib_resources-6.4.4-py3-none-any.whl", hash = "sha256:dda242603d1c9cd836c3368b1174ed74cb4049ecd209e7a1a0104620c18c5c11"},
-    {file = "importlib_resources-6.4.4.tar.gz", hash = "sha256:20600c8b7361938dc0bb2d5ec0297802e575df486f5a544fa414da65e13721f7"},
-]
-
-[[package]]
 name = "isort"
 version = "5.13.2"
 requires_python = ">=3.8.0"
@@ -1005,22 +991,6 @@ groups = ["default"]
 files = [
     {file = "python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca"},
     {file = "python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"},
-]
-
-[[package]]
-name = "python-liquid"
-version = "1.12.1"
-requires_python = ">=3.7"
-summary = "A Python engine for the Liquid template language."
-groups = ["default"]
-dependencies = [
-    "importlib-resources>=5.10.0",
-    "python-dateutil>=2.8.1",
-    "typing-extensions>=4.2.0",
-]
-files = [
-    {file = "python_liquid-1.12.1-py3-none-any.whl", hash = "sha256:2224312944be16c1a44406398eb8a07c7e57398d5c0ef15ff950946dbefe7c33"},
-    {file = "python_liquid-1.12.1.tar.gz", hash = "sha256:7367e979125859fb4116f360f224a89a52ecb455fb26843c43e4d800b389d325"},
 ]
 
 [[package]]
