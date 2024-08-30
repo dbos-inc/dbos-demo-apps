@@ -201,26 +201,29 @@ files = [
 
 [[package]]
 name = "dbos"
-version = "0.4.0a5"
+version = "0.4.0a18"
 requires_python = ">=3.9"
 summary = "A Python framework for backends that scale"
 groups = ["default"]
 dependencies = [
     "alembic>=1.13.2",
+    "fastapi[standard]>=0.112.1",
     "jsonpickle>=3.2.2",
     "jsonschema>=4.23.0",
     "opentelemetry-api>=1.26.0",
     "opentelemetry-exporter-otlp-proto-http>=1.26.0",
     "opentelemetry-sdk>=1.26.0",
+    "psutil>=6.0.0",
     "psycopg2-binary>=2.9.9",
     "python-dateutil>=2.9.0.post0",
     "pyyaml>=6.0.2",
+    "tomlkit>=0.13.2",
     "typer>=0.12.3",
     "typing-extensions>=4.12.2; python_version < \"3.10\"",
 ]
 files = [
-    {file = "dbos-0.4.0a5-py3-none-any.whl", hash = "sha256:c88103e83b12a182f99f6b40f0ced630afc4f1d516213332f4133a01e8afb978"},
-    {file = "dbos-0.4.0a5.tar.gz", hash = "sha256:c1fcc5baeb1bd58aab397f4ddd548aa53be1cd176957c79fc2022f3a47e7946e"},
+    {file = "dbos-0.4.0a18-py3-none-any.whl", hash = "sha256:a8fdf932fe3afa2fd41c2dfbc7dd0a5273b21ca162403a7e30a14f4511c0378d"},
+    {file = "dbos-0.4.0a18.tar.gz", hash = "sha256:05be77a0903876eb6fdc8b357154b73778128fc98c942ab0fb1c3ea49b181e42"},
 ]
 
 [[package]]
@@ -820,6 +823,23 @@ files = [
 ]
 
 [[package]]
+name = "psutil"
+version = "6.0.0"
+requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
+summary = "Cross-platform lib for process and system monitoring in Python."
+groups = ["default"]
+files = [
+    {file = "psutil-6.0.0-cp36-abi3-macosx_10_9_x86_64.whl", hash = "sha256:c588a7e9b1173b6e866756dde596fd4cad94f9399daf99ad8c3258b3cb2b47a0"},
+    {file = "psutil-6.0.0-cp36-abi3-manylinux_2_12_i686.manylinux2010_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6ed2440ada7ef7d0d608f20ad89a04ec47d2d3ab7190896cd62ca5fc4fe08bf0"},
+    {file = "psutil-6.0.0-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5fd9a97c8e94059b0ef54a7d4baf13b405011176c3b6ff257c247cae0d560ecd"},
+    {file = "psutil-6.0.0-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e2e8d0054fc88153ca0544f5c4d554d42e33df2e009c4ff42284ac9ebdef4132"},
+    {file = "psutil-6.0.0-cp37-abi3-win32.whl", hash = "sha256:a495580d6bae27291324fe60cea0b5a7c23fa36a7cd35035a16d93bdcf076b9d"},
+    {file = "psutil-6.0.0-cp37-abi3-win_amd64.whl", hash = "sha256:33ea5e1c975250a720b3a6609c490db40dae5d83a4eb315170c4fe0d8b1f34b3"},
+    {file = "psutil-6.0.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:ffe7fc9b6b36beadc8c322f84e1caff51e8703b88eee1da46d1e3a6ae11b4fd0"},
+    {file = "psutil-6.0.0.tar.gz", hash = "sha256:8faae4f310b6d969fa26ca0545338b21f73c6b15db7c4a8d934a5482faa818f2"},
+]
+
+[[package]]
 name = "psycopg2-binary"
 version = "2.9.9"
 requires_python = ">=3.7"
@@ -1280,6 +1300,17 @@ marker = "python_version < \"3.11\""
 files = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+
+[[package]]
+name = "tomlkit"
+version = "0.13.2"
+requires_python = ">=3.8"
+summary = "Style preserving TOML library"
+groups = ["default"]
+files = [
+    {file = "tomlkit-0.13.2-py3-none-any.whl", hash = "sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde"},
+    {file = "tomlkit-0.13.2.tar.gz", hash = "sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79"},
 ]
 
 [[package]]

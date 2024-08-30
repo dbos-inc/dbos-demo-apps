@@ -14,7 +14,7 @@ from schema import earthquake_tracker
 from sqlalchemy import literal_column, text
 from sqlalchemy.dialects.postgresql import insert
 
-dbos = DBOS()
+DBOS()
 
 # Then, let's write a function that queries the USGS for information on recent earthquakes.
 # Our function will take in a time range and return the id, place, magnitude, and timestamp
@@ -28,7 +28,7 @@ class EarthquakeData(TypedDict):
     timestamp: str
 
 
-@dbos.communicator()
+@DBOS.communicator()
 def get_earthquake_data(
     start_time: datetime, end_time: datetime
 ) -> list[EarthquakeData]:
@@ -74,7 +74,7 @@ def get_earthquake_data(
 # Return true if we inserted a new earthquake, false if we updated an existing one.
 
 
-@dbos.transaction()
+@DBOS.transaction()
 def record_earthquake_data(data: EarthquakeData) -> bool:
     return DBOS.sql_session.execute(
         insert(earthquake_tracker)
@@ -87,13 +87,13 @@ def record_earthquake_data(data: EarthquakeData) -> bool:
 # Finally, let's write a cron job that records earthquakes every minute.
 # Because earthquake data is sometimes updated later, we run over the last hour of data,
 # recording new earthquakes and updating records of existing earthquakes.
-# The @dbos.scheduled() decorator tells DBOS to run this function on a cron schedule.
-# The @dbos.workflow() decorator tells DBOS to run this function as a reliable workflow,
+# The @DBOS.scheduled() decorator tells DBOS to run this function on a cron schedule.
+# The @DBOS.workflow() decorator tells DBOS to run this function as a reliable workflow,
 # so it runs exactly-once per minute and you'll never miss an earthquake or record a duplicate.
 
 
-@dbos.scheduled("* * * * *")
-@dbos.workflow()
+@DBOS.scheduled("* * * * *")
+@DBOS.workflow()
 def run_every_minute(scheduled_time: datetime, actual_time: datetime):
     end_time = scheduled_time
     start_time = scheduled_time - timedelta(hours=1)
