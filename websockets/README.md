@@ -12,7 +12,7 @@ sends a random number to the client every second
 
 ### Client
 
-wslient.js and wsclient.py are the client scripts that requests a websocket connection. They will stay alive and continue
+`wslient.js` and `wsclient.py` are the client scripts that requests a websocket connection. They will stay alive and continue
 to receive data from the server.
 
 
