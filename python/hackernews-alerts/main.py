@@ -16,7 +16,7 @@ import slack_sdk
 
 from dbos import DBOS
 
-dbos = DBOS()
+DBOS()
 
 
 # Then, let's write a function that searches Hacker News.
@@ -25,7 +25,7 @@ dbos = DBOS()
 # It returns matching comments and links to them.
 
 
-@dbos.communicator()
+@DBOS.communicator()
 def search_hackernews(query: str, window_size_hours: int):
     threshold = datetime.now(UTC) - timedelta(hours=window_size_hours)
 
@@ -56,7 +56,7 @@ def search_hackernews(query: str, window_size_hours: int):
 # export SLACK_HN_BOT_OAUTH_TOKEN=your_token
 
 
-@dbos.communicator()
+@DBOS.communicator()
 def post_to_slack(comment: str, url: str):
     message = f"{comment}\n\n{url}"
     client = slack_sdk.WebClient(token=os.environ["SLACK_HN_BOT_OAUTH_TOKEN"])
@@ -69,12 +69,12 @@ def post_to_slack(comment: str, url: str):
 
 
 # Finally, let's write a cron job that runs the search every hour.
-# The @dbos.scheduled() decorator tells DBOS to run this function on a cron schedule.
+# The @DBOS.scheduled() decorator tells DBOS to run this function on a cron schedule.
 # For more information on cron syntax, see: https://docs.gitlab.com/ee/topics/cron/
 
 
-@dbos.scheduled("0 * * * *")
-@dbos.workflow()
+@DBOS.scheduled("0 * * * *")
+@DBOS.workflow()
 def run_hourly(scheduled_time: datetime, actual_time: datetime):
     results = search_hackernews("serverless", window_size_hours=1)
     for comment, url in results:

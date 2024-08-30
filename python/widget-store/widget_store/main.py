@@ -18,7 +18,7 @@ from .schema import OrderStatus, order, orders, product, products
 app = FastAPI()
 app.include_router(frontend_router)
 
-dbos = DBOS(app)
+DBOS(app)
 
 WIDGET_ID = 1
 PAYMENT_STATUS = "payment"
@@ -37,17 +37,17 @@ ORDER_URL = "order_url"
 # Within seconds, your app will recover to exactly the state it was in before the crash.
 
 
-@dbos.workflow()
+@DBOS.workflow()
 def checkout_workflow():
     order_id = create_order()
     inventory_reserved = reserve_inventory()
     if not inventory_reserved:
         DBOS.logger.error(f"Failed to reserve inventory for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
-        dbos.set_event(PAYMENT_URL, None)
+        DBOS.set_event(PAYMENT_URL, None)
         return
-    dbos.set_event(PAYMENT_URL, f"/payment/{DBOS.workflow_id}")
-    payment_status = dbos.recv(PAYMENT_STATUS)
+    DBOS.set_event(PAYMENT_URL, f"/payment/{DBOS.workflow_id}")
+    payment_status = DBOS.recv(PAYMENT_STATUS)
     if payment_status is not None and payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
@@ -55,7 +55,7 @@ def checkout_workflow():
         DBOS.logger.warn(f"Payment failed for order {order_id}")
         undo_reserve_inventory()
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
-    dbos.set_event(ORDER_URL, f"/order/{order_id}")
+    DBOS.set_event(ORDER_URL, f"/order/{order_id}")
 
 
 # Next, let's use FastAPI to write the HTTP endpoints for checkout.
@@ -69,8 +69,8 @@ def checkout_workflow():
 @app.post("/checkout/{key}")
 def checkout_endpoint(key: str) -> Response:
     with SetWorkflowUUID(key):
-        handle = dbos.start_workflow(checkout_workflow)
-    payment_url = dbos.get_event(handle.workflow_uuid, PAYMENT_URL)
+        handle = DBOS.start_workflow(checkout_workflow)
+    payment_url = DBOS.get_event(handle.workflow_uuid, PAYMENT_URL)
     if payment_url is None:
         return Response("/error")
     return Response(payment_url)
@@ -82,8 +82,8 @@ def checkout_endpoint(key: str) -> Response:
 
 @app.post("/payment_webhook/{key}/{status}")
 def payment_endpoint(key: str, status: str) -> Response:
-    dbos.send(key, status, PAYMENT_STATUS)
-    order_url = dbos.get_event(key, ORDER_URL)
+    DBOS.send(key, status, PAYMENT_STATUS)
+    order_url = DBOS.get_event(key, ORDER_URL)
     if order_url is None:
         return Response("/error")
     return Response(order_url)
@@ -98,11 +98,11 @@ def crash_application():
 
 
 # Finally, let's write our database operations. Each of these functions performs a simple
-# CRUD operation. We apply the @dbos.transaction() decorator to each of them to give them
+# CRUD operation. We apply the @DBOS.transaction() decorator to each of them to give them
 # access to a SQLAlchemy database connection.
 
 
-@dbos.transaction()
+@DBOS.transaction()
 def reserve_inventory() -> bool:
     rows_affected = DBOS.sql_session.execute(
         products.update()
@@ -113,7 +113,7 @@ def reserve_inventory() -> bool:
     return rows_affected > 0
 
 
-@dbos.transaction()
+@DBOS.transaction()
 def undo_reserve_inventory() -> None:
     DBOS.sql_session.execute(
         products.update()
@@ -122,7 +122,7 @@ def undo_reserve_inventory() -> None:
     )
 
 
-@dbos.transaction()
+@DBOS.transaction()
 def create_order() -> int:
     result = DBOS.sql_session.execute(
         orders.insert().values(order_status=OrderStatus.PENDING.value)
@@ -130,7 +130,7 @@ def create_order() -> int:
     return result.inserted_primary_key[0]
 
 
-@dbos.transaction()
+@DBOS.transaction()
 def get_order(order_id: str) -> Optional[order]:
     row = DBOS.sql_session.execute(
         orders.select().where(orders.c.order_id == order_id)
@@ -144,14 +144,14 @@ def get_order(order_id: str) -> Optional[order]:
     )
 
 
-@dbos.transaction()
+@DBOS.transaction()
 def update_order_status(order_id: str, status: int) -> None:
     DBOS.sql_session.execute(
         orders.update().where(orders.c.order_id == order_id).values(order_status=status)
     )
 
 
-@dbos.transaction()
+@DBOS.transaction()
 def get_product() -> product:
     row = DBOS.sql_session.execute(products.select()).fetchone()
     return product(
