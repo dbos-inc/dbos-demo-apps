@@ -46,7 +46,7 @@ def checkout_workflow():
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
         DBOS.set_event(PAYMENT_URL, None)
         return
-    DBOS.set_event(PAYMENT_URL, f"/payment/{DBOS.workflow_id}")
+    DBOS.set_event(PAYMENT_URL, DBOS.workflow_id)
     payment_status = DBOS.recv(PAYMENT_STATUS)
     if payment_status is not None and payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
