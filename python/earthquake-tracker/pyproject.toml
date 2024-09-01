@@ -3,7 +3,7 @@ name = "earthquake-tracker"
 version = "0.1.0"
 description = "Record and display earthquakes in real time"
 dependencies = [
-    "dbos>=0.4.0a18",
+    "dbos>=0.5.0a2",
     "streamlit>=1.37.1",
 ]
 requires-python = ">=3.10"
