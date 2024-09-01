@@ -10,7 +10,7 @@ database:
   port: 5432
   username: postgres
   password: ${PGPASSWORD}
-  app_db_name: widget_store
+  app_db_name: widget_store_python
   migrate:
     - alembic upgrade head
     - python3 -m migrations.reset_database
