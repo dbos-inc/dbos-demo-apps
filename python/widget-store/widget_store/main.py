@@ -38,15 +38,28 @@ ORDER_ID = "order_id"
 
 @DBOS.workflow()
 def checkout_workflow():
+    # Create a new order
     order_id = create_order()
+
+    # Attempt to reserve inventory, cancelling the order if no inventory remains.
     inventory_reserved = reserve_inventory()
     if not inventory_reserved:
         DBOS.logger.error(f"Failed to reserve inventory for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
         DBOS.set_event(PAYMENT_ID, None)
         return
+
+    # Send the unique payment ID to the HTTP endpoint so it
+    # can redirect the customer to the payments page.
     DBOS.set_event(PAYMENT_ID, DBOS.workflow_id)
+
+    # Wait for a message that the customer has completed payment.
     payment_status = DBOS.recv(PAYMENT_STATUS)
+
+    # If payment succeeded, mark the order as paid.
+    # Otherwise, return reserved inventory and cancel the order.
+    # Either way, send the unique order ID to the HTTP endpoint so it
+    # can redirect the customer to the order status page.
     if payment_status is not None and payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
