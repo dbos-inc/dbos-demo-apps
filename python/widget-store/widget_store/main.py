@@ -102,7 +102,9 @@ def checkout_endpoint(idempotency_key: str) -> Response:
 
 @app.post("/payment_webhook/{payment_id}/{payment_status}")
 def payment_endpoint(payment_id: str, payment_status: str) -> Response:
+    # Send the payment status to the checkout workflow.
     DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
+    # Wait for the checkout workflow to send an order ID, then return it.
     order_url = DBOS.get_event(payment_id, ORDER_ID)
     if order_url is None:
         raise HTTPException(status_code=404, detail="Payment failed to process")
