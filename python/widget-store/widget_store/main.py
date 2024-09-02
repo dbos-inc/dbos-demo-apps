@@ -84,8 +84,10 @@ def checkout_workflow():
 
 @app.post("/checkout/{idempotency_key}")
 def checkout_endpoint(idempotency_key: str) -> Response:
+    # Idempotently start the checkout workflow in the background.
     with SetWorkflowID(idempotency_key):
         handle = DBOS.start_workflow(checkout_workflow)
+    # Wait for the checkout workflow to send a payment ID, then return it.
     payment_id = DBOS.get_event(handle.workflow_id, PAYMENT_ID)
     if payment_id is None:
         raise HTTPException(status_code=404, detail="Checkout failed to start")
