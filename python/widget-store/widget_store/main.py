@@ -7,7 +7,6 @@
 # First, let's do imports and create a DBOS app.
 
 import os
-from typing import Optional
 
 from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI, HTTPException, Response
@@ -39,22 +38,36 @@ ORDER_ID = "order_id"
 
 @DBOS.workflow()
 def checkout_workflow():
+    # Create a new order
     order_id = create_order()
+
+    # Attempt to reserve inventory, cancelling the order if no inventory remains.
     inventory_reserved = reserve_inventory()
     if not inventory_reserved:
         DBOS.logger.error(f"Failed to reserve inventory for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
         DBOS.set_event(PAYMENT_ID, None)
         return
+
+    # Send a unique payment ID to the checkout endpoint so it
+    # can redirect the customer to the payments page.
     DBOS.set_event(PAYMENT_ID, DBOS.workflow_id)
+
+    # Wait for a message that the customer has completed payment.
     payment_status = DBOS.recv(PAYMENT_STATUS)
-    if payment_status is not None and payment_status == "paid":
+
+    # If payment succeeded, mark the order as paid.
+    # Otherwise, return reserved inventory and cancel the order.
+    if payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
     else:
         DBOS.logger.warn(f"Payment failed for order {order_id}")
         undo_reserve_inventory()
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
+
+    # Finally, send the order ID to the payment endpoint so it
+    # can redirect the customer to the order status page.
     DBOS.set_event(ORDER_ID, str(order_id))
 
 
@@ -65,14 +78,16 @@ def checkout_workflow():
 # to generate and send it a unique payment ID. It then returns the payment ID
 # so the browser can redirect the customer to the payments page.
 
-# The request takes in an idempotency key so that even if the customer presses
+# The endpoint accepts an idempotency key so that even if the customer presses
 # "buy now" multiple times, only one checkout workflow is started.
 
 
 @app.post("/checkout/{idempotency_key}")
 def checkout_endpoint(idempotency_key: str) -> Response:
+    # Idempotently start the checkout workflow in the background.
     with SetWorkflowID(idempotency_key):
         handle = DBOS.start_workflow(checkout_workflow)
+    # Wait for the checkout workflow to send a payment ID, then return it.
     payment_id = DBOS.get_event(handle.workflow_id, PAYMENT_ID)
     if payment_id is None:
         raise HTTPException(status_code=404, detail="Checkout failed to start")
@@ -87,7 +102,9 @@ def checkout_endpoint(idempotency_key: str) -> Response:
 
 @app.post("/payment_webhook/{payment_id}/{payment_status}")
 def payment_endpoint(payment_id: str, payment_status: str) -> Response:
+    # Send the payment status to the checkout workflow.
     DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
+    # Wait for the checkout workflow to send an order ID, then return it.
     order_url = DBOS.get_event(payment_id, ORDER_ID)
     if order_url is None:
         raise HTTPException(status_code=404, detail="Payment failed to process")
