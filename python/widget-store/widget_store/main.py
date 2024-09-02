@@ -49,7 +49,7 @@ def checkout_workflow():
         DBOS.set_event(PAYMENT_ID, None)
         return
 
-    # Send the unique payment ID to the checkout endpoint so it
+    # Send a unique payment ID to the checkout endpoint so it
     # can redirect the customer to the payments page.
     DBOS.set_event(PAYMENT_ID, DBOS.workflow_id)
 
@@ -66,7 +66,7 @@ def checkout_workflow():
         undo_reserve_inventory()
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
 
-    # Finally, send the unique order ID to the payment endpoint so it
+    # Finally, send the order ID to the payment endpoint so it
     # can redirect the customer to the order status page.
     DBOS.set_event(ORDER_ID, str(order_id))
 
