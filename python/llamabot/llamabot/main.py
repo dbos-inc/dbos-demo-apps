@@ -200,24 +200,14 @@ def answer_question(
 
 # Insert a Slack message as a node into LlamaIndex
 
-# Recording the previous node allows us to create a chain of messages
-PREVIOUS_NODE = None
-
 @DBOS.communicator()
 def insert_node(text: str, user_name: str, formatted_time: str) -> None:
-    global PREVIOUS_NODE
     # create a node and apply metadata
     node = TextNode(
         text=text,
         id_=str(uuid.uuid4()),
         metadata={"who": user_name, "when": formatted_time},  # type: ignore
     )
-    if PREVIOUS_NODE is not None:
-        node.relationships[NodeRelationship.PREVIOUS] = RelatedNodeInfo(
-            node_id=PREVIOUS_NODE.node_id
-        )
-        PREVIOUS_NODE = node
-
     index.insert_nodes([node])
 
 # To deploy this app to the cloud and get a public URL, run `dbos-cloud app deploy`
