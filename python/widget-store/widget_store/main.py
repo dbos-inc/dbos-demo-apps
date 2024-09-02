@@ -58,7 +58,7 @@ def checkout_workflow():
 
     # If payment succeeded, mark the order as paid.
     # Otherwise, return reserved inventory and cancel the order.
-    if payment_status is not None and payment_status == "paid":
+    if payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
     else:
@@ -78,7 +78,7 @@ def checkout_workflow():
 # to generate and send it a unique payment ID. It then returns the payment ID
 # so the browser can redirect the customer to the payments page.
 
-# The request takes in an idempotency key so that even if the customer presses
+# The endpoint accepts an idempotency key so that even if the customer presses
 # "buy now" multiple times, only one checkout workflow is started.
 
 
