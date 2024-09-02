@@ -1,8 +1,7 @@
 # Hacker News Slackbot
 
-# This app uses DBOS to deploy a cron job that periodically searches Hacker News
+# This app uses DBOS to deploy a scheduled job that periodically searches Hacker News
 # for people commenting about serverless computing and posts the comments to Slack.
-# Kudos to Modal for the idea: https://modal.com/docs/examples/hackernews_alerts
 
 # First, let's do imports and create a DBOS app.
 
@@ -67,9 +66,14 @@ def post_to_slack(comment: str, url: str):
     )
 
 
-# Finally, let's write a cron job that runs the search every hour.
-# The @DBOS.scheduled() decorator tells DBOS to run this function on a cron schedule.
-# For more information on cron syntax, see: https://docs.gitlab.com/ee/topics/cron/
+# Finally, let's write a scheduled job that runs the search every hour.
+
+# The @DBOS.scheduled decorator tells DBOS to run this function on a schedule.
+# defined with crontab syntax, in this case once per hour. For more information
+# on crontab syntax, see: https://docs.gitlab.com/ee/topics/cron/
+
+# The @DBOS.workflow decorator tells DBOS to durably execute this search, so it
+# runs exactly-once per hour and you'll never miss a comment or record a duplicate.
 
 
 @DBOS.scheduled("0 * * * *")
