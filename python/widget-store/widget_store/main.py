@@ -7,7 +7,6 @@
 # First, let's do imports and create a DBOS app.
 
 import os
-from typing import Optional
 
 from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI, HTTPException, Response
