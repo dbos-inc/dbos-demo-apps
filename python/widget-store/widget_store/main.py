@@ -49,7 +49,7 @@ def checkout_workflow():
         DBOS.set_event(PAYMENT_ID, None)
         return
 
-    # Send the unique payment ID to the HTTP endpoint so it
+    # Send the unique payment ID to the checkout endpoint so it
     # can redirect the customer to the payments page.
     DBOS.set_event(PAYMENT_ID, DBOS.workflow_id)
 
@@ -58,8 +58,6 @@ def checkout_workflow():
 
     # If payment succeeded, mark the order as paid.
     # Otherwise, return reserved inventory and cancel the order.
-    # Either way, send the unique order ID to the HTTP endpoint so it
-    # can redirect the customer to the order status page.
     if payment_status is not None and payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
@@ -67,6 +65,9 @@ def checkout_workflow():
         DBOS.logger.warn(f"Payment failed for order {order_id}")
         undo_reserve_inventory()
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
+
+    # Finally, send the unique order ID to the payment endpoint so it
+    # can redirect the customer to the order status page.
     DBOS.set_event(ORDER_ID, str(order_id))
 
 
