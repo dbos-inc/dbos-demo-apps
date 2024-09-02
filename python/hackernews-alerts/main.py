@@ -13,7 +13,6 @@ from datetime import UTC, datetime, timedelta
 
 import requests
 import slack_sdk
-
 from dbos import DBOS
 
 DBOS()
