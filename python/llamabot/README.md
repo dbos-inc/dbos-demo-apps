@@ -1,7 +1,12 @@
 # Llamabot: A Retrieval-Augmented GenAI Slackbot
 
-Llamabot is a Slackbot that listens to your conversations in a channel, persists them in a database table, and uses that knowledge to answer questions about what's going on in your Slack channel.
+Llamabot is a Slackbot that listens to your conversations in a channel, persists them in a Postgres vector index, and uses that knowledge to answer questions about what's going on in your Slack channel.
 This app is adapted from https://github.com/run-llama/llamabot, reimplementing it with LlamaIndex + DBOS + FastAPI + Postgres.
+
+This app uses DBOS to:
+
+1. Serverlessly deploy the bot to the cloud.
+2. Durably orchestrate the RAG pipeline, guaranteeing each Slack message is processed exactly once and no message is lost or duplicated.
 
 ## Creating an OpenAI Account
 To run this app, you need an OpenAI developer account. Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview).
