@@ -69,10 +69,11 @@ def slack_challenge(request: FastAPIRequest, body: Dict[str, Any] = Body(...)): 
 def handle_message(request: BoltRequest) -> None:
     DBOS.logger.info(f"Received message: {request.body}")
     event_id = request.body["event_id"]
-    # Use the unique event_id to ensure that the workflow runs exactly once for each event
+    # Use the unique event_id as an idempotency key to guarantee each message is processed exactly-once
     with SetWorkflowUUID(event_id):
-        # Start the event processing workflow and respond to Slack without waiting for the workflow to finish, because Slack expects the endpoint to reply within 3 seconds.
-        # Docs: https://api.slack.com/apis/events-api#responding
+        # Start the event processing workflow in the background then respond to Slack.
+        # We can't wait for the workflow to finish because Slack expects the
+        # endpoint to reply within 3 seconds.
         DBOS.start_workflow(message_workflow, request.body["event"])
 
 
