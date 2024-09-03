@@ -28,13 +28,15 @@ DBOS(fastapi=app)
 
 # Then, let's initialize LlamaIndex to use the app's Postgres database as the vector store.
 # Note that we don't set up the schema and tables because we've already done that in the schema migration step.
-set_global_handler("simple", logger=DBOS.logger) # Logs from LlamaIndex will be printed as the `DEBUG` level.
+set_global_handler(
+    "simple", logger=DBOS.logger
+)  # Logs from LlamaIndex will be printed as the `DEBUG` level.
 dbos_config = load_config()
 vector_store = PGVectorStore.from_params(
     database=dbos_config["database"]["app_db_name"],
     host=dbos_config["database"]["hostname"],
     password=dbos_config["database"]["password"],
-    port=dbos_config["database"]["port"],
+    port=str(dbos_config["database"]["port"]),
     user=dbos_config["database"]["username"],
     perform_setup=False,  # Already setup through schema migration
 )
@@ -51,6 +53,7 @@ slackapp = App(
 # Get this bot's own Slack ID
 auth_response = slackapp.client.auth_test()
 bot_user_id = auth_response["user_id"]
+
 
 # Next, let's define a POST endpoint in FastAPI to handle incoming slack requests
 @app.post("/")
@@ -135,6 +138,7 @@ def message_workflow(message: Dict[str, Any]) -> None:
 
 # Let's define some helper functions to interact with Slack.
 
+
 # Post a message to a slack channel, optionally in a thread
 @DBOS.communicator()
 def post_slack_message(
@@ -156,7 +160,9 @@ def get_user_name(user_id: str) -> str:
     user_name: str = user_info["user"]["name"]
     return user_name
 
+
 # Let's define some helper functions to answer the question and store chat histories.
+
 
 # Given a user's question and a slack message, answer the question with LlamaIndex and return the response
 @DBOS.communicator()
@@ -200,6 +206,7 @@ def answer_question(
 
 # Insert a Slack message as a node into LlamaIndex
 
+
 @DBOS.communicator()
 def insert_node(text: str, user_name: str, formatted_time: str) -> None:
     # create a node and apply metadata
@@ -209,5 +216,6 @@ def insert_node(text: str, user_name: str, formatted_time: str) -> None:
         metadata={"who": user_name, "when": formatted_time},  # type: ignore
     )
     index.insert_nodes([node])
+
 
 # To deploy this app to the cloud and get a public URL, run `dbos-cloud app deploy`

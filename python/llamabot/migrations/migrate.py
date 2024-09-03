@@ -10,7 +10,7 @@ vector_store = PGVectorStore.from_params(
     database=dbos_config["database"]["app_db_name"],
     host=dbos_config["database"]["hostname"],
     password=dbos_config["database"]["password"],
-    port=dbos_config["database"]["port"],
+    port=str(dbos_config["database"]["port"]),
     user=dbos_config["database"]["username"],
     perform_setup=True,  # Set up the schema and tables
 )
