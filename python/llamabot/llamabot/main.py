@@ -11,7 +11,7 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, SetWorkflowUUID, load_config
+from dbos import DBOS, SetWorkflowID, load_config
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
@@ -28,13 +28,15 @@ DBOS(fastapi=app)
 
 # Then, let's initialize LlamaIndex to use the app's Postgres database as the vector store.
 # Note that we don't set up the schema and tables because we've already done that in the schema migration step.
-set_global_handler("simple", logger=DBOS.logger) # Logs from LlamaIndex will be printed as the `DEBUG` level.
+set_global_handler(
+    "simple", logger=DBOS.logger
+)  # Logs from LlamaIndex will be printed as the `DEBUG` level.
 dbos_config = load_config()
 vector_store = PGVectorStore.from_params(
     database=dbos_config["database"]["app_db_name"],
     host=dbos_config["database"]["hostname"],
     password=dbos_config["database"]["password"],
-    port=dbos_config["database"]["port"],
+    port=str(dbos_config["database"]["port"]),
     user=dbos_config["database"]["username"],
     perform_setup=False,  # Already setup through schema migration
 )
@@ -51,6 +53,7 @@ slackapp = App(
 # Get this bot's own Slack ID
 auth_response = slackapp.client.auth_test()
 bot_user_id = auth_response["user_id"]
+
 
 # Next, let's define a POST endpoint in FastAPI to handle incoming slack requests
 @app.post("/")
@@ -69,10 +72,11 @@ def slack_challenge(request: FastAPIRequest, body: Dict[str, Any] = Body(...)): 
 def handle_message(request: BoltRequest) -> None:
     DBOS.logger.info(f"Received message: {request.body}")
     event_id = request.body["event_id"]
-    # Use the unique event_id to ensure that the workflow runs exactly once for each event
-    with SetWorkflowUUID(event_id):
-        # Start the event processing workflow and respond to Slack without waiting for the workflow to finish, because Slack expects the endpoint to reply within 3 seconds.
-        # Docs: https://api.slack.com/apis/events-api#responding
+    # Use the unique event_id as an idempotency key to guarantee each message is processed exactly-once
+    with SetWorkflowID(event_id):
+        # Start the event processing workflow in the background then respond to Slack.
+        # We can't wait for the workflow to finish because Slack expects the
+        # endpoint to reply within 3 seconds.
         DBOS.start_workflow(message_workflow, request.body["event"])
 
 
@@ -134,6 +138,7 @@ def message_workflow(message: Dict[str, Any]) -> None:
 
 # Let's define some helper functions to interact with Slack.
 
+
 # Post a message to a slack channel, optionally in a thread
 @DBOS.communicator()
 def post_slack_message(
@@ -155,7 +160,9 @@ def get_user_name(user_id: str) -> str:
     user_name: str = user_info["user"]["name"]
     return user_name
 
+
 # Let's define some helper functions to answer the question and store chat histories.
+
 
 # Given a user's question and a slack message, answer the question with LlamaIndex and return the response
 @DBOS.communicator()
@@ -199,24 +206,16 @@ def answer_question(
 
 # Insert a Slack message as a node into LlamaIndex
 
-# Recording the previous node allows us to create a chain of messages
-PREVIOUS_NODE = None
 
 @DBOS.communicator()
 def insert_node(text: str, user_name: str, formatted_time: str) -> None:
-    global PREVIOUS_NODE
     # create a node and apply metadata
     node = TextNode(
         text=text,
         id_=str(uuid.uuid4()),
         metadata={"who": user_name, "when": formatted_time},  # type: ignore
     )
-    if PREVIOUS_NODE is not None:
-        node.relationships[NodeRelationship.PREVIOUS] = RelatedNodeInfo(
-            node_id=PREVIOUS_NODE.node_id
-        )
-        PREVIOUS_NODE = node
-
     index.insert_nodes([node])
+
 
 # To deploy this app to the cloud and get a public URL, run `dbos-cloud app deploy`
