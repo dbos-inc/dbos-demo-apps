@@ -21,9 +21,12 @@ from together import Together
 
 from schema import papers_metadata
 
+# We will use FastAPI to expose the application to the web
 app = FastAPI()
+# Configure a DBOS instance
 dbos = DBOS(fastapi=app)
 
+# Configure a Postgres vector store to use BERT embeddings, served by Together.ai
 embeddings = TogetherEmbeddings(
     model="togethercomputer/m2-bert-80M-8k-retrieval",
 )
@@ -38,11 +41,17 @@ vector_store = PGVector(
     create_extension=True,
 )
 
+# ChatTogether will let us query Together.ai for exploring a paper's topics.
 model = ChatTogether(
     model="mistralai/Mixtral-8x7B-Instruct-v0.1",
 )
 
-#### UPLOAD PAPERS #### 
+#######################
+#### UPLOAD PAPERS ####
+#######################
+
+# Expose an endpoint to upload a paper. @app.get() is a FastAPI decorator that maps a URL to a function.
+# The handler will invoke a DBOS workflow (upload_paper_workflow) block until the workflow completes, then return its result.
 @app.get("/uploadPaper")
 def upload_paper(paper_url: str, paper_title: str):
     paper_id = uuid.uuid4()
@@ -50,11 +59,18 @@ def upload_paper(paper_url: str, paper_title: str):
         handle = dbos.start_workflow(upload_paper_workflow, paper_url, paper_title, paper_id)
     return handle.get_result()
 
+# Register a DBOS workflow. The workflow does three things:
+# 1. Record the paper metadata in the database (exactly once, using a DBOS 'transaction')
+# 2. Download the paper from the URL (at least once, using a DBOS 'communicator')
+# 3. Store the paper embeddings in the vector store (at least once, using a DBOS 'communicator'. Note this could be an exactly-once transaction if we could manage the PGVector connection.)
+# DBOS workflows are resilient to failure: if an error occurs, the workflow will resume exactly where it left off.
 @dbos.workflow()
 def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID):
     compensation_actions = []
 
-    # Decode URL from base64. Ensure the string is properly padded and replace + and / with - and _
+    # Decode URL from base64. We expect base64 because we encode the paper URL in the endpoint's URL.
+    # Ensure the string is properly padded and replace + and / with - and _
+    # Note: this fails for some PDFs. Turns out parsing PDFs has a bunch of corner cases.
     missing_padding = len(paper_url) % 4
     if missing_padding:
         paper_url += '=' * (4 - missing_padding)
@@ -62,11 +78,11 @@ def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID)
     paper_url = paper_url.replace('/', '_')
     decoded_url = base64.urlsafe_b64decode(paper_url).decode('utf-8')
 
-    # Create a record in the database for the paper
+    # Create a record in the database for the paper. Note: if this fail, record a compensation action.
     record_paper_metadata(paper_title, decoded_url, paper_id)
     compensation_actions.append(lambda: delete_paper_metadata(paper_id))
 
-    # Download the paper
+    # Download the paper and breaks it down into pages.
     try:
         paper_blob = download_paper(decoded_url)
         reader = PdfReader(BytesIO(paper_blob))
@@ -77,7 +93,7 @@ def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID)
             action()
         return
 
-    # Retrieve the embeddings using together.ai and store them in our vector store
+    # Retrieve the embeddings using Together.ai and store them in our vector store
     try:
         store_paper_embeddings(pages, paper_id)
     except Exception as e:
@@ -85,6 +101,9 @@ def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID)
         for action in compensation_actions:
             action()
 
+# Record the paper metadata in the database using a DBOS Transaction. Note the usage of `DBOS.sql_session` to execute SQL queries.
+# Using this session, DBOS will automatically bundle the database queries in a transaction.
+# It will also insert metadata for this step in the same transaction, this guaranteeing extactly-once execution.
 @dbos.transaction()
 def record_paper_metadata(paper_title: str, paper_url: str, paper_id: uuid.UUID):
     DBOS.sql_session.execute(
@@ -96,6 +115,7 @@ def record_paper_metadata(paper_title: str, paper_url: str, paper_id: uuid.UUID)
     )
     DBOS.logger.info(f"Recorded metadata for {paper_title}")
 
+# Delete the paper metadata in the database using a DBOS Transaction.
 @dbos.transaction()
 def delete_paper_metadata(paper_id: uuid.UUID):
     DBOS.sql_session.execute(
@@ -105,6 +125,8 @@ def delete_paper_metadata(paper_id: uuid.UUID):
     )
     DBOS.logger.info(f"Deleted metadata for {paper_id}")
 
+# Download the paper from the URL using a DBOS Communicator. This function will execute at least once.
+# You can configure the retry behavior of the communicator. See https://docs.dbos.dev/.
 @dbos.communicator()
 def download_paper(paper_url: str) -> bytes:
     DBOS.logger.info(f"Downloading paper from {paper_url}")
@@ -113,7 +135,8 @@ def download_paper(paper_url: str) -> bytes:
         raise Exception(f"Failed to download paper: {response.status_code}")
     return response.content
 
-# FIXME: this should be an only-once transaction, but PGVector managers its own connections
+# Store the paper embeddings in the vector store using a DBOS Communicator. This function will execute at least once.
+# This could be a DBOS transaction, but PGVector managers its own connections
 @dbos.communicator()
 def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
     # Create large enough chunks to avoid beeing rate limited by together.ai
@@ -127,36 +150,44 @@ def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
     DBOS.logger.info(f"Chunking {len(pages)} pages")
     metadatas = [{"id": str(paper_id)} for _ in pages]
     documents = text_splitter.create_documents(pages, metadatas=metadatas)
-    split_pages = text_splitter.split_documents(documents) 
+    split_pages = text_splitter.split_documents(documents)
 
     # Feed our vector store
     DBOS.logger.info(f"Storing {len(split_pages)} chunks of length 3000 with overlap 200")
     vector_store.add_documents(split_pages)
     DBOS.logger.info("Fed vector store")
 
+######################
 #### QUERY PAPERS ####
+######################
+
+# Prompt template for searching a paper.
 search_template = """ <s>[INST]
     You are the author of this research paper: {context}
 
     Question: {question}
-   
+
     Format your answer as a list of at most 2 words strings. Do not add any additional information. For example:
     1. Topic 1
     2. Topic 2
     3. Topic 3
-    
+
     [/INST]
 """
 search_prompt = ChatPromptTemplate.from_template(search_template)
 
+# Expose an endpoint to search for comments on a paper. The handler will invoke a DBOS workflow (search_paper_workflow) block until the workflow completes, then return its result.
 @app.get("/startSearch")
 def search_paper(paper_id: str):
     with SetWorkflowUUID(str(uuid.uuid4())):
         handle = dbos.start_workflow(search_paper_workflow, paper_id)
     comments = handle.get_result()
-    print(comments)
     return comments
 
+# Register a DBOS workflow to search for comments on a paper. The workflow does three things:
+# 1. Query the paper for a list of main topics in the paper
+# 2. Search for comments on these topics on Hackernews
+# 3. Rank each topic's comment and select the most relevant one
 @dbos.workflow()
 def search_paper_workflow(paper_id: str):
     # Query the paper for a list of topics
@@ -198,6 +229,7 @@ def search_topics(topics: List[str]) -> Dict[str, List[Dict]]:
         results[topic] = search_hackernews(topic, window_size_hours=730)
     return results
 
+# Search for comments on a list of topics using a DBOS Communicator
 @dbos.communicator()
 def search_hackernews(topic: str, window_size_hours: int) -> List[Dict[str, str]]:
     threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=window_size_hours)
@@ -225,6 +257,7 @@ def search_hackernews(topic: str, window_size_hours: int) -> List[Dict[str, str]
         })
     return hits
 
+# Rank the comments using Together.ai and Salesforce Llama-Rank
 @dbos.communicator()
 def rank_comments(comments: Dict[str, List[Dict]]) -> Dict[str, Dict]:
     results = {}
