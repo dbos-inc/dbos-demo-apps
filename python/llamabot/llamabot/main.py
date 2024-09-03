@@ -11,7 +11,7 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, SetWorkflowUUID, load_config
+from dbos import DBOS, SetWorkflowID, load_config
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
@@ -70,7 +70,7 @@ def handle_message(request: BoltRequest) -> None:
     DBOS.logger.info(f"Received message: {request.body}")
     event_id = request.body["event_id"]
     # Use the unique event_id as an idempotency key to guarantee each message is processed exactly-once
-    with SetWorkflowUUID(event_id):
+    with SetWorkflowID(event_id):
         # Start the event processing workflow in the background then respond to Slack.
         # We can't wait for the workflow to finish because Slack expects the
         # endpoint to reply within 3 seconds.
