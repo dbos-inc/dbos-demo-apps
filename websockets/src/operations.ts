@@ -1,13 +1,6 @@
-import { HandlerContext, TransactionContext, Transaction, GetApi, ArgSource, ArgSources } from '@dbos-inc/dbos-sdk';
-import { Knex } from 'knex';
+import { HandlerContext, GetApi} from '@dbos-inc/dbos-sdk';
 import { WebSocket } from 'ws';
 
-
-// The schema of the database table used in this example.
-export interface dbos_hello {
-  name: string;
-  greet_count: number;
-}
 
 export class Hello {
 
