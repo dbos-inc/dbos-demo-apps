@@ -14,7 +14,7 @@ import requests
 import slack_sdk
 from dbos import DBOS
 
-DBOS()
+dbos = DBOS()
 
 
 # Then, let's write a function that searches Hacker News.
@@ -72,7 +72,7 @@ def post_to_slack(comment: str, url: str):
     )
 
 
-# Finally, let's write a scheduled job that runs the search every hour.
+# Now, let's write a scheduled job that runs the search every hour.
 
 # The @DBOS.scheduled decorator tells DBOS to run this function on a schedule.
 # defined with crontab syntax, in this case once per hour. For more information
@@ -89,6 +89,12 @@ def run_hourly(scheduled_time: datetime, actual_time: datetime):
     for comment, url in results:
         post_to_slack(comment, url)
     DBOS.logger.info(f"Found {len(results)} comments at {str(actual_time)}")
+
+
+# Finally, in our main function, let's launch DBOS.
+
+if __name__ == "__main__":
+    dbos.launch()
 
 
 # To deploy this app to the cloud as a persistent cron job, run `dbos-cloud app deploy`

@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from .schema import greetings
 
 app = FastAPI()
-DBOS(app)
+DBOS(fastapi=app)
 
 
 @app.get("/")
