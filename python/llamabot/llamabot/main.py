@@ -140,7 +140,7 @@ def message_workflow(message: Dict[str, Any]) -> None:
 
 
 # Post a message to a slack channel, optionally in a thread
-@DBOS.communicator()
+@DBOS.step()
 def post_slack_message(
     message: str, channel: str, thread_ts: Optional[str] = None
 ) -> None:
@@ -148,13 +148,13 @@ def post_slack_message(
 
 
 # Get all the replies in a Slack thread
-@DBOS.communicator()
+@DBOS.step()
 def get_slack_replies(channel: str, thread_ts: str) -> SlackResponse:
     return slackapp.client.conversations_replies(channel=channel, ts=thread_ts)
 
 
 # Get a Slack user's username from their user id
-@DBOS.communicator()
+@DBOS.step()
 def get_user_name(user_id: str) -> str:
     user_info = slackapp.client.users_info(user=user_id)
     user_name: str = user_info["user"]["name"]
@@ -165,7 +165,7 @@ def get_user_name(user_id: str) -> str:
 
 
 # Given a user's question and a slack message, answer the question with LlamaIndex and return the response
-@DBOS.communicator()
+@DBOS.step()
 def answer_question(
     query: str, message: Dict[str, Any], replies: Optional[SlackResponse] = None
 ) -> Any:
@@ -207,7 +207,7 @@ def answer_question(
 # Insert a Slack message as a node into LlamaIndex
 
 
-@DBOS.communicator()
+@DBOS.step()
 def insert_node(text: str, user_name: str, formatted_time: str) -> None:
     # create a node and apply metadata
     node = TextNode(

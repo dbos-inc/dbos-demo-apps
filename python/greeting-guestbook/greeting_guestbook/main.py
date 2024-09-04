@@ -29,7 +29,7 @@ def get_greetings():
     return [dict(row) for row in rows.mappings()]
 
 
-@DBOS.communicator()
+@DBOS.step()
 def sign_guestbook(name: str):
     key = os.environ.get("GUESTBOOK_KEY", None)
     if key is None or len(key) != 36:
