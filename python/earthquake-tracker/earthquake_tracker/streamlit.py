@@ -8,7 +8,7 @@
 # We separate the Streamlit script from the DBOS ingestion code
 # because Streamlit re-runs the entire script every time it's viewed.
 
-# First, let's do imports.
+# First, let's do imports and configure Streamlit with a title and some custom CSS.
 
 import dbos
 import pandas as pd
@@ -16,8 +16,6 @@ import plotly.express as px
 import streamlit as st
 from schema import earthquake_tracker
 from sqlalchemy import create_engine, desc, select
-
-# Now let's configure Streamlit with a page title and description and some custom CSS.
 
 st.set_page_config(page_title="DBOS Earthquake Tracker", layout="wide")
 st.markdown(
