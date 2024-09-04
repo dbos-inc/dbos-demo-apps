@@ -111,5 +111,5 @@ with col2:
     st.metric("Average Magnitude", f"{avg_magnitude:.2f}")
     st.metric("Max Magnitude", f"{max_magnitude:.2f}")
 
-# Finally, let's add a data table with all the raw earthquake data
+# Finally, let's add a sortable data table with all the raw earthquake data
 st.dataframe(filtered_df, use_container_width=True)
