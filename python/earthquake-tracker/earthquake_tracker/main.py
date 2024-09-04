@@ -19,7 +19,7 @@ DBOS()
 # Then, let's write a function that queries the USGS for information on recent earthquakes.
 # Our function will take in a time range and return the id, place, magnitude, and timestamp
 # of all earthquakes that occured in that time range.
-# We annotate this function with `@DBOS.step` so we can durably call it from a workflow later on.
+# We annotate this function with `@DBOS.step` so we can call it from a durable workflow later on.
 
 
 class EarthquakeData(TypedDict):

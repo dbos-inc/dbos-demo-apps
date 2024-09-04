@@ -22,8 +22,8 @@ DBOS()
 # in the last N hours containing a search term.
 # It returns matching comments and links to them.
 
-# We annotate this function with `@DBOS.step` so later we can durably
-# call it from our scheduled workflow.
+# We annotate this function with `@DBOS.step` so we can call it from
+# a durable workflow later on.
 
 
 @DBOS.step()
@@ -56,8 +56,8 @@ def search_hackernews(query: str, window_size_hours: int):
 # Your token should start with "xoxb". Set it as an environment variable like so:
 # export SLACK_HN_BOT_OAUTH_TOKEN=your_token
 
-# We annotate this function with `@DBOS.step` so later we can durably
-# call it from our scheduled workflow.
+# We annotate this function with `@DBOS.step` so we can call it from
+# a durable workflow later on.
 
 
 @DBOS.step()
