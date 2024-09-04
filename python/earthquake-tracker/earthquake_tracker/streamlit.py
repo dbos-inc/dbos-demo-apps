@@ -79,7 +79,7 @@ def load_data():
 df = load_data()
 
 # Now, let's put together a data visualization!
-# First, we'll magnitude and date selector sliders in a sidebar
+# First, we'll add a magnitude slider in a sidebar
 
 with st.sidebar:
     st.header("Filters")
@@ -89,15 +89,7 @@ with st.sidebar:
         float(df["Magnitude"].max()),
         float(df["Magnitude"].min()),
     )
-    date_range = st.date_input(
-        "Date Range",
-        [df["UTC Timestamp"].min().date(), df["UTC Timestamp"].max().date()],
-    )
-filtered_df = df[
-    (df["Magnitude"] >= min_magnitude)
-    & (df["UTC Timestamp"].dt.date >= date_range[0])
-    & (df["UTC Timestamp"].dt.date <= date_range[1])
-]
+filtered_df = df[(df["Magnitude"] >= min_magnitude)]
 
 # Then, in side-by-side columns, let's display the magnitude distribution and summary statistics of the earthquakes
 
@@ -121,8 +113,3 @@ with col2:
 
 # Finally, let's add a data table with all the raw earthquake data
 st.dataframe(filtered_df, use_container_width=True)
-
-# We'll also add a refresh button for convenience
-if st.button("🔄 Refresh Data"):
-    st.cache_data.clear()
-    st.experimental_rerun()
