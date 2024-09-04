@@ -16,7 +16,7 @@ from .schema import OrderStatus, orders, products
 
 app = FastAPI()
 
-DBOS(app)
+DBOS(fastapi=app)
 
 WIDGET_ID = 1
 PAYMENT_STATUS = "payment_status"
