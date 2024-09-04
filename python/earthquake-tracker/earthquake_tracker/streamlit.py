@@ -20,26 +20,11 @@ from sqlalchemy import create_engine, desc, select
 st.set_page_config(page_title="DBOS Earthquake Tracker", layout="wide")
 st.markdown(
     """
-<style>
-    .reportview-container {
-        background-color: #f0f2f6;
-    }
-    .sidebar .sidebar-content {
-        background-color: #ffffff;
-    }
-    .Widget>label {
-        color: #31333F;
-        font-weight: bold;
-    }
-    .stProgress > div > div > div > div {
-        background-color: #4CAF50;
-    }
-            
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-</style>
-""",
+        <style>
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+        </style>
+        """,
     unsafe_allow_html=True,
 )
 st.title("🌎 Earthquake Tracker")
