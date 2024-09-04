@@ -12,6 +12,12 @@ export PGPASSWORD=dbos
 python3 start_postgres_docker.py
 ```
 
+Visit https://demo-guestbook.cloud.dbos.dev/key to get an "API key" for this app and set it as an environment variable:
+
+```shell
+export GUESTBOOK_KEY=<your-key>
+```
+
 Then run:
 
 ```shell
