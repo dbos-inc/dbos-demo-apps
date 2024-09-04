@@ -52,7 +52,6 @@ st.markdown(
 # and use it to create a database connection using sqlalchemy.
 
 
-@st.cache_data(ttl=300)
 def load_data():
     database_url = dbos.get_dbos_database_url()
     engine = create_engine(database_url)
