@@ -3,7 +3,7 @@
 # This app uses DBOS to deploy a scheduled job that periodically searches Hacker News
 # for people commenting about serverless computing and posts the comments to Slack.
 
-# First, let's do imports and create a DBOS app.
+# First, let's do imports and initialize DBOS.
 
 import html
 import os
@@ -14,7 +14,7 @@ import requests
 import slack_sdk
 from dbos import DBOS
 
-dbos = DBOS()
+DBOS()
 
 
 # Then, let's write a function that searches Hacker News.
@@ -94,7 +94,7 @@ def run_hourly(scheduled_time: datetime, actual_time: datetime):
 # Finally, in our main function, let's launch DBOS.
 
 if __name__ == "__main__":
-    dbos.launch()
+    DBOS.launch()
 
 
 # To deploy this app to the cloud as a persistent cron job, run `dbos-cloud app deploy`
