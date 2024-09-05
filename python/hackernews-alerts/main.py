@@ -3,7 +3,7 @@
 # This app uses DBOS to deploy a scheduled job that periodically searches Hacker News
 # for people commenting about serverless computing and posts the comments to Slack.
 
-# First, let's do imports and create a DBOS app.
+# First, let's do imports and initialize DBOS.
 
 import html
 import os
