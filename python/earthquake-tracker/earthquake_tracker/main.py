@@ -14,7 +14,7 @@ from schema import earthquake_tracker
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 
-dbos = DBOS()
+DBOS()
 
 # Then, let's write a function that queries the USGS for information on recent earthquakes.
 # Our function will take in a time range and return the id, place, magnitude, and timestamp
@@ -110,7 +110,7 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
 # Finally, in our main function, let's launch DBOS.
 
 if __name__ == "__main__":
-    dbos.launch()
+    DBOS.launch()
 
 
 # To deploy this app to the cloud as a persistent cron job and dashboard, run `dbos-cloud app deploy`
