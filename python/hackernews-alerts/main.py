@@ -14,7 +14,7 @@ import requests
 import slack_sdk
 from dbos import DBOS
 
-dbos = DBOS()
+DBOS()
 
 
 # Then, let's write a function that searches Hacker News.
@@ -94,7 +94,7 @@ def run_hourly(scheduled_time: datetime, actual_time: datetime):
 # Finally, in our main function, let's launch DBOS.
 
 if __name__ == "__main__":
-    dbos.launch()
+    DBOS.launch()
 
 
 # To deploy this app to the cloud as a persistent cron job, run `dbos-cloud app deploy`
