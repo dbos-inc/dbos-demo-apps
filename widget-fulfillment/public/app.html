@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DBOS Widget Store</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <style>
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-block;
+        border-top: 3px solid #fff;
+        border-right: 3px solid transparent;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+      }
+
+      @keyframes rotation {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <script>
+    console.log("Hello!!!")
+    const divider = `<div class="relative inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div>`;
+    const getOrderStatus = (status) => {
+      switch (status) {
+        case 0:
+          return "PENDING";
+        case 1:
+          return "DISPATCHED";
+        case 2:
+          return "PAID";
+        case -1:
+          return "CANCELLED";
+        default:
+          //throw new Error("Invalid order status");
+          return "UNKNOWN";
+      }
+    };
+    const setURLQueryParam = (key, value) => {
+      const url = new URL(window.location.href);
+      if (value === null) {
+        url.searchParams.delete(key);
+      } else {
+        url.searchParams.set(key, value);
+      }
+      window.history.replaceState({}, "", url);
+    };
+    const getURLQueryParam = (key) => {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(key);
+    };
+    function widgetStore() {
+      return {
+        view: "store",
+        orders: [],
+        divider,
+        visiblePanelOnMobile: "store", // internals | store | tools
+        connectionLost: false,
+        updateOrdersInterval: null,
+        init: function () {
+            this.startUpdateOrdersInterval();
+        },
+        startUpdateOrdersInterval: function () {
+          if (this.updateOrdersInterval === null) {
+            this.updateOrdersInterval = setInterval(() => {
+              this.updateOrders();
+            }, 500);
+          }
+        },
+        updateOrders: async function () {
+          try {
+            const response = await fetch("/orders");
+            if (response.status !== 200) {
+              throw new Error("Failed to fetch orders");
+            }
+            this.connectionLost = false;
+            const orders = await response.json();
+            this.orders = orders
+              .map((order) => {
+                return {
+                  ...order,
+                  order_status: getOrderStatus(order.order_status),
+                };
+              })
+              .sort((a, b) => b.order_id - a.order_id);
+            //console.log("Updating orders: ", this.orders)
+          } catch (error) {
+            this.connectionLost = true;
+          }
+        }
+      }
+    }
+  </script>
+    <body
+        x-data="widgetStore()"
+        class="h-svh md:p-1 bg-neutral-100 font-sans flex flex-col"
+    >
+        <span
+            x-show="connectionLost"
+            class="w-full flex justify-center items-center text-center bg-red-500 text-white p-2 md:p-4 rounded-lg"
+        >
+            Connection to server lost. Reconnecting...
+            <span class="spinner ml-2"></span>
+        </span>
+        
+        <div class="flex flex-col grow overflow-scroll">
+            <div class="w-full flex justify-between mb-2">
+                <div></div>
+                <img
+                    src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
+                    alt="DBOS Logo"
+                    class="w-40"
+                />
+                <div></div>
+            </div>
+
+            <div class="md:grid md:grid-cols-3 md:gap-1 grow">
+                <div :class="visiblePanelOnMobile === 'internals' || 'hidden md:block'">
+                    <div class="flex flex-col gap-6 p-5">
+                        <h2 class="text-3xl text-center">Shop internals</h2>
+                        <div x-html="divider"></div>
+
+                        <div class="flow-root w-full">
+                            <h3 class="text-2xl mb-2">Orders</h3>
+                            <p x-show="orders.length === 0" class="text-gray-500 text-center">
+                                No orders in the system.
+                            </p>
+                            <div
+                                x-show="orders.length > 0"
+                                class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8"
+                            >
+                                <div
+                                    class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
+                                >
+                                    <div
+                                        class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                                    >
+                                        <table class="min-w-full divide-y divide-gray-300">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                            <th
+                                                scope="col"
+                                                class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                                            >
+                                                Order ID
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                                            >
+                                                Status
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                                            >
+                                                Product
+                                            </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 bg-white">
+                                            <template x-for="order in orders" :key="order.order_id">
+                                            <tr>
+                                                <td
+                                                x-text="order.order_id"
+                                                class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                                                ></td>
+                                                <td
+                                                x-text="order.order_status"
+                                                class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                                                ></td>
+                                                <td
+                                                x-text="order.product"
+                                                class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                                                ></td>
+                                            </tr>
+                                            </template>
+                                        </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div :class="visiblePanelOnMobile === 'store' || 'hidden md:block'">
+                    <div
+                    class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
+                    >
+                    <h2 class="text-3xl">Widget Store</h2>
+                    <div x-html="divider"></div>
+                    </div>
+                </div>
+            
+                <div :class="visiblePanelOnMobile === 'tools' || 'hidden md:block'">
+                    <div class="flex flex-col gap-6 p-5 text-center">
+                    <h2 class="text-3xl text-center">Server Tools</h2>
+                    <div x-html="divider"></div>
+                    <p class="text-left text-gray-500">
+                        Crash the application at any time to simulate a server failure or
+                        service interruption. After crashing, the application will
+                        momentarily become inaccessible but then resume from exactly where
+                        it left off before the crash. Try it and see!
+                    </p>
+                    <div>
+                        <button
+                        class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl cursor-pointer rounded-lg transition duration-300 hover:bg-red-700 hover:shadow-lg"
+                        x-on:click="fetch('/crash_application', {'method': 'POST'})"
+                        >
+                        Crash the Application
+                        </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="md:hidden w-full grid grid-cols-3 font-semibold font-mono bg-neutral-200"
+        >
+            <button
+                class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black border-r"
+                :class="visiblePanelOnMobile === 'internals' && 'bg-neutral-300'"
+                x-on:click="visiblePanelOnMobile = 'internals'"
+            >
+                <span>Shop</span>
+                <span>Internals</span>
+            </button>
+            <button
+                class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black border-r"
+                :class="visiblePanelOnMobile === 'store' && 'bg-neutral-300'"
+                x-on:click="visiblePanelOnMobile = 'store'"
+            >
+                <span>Widget</span>
+                <span>Store</span>
+            </button>
+            <button
+                class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black"
+                :class="visiblePanelOnMobile === 'tools' && 'bg-neutral-300'"
+                x-on:click="visiblePanelOnMobile = 'tools'"
+            >
+                <span>Server</span>
+                <span>Tools</span>
+            </button>
+        </div>
+    </body>
+</html>

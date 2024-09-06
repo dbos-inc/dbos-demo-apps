@@ -16,6 +16,11 @@ async function render(file: string, ctx?: object): Promise<string> {
 export class Frontend {
 
   @GetApi('/')
+  static frontend(_ctxt: HandlerContext) {
+    return render("../public/app.html", {});
+  }
+
+  @GetApi('/old')
   static async userPick(_ctxt: HandlerContext) {
     return await render("index", {});
   }
@@ -43,6 +48,12 @@ export class Frontend {
       order: userRec.order,
       expirationSecs: Math.round(userRec.expirationSecs),
     });
+  }
+
+  @GetApi('/orders')
+  static async orders(ctxt: HandlerContext) {
+    const {orders, packers} = await ctxt.invoke(FulfillUtilities).popDashboard();
+    return orders;
   }
   
   @GetApi('/dashboard')

@@ -1,6 +1,6 @@
-import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional } from '@dbos-inc/dbos-sdk';
+import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, configureInstance, GetApi } from '@dbos-inc/dbos-sdk';
 import { FulfillUtilities, OrderPacker, OrderStatus, OrderWithProduct, Packer } from './utilities';
-import { Kafka, KafkaConfig, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
+import { Kafka, KafkaConfig, KafkaProduceCommunicator, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
 import { CurrentTimeCommunicator } from "@dbos-inc/communicator-datetime";
 
@@ -11,6 +11,11 @@ const kafkaConfig: KafkaConfig = {
   brokers: [`${process.env['KAFKA_BROKER'] ?? 'localhost:9092'}`],
   logLevel: logLevel.ERROR
 };
+
+const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduceCommunicator, 
+  'wfKafka', kafkaConfig, fulfillTopic, {
+    createPartitioner: Partitioners.DefaultPartitioner
+  });
 
 const timeToPackOrder = 30;
 
@@ -78,4 +83,26 @@ export class Fulfillment {
     process.exit(1);
     return Promise.resolve();
   }
+
+  @GetApi('/send/:order_id')
+  @Workflow()
+  static async sendMessage(ctxt: WorkflowContext, order_id: number) {
+      await ctxt.invoke(producerConfig).sendMessage(
+      {
+        value: JSON.stringify({
+          order_id: order_id,
+          details: [
+            { 
+              order_id: order_id,
+              order_status: 2,
+              last_update_time: "2024-09-04",
+              product_id: 1,
+              product: "widget"
+            }
+          ]
+        })
+      }
+    );
+  }
+
 }
