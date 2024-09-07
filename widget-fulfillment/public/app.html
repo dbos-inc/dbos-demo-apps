@@ -37,7 +37,6 @@
     </style>
   </head>
   <script>
-    console.log("Hello!!!")
     const divider = `<div class="relative inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div>`;
     const getOrderStatus = (status) => {
       switch (status) {
@@ -68,45 +67,71 @@
       return url.searchParams.get(key);
     };
     function widgetStore() {
-      return {
-        view: "store",
-        orders: [],
-        divider,
-        visiblePanelOnMobile: "store", // internals | store | tools
-        connectionLost: false,
-        updateOrdersInterval: null,
-        init: function () {
-            this.startUpdateOrdersInterval();
-        },
-        startUpdateOrdersInterval: function () {
-          if (this.updateOrdersInterval === null) {
-            this.updateOrdersInterval = setInterval(() => {
-              this.updateOrders();
-            }, 500);
-          }
-        },
-        updateOrders: async function () {
-          try {
-            const response = await fetch("/orders");
-            if (response.status !== 200) {
-              throw new Error("Failed to fetch orders");
+        return {
+            view: "store",
+            orders: [],
+            divider,
+            visiblePanelOnMobile: "store", // internals | store | tools
+            connectionLost: false,
+            updateOrdersInterval: null,
+            currentAssignment: null,
+            init: function () {
+                this.startUpdateOrdersInterval();
+            },
+            startUpdateOrdersInterval: function () {
+                if (this.updateOrdersInterval === null) {
+                    this.updateOrdersInterval = setInterval(() => {
+                    this.updateOrders();
+                    }, 500);
+                }
+            },
+            updateOrders: async function () {
+                try {
+                    const response = await fetch("/orders");
+                    if (response.status !== 200) {
+                    throw new Error("Failed to fetch orders");
+                    }
+                    this.connectionLost = false;
+                    const orders = await response.json();
+                    this.orders = orders
+                    .map((order) => {
+                        return {
+                        ...order,
+                        order_status: getOrderStatus(order.order_status),
+                        };
+                    })
+                    .sort((a, b) => b.order_id - a.order_id);            
+                    const assignmentResponse = await fetch("/newfulfill?name=alex")
+                    if (assignmentResponse.status !== 200) {
+                    throw new Error("Failed to fetch assignment");
+                    }
+                    this.currentAssignment = await assignmentResponse.json();
+                } catch (error) {
+                    this.connectionLost = true;
+                }
+            },
+            doFulfill: async function() {
+                try {
+                    const response = await fetch("/fulfill/fulfilled", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",  
+                    },
+                    body: JSON.stringify({
+                        "name": this.currentAssignment.packer.packer_name
+                    })});
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("Error:", errorText);
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                }                
+            },
+            haveCurrentOrder: function() {
+                return (this.currentAssignment.packer.order_id !== null)
             }
-            this.connectionLost = false;
-            const orders = await response.json();
-            this.orders = orders
-              .map((order) => {
-                return {
-                  ...order,
-                  order_status: getOrderStatus(order.order_status),
-                };
-              })
-              .sort((a, b) => b.order_id - a.order_id);
-            //console.log("Updating orders: ", this.orders)
-          } catch (error) {
-            this.connectionLost = true;
-          }
         }
-      }
     }
   </script>
     <body
@@ -206,8 +231,17 @@
                     <div
                     class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
                     >
-                    <h2 class="text-3xl">Widget Store</h2>
-                    <div x-html="divider"></div>
+                        <h2 class="text-3xl">Widget Store</h2>
+                        <div x-html="divider"></div>
+                        <div x-text="JSON.stringify(currentAssignment, null, 2)" class="whitespace-pre"></div>
+                        <button
+                            x-bind:disabled="connectionLost"
+                            x-show="haveCurrentOrder"
+                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
+                            x-on:click="doFulfill()"
+                        >
+                            Fulfill
+                        </button>
                     </div>
                 </div>
             

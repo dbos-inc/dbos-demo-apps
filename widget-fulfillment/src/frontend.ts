@@ -31,6 +31,13 @@ export class Frontend {
     return Promise.resolve();
   }
 
+  @GetApi('/newfulfill')
+  static async newFulfillment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
+    const userRecWF = await ctxt.startWorkflow(Fulfillment).userAssignmentWorkflow(name, more_time);
+    const userRec = await ctxt.getEvent<OrderPackerInfo>(userRecWF.getWorkflowUUID(), 'rec');
+    return userRec;
+  }
+
   @GetApi('/fulfill')
   static async fulfillment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
     const userRecWF = await ctxt.startWorkflow(Fulfillment).userAssignmentWorkflow(name, more_time);
