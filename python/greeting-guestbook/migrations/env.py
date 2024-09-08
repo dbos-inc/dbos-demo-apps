@@ -1,9 +1,8 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 from dbos import get_dbos_database_url
+from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -20,6 +19,7 @@ config.set_main_option("sqlalchemy.url", get_dbos_database_url())
 # add your model's MetaData object here
 # for 'autogenerate' support
 from greeting_guestbook.schema import metadata
+
 target_metadata = metadata
 
 # other values from the config, defined by the needs of env.py,

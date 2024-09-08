@@ -4,29 +4,12 @@ import os
 import requests
 from dbos import DBOS
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from sqlalchemy.dialects.postgresql import insert
 
 from .schema import dbos_hello
 
 app = FastAPI()
 DBOS(fastapi=app)
-
-
-@app.get("/")
-def readme() -> HTMLResponse:
-    readme = """<html><body><p>
-      Welcome! Visit the route /greeting/:name to be greeted!<br>
-      For example, visit <a href="/greeting/dbos">/greeting/dbos</a>.<br>
-      </p></body></html>
-      """
-    return HTMLResponse(readme)
-
-
-@app.get("/greetings")
-@DBOS.transaction()
-def get_greetings():
-    rows = DBOS.sql_session.execute(greetings.select())
-    return [dict(row) for row in rows.mappings()]
 
 
 @DBOS.step()
@@ -48,22 +31,23 @@ def sign_guestbook(name: str):
 
 
 @DBOS.transaction()
-def insert_greeting(name: str, note: str):
-    DBOS.sql_session.execute(greetings.insert().values(name=name, note=note))
+def insert_greeting(name: str) -> str:
+    query = (
+        insert(dbos_hello)
+        .values(name=name, greet_count=1)
+        .on_conflict_do_update(
+            index_elements=["name"], set_={"greet_count": dbos_hello.c.greet_count + 1}
+        )
+    )
+    DBOS.sql_session.execute(query)
     DBOS.logger.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
 
 
+@app.get("/greeting/{name}")
 @DBOS.workflow()
-def greeting_workflow(name: str, note: str):
+def greeting_endpoint(name: str):
     sign_guestbook(name)
-    for _ in range(5):
+    for _ in range(3):
         DBOS.logger.info("Press Control + C to stop the app...")
         DBOS.sleep(1)
-    insert_greeting(name, note)
-
-
-@app.get("/greeting/{name}")
-def greet(name: str) -> str:
-    note = f"Thank you for being awesome, {name}!"
-    DBOS.start_workflow(greeting_workflow, name, note)
-    return note
+    insert_greeting(name)
