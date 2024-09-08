@@ -18,8 +18,6 @@ def sign_guestbook(name: str):
         headers={"Content-Type": "application/json"},
         json={"name": name},
     )
-    if not response.ok:
-        raise Exception(f"Error signing guestbook: {json.dumps(response.json())}")
     DBOS.logger.info(f">>> STEP 1: Signed the guestbook for {name}")
 
 
