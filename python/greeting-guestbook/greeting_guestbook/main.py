@@ -45,3 +45,4 @@ def greeting_endpoint(name: str):
         DBOS.logger.info("Press Control + C to stop the app...")
         DBOS.sleep(1)
     insert_greeting(name)
+    return f"Thank you for being awesome, {name}!"
