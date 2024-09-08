@@ -1,5 +1,4 @@
 import json
-import os
 
 import requests
 from dbos import DBOS
@@ -14,20 +13,15 @@ DBOS(fastapi=app)
 
 @DBOS.step()
 def sign_guestbook(name: str):
-    key = os.environ.get("GUESTBOOK_KEY", None)
-    if key is None or len(key) != 36:
-        raise Exception("Please set the guestbook key in dbos-config.yaml")
-
-    url = "https://demo-guestbook.cloud.dbos.dev/record_greeting"
+    url = "https://demo-guest-book.cloud.dbos.dev/record_greeting"
     headers = {"Content-Type": "application/json"}
-    payload = {"key": key, "name": name}
+    payload = {"name": name}
 
     response = requests.post(url, headers=headers, json=payload)
-    response_str = json.dumps(response.json())
     if not response.ok:
-        raise Exception(f"Error signing guestbook: {response_str}")
+        raise Exception(f"Error signing guestbook: {json.dumps(response.json())}")
 
-    DBOS.logger.info(f">>> STEP 1: Signed the Guestbook: {response_str}")
+    DBOS.logger.info(f">>> STEP 1: Signed the guestbook for {name}")
 
 
 @DBOS.transaction()

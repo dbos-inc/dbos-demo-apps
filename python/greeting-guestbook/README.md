@@ -1,6 +1,6 @@
 # Greeting Guestbook
 
-This is the app described in the [DBOS Programming Guide](https://docs.dbos.dev/getting-started/quickstart-programming-python).
+This is the app described in the [DBOS Programming Guide](https://docs.dbos.dev/python/programming-guide).
 
 ### Running Locally
 
@@ -10,12 +10,6 @@ If you have Docker, you can start one with:
 ```shell
 export PGPASSWORD=dbos
 python3 start_postgres_docker.py
-```
-
-Visit https://demo-guestbook.cloud.dbos.dev/key to get an "API key" for this app and set it as an environment variable:
-
-```shell
-export GUESTBOOK_KEY=<your-key>
 ```
 
 Then run:
