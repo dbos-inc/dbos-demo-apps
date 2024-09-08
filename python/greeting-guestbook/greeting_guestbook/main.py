@@ -6,7 +6,7 @@ from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-from .schema import greetings
+from .schema import dbos_hello
 
 app = FastAPI()
 DBOS(fastapi=app)
