@@ -20,4 +20,4 @@ dbos migrate
 dbos start
 ```
 
-Visit [`http://localhost:8000`](http://localhost:8000) to see the app!
+Visit [`http://localhost:8000/greeting/dbos`](http://localhost:8000/greeting/dbos) to try out the app!
