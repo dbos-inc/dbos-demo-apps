@@ -18,9 +18,9 @@ config.set_main_option("sqlalchemy.url", get_dbos_database_url())
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from greeting_guestbook import schema
+from greeting_guestbook.schema import metadata
 
-target_metadata = schema.metadata
+target_metadata = metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

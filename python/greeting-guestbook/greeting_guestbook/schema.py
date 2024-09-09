@@ -1,11 +1,10 @@
-from sqlalchemy import Column, Integer, MetaData, Table, Text
+from sqlalchemy import Column, Integer, MetaData, String, Table
 
 metadata = MetaData()
 
-greetings = Table(
-    "greetings",
+dbos_hello = Table(
+    "dbos_hello",
     metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("name", Text),
-    Column("note", Text),
+    Column("greet_count", Integer, primary_key=True, autoincrement=True),
+    Column("name", String, nullable=False),
 )
