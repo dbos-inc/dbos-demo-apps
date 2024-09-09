@@ -1,9 +1,6 @@
-import json
-
 import requests
 from dbos import DBOS
 from fastapi import FastAPI
-from sqlalchemy.dialects.postgresql import insert
 
 from .schema import dbos_hello
 
@@ -23,7 +20,7 @@ def sign_guestbook(name: str):
 
 @DBOS.transaction()
 def insert_greeting(name: str) -> str:
-    query = insert(dbos_hello).values(name=name).on_conflict_do_nothing()
+    query = dbos_hello.insert().values(name=name)
     DBOS.sql_session.execute(query)
     DBOS.logger.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
 
