@@ -92,6 +92,7 @@ export class FulfillUtilities {
       await ctx.client<Packer>('packer').insert({packer_name, order_id: null, expiration: null});
       packers = await ctx.client<Packer>('packer').where({packer_name}).select();
     }
+    let order : OrderPacker[] = [];
     if (packers[0].order_id && more_time) {
       // Extend time
       ctx.logger.info(`Extending time for ${packer_name} on ${packers[0].order_id}`);
@@ -99,6 +100,10 @@ export class FulfillUtilities {
        packers[0].expiration = expiration;
        await ctx.client<Packer>('packer').where({packer_name}).update({expiration});
       }
+    } 
+    else if (packers[0].order_id) {
+      order = await ctx.client<OrderPacker>('order_packer').where({order_id: packers[0].order_id}).select();
+      return {packer: packers[0], newAssignment, order};
     }
     else {
       // Try to find assignment
@@ -114,7 +119,6 @@ export class FulfillUtilities {
         ctx.logger.info(`New Assignment for ${packer_name}: ${order_id}`);
       }
     }
-    let order : OrderPacker[] = [];
     if (packers[0].order_id) {
       order = await ctx.client<OrderPacker>('order_packer').where({order_id: packers[0].order_id}).select();
     }
