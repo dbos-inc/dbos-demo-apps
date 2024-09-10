@@ -93,7 +93,6 @@
             haveCurrentUser: function() {
                 const user = getLoggedInUser()
                 const result = (user !== null && user.trim().length > 0)
-                console.log('User: ' + user + ' result ' + result)
                 return result
             },
             doLogin: function() {
@@ -124,7 +123,6 @@
                     if (! this.haveCurrentUser() ) {
                         this.currentAssignment = null
                     } else {
-                        console.log("fulfilling")
                         const assignmentResponse = await fetch("/newfulfill?name=" + getLoggedInUser())
                         if (assignmentResponse.status !== 200) {
                             throw new Error("Failed to fetch assignment");
@@ -155,7 +153,6 @@
                 }                
             },
             doSendAlert: async function() {
-                console.log(this.nextAlertText)
                 try {
                     const response = await fetch("/do_send", {
                     method: "POST",
@@ -292,7 +289,7 @@
                                 <div class="space-x-2">
                                     <input type="text" x-model="loginUserText" class="border p-2" style="width: 300px;"
                                         @keyup.enter="doLogin">
-                                    <button @click="doLogin" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" x-bind:disabled="connectionLost">
+                                    <button @click="doLogin" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" x-bind:disabled="connectionLost">
                                         Log in</button>
                                 </div>
                             </div>
@@ -310,7 +307,7 @@
                                         <br>
                                         <div class="text-2xl" x-text="Math.round(currentAssignment.expirationSecs) + ' second' + (currentAssignment.expirationSecs > 1.5 ? 's ' : ' ') + 'remaining!'"></div>
                                         <br>
-                                        <div class="space-x-4">
+                                        <div class="space-x-4 space-y-2">
                                             <button
                                                 x-bind:disabled="connectionLost"
                                                 class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
@@ -341,7 +338,8 @@
                                         <br>
                                     </div>
                                 </template>
-                                <button @click="doLogout" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" x-bind:disabled="connectionLost">
+                                <br>
+                                <button @click="doLogout" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" x-bind:disabled="connectionLost">
                                     I'm out of here!</button>
                             </div>
                         </template>
@@ -369,15 +367,13 @@
                         <br>
                         <h3 class="text-2xl mb-2">Send an Alert</h3>
                         <div class="space-x-2">
-                            <input type="text" x-model="nextAlertText" class="border p-2" style="width: 300px;"
+                            <input type="text" x-model="nextAlertText" class="border p-2 highlight:red-700"  style="width: 300px;" 
                                 @keyup.enter="doSendAlert">
-                            <button @click="doSendAlert" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" 
+                            <button @click="doSendAlert" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" 
                                     x-bind:disabled="connectionLost">
                                     Send</button>
                         </div>
-
                     </div>
-                    
                 </div>
             </div>
         </div>
