@@ -1,5 +1,5 @@
 import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, configureInstance, GetApi } from '@dbos-inc/dbos-sdk';
-import { FulfillUtilities, OrderPacker, OrderStatus, OrderWithProduct, Packer } from './utilities';
+import { FulfillUtilities, OrderEmployee, OrderStatus, OrderWithProduct, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceCommunicator, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
 import { CurrentTimeCommunicator } from "@dbos-inc/communicator-datetime";
@@ -19,10 +19,10 @@ const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduce
 
 const timeToPackOrder = 30;
 
-export interface OrderPackerInfo
+export interface OrderEmployeeInfo
 {
-  packer: Packer;
-  order: OrderPacker[];
+  employee: Employee;
+  order: OrderEmployee[];
   expirationSecs: number | null;
   newAssignment: boolean;
 }
@@ -53,13 +53,13 @@ export class Fulfillment {
     let ctime = await ctxt.invoke(CurrentTimeCommunicator).getCurrentTime();
     const expiration = ctime + timeToPackOrder*1000;
     const userRec = await ctxt.invoke(FulfillUtilities).getUserAssignment(name, new Date(expiration), more_time);
-    const expirationSecs = userRec.packer.expiration ? (userRec.packer.expiration!.getTime()-ctime) / 1000 : null;
-    await ctxt.setEvent<OrderPackerInfo>('rec', {...userRec, expirationSecs});
+    const expirationSecs = userRec.employee.expiration ? (userRec.employee.expiration!.getTime()-ctime) / 1000 : null;
+    await ctxt.setEvent<OrderEmployeeInfo>('rec', {...userRec, expirationSecs});
       
     if (userRec.newAssignment) {
       ctxt.logger.info(`Start watch workflow for ${name}`);
       // Keep a watch over the expiration...
-      let expirationMS = userRec.packer.expiration ? userRec.packer.expiration.getTime() : 0;
+      let expirationMS = userRec.employee.expiration ? userRec.employee.expiration.getTime() : 0;
       while (expirationMS > ctime) {
         ctxt.logger.debug(`Sleeping ${expirationMS-ctime}`);
         await ctxt.sleepms(expirationMS - ctime);

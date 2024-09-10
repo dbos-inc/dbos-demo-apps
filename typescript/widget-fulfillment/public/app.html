@@ -142,7 +142,7 @@
                         "Content-Type": "application/json",  
                     },
                     body: JSON.stringify({
-                        "name": this.currentAssignment.packer.packer_name
+                        "name": this.currentAssignment.employee.employee_name
                     })});
                     if (!response.ok) {
                         const errorText = await response.text();
@@ -172,7 +172,7 @@
                 this.nextAlertText = '';
             },
             haveCurrentOrder: function() {
-                return (this.currentAssignment !== null && this.currentAssignment.packer.order_id !== null)
+                return (this.currentAssignment !== null && this.currentAssignment.employee.order_id !== null)
             }
         }
     }
