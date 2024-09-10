@@ -287,8 +287,7 @@
                                 <div class="text-2xl space-x-4">Enter your name, esteemed employee!</div>
                                 <br>
                                 <div class="space-x-2">
-                                    <input type="text" x-model="loginUserText" class="border p-2" style="width: 300px;"
-                                        @keyup.enter="doLogin">
+                                    <input type="text" x-model="loginUserText" class="border p-2" @keyup.enter="doLogin">
                                     <button @click="doLogin" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" x-bind:disabled="connectionLost">
                                         Log in</button>
                                 </div>
@@ -367,7 +366,7 @@
                         <br>
                         <h3 class="text-2xl mb-2">Send an Alert</h3>
                         <div class="space-x-2">
-                            <input type="text" x-model="nextAlertText" class="border p-2 highlight:red-700"  style="width: 300px;" 
+                            <input type="text" x-model="nextAlertText" class="border p-2 highlight:red-700" style="width: 300px;" 
                                 @keyup.enter="doSendAlert">
                             <button @click="doSendAlert" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" 
                                     x-bind:disabled="connectionLost">
