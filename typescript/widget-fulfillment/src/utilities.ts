@@ -65,6 +65,15 @@ export class FulfillUtilities {
   }
 
   @Transaction()
+  static async getMaxId(ctx: KnexTransactionContext) {
+    const result = await ctx.client<OrderPacker>('order_packer').max('order_id', { as: 'mid' }).first();
+    if (result ) {
+      return result.mid;
+    }
+    return -1;
+  }
+
+  @Transaction()
   static async addOrder(ctx: KnexTransactionContext, product: OrderWithProduct) {
     await ctx.client<OrderPacker>('order_packer').insert({
       order_id: product.order_id,

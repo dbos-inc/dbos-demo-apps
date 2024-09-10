@@ -84,16 +84,17 @@ export class Fulfillment {
     return Promise.resolve();
   }
 
-  @GetApi('/send/:order_id')
+  @PostApi('/do_send')
   @Workflow()
-  static async sendMessage(ctxt: WorkflowContext, order_id: number) {
+  static async sendAlert(ctxt: WorkflowContext, msg: string) {
+      const max_id = await ctxt.invoke(FulfillUtilities).getMaxId()  
       await ctxt.invoke(producerConfig).sendMessage(
       {
         value: JSON.stringify({
-          order_id: order_id,
+          order_id: max_id + 1,
           details: [
             { 
-              order_id: order_id,
+              order_id: max_id+1,
               order_status: 2,
               last_update_time: "2024-09-04",
               product_id: 1,

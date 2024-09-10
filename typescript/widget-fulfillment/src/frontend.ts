@@ -35,6 +35,7 @@ export class Frontend {
   static async newFulfillment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
     const userRecWF = await ctxt.startWorkflow(Fulfillment).userAssignmentWorkflow(name, more_time);
     const userRec = await ctxt.getEvent<OrderPackerInfo>(userRecWF.getWorkflowUUID(), 'rec');
+    ctxt.logger.info("rec:" + JSON.stringify(userRec))
     return userRec;
   }
 
