@@ -53,17 +53,21 @@
       }
     };
     const setURLQueryParam = (key, value) => {
-      const url = new URL(window.location.href);
-      if (value === null) {
-        url.searchParams.delete(key);
-      } else {
-        url.searchParams.set(key, value);
-      }
-      window.history.replaceState({}, "", url);
+        const url = new URL(window.location.href);
+        if (value === null) {
+            url.searchParams.delete(key);
+          } else {
+            url.searchParams.set(key, value);
+        }
+        window.history.replaceState({}, "", url);
+        window.location.reload();
     };
     const getURLQueryParam = (key) => {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(key);
+        const url = new URL(window.location.href);
+        return url.searchParams.get(key);
+    };
+    const getLoggedInUser = () => {
+        return getURLQueryParam('user')
     };
     function widgetStore() {
         return {
@@ -75,6 +79,7 @@
             updateOrdersInterval: null,
             currentAssignment: null,
             nextAlertText: '',
+            loginUserText: '',
             init: function () {
                 this.startUpdateOrdersInterval();
             },
@@ -84,6 +89,21 @@
                     this.updateOrders();
                     }, 500);
                 }
+            },
+            haveCurrentUser: function() {
+                const user = getLoggedInUser()
+                const result = (user !== null && user.trim().length > 0)
+                console.log('User: ' + user + ' result ' + result)
+                return result
+            },
+            doLogin: function() {
+                if (this.loginUserText.trim().length > 0) {
+                    setURLQueryParam('user', this.loginUserText)
+                    this.loginUserText = ""
+                }
+            },
+            doLogout: function() {
+                setURLQueryParam('user', null)
             },
             updateOrders: async function () {
                 try {
@@ -100,13 +120,19 @@
                         order_status: getOrderStatus(order.order_status),
                         };
                     })
-                    .sort((a, b) => b.order_id - a.order_id);            
-                    const assignmentResponse = await fetch("/newfulfill?name=alex")
-                    if (assignmentResponse.status !== 200) {
-                    throw new Error("Failed to fetch assignment");
+                    .sort((a, b) => b.order_id - a.order_id);
+                    if (! this.haveCurrentUser() ) {
+                        this.currentAssignment = null
+                    } else {
+                        console.log("fulfilling")
+                        const assignmentResponse = await fetch("/newfulfill?name=" + getLoggedInUser())
+                        if (assignmentResponse.status !== 200) {
+                            throw new Error("Failed to fetch assignment");
+                        }
+                        this.currentAssignment = await assignmentResponse.json();
                     }
-                    this.currentAssignment = await assignmentResponse.json();
                 } catch (error) {
+                    console.log("Error " + error)
                     this.connectionLost = true;
                 }
             },
@@ -243,16 +269,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <br>
-                            <br>
-                            <h3 class="text-2xl mb-2">Create an Alert</h3>
-                            <div class="space-x-2">
-                                <input type="text" x-model="nextAlertText" class="border p-2" style="width: 300px;"
-                                     @keyup.enter="doSendAlert">
-                                <button @click="doSendAlert" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" 
-                                        x-bind:disabled="connectionLost">
-                                        Send</button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -261,10 +277,9 @@
                     <div
                     class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
                     >
-                        <h2 class="text-3xl" x-text="haveCurrentOrder() ? 'Alert!' : 'Coast is clear'"></h2>
+                        <h2 class="text-3xl" x-text="!haveCurrentUser() ? 'Please Login!' : haveCurrentOrder() ? 'Alert!' :  'Hello, ' + getLoggedInUser() + '! Coast is clear.'"></h2>
                         <div x-html="divider"></div>
-                        
-                        <template x-if="haveCurrentOrder">
+                        <template x-if="!haveCurrentUser()">
                             <div>
                                 <img
                                     src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
@@ -272,40 +287,64 @@
                                     class="max-w-[90%] rounded-lg mx-auto"
                                 />
                                 <br>
-                                <div class="text-2xl" x-text="Math.round(currentAssignment.expirationSecs) + ' second' + (currentAssignment.expirationSecs > 1.5 ? 's ' : ' ') + 'remaining!'"></div>
+                                <div class="text-2xl space-x-4">Enter your name, esteemed employee!</div>
                                 <br>
-                                <div class="space-x-4">
-                                    <button
-                                        x-bind:disabled="connectionLost"
-                                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
-                                        x-on:click="doFulfill('fulfilled')"
-                                    >
-                                        I fixed it!
-                                    </button>
-                                    <button
-                                        x-bind:disabled="connectionLost"
-                                        class="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
-                                        x-on:click="doFulfill('more_time')"
-                                    >
-                                        I need more time!
-                                    </button>
+                                <div class="space-x-2">
+                                    <input type="text" x-model="loginUserText" class="border p-2" style="width: 300px;"
+                                        @keyup.enter="doLogin">
+                                    <button @click="doLogin" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" x-bind:disabled="connectionLost">
+                                        Log in</button>
                                 </div>
-                                
                             </div>
                         </template>
-
-                        <template x-if="!haveCurrentOrder()">
+                        
+                        <template x-if="haveCurrentUser()">
                             <div>
-                                <img
-                                    src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
-                                    alt="Widget Image"
-                                    class="max-w-[90%] rounded-lg mx-auto"
-                                />
-                                <br>
-                                <div class="text-2xl">No alerts at this time...</div> 
-                                <br>
+                                <template x-if="haveCurrentOrder">
+                                    <div>
+                                        <img
+                                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                                            alt="Widget Image"
+                                            class="max-w-[90%] rounded-lg mx-auto"
+                                        />
+                                        <br>
+                                        <div class="text-2xl" x-text="Math.round(currentAssignment.expirationSecs) + ' second' + (currentAssignment.expirationSecs > 1.5 ? 's ' : ' ') + 'remaining!'"></div>
+                                        <br>
+                                        <div class="space-x-4">
+                                            <button
+                                                x-bind:disabled="connectionLost"
+                                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
+                                                x-on:click="doFulfill('fulfilled')"
+                                            >
+                                                I fixed it!
+                                            </button>
+                                            <button
+                                                x-bind:disabled="connectionLost"
+                                                class="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
+                                                x-on:click="doFulfill('more_time')"
+                                            >
+                                                I need more time!
+                                            </button>
+                                        </div>
+                                        
+                                    </div>
+                                </template>
+                                <template x-if="!haveCurrentOrder()">
+                                    <div>
+                                        <img
+                                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                                            alt="Widget Image"
+                                            class="max-w-[90%] rounded-lg mx-auto"
+                                        />
+                                        <br>
+                                        <div class="text-2xl">No alerts at this time...</div> 
+                                        <br>
+                                    </div>
+                                </template>
+                                <button @click="doLogout" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" x-bind:disabled="connectionLost">
+                                    I'm out of here!</button>
                             </div>
-                        </template>                    
+                        </template>
                     </div>
                 </div>
             
@@ -327,7 +366,18 @@
                         Crash the Application
                         </button>
                         </div>
+                        <br>
+                        <h3 class="text-2xl mb-2">Send an Alert</h3>
+                        <div class="space-x-2">
+                            <input type="text" x-model="nextAlertText" class="border p-2" style="width: 300px;"
+                                @keyup.enter="doSendAlert">
+                            <button @click="doSendAlert" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" 
+                                    x-bind:disabled="connectionLost">
+                                    Send</button>
+                        </div>
+
                     </div>
+                    
                 </div>
             </div>
         </div>
