@@ -19,5 +19,3 @@ database:
 telemetry:
   logs:
     logLevel: INFO
-env:
-  GUESTBOOK_KEY: ${GUESTBOOK_KEY}

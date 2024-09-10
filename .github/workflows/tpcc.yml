@@ -60,7 +60,7 @@ jobs:
         with:
           node-version: 20
       - name: Compile and Test TPC-C
-        working-directory: dbos-demo-apps/tpcc
+        working-directory: dbos-demo-apps/typescript/tpcc
         run: |
           npm install
           npm run build
