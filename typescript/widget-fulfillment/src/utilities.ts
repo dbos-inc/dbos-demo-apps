@@ -21,7 +21,6 @@ export interface Employee {
 export interface OrderEmployee {
   order_id: number;
   order_status: OrderStatus;
-  product_id: number;
   product: string;
   employee_name: string | null;
 }
@@ -30,11 +29,8 @@ export interface OrderWithProduct {
   order_id: number;
   order_status: OrderStatus;
   last_update_time: Date;
-  product_id: number;
   product: string;
 }
-
-export const PRODUCT_ID = 1;
 
 export class FulfillUtilities {
   @Transaction({readOnly: true})
@@ -78,7 +74,6 @@ export class FulfillUtilities {
     await ctx.client<OrderEmployee>('order_employee').insert({
       order_id: product.order_id,
       order_status: product.order_status,
-      product_id: product.product_id,
       product: product.product,
       employee_name: null,
     }).onConflict(['order_id']).ignore();

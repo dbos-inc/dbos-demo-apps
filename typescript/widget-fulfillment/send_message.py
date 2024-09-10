@@ -27,7 +27,6 @@ payload = {
             "order_id": 123464,
             "order_status": 2,
             "last_update_time": "2024-09-04",
-            "product_id": 1,
             "product": "widget"
         }
     ]

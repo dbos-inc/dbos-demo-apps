@@ -22,7 +22,6 @@ exports.up = async function(knex) {
   await knex.schema.createTable('order_employee', table => {
     table.integer('order_id').primary();
     table.integer('order_status').notNullable();
-    table.integer('product_id').notNullable();
     table.string('product', 255).defaultTo('');
     table.string('employee_name', 255).defaultTo(null);
   });

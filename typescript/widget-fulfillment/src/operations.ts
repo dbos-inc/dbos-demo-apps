@@ -96,7 +96,6 @@ export class Fulfillment {
               order_id: max_id+1,
               order_status: 2,
               last_update_time: "2024-09-04",
-              product_id: 1,
               product: "widget"
             }
           ]
