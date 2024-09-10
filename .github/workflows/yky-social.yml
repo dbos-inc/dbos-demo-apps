@@ -48,17 +48,17 @@ jobs:
           # cache: 'npm'
       - name: Change directory and install dependencies
         run: |
-          cd ./dbos-demo-apps/yky-social
+          cd ./dbos-demo-apps/typescript/yky-social
           npm ci --no-audit
       - name: Create new PG DB and User
         run: |
-          cd ./dbos-demo-apps/yky-social
+          cd ./dbos-demo-apps/typescript/yky-social
           scripts/init_pgdb.sh
         env:
           # The postgres superuser password we set above
           PGPASSWORD: dbos
       - name: Build Test yky-social
-        working-directory: ./dbos-demo-apps/yky-social
+        working-directory: ./dbos-demo-apps/typescript/yky-social
         run: |
           npm run build
           npm run lint

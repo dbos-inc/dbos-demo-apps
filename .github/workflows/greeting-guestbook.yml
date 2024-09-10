@@ -54,7 +54,7 @@ jobs:
         with:
           node-version: 20
       - name: Compile Hello World
-        working-directory: dbos-demo-apps/greeting-guestbook
+        working-directory: dbos-demo-apps/typescript/greeting-guestbook
         run: |
           npm install
           npx knex migrate:latest

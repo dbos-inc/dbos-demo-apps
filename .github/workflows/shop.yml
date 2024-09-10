@@ -55,9 +55,9 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: 'e-commerce/shop-backend/package-lock.json'
+          cache-dependency-path: 'typescript/e-commerce/shop-backend/package-lock.json'
       - name: Compile Shop Backend Server
-        working-directory: e-commerce/shop-backend/
+        working-directory: typescript/e-commerce/shop-backend/
         run: |
           npm ci
           npm run lint
@@ -70,7 +70,7 @@ jobs:
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
       - name: Compile Payment Backend Server
-        working-directory: e-commerce/payment-backend/
+        working-directory: typescript/e-commerce/payment-backend/
         run: |
           npm ci
           npm run lint
