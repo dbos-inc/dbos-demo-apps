@@ -70,7 +70,7 @@ export class Frontend {
     return render("dashboard", {
       alerts,
       employees,
-      fulfilled: AlertStatus.FULFILLED,
+      fulfilled: AlertStatus.RESOLVED,
     });
   }
   

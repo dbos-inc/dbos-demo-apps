@@ -39,12 +39,12 @@
     const divider = `<div class="relative inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div>`;
     const getAlertStatus = (status) => {
       switch (status) {
-        case 0:
-          return "PENDING";
         case 1:
-          return "DISPATCHED";
+          return "RESOLVED";
         case 2:
-          return "PAID";
+          return "INCOMING";
+        case 3:
+          return "ASSIGNED";
         case -1:
           return "CANCELLED";
         default:

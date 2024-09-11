@@ -4,9 +4,8 @@ import { Knex } from 'knex';
 type KnexTransactionContext = TransactionContext<Knex>;
 
 export enum AlertStatus {
-  PENDING = 0,
-  FULFILLED = 1,
-  PAID = 2,
+  RESOLVED = 1,
+  INCOMING = 2,
   ASSIGNED = 3,
   CANCELLED = -1,
 }
@@ -38,7 +37,7 @@ export class FulfillUtilities {
     const alerts = await ctx.client<AlertEmployee>('alert_employee').select().orderBy(['alert_id']);
     const employees = await ctx.client<Employee>('employee').select().orderBy(['employee_name']);
     for (const a of alerts) {
-      if (a.alert_status === AlertStatus.PAID && a.employee_name) {
+      if (a.alert_status === AlertStatus.INCOMING && a.employee_name) {
         a.alert_status = AlertStatus.ASSIGNED;
       }
     }
@@ -57,7 +56,7 @@ export class FulfillUtilities {
 
   @Transaction()
   static async cleanAlerts(ctx: KnexTransactionContext) {
-    await ctx.client<AlertEmployee>('alert_employee').where({alert_status: AlertStatus.FULFILLED}).delete();
+    await ctx.client<AlertEmployee>('alert_employee').where({alert_status: AlertStatus.RESOLVED}).delete();
   }
 
   @Transaction()
@@ -129,7 +128,7 @@ export class FulfillUtilities {
     if (!employees[0].alert_id) {
       throw new Error(`Employee ${employee_name} completed an assignment that did not exist`);
     }
-    await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).update({alert_status: AlertStatus.FULFILLED});
+    await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).update({alert_status: AlertStatus.RESOLVED});
     await ctx.client<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
   }
 

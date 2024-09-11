@@ -41,7 +41,7 @@ export class Fulfillment {
     ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`);
 
     for (const detail of payload.details) {
-      if (detail.alert_status !== AlertStatus.PAID) continue;
+      if (detail.alert_status !== AlertStatus.INCOMING) continue;
       await ctxt.invoke(FulfillUtilities).addAlert(detail);
     }
 
