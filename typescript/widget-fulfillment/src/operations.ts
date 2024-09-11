@@ -1,5 +1,5 @@
 import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, configureInstance, GetApi } from '@dbos-inc/dbos-sdk';
-import { FulfillUtilities, AlertEmployee, AlertStatus, AlertWithProduct, Employee } from './utilities';
+import { FulfillUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceCommunicator, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
 import { CurrentTimeCommunicator } from "@dbos-inc/communicator-datetime";
@@ -35,7 +35,7 @@ export class Fulfillment {
     if (topic !== fulfillTopic) return; // Error
 
     const payload = JSON.parse(message.value!.toString()) as {
-      alert_id: string, details: AlertWithProduct[],
+      alert_id: string, details: AlertWithMessage[],
     };
 
     ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`);
@@ -96,7 +96,7 @@ export class Fulfillment {
               alert_id: max_id+1,
               alert_status: 2,
               last_update_time: "2024-09-04",
-              product: "widget"
+              message: msg
             }
           ]
         })

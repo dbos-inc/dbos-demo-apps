@@ -8,8 +8,7 @@
 // An alert_employee table - that is populated by incoming Kafka messages.
 //  alert_id
 //  alert_status
-//  product_id
-//  product
+//  message
 //  employee_name
 
 exports.up = async function(knex) {
@@ -22,7 +21,7 @@ exports.up = async function(knex) {
   await knex.schema.createTable('alert_employee', table => {
     table.integer('alert_id').primary();
     table.integer('alert_status').notNullable();
-    table.string('product', 255).defaultTo('');
+    table.string('message', 255).defaultTo('');
     table.string('employee_name', 255).defaultTo(null);
   });
 };

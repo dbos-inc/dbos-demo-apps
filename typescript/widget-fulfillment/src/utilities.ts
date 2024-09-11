@@ -20,15 +20,15 @@ export interface Employee {
 export interface AlertEmployee {
   alert_id: number;
   alert_status: AlertStatus;
-  product: string;
+  message: string;
   employee_name: string | null;
 }
 
-export interface AlertWithProduct {
+export interface AlertWithMessage {
   alert_id: number;
   alert_status: AlertStatus;
   last_update_time: Date;
-  product: string;
+  message: string;
 }
 
 export class FulfillUtilities {
@@ -69,11 +69,11 @@ export class FulfillUtilities {
   }
 
   @Transaction()
-  static async addAlert(ctx: KnexTransactionContext, product: AlertWithProduct) {
+  static async addAlert(ctx: KnexTransactionContext, message: AlertWithMessage) {
     await ctx.client<AlertEmployee>('alert_employee').insert({
-      alert_id: product.alert_id,
-      alert_status: product.alert_status,
-      product: product.product,
+      alert_id: message.alert_id,
+      alert_status: message.alert_status,
+      message: message.message,
       employee_name: null,
     }).onConflict(['alert_id']).ignore();
   }
