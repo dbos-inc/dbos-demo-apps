@@ -3,7 +3,7 @@ import { Knex } from 'knex';
 
 type KnexTransactionContext = TransactionContext<Knex>;
 
-export enum OrderStatus {
+export enum AlertStatus {
   PENDING = 0,
   FULFILLED = 1,
   PAID = 2,
@@ -13,21 +13,21 @@ export enum OrderStatus {
 
 export interface Employee {
   employee_name: string;
-  order_id: number | null;
+  alert_id: number | null;
   expiration: Date | null;
   timeLeft?: number;
 }
 
-export interface OrderEmployee {
-  order_id: number;
-  order_status: OrderStatus;
+export interface AlertEmployee {
+  alert_id: number;
+  alert_status: AlertStatus;
   product: string;
   employee_name: string | null;
 }
 
-export interface OrderWithProduct {
-  order_id: number;
-  order_status: OrderStatus;
+export interface AlertWithProduct {
+  alert_id: number;
+  alert_status: AlertStatus;
   last_update_time: Date;
   product: string;
 }
@@ -35,11 +35,11 @@ export interface OrderWithProduct {
 export class FulfillUtilities {
   @Transaction({readOnly: true})
   static async popDashboard(ctx: KnexTransactionContext) {
-    const orders = await ctx.client<OrderEmployee>('order_employee').select().orderBy(['order_id']);
+    const alerts = await ctx.client<AlertEmployee>('alert_employee').select().orderBy(['alert_id']);
     const employees = await ctx.client<Employee>('employee').select().orderBy(['employee_name']);
-    for (const o of orders) {
-      if (o.order_status === OrderStatus.PAID && o.employee_name) {
-        o.order_status = OrderStatus.ASSIGNED;
+    for (const a of alerts) {
+      if (a.alert_status === AlertStatus.PAID && a.employee_name) {
+        a.alert_status = AlertStatus.ASSIGNED;
       }
     }
     for (const p of employees) {
@@ -47,22 +47,22 @@ export class FulfillUtilities {
         p.timeLeft = Math.round((p.expiration.getTime() - new Date().getTime())/1000);
       }
     }
-    return {orders, employees};
+    return {alerts, employees};
   }  
 
   @Transaction()
   static async cleanStaff(ctx: KnexTransactionContext) {
-    await ctx.client<Employee>('employee').whereNull('order_id').delete();
+    await ctx.client<Employee>('employee').whereNull('alert_id').delete();
   }
 
   @Transaction()
-  static async cleanOrders(ctx: KnexTransactionContext) {
-    await ctx.client<OrderEmployee>('order_employee').where({order_status: OrderStatus.FULFILLED}).delete();
+  static async cleanAlerts(ctx: KnexTransactionContext) {
+    await ctx.client<AlertEmployee>('alert_employee').where({alert_status: AlertStatus.FULFILLED}).delete();
   }
 
   @Transaction()
   static async getMaxId(ctx: KnexTransactionContext) {
-    const result = await ctx.client<OrderEmployee>('order_employee').max('order_id', { as: 'mid' }).first();
+    const result = await ctx.client<AlertEmployee>('alert_employee').max('alert_id', { as: 'mid' }).first();
     if (result ) {
       return result.mid;
     }
@@ -70,13 +70,13 @@ export class FulfillUtilities {
   }
 
   @Transaction()
-  static async addOrder(ctx: KnexTransactionContext, product: OrderWithProduct) {
-    await ctx.client<OrderEmployee>('order_employee').insert({
-      order_id: product.order_id,
-      order_status: product.order_status,
+  static async addAlert(ctx: KnexTransactionContext, product: AlertWithProduct) {
+    await ctx.client<AlertEmployee>('alert_employee').insert({
+      alert_id: product.alert_id,
+      alert_status: product.alert_status,
       product: product.product,
       employee_name: null,
-    }).onConflict(['order_id']).ignore();
+    }).onConflict(['alert_id']).ignore();
   }
 
   @Transaction()
@@ -84,40 +84,40 @@ export class FulfillUtilities {
     let employees = await ctx.client<Employee>('employee').where({employee_name}).select();
     let newAssignment = false;
     if (!employees.length) {
-      await ctx.client<Employee>('employee').insert({employee_name, order_id: null, expiration: null});
+      await ctx.client<Employee>('employee').insert({employee_name, alert_id: null, expiration: null});
       employees = await ctx.client<Employee>('employee').where({employee_name}).select();
     }
-    let order : OrderEmployee[] = [];
-    if (employees[0].order_id && more_time) {
+    let alert : AlertEmployee[] = [];
+    if (employees[0].alert_id && more_time) {
       // Extend time
-      ctx.logger.info(`Extending time for ${employee_name} on ${employees[0].order_id}`);
+      ctx.logger.info(`Extending time for ${employee_name} on ${employees[0].alert_id}`);
       if (employees[0].expiration?.getTime() ?? 0 < expiration.getTime()) {
         employees[0].expiration = expiration;
         await ctx.client<Employee>('employee').where({employee_name}).update({expiration});
       }
     } 
-    else if (employees[0].order_id) {
-      order = await ctx.client<OrderEmployee>('order_employee').where({order_id: employees[0].order_id}).select();
-      return {employee: employees[0], newAssignment, order};
+    else if (employees[0].alert_id) {
+      alert = await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).select();
+      return {employee: employees[0], newAssignment, alert};
     }
     else {
       // Try to find assignment
-      const op = await ctx.client<OrderEmployee>('order_employee').whereNull('employee_name').orderBy(['order_id']).first();
+      const op = await ctx.client<AlertEmployee>('alert_employee').whereNull('employee_name').orderBy(['alert_id']).first();
       if (op) {
         op.employee_name = employee_name;
-        const order_id = op.order_id;
-        employees[0].order_id = op.order_id;
+        const alert_id = op.alert_id;
+        employees[0].alert_id = op.alert_id;
         employees[0].expiration = expiration;
-        await ctx.client<Employee>('employee').where({employee_name}).update({order_id, expiration});
-        await ctx.client<OrderEmployee>('order_employee').where({order_id}).update({employee_name});
+        await ctx.client<Employee>('employee').where({employee_name}).update({alert_id, expiration});
+        await ctx.client<AlertEmployee>('alert_employee').where({alert_id}).update({employee_name});
         newAssignment = true;
-        ctx.logger.info(`New Assignment for ${employee_name}: ${order_id}`);
+        ctx.logger.info(`New Assignment for ${employee_name}: ${alert_id}`);
       }
     }
-    if (employees[0].order_id) {
-      order = await ctx.client<OrderEmployee>('order_employee').where({order_id: employees[0].order_id}).select();
+    if (employees[0].alert_id) {
+      alert = await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).select();
     }
-    return {employee: employees[0], newAssignment, order};
+    return {employee: employees[0], newAssignment, alert};
   }
 
   @Transaction()
@@ -126,11 +126,11 @@ export class FulfillUtilities {
     if (!employees.length) {
       throw new Error(`No employee ${employee_name}`);
     }
-    if (!employees[0].order_id) {
+    if (!employees[0].alert_id) {
       throw new Error(`Employee ${employee_name} completed an assignment that did not exist`);
     }
-    await ctx.client<OrderEmployee>('order_employee').where({order_id: employees[0].order_id}).update({order_status: OrderStatus.FULFILLED});
-    await ctx.client<Employee>('employee').where({employee_name}).update({order_id: null, expiration: null});
+    await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).update({alert_status: AlertStatus.FULFILLED});
+    await ctx.client<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
   }
 
   @Transaction()
@@ -139,11 +139,11 @@ export class FulfillUtilities {
     if (!employees.length) {
       throw new Error(`No employee ${employee_name}`);
     }
-    if (!employees[0].order_id) {
+    if (!employees[0].alert_id) {
       return; // Nothing to abandon
     }
-    await ctx.client<OrderEmployee>('order_employee').where({order_id: employees[0].order_id}).update({employee_name: null});
-    await ctx.client<Employee>('employee').where({employee_name}).update({order_id: null, expiration: null});
+    await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).update({employee_name: null});
+    await ctx.client<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
   }
 
   // This will return null if the assignment expired, or the expiration if an unexpired assignment exists
@@ -153,15 +153,15 @@ export class FulfillUtilities {
     if (!employees.length) {
       throw new Error(`No employee ${employee_name}`);
     }
-    if (!employees[0].order_id) {
+    if (!employees[0].alert_id) {
       return null;
     }
     if ((employees[0].expiration?.getTime() ?? 0) > currentDate.getTime()) {
       ctx.logger.info(`Not yet expired: ${employees[0].expiration?.getTime()} > ${currentDate.getTime()}`);
       return employees[0].expiration;
     }
-    await ctx.client<OrderEmployee>('order_employee').where({order_id: employees[0].order_id}).update({employee_name: null});
-    await ctx.client<Employee>('employee').where({employee_name}).update({order_id: null, expiration: null});
+    await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).update({employee_name: null});
+    await ctx.client<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
     return null;
   }
 }

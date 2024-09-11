@@ -1,5 +1,5 @@
 import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, configureInstance, GetApi } from '@dbos-inc/dbos-sdk';
-import { FulfillUtilities, OrderEmployee, OrderStatus, OrderWithProduct, Employee } from './utilities';
+import { FulfillUtilities, AlertEmployee, AlertStatus, AlertWithProduct, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceCommunicator, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
 import { CurrentTimeCommunicator } from "@dbos-inc/communicator-datetime";
@@ -17,12 +17,12 @@ const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduce
     createPartitioner: Partitioners.DefaultPartitioner
   });
 
-const timeToPackOrder = 30;
+const timeToPackAlert = 30;
 
-export interface OrderEmployeeInfo
+export interface AlertEmployeeInfo
 {
   employee: Employee;
-  order: OrderEmployee[];
+  alert: AlertEmployee[];
   expirationSecs: number | null;
   newAssignment: boolean;
 }
@@ -31,18 +31,18 @@ export interface OrderEmployeeInfo
 export class Fulfillment {
   @Workflow()
   @KafkaConsume(fulfillTopic)
-  static async inboundOrderWorkflow(ctxt: WorkflowContext, topic: string, _partition: number, message: KafkaMessage) {
+  static async inboundAlertWorkflow(ctxt: WorkflowContext, topic: string, _partition: number, message: KafkaMessage) {
     if (topic !== fulfillTopic) return; // Error
 
     const payload = JSON.parse(message.value!.toString()) as {
-      order_id: string, details: OrderWithProduct[],
+      alert_id: string, details: AlertWithProduct[],
     };
 
-    ctxt.logger.info(`Received order: ${JSON.stringify(payload)}`);
+    ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`);
 
     for (const detail of payload.details) {
-      if (detail.order_status !== OrderStatus.PAID) continue;
-      await ctxt.invoke(FulfillUtilities).addOrder(detail);
+      if (detail.alert_status !== AlertStatus.PAID) continue;
+      await ctxt.invoke(FulfillUtilities).addAlert(detail);
     }
 
     return Promise.resolve();
@@ -51,10 +51,10 @@ export class Fulfillment {
   @Workflow()
   static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
     let ctime = await ctxt.invoke(CurrentTimeCommunicator).getCurrentTime();
-    const expiration = ctime + timeToPackOrder*1000;
+    const expiration = ctime + timeToPackAlert*1000;
     const userRec = await ctxt.invoke(FulfillUtilities).getUserAssignment(name, new Date(expiration), more_time);
     const expirationSecs = userRec.employee.expiration ? (userRec.employee.expiration!.getTime()-ctime) / 1000 : null;
-    await ctxt.setEvent<OrderEmployeeInfo>('rec', {...userRec, expirationSecs});
+    await ctxt.setEvent<AlertEmployeeInfo>('rec', {...userRec, expirationSecs});
       
     if (userRec.newAssignment) {
       ctxt.logger.info(`Start watch workflow for ${name}`);
@@ -90,11 +90,11 @@ export class Fulfillment {
       await ctxt.invoke(producerConfig).sendMessage(
       {
         value: JSON.stringify({
-          order_id: max_id + 1,
+          alert_id: max_id + 1,
           details: [
             { 
-              order_id: max_id+1,
-              order_status: 2,
+              alert_id: max_id+1,
+              alert_status: 2,
               last_update_time: "2024-09-04",
               product: "widget"
             }

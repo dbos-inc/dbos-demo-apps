@@ -37,7 +37,7 @@
   </head>
   <script>
     const divider = `<div class="relative inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div>`;
-    const getOrderStatus = (status) => {
+    const getAlertStatus = (status) => {
       switch (status) {
         case 0:
           return "PENDING";
@@ -48,7 +48,7 @@
         case -1:
           return "CANCELLED";
         default:
-          //throw new Error("Invalid order status");
+          //throw new Error("Invalid alert status");
           return "UNKNOWN";
       }
     };
@@ -72,21 +72,21 @@
     function widgetStore() {
         return {
             view: "store",
-            orders: [],
+            alerts: [],
             divider,
             visiblePanelOnMobile: "store", // internals | store | tools
             connectionLost: false,
-            updateOrdersInterval: null,
+            updateAlertsInterval: null,
             currentAssignment: null,
             nextAlertText: '',
             loginUserText: '',
             init: function () {
-                this.startUpdateOrdersInterval();
+                this.startUpdateAlertsInterval();
             },
-            startUpdateOrdersInterval: function () {
-                if (this.updateOrdersInterval === null) {
-                    this.updateOrdersInterval = setInterval(() => {
-                    this.updateOrders();
+            startUpdateAlertsInterval: function () {
+                if (this.updateAlertsInterval === null) {
+                    this.updateAlertsInterval = setInterval(() => {
+                    this.updateAlerts();
                     }, 500);
                 }
             },
@@ -104,22 +104,22 @@
             doLogout: function() {
                 setURLQueryParam('user', null)
             },
-            updateOrders: async function () {
+            updateAlerts: async function () {
                 try {
-                    const response = await fetch("/orders");
+                    const response = await fetch("/alerts");
                     if (response.status !== 200) {
-                    throw new Error("Failed to fetch orders");
+                    throw new Error("Failed to fetch alerts");
                     }
                     this.connectionLost = false;
-                    const orders = await response.json();
-                    this.orders = orders
-                    .map((order) => {
+                    const alerts = await response.json();
+                    this.alerts = alerts
+                    .map((alert) => {
                         return {
-                        ...order,
-                        order_status: getOrderStatus(order.order_status),
+                        ...alert,
+                        alert_status: getAlertStatus(alert.alert_status),
                         };
                     })
-                    .sort((a, b) => b.order_id - a.order_id);
+                    .sort((a, b) => b.alert_id - a.alert_id);
                     if (! this.haveCurrentUser() ) {
                         this.currentAssignment = null
                     } else {
@@ -171,8 +171,8 @@
                 }   
                 this.nextAlertText = '';
             },
-            haveCurrentOrder: function() {
-                return (this.currentAssignment !== null && this.currentAssignment.employee.order_id !== null)
+            haveCurrentAlert: function() {
+                return (this.currentAssignment !== null && this.currentAssignment.employee.alert_id !== null)
             }
         }
     }
@@ -207,12 +207,12 @@
                         <div x-html="divider"></div>
 
                         <div class="flow-root w-full">
-                            <h3 class="text-2xl mb-2">Orders</h3>
-                            <p x-show="orders.length === 0" class="text-gray-500 text-center">
-                                No orders in the system.
+                            <h3 class="text-2xl mb-2">Alerts</h3>
+                            <p x-show="alerts.length === 0" class="text-gray-500 text-center">
+                                No alerts in the system.
                             </p>
                             <div
-                                x-show="orders.length > 0"
+                                x-show="alerts.length > 0"
                                 class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8"
                             >
                                 <div
@@ -228,7 +228,7 @@
                                                 scope="col"
                                                 class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
                                             >
-                                                Order ID
+                                                Alert ID
                                             </th>
                                             <th
                                                 scope="col"
@@ -245,18 +245,18 @@
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-200 bg-white">
-                                            <template x-for="order in orders" :key="order.order_id">
+                                            <template x-for="alert in alerts" :key="alert.alert_id">
                                             <tr>
                                                 <td
-                                                x-text="order.order_id"
+                                                x-text="alert.alert_id"
                                                 class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
                                                 ></td>
                                                 <td
-                                                x-text="order.order_status"
+                                                x-text="alert.alert_status"
                                                 class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
                                                 ></td>
                                                 <td
-                                                x-text="order.product"
+                                                x-text="alert.product"
                                                 class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
                                                 ></td>
                                             </tr>
@@ -274,7 +274,7 @@
                     <div
                     class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
                     >
-                        <h2 class="text-3xl" x-text="!haveCurrentUser() ? 'Please Login!' : haveCurrentOrder() ? 'Alert!' :  'Hello, ' + getLoggedInUser() + '! Coast is clear.'"></h2>
+                        <h2 class="text-3xl" x-text="!haveCurrentUser() ? 'Please Login!' : haveCurrentAlert() ? 'Alert!' :  'Hello, ' + getLoggedInUser() + '! Coast is clear.'"></h2>
                         <div x-html="divider"></div>
                         <template x-if="!haveCurrentUser()">
                             <div>
@@ -296,7 +296,7 @@
                         
                         <template x-if="haveCurrentUser()">
                             <div>
-                                <template x-if="haveCurrentOrder">
+                                <template x-if="haveCurrentAlert">
                                     <div>
                                         <img
                                             src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
@@ -325,7 +325,7 @@
                                         
                                     </div>
                                 </template>
-                                <template x-if="!haveCurrentOrder()">
+                                <template x-if="!haveCurrentAlert()">
                                     <div>
                                         <img
                                             src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"

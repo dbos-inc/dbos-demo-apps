@@ -1,8 +1,8 @@
 import { ArgOptional, GetApi, HandlerContext, PostApi } from "@dbos-inc/dbos-sdk";
 import path from 'path';
 import { Liquid } from "liquidjs";
-import { FulfillUtilities, OrderStatus } from "./utilities";
-import { Fulfillment, OrderEmployeeInfo } from "./operations";
+import { FulfillUtilities, AlertStatus } from "./utilities";
+import { Fulfillment, AlertEmployeeInfo } from "./operations";
 
 const engine = new Liquid({
   root: path.resolve(__dirname, '..', 'views'),
@@ -34,7 +34,7 @@ export class Frontend {
   @GetApi('/newfulfill')
   static async newFulfillment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
     const userRecWF = await ctxt.startWorkflow(Fulfillment).userAssignmentWorkflow(name, more_time);
-    const userRec = await ctxt.getEvent<OrderEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
+    const userRec = await ctxt.getEvent<AlertEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
     ctxt.logger.info("rec:" + JSON.stringify(userRec))
     return userRec;
   }
@@ -42,35 +42,35 @@ export class Frontend {
   @GetApi('/fulfill')
   static async fulfillment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
     const userRecWF = await ctxt.startWorkflow(Fulfillment).userAssignmentWorkflow(name, more_time);
-    const userRec = await ctxt.getEvent<OrderEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
+    const userRec = await ctxt.getEvent<AlertEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
     if (!userRec) {
       ctxt.koaContext.redirect('/');
       return;
     }
-    if (!userRec.employee.order_id || !userRec.expirationSecs) {
-      return render('check_orders', { name });
+    if (!userRec.employee.alert_id || !userRec.expirationSecs) {
+      return render('check_alerts', { name });
     }
-    return render("fulfill_order", {
+    return render("fulfill_alert", {
       name,
       employee: userRec.employee,
-      order: userRec.order,
+      alert: userRec.alert,
       expirationSecs: Math.round(userRec.expirationSecs),
     });
   }
 
-  @GetApi('/orders')
-  static async orders(ctxt: HandlerContext) {
-    const {orders, employees} = await ctxt.invoke(FulfillUtilities).popDashboard();
-    return orders;
+  @GetApi('/alerts')
+  static async alerts(ctxt: HandlerContext) {
+    const {alerts, employees} = await ctxt.invoke(FulfillUtilities).popDashboard();
+    return alerts;
   }
   
   @GetApi('/dashboard')
   static async dashboard(ctxt: HandlerContext) {
-    const {orders, employees} = await ctxt.invoke(FulfillUtilities).popDashboard();
+    const {alerts, employees} = await ctxt.invoke(FulfillUtilities).popDashboard();
     return render("dashboard", {
-      orders,
+      alerts,
       employees,
-      fulfilled: OrderStatus.FULFILLED,
+      fulfilled: AlertStatus.FULFILLED,
     });
   }
   
@@ -95,9 +95,9 @@ export class Frontend {
     return Promise.resolve();
   }
 
-  @PostApi('/dashboard/cleanorders')
-  static async cleanOrders(ctxt: HandlerContext) {
-    await ctxt.invoke(FulfillUtilities).cleanOrders();
+  @PostApi('/dashboard/cleanalerts')
+  static async cleanAlerts(ctxt: HandlerContext) {
+    await ctxt.invoke(FulfillUtilities).cleanAlerts();
     ctxt.koaContext.redirect(`/dashboard`);
     return Promise.resolve();
   }
