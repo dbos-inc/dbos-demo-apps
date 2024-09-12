@@ -39,8 +39,8 @@ Entering a name will automatically register you as an employee, if you are not a
 * Request more time to respond
 * Cancel, and release the alert for other employeeds
 
-If no buttons are pressed in the allotted processing time, the alert will be released and can be re-assigned to other employees.
+If no buttons are pressed in the allotted processing time, the alert will be released and can be re-assigned to other employees. You can log in as different employees from different browser tabs and observe the assignment changes.
 
 ## Creating Alerts
 
-You can use the text box and button on the right to create new alerts. You can also used the attached python script `send_alert.py`. Use the red "Crash" button on the right to stop the application at any point. When restarted, the app will resume where left off. 
+You can use the text box and button on the right to create new alerts. You can create several alerts which will be queued up. You can also used the attached python script `send_alert.py`. After you use it once, increment the alert_id in the script to send more. Use the red "Crash" button on the right to stop the application at any point. When restarted, the app will resume where left off. 
