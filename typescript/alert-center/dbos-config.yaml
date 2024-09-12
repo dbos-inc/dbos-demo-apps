@@ -8,13 +8,11 @@ database:
   port: 5432
   username: 'postgres'
   password: ${PGPASSWORD}
-  app_db_name: 'widget_fulfillment'
+  app_db_name: 'alert_center'
   connectionTimeoutMillis: 3000
   app_db_client: 'knex'
   migrate: ['npx knex migrate:latest','npx knex seed:run']
   rollback: ['npx knex migrate:rollback']
-runtimeConfig:
-  port: 3500
 telemetry:
   logs:
     logLevel: 'info'

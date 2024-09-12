@@ -23,10 +23,10 @@ topic = 'alert-responder-topic'
 payload = {
     "alerts": [
         {
-            "alert_id": 123464,
+            "alert_id": 123456,
             "alert_status": 0,
             "last_update_time": "2024-01-01",
-            "message": "Alert!"
+            "message": "Alert sent by the sample script!"
         }
     ]
 }

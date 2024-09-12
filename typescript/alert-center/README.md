@@ -1,4 +1,4 @@
-# DBOS Widget Store - Fulfillment Department
+# DBOS Alert Response Center
 
 Visit the main [widget store](../widget-store/README.md) app for an opportunity to buy a widget!
 
