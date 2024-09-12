@@ -326,12 +326,12 @@
                     class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
                     :class="{'bg-orange-200': haveCurrentAlert(), 'bg-white': !haveCurrentAlert()}"
                     >
-                        <h2 class="text-3xl" x-text="!haveCurrentUser() ? 'Please Login!' : haveCurrentAlert() ? 'Alert!' :  'Hello, ' + getLoggedInUser() + '! Coast is clear.'"></h2>
+                        <h2 class="text-3xl" x-text="!haveCurrentUser() ? 'Please Login!' : haveCurrentAlert() ? 'Warning!' :  'Hello, ' + getLoggedInUser() + '! Coast is clear.'"></h2>
                         <div x-html="divider"></div>
                         <template x-if="!haveCurrentUser()">
                             <div>
                                 <img
-                                    src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                                    src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/alert_responder/dbos_alert_response_center.jpeg"
                                     alt="Widget Image"
                                     class="max-w-[90%] rounded-lg mx-auto"
                                 />
@@ -351,7 +351,7 @@
                                 <template x-if="haveCurrentAlert">
                                     <div>
                                         <img
-                                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/alert_responder/alert.jpeg"
                                             alt="Widget Image"
                                             class="max-w-[90%] rounded-lg mx-auto"
                                         />
@@ -382,7 +382,7 @@
                                 <template x-if="!haveCurrentAlert()">
                                     <div>
                                         <img
-                                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/alert_responder/coast_is_clear.jpeg"
                                             alt="Widget Image"
                                             class="max-w-[90%] rounded-lg mx-auto"
                                         />
@@ -418,12 +418,15 @@
                         </button>
                         </div>
                         <br>
-                        <h3 class="text-2xl mb-0">Send an alert message:</h3>
+                        <h3 class="text-2xl mb-0">Send an alert message</h3>
                         <div>
+                            <p class="text-left text-gray-500 mb-2">
+                                Type in an alert description and press "Send" to generate a new Kafka message:
+                            </p>
                             <input type="text" x-model="nextAlertText" class="border-2 border-grey-800 p-2" style="width: 300px;" 
                                 @keyup.enter="doSendAlert">
                             <button @click="doSendAlert" class="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" 
-                                    x-bind:disabled="connectionLost">
+                                    x-bind:disabled="connectionLost || nextAlertText.length==0">
                                     Send</button>
                         </div>
                     </div>

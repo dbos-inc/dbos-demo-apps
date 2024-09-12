@@ -103,7 +103,6 @@ export class Frontend {
   @PostApi('/dashboard/cleanstaff')
   static async cleanStaff(ctxt: HandlerContext) {
     await ctxt.invoke(FulfillUtilities).cleanStaff();
-    ctxt.koaContext.redirect(`/dashboard`);
     return Promise.resolve();
   }
 
