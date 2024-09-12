@@ -1,11 +1,11 @@
 import { ArgOptional, GetApi, HandlerContext, PostApi } from "@dbos-inc/dbos-sdk";
 import path from 'path';
 import { Liquid } from "liquidjs";
-import { FulfillUtilities, AlertStatus } from "./utilities";
-import { Fulfillment, AlertEmployeeInfo } from "./operations";
+import { RespondUtilities, AlertStatus } from "./utilities";
+import { Respondment, AlertEmployeeInfo } from "./operations";
 
 const engine = new Liquid({
-  root: path.resolve(__dirname, '..', 'views'),
+  root: path.resolve(__dirname, '..', 'public'),
   extname: ".liquid"
 });
 
@@ -17,98 +17,50 @@ export class Frontend {
 
   @GetApi('/')
   static frontend(_ctxt: HandlerContext) {
-    return render("../public/app.html", {});
+    return render("app.html", {});
   }
 
-  @GetApi('/old')
-  static async userPick(_ctxt: HandlerContext) {
-    return await render("index", {});
-  }
-
-  @PostApi('/')
-  static async setUser(ctxt: HandlerContext, name: string) {
-    ctxt.koaContext.redirect(`/fulfill?name=${encodeURIComponent(name)}`);
-    return Promise.resolve();
-  }
-
-  @GetApi('/newfulfill')
-  static async newFulfillment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
-    const userRecWF = await ctxt.startWorkflow(Fulfillment).userAssignmentWorkflow(name, more_time);
+  @GetApi('/assignment')
+  static async getAssignment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
+    const userRecWF = await ctxt.startWorkflow(Respondment).userAssignmentWorkflow(name, more_time);
     const userRec = await ctxt.getEvent<AlertEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
     ctxt.logger.info("rec:" + JSON.stringify(userRec))
     return userRec;
   }
 
-  @GetApi('/fulfill')
-  static async fulfillment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
-    const userRecWF = await ctxt.startWorkflow(Fulfillment).userAssignmentWorkflow(name, more_time);
-    const userRec = await ctxt.getEvent<AlertEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
-    if (!userRec) {
-      ctxt.koaContext.redirect('/');
-      return;
-    }
-    if (!userRec.employee.alert_id || !userRec.expirationSecs) {
-      return render('check_alerts', { name });
-    }
-    return render("fulfill_alert", {
-      name,
-      employee: userRec.employee,
-      alert: userRec.alert,
-      expirationSecs: Math.round(userRec.expirationSecs),
-    });
-  }
-
-  @GetApi('/alerts')
+  @GetApi('/alert_history')
   static async alerts(ctxt: HandlerContext) {
-    const {alerts, employees} = await ctxt.invoke(FulfillUtilities).popDashboard();
+    const {alerts, employees} = await ctxt.invoke(RespondUtilities).popDashboard();
     return alerts;
   }
   
-  @GetApi('/dashboard')
-  static async dashboard(ctxt: HandlerContext) {
-    const {alerts, employees} = await ctxt.invoke(FulfillUtilities).popDashboard();
-    return render("dashboard", {
-      alerts,
-      employees,
-      fulfilled: AlertStatus.RESOLVED,
-    });
-  }
-  
-  @PostApi('/fulfill/cancel')
-  static async cancelFulfill(ctxt: HandlerContext, name: string) {
-    await ctxt.invoke(FulfillUtilities).employeeAbandonAssignment(name);
+  @PostApi('/respond/cancel')
+  static async cancelAssignment(ctxt: HandlerContext, name: string) {
+    await ctxt.invoke(RespondUtilities).employeeAbandonAssignment(name);
     return Promise.resolve();
   }
   
-  @PostApi('/fulfill/fulfilled') 
-  static async completeFulfill(ctxt: HandlerContext, name: string) {
-    // Handle fulfillment logic
-    await ctxt.invoke(FulfillUtilities).employeeCompleteAssignment(name);
-    ctxt.koaContext.redirect(`/fulfill?name=${encodeURIComponent(name)}`);
+  @PostApi('/respond/fixed') 
+  static async fixAlert(ctxt: HandlerContext, name: string) {
+    await ctxt.invoke(RespondUtilities).employeeCompleteAssignment(name);
   }
   
-  @PostApi('/fulfill/more_time')
-  static async extendFulfill(ctxt: HandlerContext, name: string) {
-    // Handle request for more time - this is basically a page reload...
-    ctxt.koaContext.redirect(`/fulfill?name=${encodeURIComponent(name)}&more_time=true`);
+  @PostApi('/respond/more_time')
+  static async extendAssignment(ctxt: HandlerContext, name: string) {
+    ctxt.koaContext.redirect(`/assignment?name=${encodeURIComponent(name)}&more_time=true`);
     return Promise.resolve();
   }
 
   @PostApi('/dashboard/cleanalerts')
   static async cleanAlerts(ctxt: HandlerContext) {
-    await ctxt.invoke(FulfillUtilities).cleanAlerts();
+    await ctxt.invoke(RespondUtilities).cleanAlerts();
     return Promise.resolve();
   }
 
   @PostApi('/dashboard/cleanstaff')
   static async cleanStaff(ctxt: HandlerContext) {
-    await ctxt.invoke(FulfillUtilities).cleanStaff();
+    await ctxt.invoke(RespondUtilities).cleanStaff();
     return Promise.resolve();
-  }
-
-  @GetApi('/error')
-  static error(_ctxt: HandlerContext) {
-    return render("error", {});
   }
 
   @GetApi('/crash')

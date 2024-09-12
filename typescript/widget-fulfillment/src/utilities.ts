@@ -30,7 +30,7 @@ export interface AlertWithMessage {
   message: string;
 }
 
-export class FulfillUtilities {
+export class RespondUtilities {
   @Transaction({readOnly: true})
   static async popDashboard(ctx: KnexTransactionContext) {
     const alerts = await ctx.client<AlertEmployee>('alert_employee').select().orderBy(['alert_id']);

@@ -1,10 +1,10 @@
 import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, configureInstance, GetApi } from '@dbos-inc/dbos-sdk';
-import { FulfillUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
+import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceCommunicator, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
 import { CurrentTimeCommunicator } from "@dbos-inc/communicator-datetime";
 
-const fulfillTopic = 'widget-fulfill-topic';
+const respondTopic = 'alert-responder-topic';
 
 const kafkaConfig: KafkaConfig = {
   clientId: 'dbos-kafka-test',
@@ -13,7 +13,7 @@ const kafkaConfig: KafkaConfig = {
 };
 
 const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduceCommunicator, 
-  'wfKafka', kafkaConfig, fulfillTopic, {
+  'wfKafka', kafkaConfig, respondTopic, {
     createPartitioner: Partitioners.DefaultPartitioner
   });
 
@@ -28,21 +28,21 @@ export interface AlertEmployeeInfo
 }
 
 @Kafka(kafkaConfig)
-export class Fulfillment {
+export class Respondment {
   @Workflow()
-  @KafkaConsume(fulfillTopic)
+  @KafkaConsume(respondTopic)
   static async inboundAlertWorkflow(ctxt: WorkflowContext, topic: string, _partition: number, message: KafkaMessage) {
-    if (topic !== fulfillTopic) return; // Error
+    if (topic !== respondTopic) return; // Error
 
     const payload = JSON.parse(message.value!.toString()) as {
-      alert_id: string, details: AlertWithMessage[],
+      alerts: AlertWithMessage[],
     };
 
     ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`);
 
-    for (const detail of payload.details) {
+    for (const detail of payload.alerts) {
       if (detail.alert_status !== AlertStatus.ACTIVE) continue;
-      await ctxt.invoke(FulfillUtilities).addAlert(detail);
+      await ctxt.invoke(RespondUtilities).addAlert(detail);
     }
 
     return Promise.resolve();
@@ -52,7 +52,7 @@ export class Fulfillment {
   static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
     let ctime = await ctxt.invoke(CurrentTimeCommunicator).getCurrentTime();
     const expiration = ctime + timeToPackAlert*1000;
-    const userRec = await ctxt.invoke(FulfillUtilities).getUserAssignment(name, new Date(expiration), more_time);
+    const userRec = await ctxt.invoke(RespondUtilities).getUserAssignment(name, new Date(expiration), more_time);
     const expirationSecs = userRec.employee.expiration ? (userRec.employee.expiration!.getTime()-ctime) / 1000 : null;
     await ctxt.setEvent<AlertEmployeeInfo>('rec', {...userRec, expirationSecs});
       
@@ -65,7 +65,7 @@ export class Fulfillment {
         await ctxt.sleepms(expirationMS - ctime);
         const curDate = await ctxt.invoke(CurrentTimeCommunicator).getCurrentDate();
         ctime = curDate.getTime();
-        const nextTime = await ctxt.invoke(FulfillUtilities).checkForExpiredAssignment(name, curDate);
+        const nextTime = await ctxt.invoke(RespondUtilities).checkForExpiredAssignment(name, curDate);
         if (!nextTime) {
           ctxt.logger.info(`Assignment for ${name} ended; no longer watching.`);
           break;
@@ -85,18 +85,17 @@ export class Fulfillment {
 
   @PostApi('/do_send')
   @Workflow()
-  static async sendAlert(ctxt: WorkflowContext, msg: string) {
-      const max_id = await ctxt.invoke(FulfillUtilities).getMaxId()  
+  static async sendAlert(ctxt: WorkflowContext, message: string) {
+      const max_id = await ctxt.invoke(RespondUtilities).getMaxId()  
       await ctxt.invoke(producerConfig).sendMessage(
       {
         value: JSON.stringify({
-          alert_id: max_id + 1,
-          details: [
+          alerts: [
             { 
               alert_id: max_id+1,
               alert_status: AlertStatus.ACTIVE,
-              last_update_time: "2024-09-04",
-              message: msg
+              last_update_time: "2024-01-01",
+              message: message
             }
           ]
         })

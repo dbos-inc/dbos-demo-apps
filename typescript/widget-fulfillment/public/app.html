@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DBOS Widget Store</title>
+    <title>DBOS Alert Response Center</title>
     <link
       rel="icon"
       type="image/x-icon"
@@ -67,7 +67,7 @@
     const getLoggedInUser = () => {
         return getURLQueryParam('user')
     };
-    function widgetStore() {
+    function responseCenter() {
         return {
             view: "store",
             alerts: [],
@@ -102,7 +102,7 @@
             doLogout: async function() {
                 if (this.haveCurrentAlert()) {
                     try {
-                        const response = await fetch("/fulfill/cancel", {
+                        const response = await fetch("/respond/cancel", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",  
@@ -122,7 +122,7 @@
             },
             updateAlerts: async function () {
                 try {
-                    const response = await fetch("/alerts");
+                    const response = await fetch("/alert_history");
                     if (response.status !== 200) {
                         throw new Error("Failed to fetch alerts");
                     }
@@ -139,7 +139,7 @@
                     if (! this.haveCurrentUser() ) {
                         this.currentAssignment = null
                     } else {
-                        const assignmentResponse = await fetch("/newfulfill?name=" + getLoggedInUser())
+                        const assignmentResponse = await fetch("/assignment?name=" + getLoggedInUser())
                         if (assignmentResponse.status !== 200) {
                             throw new Error("Failed to fetch assignment");
                         }
@@ -151,9 +151,9 @@
                     this.connectionLost = true;
                 }
             },
-            doFulfill: async function(arg) {
+            doRespond: async function(arg) {
                 try {
-                    const response = await fetch("/fulfill/" + arg, {
+                    const response = await fetch("/respond/" + arg, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",  
@@ -177,7 +177,7 @@
                         "Content-Type": "application/json",  
                     },
                     body: JSON.stringify({
-                        "msg": this.nextAlertText
+                        "message": this.nextAlertText
                     })});
                     if (!response.ok) {
                         const errorText = await response.text();
@@ -212,7 +212,7 @@
     }
   </script>
     <body
-        x-data="widgetStore()"
+        x-data="responseCenter()"
         class="h-svh md:p-1 bg-neutral-100 font-sans flex flex-col"
     >
         <span
@@ -332,11 +332,11 @@
                             <div>
                                 <img
                                     src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/alert_responder/dbos_alert_response_center.jpeg"
-                                    alt="Widget Image"
+                                    alt="DBOS Alert Response Center"
                                     class="max-w-[90%] rounded-lg mx-auto"
                                 />
                                 <br>
-                                <div class="text-2xl space-x-4">Enter your name, esteemed employee!</div>
+                                <div class="text-2xl space-x-4">Enter your name, esteemed employee:</div>
                                 <br>
                                 <div class="space-x-2">
                                     <input type="text" x-model="loginUserText" class="border-2 p-2 border-grey-800" @keyup.enter="doLogin">
@@ -352,7 +352,7 @@
                                     <div>
                                         <img
                                             src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/alert_responder/alert.jpeg"
-                                            alt="Widget Image"
+                                            alt="Alert!"
                                             class="max-w-[90%] rounded-lg mx-auto"
                                         />
                                         <br>
@@ -364,14 +364,14 @@
                                             <button
                                                 x-bind:disabled="connectionLost"
                                                 class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
-                                                x-on:click="doFulfill('fulfilled')"
+                                                x-on:click="doRespond('fixed')"
                                             >
                                                 I fixed it!
                                             </button>
                                             <button
                                                 x-bind:disabled="connectionLost"
                                                 class="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
-                                                x-on:click="doFulfill('more_time')"
+                                                x-on:click="doRespond('more_time')"
                                             >
                                                 I need more time!
                                             </button>
@@ -383,7 +383,7 @@
                                     <div>
                                         <img
                                             src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/alert_responder/coast_is_clear.jpeg"
-                                            alt="Widget Image"
+                                            alt="Coast is Clear!"
                                             class="max-w-[90%] rounded-lg mx-auto"
                                         />
                                         <br>
@@ -442,16 +442,16 @@
                 :class="visiblePanelOnMobile === 'internals' && 'bg-neutral-300'"
                 x-on:click="visiblePanelOnMobile = 'internals'"
             >
-                <span>Shop</span>
-                <span>Internals</span>
+                <span>Internal</span>
+                <span>Data</span>
             </button>
             <button
                 class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black border-r"
                 :class="visiblePanelOnMobile === 'store' && 'bg-neutral-300'"
                 x-on:click="visiblePanelOnMobile = 'store'"
             >
-                <span>Widget</span>
-                <span>Store</span>
+                <span>Alert</span>
+                <span>Center</span>
             </button>
             <button
                 class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black"

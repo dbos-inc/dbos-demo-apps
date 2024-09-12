@@ -17,16 +17,15 @@ def delivery_report(err, msg):
         print(f"Message delivered to {msg.topic()} [{msg.partition()}]")
 
 # Define the topic
-topic = 'widget-fulfill-topic'
+topic = 'alert-responder-topic'
 
 # Define the JSON payload
 payload = {
-    "alert_id": "123464",
-    "details": [
+    "alerts": [
         {
             "alert_id": 123464,
-            "alert_status": 2,
-            "last_update_time": "2024-09-04",
+            "alert_status": 0,
+            "last_update_time": "2024-01-01",
             "message": "Alert!"
         }
     ]
