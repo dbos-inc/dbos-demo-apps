@@ -77,7 +77,6 @@ export class Frontend {
   @PostApi('/fulfill/cancel')
   static async cancelFulfill(ctxt: HandlerContext, name: string) {
     await ctxt.invoke(FulfillUtilities).employeeAbandonAssignment(name);
-    ctxt.koaContext.redirect('/');
     return Promise.resolve();
   }
   
@@ -98,7 +97,6 @@ export class Frontend {
   @PostApi('/dashboard/cleanalerts')
   static async cleanAlerts(ctxt: HandlerContext) {
     await ctxt.invoke(FulfillUtilities).cleanAlerts();
-    ctxt.koaContext.redirect(`/dashboard`);
     return Promise.resolve();
   }
 

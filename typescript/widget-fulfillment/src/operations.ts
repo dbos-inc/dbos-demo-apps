@@ -41,7 +41,7 @@ export class Fulfillment {
     ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`);
 
     for (const detail of payload.details) {
-      if (detail.alert_status !== AlertStatus.INCOMING) continue;
+      if (detail.alert_status !== AlertStatus.ACTIVE) continue;
       await ctxt.invoke(FulfillUtilities).addAlert(detail);
     }
 
@@ -94,7 +94,7 @@ export class Fulfillment {
           details: [
             { 
               alert_id: max_id+1,
-              alert_status: 2,
+              alert_status: AlertStatus.ACTIVE,
               last_update_time: "2024-09-04",
               message: msg
             }

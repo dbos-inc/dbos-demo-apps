@@ -4,10 +4,9 @@ import { Knex } from 'knex';
 type KnexTransactionContext = TransactionContext<Knex>;
 
 export enum AlertStatus {
-  RESOLVED = 1,
-  INCOMING = 2,
-  ASSIGNED = 3,
-  CANCELLED = -1,
+  ACTIVE   = 0,
+  ASSIGNED = 1,
+  RESOLVED = 2
 }
 
 export interface Employee {
@@ -37,7 +36,7 @@ export class FulfillUtilities {
     const alerts = await ctx.client<AlertEmployee>('alert_employee').select().orderBy(['alert_id']);
     const employees = await ctx.client<Employee>('employee').select().orderBy(['employee_name']);
     for (const a of alerts) {
-      if (a.alert_status === AlertStatus.INCOMING && a.employee_name) {
+      if (a.alert_status === AlertStatus.ACTIVE && a.employee_name) {
         a.alert_status = AlertStatus.ASSIGNED;
       }
     }
