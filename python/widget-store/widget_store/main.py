@@ -186,7 +186,7 @@ def restock():
 # then dispatches orders that are fully progressed.
 
 
-@DBOS.scheduled("* * * * * */20")
+@DBOS.scheduled("*/20 * * * * *")
 @DBOS.transaction()
 def update_order_progress(scheduled_time, actual_time):
     # Update the progress of paid orders.
