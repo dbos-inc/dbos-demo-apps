@@ -182,11 +182,11 @@ def restock():
 
 
 # Now, let's write a scheduled job to dispatch orders that have been paid for.
-# Every second, it updates the progress of every outstanding paid order,
+# Every 20 seconds, it updates the progress of every outstanding paid order,
 # then dispatches orders that are fully progressed.
 
 
-@DBOS.scheduled("* * * * * *")
+@DBOS.scheduled("*/20 * * * * *")
 @DBOS.transaction()
 def update_order_progress(scheduled_time, actual_time):
     # Update the progress of paid orders.
