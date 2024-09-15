@@ -23,13 +23,17 @@ export class Frontend {
     return render("app.html", {});
   }
 
+
   //For a new employee to get an assignment or for an assigned employee to ask for more time
   @GetApi('/assignment')
   static async getAssignment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
     const userRecWF = await ctxt.startWorkflow(AlertCenter).userAssignmentWorkflow(name, more_time);
+
+    //This Workflow Event lets us know if we have an assignment and, if so, how much time is left
     const userRec = await ctxt.getEvent<AlertEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
     return userRec;
   }
+
 
   //Retrieve a history and status of all the alerts
   @GetApi('/alert_history')
@@ -38,6 +42,7 @@ export class Frontend {
     return alerts;
   }
   
+
   //An employee request to cancel the current assignment
   @PostApi('/respond/cancel')
   static async cancelAssignment(ctxt: HandlerContext, name: string) {
@@ -45,18 +50,21 @@ export class Frontend {
     return Promise.resolve();
   }
   
+
   //An employee request to mark the current assignment as completed
   @PostApi('/respond/fixed') 
   static async fixAlert(ctxt: HandlerContext, name: string) {
     await ctxt.invoke(RespondUtilities).employeeCompleteAssignment(name);
   }
   
+
   //An employee request to ask for more time (simple redirect to above)
   @PostApi('/respond/more_time')
   static async extendAssignment(ctxt: HandlerContext, name: string) {
     ctxt.koaContext.redirect(`/assignment?name=${encodeURIComponent(name)}&more_time=true`);
     return Promise.resolve();
   }
+
 
   //Delete all the alerts from the alert history
   @PostApi('/dashboard/cleanalerts')

@@ -18,8 +18,8 @@ const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduce
     createPartitioner: Partitioners.DefaultPartitioner
   });
 
-const timeToPackAlert = 30;
 
+//The structure returned to the frontend when an employee asks for an assignment
 export interface AlertEmployeeInfo
 {
   employee: Employee;
@@ -31,8 +31,7 @@ export interface AlertEmployeeInfo
 @Kafka(kafkaConfig)
 export class AlertCenter {
 
-
-  //This is invoked when a new alert message arrives. We add all incoming data to our database
+  //This is invoked when a new alert message arrives using the @KafkaConsume decorator
   @Workflow()
   @KafkaConsume(respondTopic)
   static async inboundAlertWorkflow(ctxt: WorkflowContext, topic: string, _partition: number, message: KafkaMessage) {
@@ -40,16 +39,18 @@ export class AlertCenter {
       alerts: AlertWithMessage[],
     };
     ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`);
+    //Add to the database
     for (const detail of payload.alerts) {
       await ctxt.invoke(RespondUtilities).addAlert(detail);
     }
     return Promise.resolve();
   }
 
+
   //This is invoked when:
   // 1. An employee asks for a new assignment, or
   // 2. An employee asks for more time with the existing assignment, or
-  // 3. An employee simply refreshes their page to get an update for how much time is left
+  // 3. There's a simple refresh of the page to let the employee know how much time is left
   @Workflow()
   static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
     
@@ -65,26 +66,30 @@ export class AlertCenter {
 
     if (userRec.newAssignment) {
 
-      //This is the first time we assignned this employee to this alert. 
-      //Here we start a loop that sleeps, wakes up and checks the assignment for expiration
+      //First time we assigned this alert to this employee. 
+      //Here we start a loop that sleeps, wakes up and checks if the assignment has expired
       ctxt.logger.info(`Start watch workflow for ${name}`);
       let expirationMS = userRec.employee.expiration ? userRec.employee.expiration.getTime() : 0;
+
       while (expirationMS > ctime) {
         ctxt.logger.debug(`Sleeping ${expirationMS-ctime}`);
         await ctxt.sleepms(expirationMS - ctime);
         const curDate = await ctxt.invoke(CurrentTimeCommunicator).getCurrentDate();
         ctime = curDate.getTime();
         const nextTime = await ctxt.invoke(RespondUtilities).checkForExpiredAssignment(name, curDate);
+
         if (!nextTime) {
           //The time on this assignment expired, and we can stop monitoring it
           ctxt.logger.info(`Assignment for ${name} ended; no longer watching.`);
           break;
         }
+
         expirationMS = nextTime.getTime();
         ctxt.logger.info(`Going around again: ${expirationMS} / ${ctime}`);
       }
     }
   }
+
 
   @PostApi('/crash_application')
   static async crashApplication(_ctxt: HandlerContext) {
@@ -93,12 +98,14 @@ export class AlertCenter {
     return Promise.resolve();
   }
 
+
   //Produce a new alert message to our broker
   @PostApi('/do_send')
   @Workflow()
   static async sendAlert(ctxt: WorkflowContext, message: string) {
-      const max_id = await ctxt.invoke(RespondUtilities).getMaxId();
-      await ctxt.invoke(producerConfig).sendMessage(
+
+    const max_id = await ctxt.invoke(RespondUtilities).getMaxId();
+    await ctxt.invoke(producerConfig).sendMessage(
       {
         value: JSON.stringify({
           alerts: [
