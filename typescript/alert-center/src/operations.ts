@@ -1,14 +1,15 @@
-import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, configureInstance, GetApi } from '@dbos-inc/dbos-sdk';
+import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, configureInstance } from '@dbos-inc/dbos-sdk';
 import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceCommunicator, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
 import { CurrentTimeCommunicator } from "@dbos-inc/communicator-datetime";
 
+//The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
 
 const kafkaConfig: KafkaConfig = {
   clientId: 'dbos-kafka-test',
-  brokers: [`${process.env['KAFKA_BROKER'] ?? 'localhost:9092'}`],
+  brokers: [`${process.env['KAFKA_BROKER'] ?? 'localhost:9092'}`],  //this is passed via dbos-config.yaml
   logLevel: logLevel.ERROR
 };
 
@@ -28,37 +29,45 @@ export interface AlertEmployeeInfo
 }
 
 @Kafka(kafkaConfig)
-export class Respondment {
+export class AlertCenter {
+
+
+  //This is invoked when a new alert message arrives. We add all incoming data to our database
   @Workflow()
   @KafkaConsume(respondTopic)
   static async inboundAlertWorkflow(ctxt: WorkflowContext, topic: string, _partition: number, message: KafkaMessage) {
-    if (topic !== respondTopic) return; // Error
-
     const payload = JSON.parse(message.value!.toString()) as {
       alerts: AlertWithMessage[],
     };
-
     ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`);
-
     for (const detail of payload.alerts) {
-      if (detail.alert_status !== AlertStatus.ACTIVE) continue;
       await ctxt.invoke(RespondUtilities).addAlert(detail);
     }
-
     return Promise.resolve();
   }
 
+  //This is invoked when:
+  // 1. An employee asks for a new assignment, or
+  // 2. An employee asks for more time with the existing assignment, or
+  // 3. An employee simply refreshes their page to get an update for how much time is left
   @Workflow()
   static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
+    
+    //Get the current time from a communicator
     let ctime = await ctxt.invoke(CurrentTimeCommunicator).getCurrentTime();
-    const expiration = ctime + timeToPackAlert*1000;
-    const userRec = await ctxt.invoke(RespondUtilities).getUserAssignment(name, new Date(expiration), more_time);
+
+    //Assign, extend time or simply return current assignment
+    const userRec = await ctxt.invoke(RespondUtilities).getUserAssignment(name, ctime, more_time);
+    
+    //Get the expiration time (if there is a current assignment); use setEvent to provide it to the caller
     const expirationSecs = userRec.employee.expiration ? (userRec.employee.expiration!.getTime()-ctime) / 1000 : null;
     await ctxt.setEvent<AlertEmployeeInfo>('rec', {...userRec, expirationSecs});
-      
+
     if (userRec.newAssignment) {
+
+      //This is the first time we assignned this employee to this alert. 
+      //Here we start a loop that sleeps, wakes up and checks the assignment for expiration
       ctxt.logger.info(`Start watch workflow for ${name}`);
-      // Keep a watch over the expiration...
       let expirationMS = userRec.employee.expiration ? userRec.employee.expiration.getTime() : 0;
       while (expirationMS > ctime) {
         ctxt.logger.debug(`Sleeping ${expirationMS-ctime}`);
@@ -67,6 +76,7 @@ export class Respondment {
         ctime = curDate.getTime();
         const nextTime = await ctxt.invoke(RespondUtilities).checkForExpiredAssignment(name, curDate);
         if (!nextTime) {
+          //The time on this assignment expired, and we can stop monitoring it
           ctxt.logger.info(`Assignment for ${name} ended; no longer watching.`);
           break;
         }
@@ -83,10 +93,11 @@ export class Respondment {
     return Promise.resolve();
   }
 
+  //Produce a new alert message to our broker
   @PostApi('/do_send')
   @Workflow()
   static async sendAlert(ctxt: WorkflowContext, message: string) {
-      const max_id = await ctxt.invoke(RespondUtilities).getMaxId()  
+      const max_id = await ctxt.invoke(RespondUtilities).getMaxId();
       await ctxt.invoke(producerConfig).sendMessage(
       {
         value: JSON.stringify({
@@ -94,7 +105,6 @@ export class Respondment {
             { 
               alert_id: max_id+1,
               alert_status: AlertStatus.ACTIVE,
-              last_update_time: "2024-01-01",
               message: message
             }
           ]
@@ -102,5 +112,4 @@ export class Respondment {
       }
     );
   }
-
 }

@@ -26,32 +26,22 @@ export interface AlertEmployee {
 export interface AlertWithMessage {
   alert_id: number;
   alert_status: AlertStatus;
-  last_update_time: Date;
   message: string;
 }
 
+const timeToRespondToAlert = 30
+
 export class RespondUtilities {
   @Transaction({readOnly: true})
-  static async popDashboard(ctx: KnexTransactionContext) {
+  static async getAlertStatus(ctx: KnexTransactionContext) {
     const alerts = await ctx.client<AlertEmployee>('alert_employee').select().orderBy(['alert_id']);
-    const employees = await ctx.client<Employee>('employee').select().orderBy(['employee_name']);
     for (const a of alerts) {
       if (a.alert_status === AlertStatus.ACTIVE && a.employee_name) {
         a.alert_status = AlertStatus.ASSIGNED;
       }
     }
-    for (const p of employees) {
-      if (p.expiration) {
-        p.timeLeft = Math.round((p.expiration.getTime() - new Date().getTime())/1000);
-      }
-    }
-    return {alerts, employees};
+    return alerts;
   }  
-
-  @Transaction()
-  static async cleanStaff(ctx: KnexTransactionContext) {
-    await ctx.client<Employee>('employee').whereNull('alert_id').delete();
-  }
 
   @Transaction()
   static async cleanAlerts(ctx: KnexTransactionContext) {
@@ -78,46 +68,50 @@ export class RespondUtilities {
   }
 
   @Transaction()
-  static async getUserAssignment(ctx: KnexTransactionContext, employee_name: string, expiration: Date, @ArgOptional more_time: boolean | undefined) {
+  static async getUserAssignment(ctx: KnexTransactionContext, employee_name: string, currentTime: number, @ArgOptional more_time: boolean | undefined) {
     let employees = await ctx.client<Employee>('employee').where({employee_name}).select();
     let newAssignment = false;
-    if (!employees.length) {
+
+    if (employees.length === 0) {
+      
+      //Is this the first getUserAssignment for this employee? Add them to the employee table
       await ctx.client<Employee>('employee').insert({employee_name, alert_id: null, expiration: null});
       employees = await ctx.client<Employee>('employee').where({employee_name}).select();
     }
-    let alert : AlertEmployee[] = [];
-    if (employees[0].alert_id && more_time) {
-      // Extend time
-      ctx.logger.info(`Extending time for ${employee_name} on ${employees[0].alert_id}`);
-      if (employees[0].expiration?.getTime() ?? 0 < expiration.getTime()) {
-        employees[0].expiration = expiration;
-        await ctx.client<Employee>('employee').where({employee_name}).update({expiration});
-      }
-    } 
-    else if (employees[0].alert_id) {
-      alert = await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).select();
-      return {employee: employees[0], newAssignment, alert};
-    }
-    else {
-      // Try to find assignment
+
+    const expirationTime = new Date(currentTime + timeToRespondToAlert * 1000);
+
+    if (!employees[0].alert_id) { 
+      
+      //This employee does not have a current assignment. Let's find a new one!
       const op = await ctx.client<AlertEmployee>('alert_employee').whereNull('employee_name').orderBy(['alert_id']).first();
       if (op) {
         op.employee_name = employee_name;
         const alert_id = op.alert_id;
         employees[0].alert_id = op.alert_id;
-        employees[0].expiration = expiration;
-        await ctx.client<Employee>('employee').where({employee_name}).update({alert_id, expiration});
+        employees[0].expiration = expirationTime
+        await ctx.client<Employee>('employee').where({employee_name}).update({alert_id, expiration: expirationTime});
         await ctx.client<AlertEmployee>('alert_employee').where({alert_id}).update({employee_name});
         newAssignment = true;
         ctx.logger.info(`New Assignment for ${employee_name}: ${alert_id}`);
       }
+    } else if (employees[0].alert_id && more_time) { 
+
+      //This employee has and assignment and asking for more time.
+      ctx.logger.info(`Extending time for ${employee_name} on ${employees[0].alert_id}`);
+      employees[0].expiration = expirationTime;
+      await ctx.client<Employee>('employee').where({employee_name}).update({expiration: expirationTime});
     }
+
+    //If we have an alert assignment (new or existing), retrieve and return it
+    let alert : AlertEmployee[] = [];
     if (employees[0].alert_id) {
       alert = await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).select();
     }
     return {employee: employees[0], newAssignment, alert};
   }
 
+  
   @Transaction()
   static async employeeCompleteAssignment(ctx: KnexTransactionContext, employee_name: string) {
     const employees = await ctx.client<Employee>('employee').where({employee_name}).select();
@@ -148,9 +142,6 @@ export class RespondUtilities {
   @Transaction()
   static async checkForExpiredAssignment(ctx: KnexTransactionContext, employee_name: string, currentDate: Date) : Promise<Date | null> {
     const employees = await ctx.client<Employee>('employee').where({employee_name}).select();
-    if (!employees.length) {
-      throw new Error(`No employee ${employee_name}`);
-    }
     if (!employees[0].alert_id) {
       return null;
     }
