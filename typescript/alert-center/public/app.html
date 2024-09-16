@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DBOS Alert Response Center</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <style>
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-block;
+        border-top: 3px solid #fff;
+        border-right: 3px solid transparent;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+      }
+      @keyframes rotation {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <script>
+    const divider = `<div class="relative inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div>`;
+    const getAlertStatus = (status) => {
+      switch (status) {
+        case 0:
+          return "ACTIVE";
+        case 1:
+          return "ASSIGNED";
+        case 2:
+          return "RESOLVED";
+        default:
+          //throw new Error("Invalid alert status");
+          return "UNKNOWN";
+      }
+    };
+    const setURLQueryParam = (key, value) => {
+        const url = new URL(window.location.href);
+        if (value === null) {
+            url.searchParams.delete(key);
+          } else {
+            url.searchParams.set(key, value);
+        }
+        window.history.replaceState({}, "", url);
+        window.location.reload();
+    };
+    const getURLQueryParam = (key) => {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(key);
+    };
+    const getLoggedInUser = () => {
+        return getURLQueryParam('user')
+    };
+    function responseCenter() {
+        return {
+            view: "alert_center",
+            alerts: [],
+            divider,
+            visiblePanelOnMobile: "alert_center", // internals | alert_center | tools
+            connectionLost: false,
+            updateAlertsInterval: null,
+            currentAssignment: null,
+            nextAlertText: '',
+            loginUserText: '',
+            init: function () {
+                this.startUpdateAlertsInterval();
+            },
+            startUpdateAlertsInterval: function () {
+                if (this.updateAlertsInterval === null) {
+                    this.updateAlertsInterval = setInterval(() => {
+                    this.updateAlerts();
+                    }, 500);
+                }
+            },
+            haveCurrentUser: function() {
+                const user = getLoggedInUser()
+                const result = (user !== null && user.trim().length > 0)
+                return result
+            },
+            doLogin: function() {
+                if (this.loginUserText.trim().length > 0) {
+                    setURLQueryParam('user', this.loginUserText)
+                    this.loginUserText = ""
+                }
+            },
+            doLogout: async function() {
+                if (this.haveCurrentAlert()) {
+                    try {
+                        const response = await fetch("/respond/cancel", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",  
+                        },
+                        body: JSON.stringify({
+                            "name": this.currentAssignment.employee.employee_name
+                        })});
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error("Error:", errorText);
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                    } 
+                }
+                setURLQueryParam('user', null)
+            },
+            updateAlerts: async function () {
+                try {
+                    const response = await fetch("/alert_history");
+                    if (response.status !== 200) {
+                        throw new Error("Failed to fetch alerts");
+                    }
+                    this.connectionLost = false;
+                    const alerts = await response.json();
+                    console.log(alerts)
+                    this.alerts = alerts.map((alert) => {
+                        return {
+                        ...alert,
+                        alert_status: getAlertStatus(alert.alert_status),
+                        };
+                    })
+                    .sort((a, b) => b.alert_id - a.alert_id);
+                    if (! this.haveCurrentUser() ) {
+                        this.currentAssignment = null
+                    } else {
+                        const assignmentResponse = await fetch("/assignment?name=" + getLoggedInUser())
+                        if (assignmentResponse.status !== 200) {
+                            throw new Error("Failed to fetch assignment");
+                        }
+                        this.currentAssignment = await assignmentResponse.json();
+                        console.log(this.currentAssignment)
+                    }
+                } catch (error) {
+                    console.log("Error " + error)
+                    this.connectionLost = true;
+                }
+            },
+            doRespond: async function(arg) {
+                try {
+                    const response = await fetch("/respond/" + arg, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",  
+                    },
+                    body: JSON.stringify({
+                        "name": this.currentAssignment.employee.employee_name
+                    })});
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("Error:", errorText);
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                }                
+            },
+            doSendAlert: async function() {
+                try {
+                    const response = await fetch("/do_send", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",  
+                    },
+                    body: JSON.stringify({
+                        "message": this.nextAlertText
+                    })});
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("Error:", errorText);
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                }   
+                this.nextAlertText = '';
+            },
+            haveCurrentAlert: function() {
+                return (this.currentAssignment !== null && this.currentAssignment.employee.alert_id !== null)
+            },
+            doCleanAlerts: async function() {
+                try {
+                    const response = await fetch("/dashboard/cleanalerts", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",  
+                        },
+                        body: JSON.stringify({})
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("Error:", errorText);
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                }   
+            }
+        }
+    }
+  </script>
+    <body
+        x-data="responseCenter()"
+        class="h-svh md:p-1 bg-neutral-100 font-sans flex flex-col"
+    >
+        <span
+            x-show="connectionLost"
+            class="w-full flex justify-center items-center text-center bg-red-500 text-white p-2 md:p-4 rounded-lg"
+        >
+            Connection to server lost. Reconnecting...
+            <span class="spinner ml-2"></span>
+        </span>
+        
+        <div class="flex flex-col grow overflow-scroll">
+            <div class="w-full flex justify-between mb-2">
+                <div></div>
+                <img
+                    src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
+                    alt="DBOS Logo"
+                    class="w-40"
+                />
+                <div></div>
+            </div>
+
+            <div class="md:grid md:grid-cols-3 md:gap-1 grow">
+                <div :class="visiblePanelOnMobile === 'internals' || 'hidden md:block'">
+                    <div class="flex flex-col gap-6 p-5">
+                        <h2 class="text-3xl text-center">Internal Data</h2>
+                        <div x-html="divider"></div>
+
+                        <div class="flow-root w-full">
+                            <h3 class="text-2xl mb-2 flex justify-between items-center">Alert history <button @click="doCleanAlerts" class="justify-end text-sm bg-gray-300 hover:bg-gray-400 text-gray-600 py-2 px-2 rounded disabled:bg-gray-100" x-bind:disabled="connectionLost"> Clear </button></h3>
+                            
+
+                            <p x-show="alerts.length === 0" class="text-gray-500 text-center">
+                                No alerts in the system.
+                            </p>
+                            <div
+                                x-show="alerts.length > 0"
+                                class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8"
+                            >
+                                <div
+                                    class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
+                                >
+                                    <div
+                                        class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                                    >
+                                        <table class="min-w-full divide-y divide-gray-300">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                            <th
+                                                scope="col"
+                                                class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                                            >
+                                                Alert ID
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                                            >
+                                                Message
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                                            >
+                                                Assignee
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                                            >
+                                                Status
+                                            </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 bg-white">
+                                            <template x-for="alert in alerts" :key="alert.alert_id">
+                                            <tr>
+                                                <td
+                                                x-text="alert.alert_id"
+                                                class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                                                ></td>
+                                                <td
+                                                x-text="alert.message.substring(0,30)"
+                                                class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                                                ></td>
+                                                <td
+                                                x-text="alert.employee_name"
+                                                class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                                                ></td>
+                                                <td
+                                                x-text="alert.alert_status"
+                                                :class="{
+                                                    'text-red-700': alert.alert_status === 'ACTIVE',
+                                                    'text-yellow-600': alert.alert_status === 'ASSIGNED',
+                                                    'text-green-700': alert.alert_status === 'RESOLVED'
+                                                }"
+                                                class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 font-bold"
+                                                ></td>
+                                            </tr>
+                                            </template>
+                                        </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div :class="visiblePanelOnMobile === 'alert_center' || 'hidden md:block'">
+                    <div
+                    class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
+                    :class="{'bg-orange-200': haveCurrentAlert(), 'bg-white': !haveCurrentAlert()}"
+                    >
+                        <h2 class="text-3xl" x-text="!haveCurrentUser() ? 'Please Login!' : haveCurrentAlert() ? 'Warning!' :  'Hello, ' + getLoggedInUser() + '! Coast is clear.'"></h2>
+                        <div x-html="divider"></div>
+                        <template x-if="!haveCurrentUser()">
+                            <div>
+                                <img
+                                    src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/alert_responder/dbos_alert_response_center.jpeg"
+                                    alt="DBOS Alert Response Center"
+                                    class="max-w-[90%] rounded-lg mx-auto"
+                                />
+                                <br>
+                                <div class="text-2xl space-x-4">Enter your name, esteemed employee:</div>
+                                <br>
+                                <div class="space-x-2">
+                                    <input type="text" x-model="loginUserText" class="border-2 p-2 border-grey-800" @keyup.enter="doLogin">
+                                    <button @click="doLogin" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" x-bind:disabled="connectionLost">
+                                        Log in</button>
+                                </div>
+                            </div>
+                        </template>
+                        
+                        <template x-if="haveCurrentUser()">
+                            <div>
+                                <template x-if="haveCurrentAlert">
+                                    <div>
+                                        <img
+                                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/alert_responder/alert.jpeg"
+                                            alt="Alert!"
+                                            class="max-w-[90%] rounded-lg mx-auto"
+                                        />
+                                        <br>
+                                        <div class="text-2xl" x-text="currentAssignment.alert[0].message"></div>
+                                        <br>
+                                        <div class="text-xl" x-text="'Please fix it. You have ' + Math.round(currentAssignment.expirationSecs) + ' second' + (currentAssignment.expirationSecs > 1.5 ? 's ' : ' ') + 'remaining!'"></div>
+                                        <br>
+                                        <div class="space-x-4 space-y-2">
+                                            <button
+                                                x-bind:disabled="connectionLost"
+                                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
+                                                x-on:click="doRespond('fixed')"
+                                            >
+                                                I fixed it!
+                                            </button>
+                                            <button
+                                                x-bind:disabled="connectionLost"
+                                                class="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
+                                                x-on:click="doRespond('more_time')"
+                                            >
+                                                I need more time!
+                                            </button>
+                                        </div>
+                                        
+                                    </div>
+                                </template>
+                                <template x-if="!haveCurrentAlert()">
+                                    <div>
+                                        <img
+                                            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/alert_responder/coast_is_clear.jpeg"
+                                            alt="Coast is Clear!"
+                                            class="max-w-[90%] rounded-lg mx-auto"
+                                        />
+                                        <br>
+                                        <div class="text-2xl">No alerts at this time...</div> 
+                                        <br>
+                                    </div>
+                                </template>
+                                <br>
+                                <button @click="doLogout" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" x-bind:disabled="connectionLost">
+                                    I'm out of here!</button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            
+                <div :class="visiblePanelOnMobile === 'tools' || 'hidden md:block'">
+                    <div class="flex flex-col gap-6 p-5 text-center">
+                        <h2 class="text-3xl text-center">Server Tools</h2>
+                        <div x-html="divider"></div>
+                            <h3 class="text-2xl mb-0">Create an alert</h3>
+                            <div>
+                                <p class="text-left text-gray-500 mb-2">
+                                    Type in some text and press "Send" to produce a Kafka message:
+                                </p>
+                                <input type="text" x-model="nextAlertText" class="border-2 border-grey-800 p-2" style="width: 300px;" 
+                                    @keyup.enter="doSendAlert">
+                                <button @click="doSendAlert" class="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500" 
+                                        x-bind:disabled="connectionLost || nextAlertText.length==0">
+                                        Send</button>
+                            </div>
+                            <br>
+                            <br>
+                        <p class="text-left text-gray-500">
+                            Crash the application at any time to simulate a server failure or
+                            service interruption. After crashing, the application will
+                            momentarily become inaccessible but then resume from exactly where
+                            it left off before the crash. Try it and see!
+                        </p>
+                        <div>
+                            <button
+                            class="bg-red-700 hover:bg-red-800 border-none text-white py-4 px-6 text-center text-xl cursor-pointer rounded-lg transition duration-300 hover:shadow-lg"
+                            x-on:click="fetch('/crash_application', {'method': 'POST'})"
+                            >
+                                Crash the Application
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="md:hidden w-full grid grid-cols-3 font-semibold font-mono bg-neutral-200"
+        >
+            <button
+                class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black border-r"
+                :class="visiblePanelOnMobile === 'internals' && 'bg-neutral-300'"
+                x-on:click="visiblePanelOnMobile = 'internals'"
+            >
+                <span>Internal</span>
+                <span>Data</span>
+            </button>
+            <button
+                class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black border-r"
+                :class="visiblePanelOnMobile === 'alert_center' && 'bg-neutral-300'"
+                x-on:click="visiblePanelOnMobile = 'alert_center'"
+            >
+                <span>Alert</span>
+                <span>Center</span>
+            </button>
+            <button
+                class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black"
+                :class="visiblePanelOnMobile === 'tools' && 'bg-neutral-300'"
+                x-on:click="visiblePanelOnMobile = 'tools'"
+            >
+                <span>Server</span>
+                <span>Tools</span>
+            </button>
+        </div>
+    </body>
+</html>
