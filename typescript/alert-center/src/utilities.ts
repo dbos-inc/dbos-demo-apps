@@ -79,8 +79,7 @@ export class RespondUtilities {
 
     if (employees.length === 0) {
       //Is this the first getUserAssignment for this employee? Add them to the employee table
-      await ctx.client<Employee>('employee').insert({employee_name, alert_id: null, expiration: null});
-      employees = await ctx.client<Employee>('employee').where({employee_name}).select();
+      employees = await ctx.client<Employee>('employee').insert({employee_name, alert_id: null, expiration: null}).returning('*');
     }
 
     const expirationTime = new Date(currentTime + timeToRespondToAlert * 1000);
