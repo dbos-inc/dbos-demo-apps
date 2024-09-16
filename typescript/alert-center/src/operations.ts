@@ -10,6 +10,13 @@ const respondTopic = 'alert-responder-topic';
 const kafkaConfig: KafkaConfig = {
   clientId: 'dbos-kafka-test',
   brokers: [`${process.env['KAFKA_BROKER'] ?? 'localhost:9092'}`],  //this is passed via dbos-config.yaml
+  ssl: process.env['KAFKA_USERNAME'] ? true : false,
+  sasl: process.env['KAFKA_USERNAME'] ? {
+    mechanism: 'plain',
+    username: process.env['KAFKA_USERNAME']!,
+    password: process.env['KAFKA_PASSWORD']!,
+  } : undefined,
+  connectionTimeout: 45000,
   logLevel: logLevel.ERROR
 };
 

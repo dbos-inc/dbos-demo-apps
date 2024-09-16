@@ -18,3 +18,5 @@ telemetry:
     logLevel: 'info'
 env:
   KAFKA_BROKER: ${KAFKA_BROKER}
+  KAFKA_USERNAME: ${KAFKA_USERNAME}
+  KAFKA_PASSWORD: ${KAFKA_PASSWORD}
