@@ -34,7 +34,15 @@ If you have an existing Kafka broker you'd like to use, pass the URL and port to
 ```shell
 export KAFKA_BROKER="broker1.example.com:9092"
 ```
-After this, running `dbos-cloud app deploy` will pass URL with the app code to DBOS Cloud.
+
+If you have set up Kafka security on your cloud broker (perhaps using [Confluent Cloud](#setting-up-confluent-cloud)), you may also need to export the credentials:
+
+```shell
+export KAFKA_USERNAME='7...V'
+export KAFKA_PASSWORD='X/...v'
+```
+
+After exporting these environment varables, running `dbos-cloud app deploy` will pass the broker URL, credentials, and the app code to DBOS Cloud for deployment.
 
 ## Usage
 Visit the app on http://localhost:3000/
@@ -52,3 +60,17 @@ If no buttons are pressed in the allotted processing time, the alert will be can
 ## Creating Alerts
 
 You can use the text box and button on the right to create new alerts. You can create several alerts which will be queued up. 
+
+## Setting Up Confluent Cloud
+
+Confluent provides a [simple cloud setup for Kafka](https://www.confluent.io/get-started/).
+
+While the specific steps are detailed on their website, the basic steps are:
+*  Sign up for an account.
+*  Provision a broker (probably in AWS, but that is not essential).
+*  Create the topic `alert-responder-topic`; if you do not do this the broker will not accept messages from the app.
+*  Create a set of development credentials; if these are correct the returned information will indicate `security.protocol=SASL_SSL` and `sasl.mechanisms=PLAIN`.
+*  Export the returned value of `bootstrap.servers` for `KAFKA_BROKER`.
+*  Export the returned value of `sasl.username` for `KAFKA_USERNAME` and `sasl.password` for `KAFKA_PASSWORD`.
+
+Afterward, the Alert Responce Center app can be run locally using cloud-based Kafka, or can be deployed to DBOS cloud.

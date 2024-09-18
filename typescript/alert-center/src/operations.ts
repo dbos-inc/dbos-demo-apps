@@ -7,9 +7,19 @@ import { CurrentTimeCommunicator } from "@dbos-inc/communicator-datetime";
 //The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
 
+// KAFKA_BROKER is passed via dbos-config.yaml
+const kbroker = process.env['KAFKA_BROKER'] ? process.env['KAFKA_BROKER'] : 'localhost:9092';
+
 const kafkaConfig: KafkaConfig = {
   clientId: 'dbos-kafka-test',
-  brokers: [`${process.env['KAFKA_BROKER'] ?? 'localhost:9092'}`],  //this is passed via dbos-config.yaml
+  brokers: [kbroker],
+  ssl: process.env['KAFKA_USERNAME'] ? true : false,
+  sasl: process.env['KAFKA_USERNAME'] ? {
+    mechanism: 'plain',
+    username: process.env['KAFKA_USERNAME']!,
+    password: process.env['KAFKA_PASSWORD']!,
+  } : undefined,
+  connectionTimeout: 45000,
   logLevel: logLevel.ERROR
 };
 
