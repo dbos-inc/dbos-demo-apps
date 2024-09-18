@@ -71,6 +71,6 @@ While the specific steps are detailed on their website, the basic steps are:
 *  Create the topic `alert-responder-topic`; if you do not do this the broker will not accept messages from the app.
 *  Create a set of development credentials; if these are correct the returned information will indicate `security.protocol=SASL_SSL` and `sasl.mechanisms=PLAIN`.
 *  Export the returned value of `bootstrap.servers` for `KAFKA_BROKER`.
-*  Export the returned value of `sasl.username` for `KAFKA_USERNAME and `sasl.password` for `KAFKA_PASSWORD`.
+*  Export the returned value of `sasl.username` for `KAFKA_USERNAME` and `sasl.password` for `KAFKA_PASSWORD`.
 
 Afterward, the Alert Responce Center app can be run locally using cloud-based Kafka, or can be deployed to DBOS cloud.
