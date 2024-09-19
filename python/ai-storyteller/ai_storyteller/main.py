@@ -1,4 +1,4 @@
-# DBOS AI Quickstart: A simple FastAPI app that uses LlamaIndex to generate a story and can be deployed to DBOS Cloud.
+# DBOS AI storyteller: A simple FastAPI app that uses LlamaIndex to generate a story and can be deployed to DBOS Cloud.
 
 # First, let's do imports and create FastAPI and DBOS instances.
 from fastapi.responses import HTMLResponse
