@@ -1,8 +1,6 @@
-
+from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-
-from dbos import DBOS
 
 app = FastAPI()
 DBOS(fastapi=app)
