@@ -8,6 +8,7 @@
 import html
 import os
 import re
+import threading
 from datetime import UTC, datetime, timedelta
 
 import requests
@@ -91,10 +92,12 @@ def run_hourly(scheduled_time: datetime, actual_time: datetime):
     DBOS.logger.info(f"Found {len(results)} comments at {str(actual_time)}")
 
 
-# Finally, in our main function, let's launch DBOS.
+# Finally, in our main function, let's launch DBOS, then sleep the main thread forever
+# while the background threads run.
 
 if __name__ == "__main__":
     DBOS.launch()
+    threading.Event().wait()
 
 
 # To deploy this app to the cloud as a persistent cron job, run `dbos-cloud app deploy`

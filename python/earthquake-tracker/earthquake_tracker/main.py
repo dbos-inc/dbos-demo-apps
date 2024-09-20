@@ -5,6 +5,7 @@
 
 # First, let's do imports and initialize DBOS.
 
+import threading
 from datetime import datetime, timedelta
 from typing import TypedDict
 
@@ -107,11 +108,12 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
             DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 
 
-# Finally, in our main function, let's launch DBOS.
+# Finally, in our main function, let's launch DBOS, then sleep the main thread forever
+# while the background threads run.
 
 if __name__ == "__main__":
     DBOS.launch()
-
+    threading.Event().wait()
 
 # To deploy this app to the cloud as a persistent cron job and dashboard, run `dbos-cloud app deploy`
 # To see the code for the Streamlit visualization, check out streamlit.py

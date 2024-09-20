@@ -2,21 +2,12 @@
 
 from decimal import Decimal
 
-from dbos import load_config
-from sqlalchemy import URL, create_engine, delete, insert
+from dbos import get_dbos_database_url
+from sqlalchemy import create_engine, delete, insert
 
 from widget_store import schema
 
-dbos_config = load_config("dbos-config.yaml")
-db_url = URL.create(
-    "postgresql",
-    username=dbos_config["database"]["username"],
-    password=dbos_config["database"]["password"],
-    host=dbos_config["database"]["hostname"],
-    port=dbos_config["database"]["port"],
-    database=dbos_config["database"]["app_db_name"],
-)
-engine = create_engine(db_url)
+engine = create_engine(get_dbos_database_url())
 
 with engine.connect() as connection:
     # Delete all existing entries
