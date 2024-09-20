@@ -147,7 +147,7 @@ def create_order() -> int:
 
 @app.get("/order/{order_id}")
 @DBOS.transaction()
-def get_order(order_id: str):
+def get_order(order_id: int):
     return (
         DBOS.sql_session.execute(orders.select().where(orders.c.order_id == order_id))
         .mappings()
@@ -156,7 +156,7 @@ def get_order(order_id: str):
 
 
 @DBOS.transaction()
-def update_order_status(order_id: str, status: int) -> None:
+def update_order_status(order_id: int, status: int) -> None:
     DBOS.sql_session.execute(
         orders.update().where(orders.c.order_id == order_id).values(order_status=status)
     )
