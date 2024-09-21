@@ -7,7 +7,7 @@ name: ai-storyteller
 language: python
 runtimeConfig:
   start:
-    - "fastapi run ai_storyteller/main.py"
+    - "fastapi run ./main.py"
 database:
   hostname: localhost
   port: 5432
@@ -15,7 +15,7 @@ database:
   password: ${PGPASSWORD}
   app_db_name: ai_storyteller
   migrate:
-    - echo "No migrations to run"
+    - echo 'No migrations specified'
 telemetry:
   logs:
     logLevel: INFO
