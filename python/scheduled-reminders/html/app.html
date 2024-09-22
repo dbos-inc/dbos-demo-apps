@@ -31,16 +31,28 @@
                 </button>
             </div>
         </form>
+        <div id="successMessage" class="hidden mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+            <strong class="font-bold">Success!</strong>
+            <span class="block sm:inline"> Thank you for signing up. Reminders will be sent to: <span id="successEmail"></span></span>
+        </div>
+        <div id="errorMessage" class="hidden mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline"> There was a problem signing up. Please try again.</span>
+        </div>
     </div>
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
-        
+
         // Form submission handling
         document.getElementById('reminderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('email-address').value;
            
+            // Hide any existing messages
+            document.getElementById('successMessage').classList.add('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+
             // Send POST request to /email endpoint
             fetch('/email', {
                 method: 'POST',
@@ -57,12 +69,13 @@
             })
             .then(data => {
                 console.log('Success:', data);
-                alert('Thank you for signing up! Reminders will be sent to: ' + email);
+                document.getElementById('successEmail').textContent = email;
+                document.getElementById('successMessage').classList.remove('hidden');
                 this.reset();
             })
             .catch((error) => {
                 console.error('Error:', error);
-                alert('There was a problem signing up. Please try again.');
+                document.getElementById('errorMessage').classList.remove('hidden');
             });
         });
     </script>
