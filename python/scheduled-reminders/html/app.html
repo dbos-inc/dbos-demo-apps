@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduled Reminders</title>
+    <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <i data-lucide="bell" class="mx-auto h-12 w-12 text-indigo-600"></i>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Scheduled Reminders</h2>
+            <p class="mt-2 text-sm text-gray-600">Never forget an important task again</p>
+        </div>
+        <form id="reminderForm" class="mt-8 space-y-6">
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="email-address" class="sr-only">Email address</label>
+                    <input id="email-address" name="email" type="email" autocomplete="email" required
+                        class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                        placeholder="Email address">
+                </div>
+            </div>
+            <div>
+                <button type="submit"
+                    class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Sign up for reminders
+                </button>
+            </div>
+        </form>
+    </div>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Form submission handling
+        document.getElementById('reminderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email-address').value;
+           
+            // Send POST request to /email endpoint
+            fetch('/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                alert('Thank you for signing up! Reminders will be sent to: ' + email);
+                this.reset();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('There was a problem signing up. Please try again.');
+            });
+        });
+    </script>
+</body>
+</html>

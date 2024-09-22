@@ -2,6 +2,8 @@ import os
 
 from dbos import DBOS
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel, EmailStr
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
@@ -44,7 +46,16 @@ def reminder_workflow(to_email: str):
     DBOS.sleep(30 * 24 * 60 * 60)  # Wait for one month (30 days)
     send_email(to_email, time="one month")
 
+class EmailSchema(BaseModel):
+    email: EmailStr
 
-@app.post("/")
-def endpoint():
-    DBOS.start_workflow(reminder_workflow, "peter.kraft@dbos.dev")
+@app.post("/email")
+def email_endpoint(email: EmailSchema):
+    DBOS.logger.info(email)
+    # DBOS.start_workflow(reminder_workflow, "peter.kraft@dbos.dev")
+
+@app.get("/")
+def frontend():
+    with open(os.path.join("html", "app.html")) as file:
+        html = file.read()
+    return HTMLResponse(html)
