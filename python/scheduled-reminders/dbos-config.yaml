@@ -19,3 +19,6 @@ database:
 telemetry:
   logs:
     logLevel: INFO
+env:
+  SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+  SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL}
