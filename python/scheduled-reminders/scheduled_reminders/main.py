@@ -1,6 +1,6 @@
 import os
 
-from dbos import DBOS
+from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
@@ -46,13 +46,16 @@ def reminder_workflow(to_email: str):
     DBOS.sleep(30 * 24 * 60 * 60)  # Wait for one month (30 days)
     send_email(to_email, time="one month")
 
+
 class EmailSchema(BaseModel):
     email: EmailStr
 
+
 @app.post("/email")
 def email_endpoint(email: EmailSchema):
-    DBOS.logger.info(email)
-    # DBOS.start_workflow(reminder_workflow, "peter.kraft@dbos.dev")
+    with SetWorkflowID(email.email):
+        DBOS.start_workflow(reminder_workflow, email.email)
+
 
 @app.get("/")
 def frontend():
