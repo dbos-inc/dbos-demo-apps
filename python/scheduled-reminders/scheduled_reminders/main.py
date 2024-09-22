@@ -75,8 +75,7 @@ def send_email(to_email: str, time: str):
 
 
 # Next, let's use FastAPI to write an HTTP endpoint for scheduling reminder emails.
-# The endpoint takes in an email address and starts in the background
-# a reminder workflow for that address.
+# The endpoint takes in an email address and starts a reminder workflow in the background.
 
 # As a basic anti-spam measure, we'll use the supplied email address as an idempotency key.
 # That way, you can only send reminders once to any email address.
