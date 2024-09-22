@@ -1,6 +1,6 @@
 ## Scheduled Reminders
 
-This app uses DBOS to schedule reminder emails to send far in the future.
+This app uses DBOS to schedule reminder emails to send weeks or months in the future.
 
 ### Setting Up SendGrid
 
