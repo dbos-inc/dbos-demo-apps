@@ -18,14 +18,15 @@ DBOS(fastapi=app)
 # It sends emails one minute, one day, one week, and
 # one month in the future.
 
-# Thanks to DBOS durable workflows, scheduling a function
-# to execute far in the future is easy: just sleep then
-# call the function.
+# Because we use a DBOS durably executed workflow, scheduling a
+# function to execute far in the future is easy: just sleep
+# then call the function.
 
-# When you first call DBOS.sleep, the wakeup time is recorded
-# in the database. That way, even if your program is interrupted
-# or restarted multiple times during a month-long sleep,
-# it will still wake up on schedule and execute the function.
+# Under the hood, this works because when you first call
+# DBOS.sleep, it records its wakeup time in the database.
+# That way, even if your program is interrupted or restarted
+# multiple times during a month-long sleep, it still wakes
+# up on schedule and sends the reminder email.
 
 
 @DBOS.workflow()
