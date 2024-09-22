@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scheduled Reminders</title>
+    <title>DBOS Scheduled Reminders</title>
     <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -13,7 +13,7 @@
         <div class="text-center">
             <i data-lucide="bell" class="mx-auto h-12 w-12 text-indigo-600"></i>
             <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Scheduled Reminders</h2>
-            <p class="mt-2 text-sm text-gray-600">Never forget an important task again</p>
+            <p class="mt-2 text-sm text-gray-600">Send yourself reminders far in the future.</p>
         </div>
         <form id="reminderForm" class="mt-8 space-y-6">
             <div class="rounded-md shadow-sm -space-y-px">
@@ -39,6 +39,9 @@
             <strong class="font-bold">Error!</strong>
             <span class="block sm:inline"> There was a problem signing up. Please try again.</span>
         </div>
+        <p class="mt-4 text-sm text-center text-gray-700">
+            Powered by <a href="https://docs.dbos.dev" target="_blank" rel="noopener noreferrer" class="font-medium text-indigo-600 hover:text-indigo-500">DBOS</a>, implemented in <a href="https://docs.dbos.dev" target="_blank" rel="noopener noreferrer" class="font-medium text-indigo-600 hover:text-indigo-500">&lt;50 lines of code</a>.
+        </p>
     </div>
     <script>
         // Initialize Lucide icons
