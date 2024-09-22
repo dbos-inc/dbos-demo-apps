@@ -58,7 +58,7 @@ if from_email is None:
 
 # Then, we implement the send_email function using SendGrid's API.
 # We annotate this function with @DBOS.step() so the reminder workflow
-# calls it durably and avoids re-executing it if restarted.
+# calls it durably and doesn't re-execute it if restarted.
 
 
 @DBOS.step()
@@ -74,12 +74,12 @@ def send_email(to_email: str, time: str):
     DBOS.logger.info(f"Email sent to {to_email} at time {time}")
 
 
-# Next, let's use FastAPI to write an HTTP endpoint that sends emails.
-# The endpoint takes in an email and starts in the background
-# a reminder workflow for that email.
+# Next, let's use FastAPI to write an HTTP endpoint for scheduling reminder emails.
+# The endpoint takes in an email address and starts in the background
+# a reminder workflow for that address.
 
-# As a basic anti-spam measure, we'll use the target email as an idempotency key.
-# That way, you can only send one set of reminders to any given email.
+# As a basic anti-spam measure, we'll use the supplied email address as an idempotency key.
+# That way, you can only send reminders once to any email address.
 
 
 class EmailSchema(BaseModel):
