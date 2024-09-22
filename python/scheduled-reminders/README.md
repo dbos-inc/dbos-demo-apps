@@ -27,7 +27,7 @@ Then, run this command to deploy your app:
 dbos-cloud app deploy
 ```
 
-This command outputs a URL&dash;visit it to schedule a reminder!
+This command outputs a URL&mdash;visit it to schedule a reminder!
 You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
 
 ### Running Locally
