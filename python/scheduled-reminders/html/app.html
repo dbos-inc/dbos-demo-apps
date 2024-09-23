@@ -84,7 +84,7 @@
             .then(data => {
                 console.log('Success:', data);
                 document.getElementById('successEmail').textContent = email;
-                document.getElementById('successDate').textContent = new Date(date).toLocaleDateString();
+                document.getElementById('successDate').textContent = date;
                 document.getElementById('successMessage').classList.remove('hidden');
                 this.reset();
                 // Reset the date input's min attribute
