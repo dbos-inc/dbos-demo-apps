@@ -3,8 +3,8 @@
 # First, let's do imports and initialize DBOS.
 
 import os
-
 from datetime import datetime
+
 from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -32,10 +32,19 @@ DBOS(fastapi=app)
 
 @DBOS.workflow()
 def reminder_workflow(to_email: str, send_date: datetime, start_date: datetime):
+    send_email(
+        to_email,
+        subject="DBOS Reminder Confirmation",
+        message=f"Thank you for signing up for DBOS reminders! You will receive a reminder on {send_date}.",
+    )
     days_to_wait = (send_date - start_date).days
     seconds_to_wait = days_to_wait * 24 * 60 * 60
     DBOS.sleep(seconds_to_wait)
-    send_email(to_email, start_date)
+    send_email(
+        to_email,
+        subject="DBOS Reminder",
+        message=f"This is a reminder from DBOS! You requested this reminder on {start_date}.",
+    )
 
 
 # Now, let's write the actual email-sending code using SendGrid.
@@ -56,12 +65,9 @@ if from_email is None:
 
 
 @DBOS.step()
-def send_email(to_email: str, start_date: datetime):
+def send_email(to_email: str, subject: str, message: str):
     message = Mail(
-        from_email=from_email,
-        to_emails=to_email,
-        subject="DBOS Reminder",
-        html_content=f"This is a reminder from DBOS! You requested this reminder on {start_date}.",
+        from_email=from_email, to_emails=to_email, subject=subject, html_content=message
     )
     email_client = SendGridAPIClient(api_key)
     email_client.send(message)
@@ -82,7 +88,7 @@ class RequestSchema(BaseModel):
 
 @app.post("/email")
 def email_endpoint(request: RequestSchema):
-    send_date = datetime.strptime(request.date, '%Y-%m-%d').date()
+    send_date = datetime.strptime(request.date, "%Y-%m-%d").date()
     today_date = datetime.now().date()
     with SetWorkflowID(f"{request.email}-{request.date}"):
         DBOS.start_workflow(reminder_workflow, request.email, send_date, today_date)
