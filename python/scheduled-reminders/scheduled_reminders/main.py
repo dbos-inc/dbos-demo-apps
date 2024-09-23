@@ -4,6 +4,7 @@
 
 import os
 
+from datetime import datetime
 from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -30,18 +31,11 @@ DBOS(fastapi=app)
 
 
 @DBOS.workflow()
-def reminder_workflow(to_email: str):
-    DBOS.sleep(60)  # Wait for one minute
-    send_email(to_email, time="one minute")
-
-    DBOS.sleep(24 * 60 * 60)  # Wait for one day
-    send_email(to_email, time="one day")
-
-    DBOS.sleep(7 * 24 * 60 * 60)  # Wait for one week
-    send_email(to_email, time="one week")
-
-    DBOS.sleep(30 * 24 * 60 * 60)  # Wait for one month (30 days)
-    send_email(to_email, time="one month")
+def reminder_workflow(to_email: str, send_date: datetime, start_date: datetime):
+    days_to_wait = (send_date - start_date).days
+    seconds_to_wait = days_to_wait * 24 * 60 * 60
+    DBOS.sleep(seconds_to_wait)
+    send_email(to_email, start_date)
 
 
 # Now, let's write the actual email-sending code using SendGrid.
@@ -62,16 +56,16 @@ if from_email is None:
 
 
 @DBOS.step()
-def send_email(to_email: str, time: str):
+def send_email(to_email: str, start_date: datetime):
     message = Mail(
         from_email=from_email,
         to_emails=to_email,
         subject="DBOS Reminder",
-        html_content=f"This is a reminder from DBOS! It has been {time} since your last reminder.",
+        html_content=f"This is a reminder from DBOS! You requested this reminder on {start_date}.",
     )
     email_client = SendGridAPIClient(api_key)
     email_client.send(message)
-    DBOS.logger.info(f"Email sent to {to_email} at time {time}")
+    DBOS.logger.info(f"Email sent to {to_email}")
 
 
 # Next, let's use FastAPI to write an HTTP endpoint for scheduling reminder emails.
@@ -81,14 +75,17 @@ def send_email(to_email: str, time: str):
 # That way, you can only send reminders once to any email address.
 
 
-class EmailSchema(BaseModel):
+class RequestSchema(BaseModel):
     email: EmailStr
+    date: str
 
 
 @app.post("/email")
-def email_endpoint(email: EmailSchema):
-    with SetWorkflowID(email.email):
-        DBOS.start_workflow(reminder_workflow, email.email)
+def email_endpoint(request: RequestSchema):
+    send_date = datetime.strptime(request.date, '%Y-%m-%d').date()
+    today_date = datetime.now().date()
+    with SetWorkflowID(f"{request.email}-{request.date}"):
+        DBOS.start_workflow(reminder_workflow, request.email, send_date, today_date)
 
 
 # Finally, let's serve the app's frontend from an HTML file using FastAPI.
