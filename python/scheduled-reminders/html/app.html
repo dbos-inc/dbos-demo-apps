@@ -97,7 +97,7 @@
                 document.getElementById('successMessage').classList.remove('hidden');
                 this.reset();
                 // Reset the date input's min attribute
-                document.getElementById('reminder-date').min = tomorrow.toISOString().split('T')[0];
+                document.getElementById('reminder-date').min = getTomorrowDate();
             })
             .catch((error) => {
                 console.error('Error:', error);
