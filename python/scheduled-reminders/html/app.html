@@ -53,9 +53,18 @@
         lucide.createIcons();
 
         // Set minimum date to tomorrow
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        document.getElementById('reminder-date').min = tomorrow.toISOString().split('T')[0];
+        function getTomorrowDate() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const year = tomorrow.getFullYear();
+            const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const day = String(tomorrow.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        }
+        document.getElementById('reminder-date').min = getTomorrowDate();
 
         // Form submission handling
         document.getElementById('reminderForm').addEventListener('submit', function(e) {
