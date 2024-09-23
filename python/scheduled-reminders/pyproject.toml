@@ -1,0 +1,28 @@
+[project]
+name = "scheduled-reminders"
+version = "0.1.0"
+dependencies = [
+    "dbos>=0.7.0a9",
+    "sendgrid>=6.11.0",
+]
+requires-python = ">=3.9"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "isort>=5.13.2",
+    "black>=24.8.0",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+filter_files = true
+atomic = true
