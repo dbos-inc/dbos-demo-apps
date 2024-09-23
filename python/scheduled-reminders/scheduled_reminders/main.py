@@ -1,4 +1,4 @@
-# This app uses DBOS to schedule reminder emails to send weeks or months in the future.
+# This app uses DBOS to schedule reminder emails for any day in the future.
 
 # First, let's do imports and initialize DBOS.
 
@@ -16,17 +16,17 @@ app = FastAPI()
 DBOS(fastapi=app)
 
 # Next, let's write the workflow that sends emails.
-# It sends emails one minute, one day, one week, and
-# one month in the future.
+# We'll send a quick confirmation email, then wait
+# until the scheduled day, then send the reminder email.
 
-# Because we use a DBOS durably executed workflow, scheduling a
-# function to execute far in the future is easy: just sleep
-# then call the function.
+# Because we use a DBOS durably executed workflow, waiting
+# until the scheduled day is easy, no matter how far away
+# that day is: just sleep!
 
 # Under the hood, this works because when you first call
 # DBOS.sleep, it records its wakeup time in the database.
 # That way, even if your program is interrupted or restarted
-# multiple times during a month-long sleep, it still wakes
+# multiple times during a days-long sleep, it still wakes
 # up on schedule and sends the reminder email.
 
 
@@ -75,10 +75,11 @@ def send_email(to_email: str, subject: str, message: str):
 
 
 # Next, let's use FastAPI to write an HTTP endpoint for scheduling reminder emails.
-# The endpoint takes in an email address and starts a reminder workflow in the background.
+# The endpoint takes in an email address and a scheduled date and starts a reminder
+# workflow in the background.
 
-# As a basic anti-spam measure, we'll use the supplied email address as an idempotency key.
-# That way, you can only send reminders once to any email address.
+# As a basic anti-spam measure, we'll use the supplied email address and date as an idempotency key.
+# That way, you can only send one reminder to any email address per day.
 
 
 class RequestSchema(BaseModel):
