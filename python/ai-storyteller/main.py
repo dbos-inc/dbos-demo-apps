@@ -1,9 +1,11 @@
 # DBOS AI storyteller: A simple FastAPI app that uses LlamaIndex to generate a story and can be deployed to DBOS Cloud.
 
 # First, let's do imports and create FastAPI and DBOS instances.
+import os
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from fastapi import FastAPI
 from dbos import DBOS, SetWorkflowID
+import requests
 
 app = FastAPI()
 DBOS(fastapi=app)
@@ -12,6 +14,7 @@ DBOS(fastapi=app)
 documents = SimpleDirectoryReader("data").load_data()
 index = VectorStoreIndex.from_documents(documents)
 query_engine = index.as_query_engine()
+slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
 
 # After that, let's define three steps, each representing a part of the story.
 @DBOS.step()
@@ -29,13 +32,21 @@ def get_yc():
     response = query_engine.query("What happened after YC?")
     return str(response)
 
-# This workflow invokes the above three steps to tell a whole story!
+@DBOS.step()
+def post_to_slack(message: str):
+    requests.post(slack_webhook_url, headers={"Content-Type": "application/json"}, json={"text": message})
+
+# This workflow invokes the above three steps to tell a whole story.
+# Then, optionally send the story to a Slack channel.
 @DBOS.workflow()
 def story_workflow():
-    res1 = "First, " + get_growup()
-    res2 = " Then, " + get_art_school()
-    res3 = " Finally, " + get_yc()
-    return res1 + res2 + res3
+    res1 = get_growup()
+    res2 = get_art_school()
+    res3 = get_yc()
+    story = f"Story Version {DBOS.workflow_id}: First, {res1} Then, {res2} Finally, {res3}"
+    if slack_webhook_url:
+        post_to_slack(story)
+    return story
 
 # Let's define a route that generates a version of the story.
 # Every time you visit the same version, you get the same story.
@@ -59,7 +70,7 @@ def readme() -> HTMLResponse:
     <body class="font-sans text-gray-800 p-6 max-w-2xl mx-auto">
         <h1 class="text-xl font-semibold mb-4">DBOS Storyteller</h1>
         <p class="mb-4">
-            Visit the route <code class="bg-gray-100 px-1 rounded">/story/{version}</code> to generate a version of the story!<br>
+            Visit the route <code class="bg-gray-100 px-1 rounded">/story/{version}</code> to generate a version of the story and send it to your Slack channel (optional)!<br>
             For example, visit <code class="bg-gray-100 px-1 rounded"><a href="/story/v1" class="text-blue-600 hover:underline">/story/v1</a></code><br>
             The story remains consistent for the same version number.
             <br>
