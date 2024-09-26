@@ -23,26 +23,27 @@ def get_growup():
     return str(response)
 
 @DBOS.step()
-def get_art_school():
+def get_start_yc():
     response = query_engine.query("How did the author start YC?")
     return str(response)
 
 @DBOS.step()
-def get_yc():
+def get_after_yc():
     response = query_engine.query("What happened after YC?")
     return str(response)
 
 @DBOS.step()
 def post_to_slack(message: str):
     requests.post(slack_webhook_url, headers={"Content-Type": "application/json"}, json={"text": message})
+    DBOS.logger.info(f"Sent story version {DBOS.workflow_id} to Slack!")
 
 # This workflow invokes the above three steps to tell a whole story.
 # Then, optionally send the story to a Slack channel.
 @DBOS.workflow()
 def story_workflow():
     res1 = get_growup()
-    res2 = get_art_school()
-    res3 = get_yc()
+    res2 = get_start_yc()
+    res3 = get_after_yc()
     story = f"Story Version {DBOS.workflow_id}: First, {res1} Then, {res2} Finally, {res3}"
     if slack_webhook_url:
         post_to_slack(story)
