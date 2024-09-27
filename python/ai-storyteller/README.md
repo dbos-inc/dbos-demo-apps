@@ -22,6 +22,26 @@ If you use Windows, run
 set OPENAI_API_KEY=<your_openai_key>
 ```
 
+## (Optional) Set up a Slack webhook
+
+Optionally, you can create an [incoming webhook](https://api.slack.com/messaging/webhooks) to post stories from your app to your Slack workspace.
+It should look something like this:
+
+```
+https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+Set it as an environment variable:
+
+```shell
+export SLACK_WEBHOOK_URL=XXXXX
+```
+
+If you use Windows, run
+```shell
+set SLACK_WEBHOOK_URL=XXXXX
+```
+
 ## Deploying to the Cloud
 
 To deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
