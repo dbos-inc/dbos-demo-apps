@@ -10,7 +10,7 @@ certifi==2024.8.30
 charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6; platform_system == "Windows" or sys_platform == "win32"
-dbos==0.8.0a3
+dbos==0.8.0a10
 deprecated==1.2.14
 dnspython==2.6.1
 email-validator==2.2.0
