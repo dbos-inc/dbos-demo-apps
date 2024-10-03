@@ -165,7 +165,7 @@ Provenance data is automatically captured by DBOS Cloud during workflow executio
 Each backend package in this demo has a single [reliable workflow](https://docs.dbos.dev/tutorials/workflow-tutorial) at its core.
 The following sections show the code for that workflow, along with detailed notes regarding how it works.
 Each package also has [transaction](https://docs.dbos.dev/tutorials/transaction-tutorial),
-[communicator](https://docs.dbos.dev/tutorials/communicator-tutorial) 
+[step](https://docs.dbos.dev/tutorials/step-tutorial) 
 and [handler](https://docs.dbos.dev/tutorials/http-serving-tutorial) functions.
 These functions are fairly straightforward, please see the source code for more details.
 
@@ -213,7 +213,7 @@ a payment session and get a payment redirection URL.
   }
 ```
 
-Assuming the order can be fulfilled, `paymentWorkflow` calls out to the payment provider via a [communicator function](https://docs.dbos.dev/tutorials/communicator-tutorial).
+Assuming the order can be fulfilled, `paymentWorkflow` calls out to the payment provider via a [step](https://docs.dbos.dev/tutorials/communicator-tutorial).
 In a real-world shop using a real-world payment provider such as Stripe, `createPaymentSession` would likely use a client SDK from the payment provider.
 Since this is a demo, raw `fetch` calls are used instead.
 
@@ -284,7 +284,7 @@ If the notification is received and indicates the user paid, we finalize the ord
 If the notification is not received, the workflow attempts to reestablish the payment session.
 The code is written this way in case there is a hardware failure while waiting for the notification.
 The developer cannot depend on the workflow local variables being consistent for the entire workflow execution.
-If there is a hardware failure, the workflow will be restarted but transaction and communicator calls that have already occurred will *NOT* be executed again.
+If there is a hardware failure, the workflow will be restarted but transaction and step calls that have already occurred will *NOT* be executed again.
 
 The only remaining aspect of this workflow is the source of the `checkout_complete_topic` message.
 When calling out to the payment system, the shop backend provided a webhook callback URL as well as the unique UUID of the workflow instance.
@@ -363,7 +363,7 @@ The `payment-backend` project uses:
 
 The `shop-backend` project uses a few additional testing techniques:
 * Using `testRuntime.invoke` to call application functions without creating HTTP-style requests (via `supertest`).
-* Using `jest.spyOn` to mock the behavior of communicators.
+* Using `jest.spyOn` to mock the behavior of steps.
 > **💡 Note:** `jest.spyOn` cannot be used to replace a DBOS function directly, as places its interceptor after the function is already registered with the DBOS framework.
 > As a workaround, consider refactoring such that `jest.spyOn` intercepts a plain, undecorated `static` method.
 

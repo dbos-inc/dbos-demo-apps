@@ -2,7 +2,7 @@ import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, config
 import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceCommunicator, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
-import { CurrentTimeCommunicator } from "@dbos-inc/communicator-datetime";
+import { CurrentTimeStep } from "@dbos-inc/communicator-datetime";
 
 //The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
@@ -64,8 +64,9 @@ export class AlertCenter {
   @Workflow()
   static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
     
-    //Get the current time from a communicator
-    let ctime = await ctxt.invoke(CurrentTimeCommunicator).getCurrentTime();
+    // Get the current time from a checkpointed step;
+    //   This ensures the same time is used for recovery or in the time-travel debugger
+    let ctime = await ctxt.invoke(CurrentTimeStep).getCurrentTime();
 
     //Assign, extend time or simply return current assignment
     const userRec = await ctxt.invoke(RespondUtilities).getUserAssignment(name, ctime, more_time);
@@ -84,7 +85,7 @@ export class AlertCenter {
       while (expirationMS > ctime) {
         ctxt.logger.debug(`Sleeping ${expirationMS-ctime}`);
         await ctxt.sleepms(expirationMS - ctime);
-        const curDate = await ctxt.invoke(CurrentTimeCommunicator).getCurrentDate();
+        const curDate = await ctxt.invoke(CurrentTimeStep).getCurrentDate();
         ctime = curDate.getTime();
         const nextTime = await ctxt.invoke(RespondUtilities).checkForExpiredAssignment(name, curDate);
 

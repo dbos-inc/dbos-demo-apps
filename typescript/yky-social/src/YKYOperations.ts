@@ -17,8 +17,8 @@ import { getS3, getS3Client } from './app';
 
 import {
  DBOSContext,
- Communicator,
- CommunicatorContext,
+ Step,
+ StepContext,
  Transaction,
  TransactionContext,
  SkipLogging,
@@ -364,8 +364,8 @@ static async readRecvTimeline(ctx: ORMTC, curUser : string, type : RecvType[], g
     });
 }
 
-@Communicator()
-static async createS3UploadKey(ctx: CommunicatorContext, key: string, bucket: string) : Promise<PresignedPost> {
+@Step()
+static async createS3UploadKey(ctx: StepContext, key: string, bucket: string) : Promise<PresignedPost> {
     const postPresigned = await createPresignedPost(
       getS3(ctx),
       {
@@ -469,7 +469,7 @@ static async mediaUpload(ctx: WorkflowContext, mtype: string, mediaId: string, m
         // No need to make a database record, or, at this point, roll anything back.
         // It might be a good idea to clobber the s3 key in case it arrived but we weren't told.
         //   (The access key duration is less than the time we wait, so it can't be started.)
-        // TODO: perhaps put this operation in a communicator later.
+        // TODO: perhaps put this operation in a step later.
         await Operations.ensureS3FileDropped(ctx, mediaFile, bucket);
     }
     return {};

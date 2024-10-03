@@ -50,7 +50,7 @@ export class Shop {
     await ctxt.setEvent(PAYMENT_ID_EVENT, ctxt.workflowUUID);
 
     // Wait for a payment notification from paymentWebhook (below)
-    // This simulates a communicator waiting on a payment processor
+    // This simulates a step waiting on a payment processor
     // If the timeout expires (seconds), this returns null
     // and the order is cancelled
     const notification = await ctxt.recv<string>(PAYMENT_TOPIC, 120);
