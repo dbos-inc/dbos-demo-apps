@@ -23,7 +23,7 @@ export class Hello {
 
     // Upgrade the request to a WebSocket
     const wss = new WebSocket.Server({ noServer: true });
-    
+
     wss.handleUpgrade(ctx.koaContext.req, ctx.koaContext.socket, Buffer.alloc(0), (ws) => {
         wss.emit('connection', ws, ctx.koaContext.req);
 
@@ -41,11 +41,11 @@ export class Hello {
           } catch (err) {
             console.error('Error during polling:', err);
           }
-        })();
+        })().then(()=>{}).catch((_e)=>{});
 
         // Handle WebSocket events
         ws.on('message', (message) => {
-            console.log('Received:', message.toString());
+            console.log('Received:', `${message.toLocaleString()}`);
             ws.send('Hello from server!');
         });
 
@@ -56,6 +56,7 @@ export class Hello {
 
     ctx.koaContext.respond = false;
 
+    return Promise.resolve();
   }
 
   static sleep(ms: number) {
