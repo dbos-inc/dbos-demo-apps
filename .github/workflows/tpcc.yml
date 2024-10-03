@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'tpcc/**'
+      - 'typescript/tpcc/**'
       - '.github/workflows/tpcc.yml'
   pull_request:
     types:
@@ -13,7 +13,7 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'tpcc/**'
+      - 'typescript/tpcc/**'
       - '.github/workflows/tpcc.yml'
   workflow_dispatch:
 

@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'bank/**'
+      - 'typescript/bank/**'
       - '.github/workflows/bank.yml'
   pull_request:
     types:
@@ -13,7 +13,7 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'bank/**'
+      - 'typescript/bank/**'
       - '.github/workflows/bank.yml'
   workflow_dispatch:
 
