@@ -1,5 +1,4 @@
-import { CommunicatorContext, TestingRuntime, TransactionContext, createTestingRuntime } from "@dbos-inc/dbos-sdk";
-import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
+import { StepContext, TestingRuntime, TransactionContext, createTestingRuntime } from "@dbos-inc/dbos-sdk";
 import { Shop, Product, checkout_url_topic } from "./operations";
 import request from "supertest";
 import { Knex } from 'knex';
@@ -90,7 +89,7 @@ describe("operations", () => {
 
     // Spy on / stub out the URL fetch
     const paySpy = jest.spyOn(Shop, 'placePaymentSessionRequest');
-    paySpy.mockImplementation(async (ctxt: CommunicatorContext, _productDetails: Product[], _origin: string) => {
+    paySpy.mockImplementation(async (ctxt: StepContext, _productDetails: Product[], _origin: string) => {
       return {
         session_id: "1234",
         url:ctxt.workflowUUID,
@@ -135,7 +134,7 @@ describe("operations", () => {
 
     // Spy on / stub out the URL fetch
     const paySpy = jest.spyOn(Shop, 'placePaymentSessionRequest');
-    paySpy.mockImplementation(async (ctxt: CommunicatorContext, _productDetails: Product[], _origin: string) => {
+    paySpy.mockImplementation(async (ctxt: StepContext, _productDetails: Product[], _origin: string) => {
       return {
         session_id: "1234",
         url:ctxt.workflowUUID,

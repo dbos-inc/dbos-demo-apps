@@ -1,9 +1,9 @@
 import {
   WorkflowContext,
   TransactionContext,
-  CommunicatorContext,
+  StepContext,
   Transaction,
-  Communicator,
+  Step,
   Workflow,
   GetApi,
   DefaultRequiredRole,
@@ -132,8 +132,8 @@ export class BankTransactionHistory {
     return txnId;
   }
 
-  @Communicator()
-  static async remoteTransferComm(commCtxt: CommunicatorContext, remoteUrl: string, data: TransactionHistory, workflowUUID: string): Promise<boolean> {
+  @Step()
+  static async remoteTransferComm(commCtxt: StepContext, remoteUrl: string, data: TransactionHistory, workflowUUID: string): Promise<boolean> {
     const token = commCtxt.request?.headers!["authorization"];
     if (!token) {
       commCtxt.logger.error("Failed to extract valid token!");

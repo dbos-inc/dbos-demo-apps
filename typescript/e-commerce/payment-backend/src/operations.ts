@@ -1,6 +1,6 @@
 import {
   TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
-  GetApi, PostApi, DBOSResponseError, ArgRequired, ArgOptional, DBOSContext, Communicator, CommunicatorContext, ArgSource, ArgSources, KoaMiddleware
+  GetApi, PostApi, DBOSResponseError, ArgRequired, ArgOptional, DBOSContext, Step, StepContext, ArgSource, ArgSources, KoaMiddleware
 } from '@dbos-inc/dbos-sdk';
 
 import KoaViews from '@ladjs/koa-views';
@@ -208,9 +208,9 @@ export class PlaidPayments {
     await ctxt.client<SessionTable>('session').where({ session_id }).update({ status });
   }
 
-  @Communicator()
+  @Step()
   static async paymentWebhook(
-    ctxt: CommunicatorContext,
+    ctxt: StepContext,
     webhook: string, 
     session_id: string, 
     status: string | undefined, 

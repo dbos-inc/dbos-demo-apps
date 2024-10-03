@@ -1,5 +1,5 @@
 import {
-    Transaction, Communicator, CommunicatorContext, TransactionContext, HandlerContext, PostApi
+    Transaction, Step, StepContext, TransactionContext, HandlerContext, PostApi
 } from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
@@ -80,12 +80,12 @@ export class ShopUtilities {
     await ctxt.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctxt.client.raw('inventory + ?', [product.inventory]) });
   }
 
-  @Communicator()
-  static async createPaymentSession(ctxt: CommunicatorContext): Promise<PaymentSession> {
+  @Step()
+  static async createPaymentSession(ctxt: StepContext): Promise<PaymentSession> {
     return await ShopUtilities.placePaymentSessionRequest(ctxt, product);
   }
 
-  static async placePaymentSessionRequest(ctxt: CommunicatorContext, product: Product): Promise<PaymentSession> {
+  static async placePaymentSessionRequest(ctxt: StepContext, product: Product): Promise<PaymentSession> {
     const paymentUrl = ctxt.getConfig('payment_host', 'http://localhost:8086');
     const shopUrl = ctxt.getConfig('shop_host', 'http://localhost:8082');
 
@@ -111,8 +111,8 @@ export class ShopUtilities {
     return session;
   }
 
-  @Communicator()
-  static async retrievePaymentSession(ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
+  @Step()
+  static async retrievePaymentSession(ctxt: StepContext, sessionID: string): Promise<PaymentSession> {
     const paymentUrl = ctxt.getConfig('payment_host', 'http://localhost:8086');
     const response = await fetch(`${paymentUrl}/api/session/${sessionID}`, {
       method: 'GET',

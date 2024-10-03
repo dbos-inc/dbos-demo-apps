@@ -1,5 +1,5 @@
 import {
-    TransactionContext, Transaction, CommunicatorContext, Communicator,
+    TransactionContext, Transaction, StepContext, Step,
     WorkflowContext, Workflow, GetApi, HandlerContext, DBOSResponseError
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
@@ -25,8 +25,8 @@ export class Greetings {
     return await ctxt.client('greetings').select('*') as GreetingRecord[];
   }
 
-  @Communicator()
-  static async SignGuestbook(ctxt: CommunicatorContext, name: string) {
+  @Step()
+  static async SignGuestbook(ctxt: StepContext, name: string) {
     const key = process.env.GUESTBOOK_KEY;  //set in dbos-config.yaml
     if (!key || key.length !== 36) {
       throw new DBOSResponseError("Please set the guestbook key in dbos-config.yaml", 401);

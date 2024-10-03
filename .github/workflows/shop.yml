@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'e-commerce/**'
+      - 'typescript/e-commerce/**'
       - '.github/workflows/shop.yml'
   pull_request:
     types:
@@ -13,7 +13,7 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'e-commerce/**'
+      - 'typescript/e-commerce/**'
       - '.github/workflows/shop.yml'
   workflow_dispatch:
 

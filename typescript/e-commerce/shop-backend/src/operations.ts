@@ -1,8 +1,8 @@
 import {
   TransactionContext, WorkflowContext, Transaction, Workflow, HandlerContext,
-  GetApi, PostApi, Communicator, CommunicatorContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
+  GetApi, PostApi, Step, StepContext, DBOSResponseError, ArgSource, ArgSources, DBOSContext
 } from '@dbos-inc/dbos-sdk';
-import { BcryptCommunicator } from '@dbos-inc/communicator-bcrypt';
+import { BcryptStep } from '@dbos-inc/communicator-bcrypt';
 import { Knex } from 'knex';
 import { Request } from 'koa';
 
@@ -140,7 +140,7 @@ export class Shop {
   @Transaction({ readOnly: true })
   static async login(ctxt: KnexTransactionContext, username: string, password: string): Promise<void> {
     const user = await ctxt.client<User>('users').select("password").where({ username }).first();
-    if (!(user && await BcryptCommunicator.bcryptCompare(password, user.password))) {
+    if (!(user && await BcryptStep.bcryptCompare(password, user.password))) {
       throw new DBOSResponseError("Invalid username or password", 400);
     }
   }
@@ -148,7 +148,7 @@ export class Shop {
   @PostApi('/api/register')
   @Workflow()
   static async register(ctxt: WorkflowContext, username: string, password: string): Promise<void> {
-    const hashedPassword = await ctxt.invoke(BcryptCommunicator).bcryptHash(password, 10);
+    const hashedPassword = await ctxt.invoke(BcryptStep).bcryptHash(password, 10);
     await ctxt.invoke(Shop).saveNewUser(username, hashedPassword);
   }
 
@@ -363,12 +363,12 @@ export class Shop {
     await ctxt.client<Cart>('cart').where({ username }).del();
   }
 
-  @Communicator()
-  static async createPaymentSession(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
+  @Step()
+  static async createPaymentSession(ctxt: StepContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
     return await Shop.placePaymentSessionRequest(ctxt, productDetails, origin);
   }
 
-  static async placePaymentSessionRequest(ctxt: CommunicatorContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
+  static async placePaymentSessionRequest(ctxt: StepContext, productDetails: Product[], origin: string): Promise<PaymentSession> {
     const { paymentHost, localHost } = getHostConfig(ctxt);
 
     const response = await fetch(`${paymentHost}/api/create_payment_session`, {
@@ -393,8 +393,8 @@ export class Shop {
     return session;
   }
 
-  @Communicator()
-  static async retrievePaymentSession(ctxt: CommunicatorContext, sessionID: string): Promise<PaymentSession> {
+  @Step()
+  static async retrievePaymentSession(ctxt: StepContext, sessionID: string): Promise<PaymentSession> {
     const { paymentHost } = getHostConfig(ctxt);
 
     const response = await fetch(`${paymentHost}/api/session/${sessionID}`, {

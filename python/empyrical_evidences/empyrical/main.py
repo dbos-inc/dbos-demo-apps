@@ -61,8 +61,8 @@ def upload_paper(paper_url: str, paper_title: str):
 
 # Register a DBOS workflow. The workflow does three things:
 # 1. Record the paper metadata in the database (exactly once, using a DBOS 'transaction')
-# 2. Download the paper from the URL (at least once, using a DBOS 'communicator')
-# 3. Store the paper embeddings in the vector store (at least once, using a DBOS 'communicator'. Note this could be an exactly-once transaction if we could manage the PGVector connection.)
+# 2. Download the paper from the URL (at least once, using a DBOS 'step')
+# 3. Store the paper embeddings in the vector store (at least once, using a DBOS 'step'. Note this could be an exactly-once transaction if we could manage the PGVector connection.)
 # DBOS workflows are resilient to failure: if an error occurs, the workflow will resume exactly where it left off.
 @dbos.workflow()
 def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID):
@@ -125,9 +125,9 @@ def delete_paper_metadata(paper_id: uuid.UUID):
     )
     DBOS.logger.info(f"Deleted metadata for {paper_id}")
 
-# Download the paper from the URL using a DBOS Communicator. This function will execute at least once.
-# You can configure the retry behavior of the communicator. See https://docs.dbos.dev/.
-@dbos.communicator()
+# Download the paper from the URL using a DBOS Step. This function will execute at least once.
+# You can configure the retry behavior of the step. See https://docs.dbos.dev/.
+@dbos.step()
 def download_paper(paper_url: str) -> bytes:
     DBOS.logger.info(f"Downloading paper from {paper_url}")
     response = requests.get(paper_url.rstrip())
@@ -135,9 +135,9 @@ def download_paper(paper_url: str) -> bytes:
         raise Exception(f"Failed to download paper: {response.status_code}")
     return response.content
 
-# Store the paper embeddings in the vector store using a DBOS Communicator. This function will execute at least once.
+# Store the paper embeddings in the vector store using a DBOS Step. This function will execute at least once.
 # This could be a DBOS transaction, but PGVector managers its own connections
-@dbos.communicator()
+@dbos.step()
 def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
     # Create large enough chunks to avoid beeing rate limited by together.ai
     text_splitter = RecursiveCharacterTextSplitter(
@@ -229,8 +229,8 @@ def search_topics(topics: List[str]) -> Dict[str, List[Dict]]:
         results[topic] = search_hackernews(topic, window_size_hours=730)
     return results
 
-# Search for comments on a list of topics using a DBOS Communicator
-@dbos.communicator()
+# Search for comments on a list of topics using a DBOS Step
+@dbos.step()
 def search_hackernews(topic: str, window_size_hours: int) -> List[Dict[str, str]]:
     threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=window_size_hours)
 
@@ -258,7 +258,7 @@ def search_hackernews(topic: str, window_size_hours: int) -> List[Dict[str, str]
     return hits
 
 # Rank the comments using Together.ai and Salesforce Llama-Rank
-@dbos.communicator()
+@dbos.step()
 def rank_comments(comments: Dict[str, List[Dict]]) -> Dict[str, Dict]:
     results = {}
     client = Together()

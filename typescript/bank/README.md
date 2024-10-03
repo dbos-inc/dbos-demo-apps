@@ -225,7 +225,7 @@ const result = await ctxt.invoke(BankTransactionHistory)
 If the withdrawal transaction fails, it throws an exception and rolls back automatically, additionally failing the workflow.
 If the withdrawal transaction succeeds, it returns a bank transaction ID, which can be used later in a compensating action to undo this transaction.
 
-In the second step, the workflow invokes a communicator function that sends an HTTP request to the remote backend server to invoke a `depositWorkflow` which deposits the same amount of money from the remote account:
+In the second step, the workflow invokes a step that sends an HTTP request to the remote backend server to invoke a `depositWorkflow` which deposits the same amount of money from the remote account:
 ```ts
 const remoteUrl = data.toLocation + "/api/deposit";
 const thReq = {
@@ -243,9 +243,9 @@ const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory)
     /*workflowUUID=*/ ctxt.workflowUUID + '-deposit');
 ```
 
-Note that we pass in `"ctxt.workflowUUID + '-deposit'"` as the idempotency key for the remote workflow.  The communicator function sets an HTTP header "dbos-workflowuuid" with this UUID, so DBOS can guarantee that the remote workflow runs exactly once even if the communicator is retried.
+Note that we pass in `"ctxt.workflowUUID + '-deposit'"` as the idempotency key for the remote workflow.  The step sets an HTTP header "dbos-workflowuuid" with this UUID, so DBOS can guarantee that the remote workflow runs exactly once even if the step is retried.
 
-Finally, if the communicator returns `false` or fails, it means the remote deposit failed and we must undo the previous withdrawal transaction.
+Finally, if the step returns `false` or fails, it means the remote deposit failed and we must undo the previous withdrawal transaction.
 This undo transaction increments the user balance and removes the entry from the bank transaction history (we added it in the first step).  Note that this "undo" transaction is a compensating action, doing the reverse of the withdrawal.  Setting the balance back to the previous balance could be wrong,
 if any intervening transactions occurred that changed the balance.
 ```ts

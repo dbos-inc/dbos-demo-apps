@@ -1,4 +1,4 @@
-import { SendEmailCommunicator } from '@dbos-inc/communicator-email-ses';
+import { SendEmailStep } from '@dbos-inc/communicator-email-ses';
 import { Scheduled, SchedulerMode, Transaction, TransactionContext, Workflow, WorkflowContext, configureInstance} from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 
@@ -38,7 +38,7 @@ export interface OrderWithProduct {
 export const PRODUCT_ID = 1;
 
 const reportSes = (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])
-  ? configureInstance(SendEmailCommunicator, 'reportSES', {awscfgname: 'aws_config'})
+  ? configureInstance(SendEmailStep, 'reportSES', {awscfgname: 'aws_config'})
   : undefined;
 
 export class ShopUtilities {

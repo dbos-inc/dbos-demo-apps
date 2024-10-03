@@ -4,10 +4,10 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'yky-social/**'
+      - 'typescript/yky-social/**'
   pull_request:
     paths:
-      - 'yky-social/**'
+      - 'typescript/yky-social/**'
       - '.github/**'
   workflow_dispatch:
 
