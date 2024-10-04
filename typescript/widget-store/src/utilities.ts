@@ -153,7 +153,7 @@ export class ShopUtilities {
     await ShopUtilities.sendStatusEmail(ctx, yesterday, sales);
   }
 
-  @Scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '* * * * * *'}) // Every second
+  @Scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '*/20 * * * * *'}) // Every second
   @Workflow()
   static async makeProgressOnAllPaidOrders(ctx: WorkflowContext, _schedDate: Date, _curdate: Date) {
     const orders = await ctx.invoke(ShopUtilities).retrievePaidOrders();
