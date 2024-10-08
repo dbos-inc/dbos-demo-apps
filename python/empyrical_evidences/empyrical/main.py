@@ -1,32 +1,60 @@
 import datetime
 import html
+import os
 import re
 from typing import List, Dict
 import requests
 import uuid
 import base64
 from io import BytesIO
-from dbos import DBOS, SetWorkflowUUID
-from fastapi import FastAPI
 from PyPDF2 import PdfReader
 from sqlalchemy.engine import create_engine
+
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_together import TogetherEmbeddings, ChatTogether
 from langchain_postgres.vectorstores import PGVector
 from langchain_community.vectorstores import DistanceStrategy
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+
+# Import FastAPI to serve requests
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+# Import Together Python SDK and the Langchain Together.ai integration
+from langchain_together import TogetherEmbeddings, ChatTogether
 from together import Together
 
+# Import DBOS lightweight annotations.
+from dbos import DBOS, SetWorkflowUUID
+
+# Import the sqlalchemy schema representing papers metadata.
 from schema import papers_metadata
 
-# We will use FastAPI to expose the application to the web
+# First, we'll create a FastAPI app and a DBOS instance.
+# The app will expose endpoints to upload and search for papers.
+# The DBOS instance will manage durable execution.
 app = FastAPI()
-# Configure a DBOS instance
 dbos = DBOS(fastapi=app)
 
-# Configure a Postgres vector store to use BERT embeddings, served by Together.ai
+# List of allowed origins (can be specific URLs or '*' to allow all)
+origins = [
+    "http://localhost:3000",  # Allow requests from the frontend running on localhost:3000
+    # Add other allowed origins here (e.g., if you deploy the frontend somewhere else)
+]
+
+# Add the CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allows requests from the defined origins
+    allow_credentials=True,  # Allows cookies or authentication headers
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Now, let's setup a vector store to store embeddings.
+# We will use BERT, served by Together.ai, and postgres/pgvector as a vector store.
 embeddings = TogetherEmbeddings(
     model="togethercomputer/m2-bert-80M-8k-retrieval",
 )
@@ -41,17 +69,13 @@ vector_store = PGVector(
     create_extension=True,
 )
 
-# ChatTogether will let us query Together.ai for exploring a paper's topics.
-model = ChatTogether(
-    model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-)
-
 #######################
 #### UPLOAD PAPERS ####
 #######################
 
-# Expose an endpoint to upload a paper. @app.get() is a FastAPI decorator that maps a URL to a function.
-# The handler will invoke a DBOS workflow (upload_paper_workflow) block until the workflow completes, then return its result.
+# Now, let's program an endpoint to upload papers.
+# @app.get() is a FastAPI decorator that maps a URL to a function, in this case, `upload_paper()`
+# upload_paper() will synchronously invoke a DBOS workflow (upload_paper_workflow), then return its result.
 @app.get("/uploadPaper")
 def upload_paper(paper_url: str, paper_title: str):
     paper_id = uuid.uuid4()
@@ -59,13 +83,13 @@ def upload_paper(paper_url: str, paper_title: str):
         handle = dbos.start_workflow(upload_paper_workflow, paper_url, paper_title, paper_id)
     return handle.get_result()
 
-# Register a DBOS workflow. The workflow does three things:
+# Let's register a DBOS workflow. The workflow does three things:
 # 1. Record the paper metadata in the database (exactly once, using a DBOS 'transaction')
 # 2. Download the paper from the URL (at least once, using a DBOS 'step')
 # 3. Store the paper embeddings in the vector store (at least once, using a DBOS 'step'. Note this could be an exactly-once transaction if we could manage the PGVector connection.)
 # DBOS workflows are resilient to failure: if an error occurs, the workflow will resume exactly where it left off.
 @dbos.workflow()
-def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID):
+def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID) -> str:
     compensation_actions = []
 
     # Decode URL from base64. We expect base64 because we encode the paper URL in the endpoint's URL.
@@ -91,7 +115,7 @@ def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID)
         DBOS.logger.error(f"Failed to download or parse the paper: {e}")
         for action in compensation_actions:
             action()
-        return
+        raise e
 
     # Retrieve the embeddings using Together.ai and store them in our vector store
     try:
@@ -100,10 +124,13 @@ def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID)
         DBOS.logger.error(f"Failed to store the embeddings: {e}")
         for action in compensation_actions:
             action()
+        raise e
+
+    return {"title": paper_title, "url": decoded_url, "id": paper_id}
 
 # Record the paper metadata in the database using a DBOS Transaction. Note the usage of `DBOS.sql_session` to execute SQL queries.
 # Using this session, DBOS will automatically bundle the database queries in a transaction.
-# It will also insert metadata for this step in the same transaction, this guaranteeing extactly-once execution.
+# It will also insert metadata for this communicator in the same transaction, this guaranteeing extactly-once execution.
 @dbos.transaction()
 def record_paper_metadata(paper_title: str, paper_url: str, paper_id: uuid.UUID):
     DBOS.sql_session.execute(
@@ -161,48 +188,65 @@ def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
 #### QUERY PAPERS ####
 ######################
 
-# Prompt template for searching a paper.
-search_template = """ <s>[INST]
+# ChatTogether will let us query Together.ai for exploring a paper's topics.
+model = ChatTogether(
+    model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+)
+
+ask_paper_template = """ <s>[INST]
+    You are the author of this research paper: {context}
+    Someone asks you the following question about the paper:
+
+    Question: {question}
+
+    Support your answer with excerpts from the paper.
+
+    [/INST]
+"""
+ask_paper_prompt = ChatPromptTemplate.from_template(ask_paper_template)
+
+@app.get("/askPaper")
+def ask_paper_endpoint(paper_name: str, question: str):
+    try:
+        answer = ask_paper(paper_name, question, ask_paper_prompt)
+    except Exception as e:
+        DBOS.logger.error(f"Failed to retrieve answer from the paper: {e}")
+        return
+    return answer
+
+# Prompt template for identifying topics in a paper.
+topics_search_template = """ <s>[INST]
     You are the author of this research paper: {context}
 
     Question: {question}
 
     Format your answer as a list of at most 2 words strings. Do not add any additional information. For example:
-    1. Topic 1
-    2. Topic 2
-    3. Topic 3
+    Topic 1
+    Topic 2
+    Topic 3
 
     [/INST]
 """
-search_prompt = ChatPromptTemplate.from_template(search_template)
+topics_search_prompt = ChatPromptTemplate.from_template(topics_search_template)
 
 # Expose an endpoint to search for comments on a paper. The handler will invoke a DBOS workflow (search_paper_workflow) block until the workflow completes, then return its result.
 @app.get("/startSearch")
-def search_paper(paper_id: str):
+def search_paper(paper_name: str):
     with SetWorkflowUUID(str(uuid.uuid4())):
-        handle = dbos.start_workflow(search_paper_workflow, paper_id)
+        handle = dbos.start_workflow(search_paper_workflow, paper_name)
     comments = handle.get_result()
     return comments
 
-# Register a DBOS workflow to search for comments on a paper. The workflow does three things:
+# Register a DBOS workflow to search for HN comments related to a paper's main topics. The workflow does three things:
 # 1. Query the paper for a list of main topics in the paper
 # 2. Search for comments on these topics on Hackernews
 # 3. Rank each topic's comment and select the most relevant one
 @dbos.workflow()
-def search_paper_workflow(paper_id: str):
+def search_paper_workflow(paper_name: str):
     # Query the paper for a list of topics
-    retriever = vector_store.as_retriever(
-        filter={"id": paper_id}
-    )
-    chain = (
-        {"context": retriever, "question": RunnablePassthrough()}
-        | search_prompt
-        | model
-        | StrOutputParser()
-    )
     question = "List the 5 most meaningful topics that represent this paper's contribution."
     try:
-        topics = chain.invoke(question).split("\n")
+        topics = ask_paper(paper_name, question, topics_search_prompt)
     except Exception as e:
         DBOS.logger.error(f"Failed to retrieve topics from the paper: {e}")
         return
@@ -276,3 +320,39 @@ def rank_comments(comments: Dict[str, List[Dict]]) -> Dict[str, Dict]:
             DBOS.logger.info(most_relevant_comment['url'])
             results[topic] = most_relevant_comment
     return results
+
+@dbos.transaction()
+def get_paper(name: str):
+    return DBOS.sql_session.execute(
+        papers_metadata.select().where(papers_metadata.c.name == name)
+    ).mappings().first()
+
+def ask_paper(paper_name: str, question: str, prompt: str) -> List[str]:
+    retriever = vector_store.as_retriever(
+        filter={"name": paper_name}
+    )
+    chain = (
+        {"context": retriever, "question": RunnablePassthrough()}
+        | prompt
+        | model
+        | StrOutputParser()
+    )
+    topics = chain.invoke(question).split("\n")
+    return topics
+
+# Next, let's serve the app's frontend from an HTML file using FastAPI.
+# In production, we recommend using DBOS primarily for the backend,
+# with your frontend deployed elsewhere.
+
+@app.get("/")
+def frontend():
+    with open(os.path.join("html", "app.html")) as file:
+        html = file.read()
+    return HTMLResponse(html)
+
+
+@app.get("/papers")
+@dbos.transaction()
+def get_papers():
+    rows = DBOS.sql_session.execute(papers_metadata.select())
+    return [dict(row) for row in rows.mappings()]
