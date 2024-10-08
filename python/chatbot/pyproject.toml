@@ -10,6 +10,7 @@ dependencies = [
     "langchain-core>=0.3.9",
     "langgraph>=0.2.34",
     "langchain-openai>=0.2.2",
+    "langgraph-checkpoint-postgres>=2.0.1",
 ]
 requires-python = ">=3.9"
 readme = "README.md"

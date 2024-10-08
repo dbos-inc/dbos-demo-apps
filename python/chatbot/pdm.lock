@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:2acd4fb708246eb5fc3beec4da1430953f47cdbbe8067b9af735b5429c721598"
+content_hash = "sha256:328a73545277123487cf9c62bb08fd57ba242149f6d2f2cf96340a1a046ff1b6"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -804,6 +804,23 @@ files = [
 ]
 
 [[package]]
+name = "langgraph-checkpoint-postgres"
+version = "2.0.1"
+requires_python = "<4.0.0,>=3.9.0"
+summary = "Library with a Postgres implementation of LangGraph checkpoint saver."
+groups = ["default"]
+dependencies = [
+    "langgraph-checkpoint<3.0.0,>=2.0.0",
+    "orjson>=3.10.1",
+    "psycopg-pool<4.0.0,>=3.0.0",
+    "psycopg<4.0.0,>=3.0.0",
+]
+files = [
+    {file = "langgraph_checkpoint_postgres-2.0.1-py3-none-any.whl", hash = "sha256:c7ef3d0266ca9adba612d0dd0de14d2b1a5671dd788517d35379d93e3c8ae3a2"},
+    {file = "langgraph_checkpoint_postgres-2.0.1.tar.gz", hash = "sha256:ca2d29a54bab4e4c9707370792dd05a1ba3d7bddd12ef269753bbedeff95b395"},
+]
+
+[[package]]
 name = "langsmith"
 version = "0.1.132"
 requires_python = "<4.0,>=3.8.1"
@@ -1261,6 +1278,20 @@ dependencies = [
 files = [
     {file = "psycopg-3.2.3-py3-none-any.whl", hash = "sha256:644d3973fe26908c73d4be746074f6e5224b03c1101d302d9a53bf565ad64907"},
     {file = "psycopg-3.2.3.tar.gz", hash = "sha256:a5764f67c27bec8bfac85764d23c534af2c27b893550377e37ce59c12aac47a2"},
+]
+
+[[package]]
+name = "psycopg-pool"
+version = "3.2.3"
+requires_python = ">=3.8"
+summary = "Connection Pool for Psycopg"
+groups = ["default"]
+dependencies = [
+    "typing-extensions>=4.6",
+]
+files = [
+    {file = "psycopg_pool-3.2.3-py3-none-any.whl", hash = "sha256:53bd8e640625e01b2927b2ad96df8ed8e8f91caea4597d45e7673fc7bbb85eb1"},
+    {file = "psycopg_pool-3.2.3.tar.gz", hash = "sha256:bb942f123bef4b7fbe4d55421bd3fb01829903c95c0f33fd42b7e94e5ac9b52a"},
 ]
 
 [[package]]
