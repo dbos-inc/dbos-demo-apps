@@ -1,10 +1,26 @@
-from sqlalchemy import Column, Integer, MetaData, String, Table
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Column,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    text,
+)
 
 metadata = MetaData()
 
-dbos_hello = Table(
-    "dbos_hello",
+chat_history = Table(
+    "chat_history",
     metadata,
-    Column("greet_count", Integer, primary_key=True, autoincrement=True),
-    Column("name", String, nullable=False),
+    Column("message_id", Integer, primary_key=True, autoincrement=True),
+    Column("content", String, nullable=False),
+    Column("is_user", Boolean, nullable=False),
+    Column(
+        "created_at",
+        BigInteger,
+        nullable=False,
+        server_default=text("(EXTRACT(epoch FROM now()) * 1000::numeric)::bigint"),
+    ),
 )

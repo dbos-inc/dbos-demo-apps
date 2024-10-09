@@ -11,6 +11,8 @@ from langgraph.graph import START, MessagesState, StateGraph
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 
+from .schema import chat_history
+
 app = FastAPI()
 dbos = DBOS(fastapi=app)
 
@@ -46,8 +48,6 @@ def create_langchain():
 
 chain = create_langchain()
 
-history = []
-
 
 class ChatSchema(BaseModel):
     query: str
@@ -56,20 +56,31 @@ class ChatSchema(BaseModel):
 @app.post("/chat")
 def chat_endpoint(chat: ChatSchema):
     config = {"configurable": {"thread_id": "default_thread"}}
-
-    history.append({"content": chat.query, "isUser": True})
-
+    insert_chat(chat.query, True)
     input_messages = [HumanMessage(chat.query)]
     output = chain.invoke({"messages": input_messages}, config)
     response = output["messages"][-1].content
-    history.append({"content": response, "isUser": False})
-
+    insert_chat(response, False)
     return {"content": response, "isUser": True}
 
 
 @app.get("/history")
 def history_endpoint():
-    return history
+    return get_chats()
+
+
+@DBOS.transaction()
+def insert_chat(content, is_user):
+    DBOS.sql_session.execute(
+        chat_history.insert().values(content=content, is_user=is_user)
+    )
+
+
+@DBOS.transaction()
+def get_chats():
+    stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
+    result = DBOS.sql_session.execute(stmt)
+    return [{"content": row.content, "isUser": row.is_user} for row in result]
 
 
 @app.get("/")
