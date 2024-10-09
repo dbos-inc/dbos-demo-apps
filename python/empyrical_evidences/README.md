@@ -7,15 +7,15 @@
 
 ## What It Does
 
-This application searches Hacker News for comments relevant to your favorite academic papers.
-Specifically, it uses the Together.ai inference APIs to identify key topics in papers, then searches Hacker News for related comments and ranks them.
-It is serverlessly hosted on DBOS Cloud.
+This application lets you interact with your favorite academic papers.
+You can either ask a question to the paper, or search for comments on Hacker News related to the paper.
+The application uses Together.ai inference APIs for both features and is serverlessly hosted on DBOS Cloud.
 
 ## How It Works
 
 - First, you upload an academic paper. The app uses the Together.ai API to query the paper's embeddings and store them in Postgres using pgvector.
-- Then, you search Hacker News for comments relevant to the paper.
-  The app does this with a multi-agent workflow that first extracts the paper's key topics, then searches Hacker News for relevant comments, then ranks the comments.
+- Then, you can either ask a question to the paper or search Hacker News relevant comments.
+- Searching for comments on Hacker News is a multi-agents workflow that first extracts the paper's key topics, searches Hacker News for relevant comments, and ranks the comments.
 
 ## Why Use DBOS
 
@@ -84,6 +84,9 @@ dbos start
 ```
 
 ## Usage
+
+The application expose a simple frontend. Locally it default to `localhost:8000/`.
+This section documents the API usage.
 
 ### Uploading A Paper
 
