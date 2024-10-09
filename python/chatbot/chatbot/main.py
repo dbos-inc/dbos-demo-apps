@@ -53,13 +53,19 @@ class ChatSchema(BaseModel):
     query: str
 
 
-@app.post("/chat")
-def chat_endpoint(chat: ChatSchema):
+@DBOS.step()
+def query_model(query: str) -> str:
     config = {"configurable": {"thread_id": "default_thread"}}
-    insert_chat(chat.query, True)
-    input_messages = [HumanMessage(chat.query)]
+    input_messages = [HumanMessage(query)]
     output = chain.invoke({"messages": input_messages}, config)
-    response = output["messages"][-1].content
+    return output["messages"][-1].content
+
+
+@app.post("/chat")
+@DBOS.workflow()
+def chat_workflow(chat: ChatSchema):
+    insert_chat(chat.query, True)
+    response = query_model(chat.query)
     insert_chat(response, False)
     return {"content": response, "isUser": True}
 
