@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Frontend</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+    <div class="container mx-auto p-4 flex-1 flex flex-col">
+        <h1 class="text-2xl font-bold mb-4">Chatbot</h1>
+        <div id="chat-history" class="bg-white p-4 rounded-lg shadow mb-4 flex-1 overflow-y-auto">
+            <!-- Chat messages will be inserted here -->
+        </div>
+        <form id="chat-form" class="flex">
+            <input type="text" id="message-input" placeholder="Type your message..." class="flex-1 p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Send</button>
+        </form>
+    </div>
+
+    <script>
+        const chatHistory = document.getElementById('chat-history');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+
+        // Function to add a message to the chat history
+        function addMessage(message, isUser = false) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `mb-2 p-2 rounded-lg ${isUser ? 'bg-blue-100 ml-auto' : 'bg-gray-100'}`;
+            messageElement.style.maxWidth = '80%';
+            messageElement.textContent = message;
+            chatHistory.appendChild(messageElement);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // Function to fetch chat history
+        async function fetchChatHistory() {
+            try {
+                const response = await fetch('/history');
+                const history = await response.json();
+                history.forEach(message => addMessage(message.content, message.isUser));
+            } catch (error) {
+                console.error('Error fetching chat history:', error);
+            }
+        }
+
+        // Function to send a chat message
+        async function sendMessage(message) {
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({"query": message}),
+                });
+                const data = await response.json();
+                addMessage(data.content);
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        }
+
+        // Event listener for form submission
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                messageInput.value = '';
+                await sendMessage(message);
+            }
+        });
+
+        // Fetch chat history when the page loads
+        fetchChatHistory();
+    </script>
+</body>
+</html>
