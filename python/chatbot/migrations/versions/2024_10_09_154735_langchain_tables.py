@@ -5,18 +5,17 @@ Revises: c6b516e182b2
 Create Date: 2024-10-09 15:47:35.834817
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
+from dbos import load_config
 from langgraph.checkpoint.postgres import PostgresSaver
 
-from dbos import load_config
-
-
 # revision identifiers, used by Alembic.
-revision: str = 'f4e458725794'
-down_revision: Union[str, None] = 'c6b516e182b2'
+revision: str = "f4e458725794"
+down_revision: Union[str, None] = "c6b516e182b2"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
