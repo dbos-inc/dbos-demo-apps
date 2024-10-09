@@ -195,12 +195,20 @@ class PaperQuestion(BaseModel):
     paper_name: str
 
 @app.post("/askPaper")
+@dbos.workflow()
 def ask_paper_endpoint(q: PaperQuestion):
+    # First retrieve the paper's metadata
+    paper = get_paper(q.paper_name)
+    if paper is None:
+        raise HTTPException(status_code=404, detail=f"Paper {q.paper_name} not found")
+    DBOS.logger.debug(f"Retrieved paper metadata: {paper}")
+
+    # Then ask the question to the paper
     DBOS.logger.info(f"Asked question: '{q.question}' to paper {q.paper_name}")
     try:
         # Use our vector store to retrieve the paper embeddings
         retriever = vector_store.as_retriever(
-            filter={"name": q.paper_name}
+            filter={"id": paper.uuid}
         )
         # The chain simply invokes the model with the question and parses the output
         chain = (
@@ -228,12 +236,14 @@ def ask_paper_endpoint(q: PaperQuestion):
 topics_search_template = """ <s>[INST]
     You are the author of this research paper: {context}
 
-    List the 5 most important topics addressed by the paper.
+    List the {question} most important topics addressed by the paper.
 
     Format your answer as a list of at most 2 words strings. Do not add any additional information. For example:
     Topic 1
     Topic 2
     Topic 3
+
+    Do not number items in the list.
 
     [/INST]
 """
@@ -242,6 +252,7 @@ topics_search_prompt = ChatPromptTemplate.from_template(topics_search_template)
 # The handler invokes a DBOS workflow, block until the workflow completes, then return its result
 @app.get("/startSearch")
 def search_paper(paper_name: str):
+    DBOS.logger.info(f"Searching for comments on paper {paper_name}")
     with SetWorkflowUUID(str(uuid.uuid4())):
         handle = dbos.start_workflow(search_paper_workflow, paper_name)
     comments = handle.get_result()
@@ -254,10 +265,25 @@ def search_paper(paper_name: str):
 # Durability is important for this workflow. If it fails, we want to resume exactly where we left off and not consume our together.ai credits
 @dbos.workflow()
 def search_paper_workflow(paper_name: str):
+    # First retrieve the paper's metadata
+    paper = get_paper(paper_name)
+    if paper is None:
+        raise HTTPException(status_code=404, detail=f"Paper {paper_name} not found")
+    DBOS.logger.debug(f"Retrieved paper metadata: {paper}")
+
     # Query the paper for a list of topics
-    question = "List the 5 most meaningful topics that represent this paper's contribution."
+    topics_number = "5"
     try:
-        topics = ask_paper(paper_name, "placeholder", topics_search_prompt)
+        retriever = vector_store.as_retriever(
+            filter={"id": paper.uuid}
+        )
+        chain = (
+            {"context": retriever, "question": RunnablePassthrough()}
+            | topics_search_prompt
+            | model
+            | StrOutputParser()
+        )
+        topics = chain.invoke(topics_number).split("\n")
     except Exception as e:
         DBOS.logger.error(f"Failed to retrieve topics from the paper: {e}")
         return
@@ -338,20 +364,6 @@ def get_paper(name: str):
         papers_metadata.select().where(papers_metadata.c.name == name)
     ).mappings().first()
 
-def ask_paper(paper_name: str, question: str, prompt: str) -> List[str]:
-    retriever = vector_store.as_retriever(
-        filter={"name": paper_name}
-    )
-    chain = (
-        {"context": retriever, "question": RunnablePassthrough()}
-        | prompt
-        | model
-        | StrOutputParser()
-    )
-    topics = chain.invoke(question).split("\n")
-    return topics
-
-
 ##################
 #### FRONTEND ####
 ##################
@@ -370,3 +382,9 @@ def frontend():
 def get_papers():
     rows = DBOS.sql_session.execute(papers_metadata.select())
     return [dict(row) for row in rows.mappings()]
+
+@dbos.transaction()
+def get_paper(name: str):
+    return DBOS.sql_session.execute(
+        papers_metadata.select().where(papers_metadata.c.name == name)
+    ).mappings().first()

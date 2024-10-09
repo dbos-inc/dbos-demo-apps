@@ -116,6 +116,27 @@
                         console.error("Error:", error);
                     }
                 },
+                hnCommentsPaperName: '',
+                hnComments: [],
+                async searchComments() {
+                    this.hnComments = [];
+                    try {
+                        const response = await fetch(`/startSearch?paper_name=${this.hnCommentsPaperName}`, {
+                            method: "GET",
+                            headers: { "Content-Type": "application/json" },
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log("HN Comments", data);
+                            this.hnComments = data;
+                        } else {
+                            const errorText = await response.text();
+                            console.log("Error", errorText);
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                    }
+                },
             };
         }
     </script>
@@ -177,6 +198,44 @@
             <div x-show="paperAnswer" class="mt-4 p-2 border border-gray-300 rounded bg-gray-50">
                 <h2 class="font-bold">Response:</h2>
                 <p x-text="paperAnswer"></p>
+            </div>
+        </div>
+
+        <!-- Third Column: search for HN comments -->
+        <div class="flex flex-col w-1/4 p-4">
+            <h1>Search for Hacker News comments</h1>
+            <input
+                type="text"
+                x-model="hnCommentsPaperName"
+                placeholder="Paper name"
+                class="p-2 border border-gray-300 rounded mb-2"
+            />
+            <button @click="searchComments" class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Search relevant HN comments
+            </button>
+            <!-- Display the response here -->
+            <div x-show="hnComments.length" class="mt-4 p-2 border border-gray-300 rounded bg-gray-50">
+                <h2 class="font-bold">Hacker News comments:</h2>
+                <ul>
+                    <template x-for="comment in hnComments" :key="comment.topic">
+                        <li class="p-2 border-b">
+                            <!-- Display the topic -->
+                            Topic: <span class="font-bold" x-text="comment.topic"></span>
+
+                            <!-- Nested details for each topic -->
+                            <ul class="ml-4 mt-2">
+                                <li>
+                                    <!-- Link to the story -->
+                                    <a :href="comment.url" x-text="comment.story_title" class="text-blue-500 underline hover:text-blue-700" target="_blank"></a>
+                                </li>
+                                <li>
+                                    <!-- Display the comment -->
+                                    <span x-text="story.comment"></span>
+                                </li>
+                            </ul>
+                        </li>
+                    </template>
+                </ul>
             </div>
         </div>
     </body>
