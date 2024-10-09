@@ -96,7 +96,12 @@ Call the `/uploadPaper` endpoint with query parameters `paper_url` (must be base
 curl "localhost:8000/uploadPaper?paper_url=aHR0cHM6Ly9wZW9wbGUuY3NhaWwubWl0LmVkdS90ZGFuZm9yZC82ODMwcGFwZXJzL3N0b25lYnJha2VyLWNzdG9yZS5wZGYK&paper_title=cstore"
 ```
 
-This will return a unique identifier for the paper. You will use that ID for your search.
+### Ask a question to the paper
+Call the `/askPaper` endpoint and set `paper_name` and `question` in the payload. For example:
+
+```bash
+curl -X POST "localhost:8000/askPaper" -d '{"paper_name": "cstore", "question": "What is the main idea of the paper?"}' -H "Content-Type: application/json"
+```
 
 ### Search Hacker News comments and rank them
 

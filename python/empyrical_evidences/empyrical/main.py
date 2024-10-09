@@ -182,6 +182,7 @@ ask_paper_template = """ <s>[INST]
     Question: {question}
 
     Support your answer with excerpts from the paper.
+    Excerpts should not include figures captions.
 
     [/INST]
 """
