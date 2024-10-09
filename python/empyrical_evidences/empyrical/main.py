@@ -257,7 +257,7 @@ def search_paper_workflow(paper_name: str):
     # Query the paper for a list of topics
     question = "List the 5 most meaningful topics that represent this paper's contribution."
     try:
-        topics = ask_paper(paper_name, "", topics_search_prompt)
+        topics = ask_paper(paper_name, "placeholder", topics_search_prompt)
     except Exception as e:
         DBOS.logger.error(f"Failed to retrieve topics from the paper: {e}")
         return
@@ -305,7 +305,7 @@ def search_hackernews(topic: str, window_size_hours: int) -> List[Dict[str, str]
         comment = re.sub("<[^<]+?>", "", comment)
         url = f"https://news.ycombinator.com/item?id={hit['objectID']}"
         hits.append({
-            "query_topic": topic,
+            "topic": topic,
             "comment": comment,
             "url": url,
             "story_title": hit["story_title"],
@@ -315,7 +315,7 @@ def search_hackernews(topic: str, window_size_hours: int) -> List[Dict[str, str]
 # Rank the comments using Together.ai and Salesforce Llama-Rank
 @dbos.step()
 def rank_comments(comments: Dict[str, List[Dict]]) -> Dict[str, Dict]:
-    results = {}
+    results = []
     client = Together()
     for topic, result in comments.items():
         if len(result) > 0:
@@ -329,7 +329,7 @@ def rank_comments(comments: Dict[str, List[Dict]]) -> Dict[str, Dict]:
             DBOS.logger.info(f"Most relevant comment for topic {topic}:")
             DBOS.logger.info(most_relevant_comment['comment'])
             DBOS.logger.info(most_relevant_comment['url'])
-            results[topic] = most_relevant_comment
+            results.append(most_relevant_comment)
     return results
 
 @dbos.transaction()

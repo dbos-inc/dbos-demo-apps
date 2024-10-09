@@ -108,7 +108,15 @@ curl -X POST "localhost:8000/askPaper" -d '{"paper_name": "cstore", "question": 
 Call the `startSearch` endpoint with query parameter `paper_id`. For example:
 
 ```bash
-curl "localhost:8000/searchPaper?paper_id=c75178c7-7168-497b-a41f-381d8a557270
+curl "localhost:8000/startSearch?paper_name=cstore"
 ```
 
-The response will be in JSON.
+The response, a list of comments for each topic, will be in JSON and the schema is:
+```json
+[{
+    "topic",
+    "comment",
+    "url",
+    "story_title",
+}]
+```
