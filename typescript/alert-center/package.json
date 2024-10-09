@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@dbos-inc/communicator-datetime": "^1.24.15",
-    "@dbos-inc/dbos-kafkajs": "1.17.11-preview.g5f42092e6b",
+    "@dbos-inc/dbos-kafkajs": "^1.25.5-preview",
     "@dbos-inc/dbos-sdk": "^1.24.15",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
