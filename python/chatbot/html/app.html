@@ -9,6 +9,30 @@
 <body class="bg-gray-100 h-screen flex flex-col">
     <div class="container mx-auto p-4 flex-1 flex flex-col">
         <h1 class="text-2xl font-bold mb-4">Chatbot</h1>
+        <div id="time-counters" class="flex justify-between items-center bg-gray-200 p-2 rounded-lg text-sm mb-4">
+            <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-blue-600">
+                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                    <rect x="9" y="9" width="6" height="6"></rect>
+                    <line x1="9" y1="1" x2="9" y2="4"></line>
+                    <line x1="15" y1="1" x2="15" y2="4"></line>
+                    <line x1="9" y1="20" x2="9" y2="23"></line>
+                    <line x1="15" y1="20" x2="15" y2="23"></line>
+                    <line x1="20" y1="9" x2="23" y2="9"></line>
+                    <line x1="20" y1="14" x2="23" y2="14"></line>
+                    <line x1="1" y1="9" x2="4" y2="9"></line>
+                    <line x1="1" y1="14" x2="4" y2="14"></line>
+                </svg>
+                <span>CPU Time: <span id="cpu-time">0.00</span> ms</span>
+            </div>
+            <div class="flex items-center ml-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-green-600">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>Wall Clock Time: <span id="wall-clock-time">0.00</span> ms</span>
+            </div>
+        </div>
         <div id="chat-history" class="bg-white p-4 rounded-lg shadow mb-4 flex-1 overflow-y-auto">
             <!-- Chat messages will be inserted here -->
         </div>
@@ -17,11 +41,12 @@
             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Send</button>
         </form>
     </div>
-
     <script>
         const chatHistory = document.getElementById('chat-history');
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
+        const cpuTimeElement = document.getElementById('cpu-time');
+        const wallClockTimeElement = document.getElementById('wall-clock-time');
 
         // Function to add a message to the chat history
         function addMessage(message, isUser = false) {
@@ -61,6 +86,22 @@
             }
         }
 
+        // Function to update time counters
+        async function updateTimeCounters() {
+            try {
+                const [cpuResponse, wallClockResponse] = await Promise.all([
+                    fetch('/cpu_time'),
+                    fetch('/wall_clock_time')
+                ]);
+                const cpuData = await cpuResponse.json();
+                const wallClockData = await wallClockResponse.json();
+                cpuTimeElement.textContent = cpuData.cpu_time.toFixed(2);
+                wallClockTimeElement.textContent = wallClockData.wall_clock_time.toFixed(2);
+            } catch (error) {
+                console.error('Error fetching time data:', error);
+            }
+        }
+
         // Event listener for form submission
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -74,6 +115,9 @@
 
         // Fetch chat history when the page loads
         fetchChatHistory();
+
+        // Update time counters every ten seconds
+        setInterval(updateTimeCounters, 10000);
     </script>
 </body>
 </html>

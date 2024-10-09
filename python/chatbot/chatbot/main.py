@@ -10,6 +10,9 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import START, MessagesState, StateGraph
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
+import psutil
+from collections import deque
+import time
 
 from .schema import chat_history
 
@@ -62,9 +65,12 @@ def query_model(query: str) -> str:
 @app.post("/chat")
 @DBOS.workflow()
 def chat_workflow(chat: ChatSchema):
+    start_time = time.time()
     insert_chat(chat.query, True)
     response = query_model(chat.query)
     insert_chat(response, False)
+    elapsed_time_ms = (time.time() - start_time) * 1000
+    wallclock_times_buffer.append((time.time(), elapsed_time_ms))
     return {"content": response, "isUser": True}
 
 
@@ -92,3 +98,32 @@ def frontend():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return HTMLResponse(html)
+
+last_cpu_time_ms = 0
+cpu_times_buffer = deque()
+wallclock_times_buffer = deque()
+
+@DBOS.scheduled("*/10 * * * * *")
+@DBOS.workflow()
+def update_cpu_usage(scheduled, actual):
+    global last_cpu_time_ms
+    process = psutil.Process()
+    cpu_times = process.cpu_times()
+    cpu_time_ms = (cpu_times.system + cpu_times.user) * 1000
+    time_consumed = cpu_time_ms - last_cpu_time_ms
+    if last_cpu_time_ms > 0:
+        cpu_times_buffer.append((time.time(), time_consumed))
+    last_cpu_time_ms = cpu_time_ms
+    for buf in [cpu_times_buffer, wallclock_times_buffer]:
+        while buf and time.time() - buf[0][0] > 60:
+            buf.popleft()
+        total_time = sum([t for _, t in buf])
+        print(total_time)
+
+@app.get("/cpu_time")
+def get_cpu_time():
+    return {"cpu_time": sum([t for _, t in cpu_times_buffer])}
+
+@app.get("/wall_clock_time")
+def get_cpu_time():
+    return {"wall_clock_time": sum([t for _, t in wallclock_times_buffer])}
