@@ -1,6 +1,6 @@
 import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, configureInstance } from '@dbos-inc/dbos-sdk';
 import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
-import { Kafka, KafkaConfig, KafkaProduceCommunicator, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
+import { Kafka, KafkaConfig, KafkaProduceStep, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
 import { CurrentTimeStep } from "@dbos-inc/communicator-datetime";
 
@@ -23,7 +23,7 @@ const kafkaConfig: KafkaConfig = {
   logLevel: logLevel.ERROR
 };
 
-const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduceCommunicator, 
+const producerConfig: KafkaProduceStep =  configureInstance(KafkaProduceStep, 
   'wfKafka', kafkaConfig, respondTopic, {
     createPartitioner: Partitioners.DefaultPartitioner
   });
