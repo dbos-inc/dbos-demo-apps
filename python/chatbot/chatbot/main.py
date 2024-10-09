@@ -40,8 +40,6 @@ def create_langchain():
     db = DBOS.config["database"]
     connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
     pool = ConnectionPool(connection_string)
-    with PostgresSaver.from_conn_string(connection_string) as c:
-        c.setup()
     checkpointer = PostgresSaver(pool)
     return workflow.compile(checkpointer=checkpointer)
 
