@@ -1,5 +1,9 @@
 import os
+import threading
+import time
+from collections import deque
 
+import psutil
 from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -10,9 +14,6 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import START, MessagesState, StateGraph
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
-import psutil
-from collections import deque
-import time
 
 from .schema import chat_history
 
@@ -99,30 +100,38 @@ def frontend():
         html = file.read()
     return HTMLResponse(html)
 
+
 last_cpu_time_ms = 0
 cpu_times_buffer = deque()
 wallclock_times_buffer = deque()
 
-@DBOS.scheduled("*/10 * * * * *")
-@DBOS.workflow()
-def update_cpu_usage(scheduled, actual):
-    global last_cpu_time_ms
-    process = psutil.Process()
-    cpu_times = process.cpu_times()
-    cpu_time_ms = (cpu_times.system + cpu_times.user) * 1000
-    time_consumed = cpu_time_ms - last_cpu_time_ms
-    if last_cpu_time_ms > 0:
-        cpu_times_buffer.append((time.time(), time_consumed))
-    last_cpu_time_ms = cpu_time_ms
-    for buf in [cpu_times_buffer, wallclock_times_buffer]:
-        while buf and time.time() - buf[0][0] > 60:
-            buf.popleft()
-        total_time = sum([t for _, t in buf])
-        print(total_time)
 
-@app.get("/cpu_time")
+def update_cpu_usage():
+    while True:
+        time.sleep(2)
+        global last_cpu_time_ms
+        process = psutil.Process()
+        cpu_times = process.cpu_times()
+        cpu_time_ms = (cpu_times.system + cpu_times.user) * 1000
+        time_consumed = cpu_time_ms - last_cpu_time_ms
+        if last_cpu_time_ms > 0:
+            cpu_times_buffer.append((time.time(), time_consumed))
+        last_cpu_time_ms = cpu_time_ms
+        for buf in [cpu_times_buffer, wallclock_times_buffer]:
+            while buf and time.time() - buf[0][0] > 60:
+                buf.popleft()
+
+
+threading.Thread(target=update_cpu_usage).start()
+
+
+@app.get("/times")
 def get_cpu_time():
-    return {"cpu_time": sum([t for _, t in cpu_times_buffer])}
+    return {
+        "cpu_time": sum([t for _, t in cpu_times_buffer]),
+        "wall_clock_time": sum([t for _, t in wallclock_times_buffer]),
+    }
+
 
 @app.get("/wall_clock_time")
 def get_cpu_time():
