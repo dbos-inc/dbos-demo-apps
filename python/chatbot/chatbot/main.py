@@ -32,7 +32,7 @@ def create_langchain():
     workflow.add_edge(START, "model")
     workflow.add_node("model", call_model)
     db = DBOS.config["database"]
-    connection_string = f"postgresql://{db["username"]}:{db["password"]}@{db["hostname"]}:{db["port"]}/{db["app_db_name"]}"
+    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
     pool = ConnectionPool(connection_string)
     with PostgresSaver.from_conn_string(connection_string) as c:
         c.setup()
