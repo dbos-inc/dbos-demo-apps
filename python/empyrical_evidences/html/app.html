@@ -88,7 +88,34 @@
                     } catch (error) {
                         console.error("Error:", error);
                     }
-                }
+                },
+                paperAnswer: '',
+                paperQuestion: '',
+                questionnedPaperName: '',
+                async askPaper() {
+                    this.paperAnswer = '';
+                    try {
+                        const response = await fetch(`/askPaper`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                question: this.paperQuestion,
+                                paper_name: this.questionnedPaperName,
+                            }),
+                        });
+                        if (response.ok) {
+                            const data = await response.text();
+                            this.paperAnswer = data || "No response received.";
+                            console.log("Response", this.paperAnswer);
+                        } else {
+                            const errorText = await response.text();
+                            console.log("Error", errorText);
+                            this.paperAnswer = `Error: ${errorText}`;
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                    }
+                },
             };
         }
     </script>
@@ -117,7 +144,7 @@
 
             <!-- Papers List (Bottom Div) -->
             <div class="flex flex-col mt-4">
-                <h1>Papers in the bank</h1>
+                <h1>Papers ingested</h1>
                 <ul>
                     <template x-for="paper in papers" :key="paper.uuid">
                         <li class="p-1">
@@ -133,13 +160,24 @@
             <h1>Ask a question to a paper</h1>
             <input
                 type="text"
-                x_model="paperQuestion"
+                x-model="questionnedPaperName"
+                placeholder="Paper name"
+                class="p-2 border border-gray-300 rounded mb-2"
+            />
+            <input
+                type="text"
+                x-model="paperQuestion"
                 placeholder="Question"
                 class="p-2 border border-gray-300 rounded mb-2"
             />
             <button @click="askPaper" class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                Question
+                Ask
             </button>
+            <!-- Display the response here -->
+            <div x-show="paperAnswer" class="mt-4 p-2 border border-gray-300 rounded bg-gray-50">
+                <h2 class="font-bold">Response:</h2>
+                <p x-text="paperAnswer"></p>
+            </div>
         </div>
     </body>
 </html>
