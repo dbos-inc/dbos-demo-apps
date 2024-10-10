@@ -11,7 +11,7 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, SetWorkflowID, load_config
+from dbos import DBOS, SetWorkflowID, load_config, Queue
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
@@ -25,6 +25,11 @@ from slack_sdk.web import SlackResponse
 
 app = FastAPI()
 DBOS(fastapi=app)
+
+# Define a queue to limit processing incoming messages to 10 per minute.
+# This is to prevent the bot from being overwhelmed by a large number of messages.
+# We also set the concurrency to 1 to ensure that messages are responded in the order they are received.
+work_queue = Queue("llamabot_queue", limiter={"limit": 10, "period": 60}, concurrency=1)
 
 # Then, let's initialize LlamaIndex to use the app's Postgres database as the vector store.
 # Note that we don't set up the schema and tables because we've already done that in the schema migration step.
@@ -74,11 +79,10 @@ def handle_message(request: BoltRequest) -> None:
     event_id = request.body["event_id"]
     # Use the unique event_id as an idempotency key to guarantee each message is processed exactly-once
     with SetWorkflowID(event_id):
-        # Start the event processing workflow in the background then respond to Slack.
+        # Enqueue the event processing workflow then respond to Slack.
         # We can't wait for the workflow to finish because Slack expects the
         # endpoint to reply within 3 seconds.
-        DBOS.start_workflow(message_workflow, request.body["event"])
-
+        work_queue.enqueue(message_workflow, request.body["event"])
 
 # Now, let's write the main workflow function that processes incoming messages.
 @DBOS.workflow()
