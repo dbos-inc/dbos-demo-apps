@@ -1,3 +1,7 @@
+# In this app, we use DBOS and LangChain to build a chatbot and serverlessly deploy it to the cloud.
+
+# First, let's do imports and initialize DBOS.
+
 import os
 import threading
 import time
@@ -20,10 +24,19 @@ from .schema import chat_history
 app = FastAPI()
 dbos = DBOS(fastapi=app)
 
+# Next, let's set up LangChain. We'll use LangChain to
+# answer each chat message using OpenAI's gpt-3.5-turbo.
+# We'll configure LangChain to store message history
+# in Postgres so it persists across app restarts.
+
+# For fun, let's also instruct our chatbot to talk like a pirate.
+
 
 def create_langchain():
+    # We use gpt-3.5-turbo as our model.
     model = ChatOpenAI(model="gpt-3.5-turbo")
-    graph = StateGraph(state_schema=MessagesState)
+
+    # This prompt instructs the model how to act. We'll tell it to talk like a pirate!
     prompt = ChatPromptTemplate.from_messages(
         [
             (
@@ -34,45 +47,73 @@ def create_langchain():
         ]
     )
 
+    # This function tells LangChain to invoke our model with our prompt.
     def call_model(state: MessagesState):
         chain = prompt | model
         response = chain.invoke(state)
         return {"messages": response}
 
-    graph.add_node("model", call_model)
-    graph.add_edge(START, "model")
+    # Create a checkpointer LangChain can use to store message history in Postgres.
     db = DBOS.config["database"]
     connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
     pool = ConnectionPool(connection_string)
     checkpointer = PostgresSaver(pool)
+
+    # Finally, construct and return the graph LangChain uses to respond to each message.
+    # This chatbot uses a simple one-node graph that just calls the model.
+    graph = StateGraph(state_schema=MessagesState)
+    graph.add_node("model", call_model)
+    graph.add_edge(START, "model")
     return graph.compile(checkpointer=checkpointer)
 
 
 chain = create_langchain()
 
+# Now, let's chat! We'll write the endpoint
+# that handles each chat request.
 
-@DBOS.step()
-def query_model(query: str) -> str:
-    config = {"configurable": {"thread_id": "default_thread"}}
-    input_messages = [HumanMessage(query)]
-    output = chain.invoke({"messages": input_messages}, config)
-    return output["messages"][-1].content
+# This endpoint is a DBOS workflow with three steps:
+# 1. Store the incoming chat message in Postgres.
+# 2. Use LangChain to query the LLM to get its response
+# to the chat message.
+# 3. Store the response in Postgres.
 
 
 class ChatSchema(BaseModel):
-    query: str
+    message: str
 
 
 @app.post("/chat")
 @DBOS.workflow()
 def chat_workflow(chat: ChatSchema):
     start_time = time.time()
-    insert_chat(chat.query, True)
-    response = query_model(chat.query)
+    insert_chat(chat.message, True)
+    response = query_model(chat.message)
     insert_chat(response, False)
     elapsed_time = time.time() - start_time
     wallclock_times_buffer.append((time.time(), elapsed_time))
     return {"content": response, "isUser": True}
+
+
+# Next, let's write the function that actually queries LangChain
+# for each new message and returns its response.
+
+# We annotate it with DBOS.step() to mark it as a step in our chat workflow.
+
+
+@DBOS.step()
+def query_model(message: str) -> str:
+    config = {"configurable": {"thread_id": "default_thread"}}
+    input_messages = [HumanMessage(message)]
+    output = chain.invoke({"messages": input_messages}, config)
+    return output["messages"][-1].content
+
+
+# Let's also write a history endpoint that retrieves all past chats
+# from the database.
+
+# This function is called when we open up the chatbot so it
+# can display your chat history.
 
 
 @app.get("/history")
