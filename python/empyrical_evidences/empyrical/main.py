@@ -40,7 +40,6 @@ from schema import papers_metadata
 app = FastAPI()
 dbos = DBOS(fastapi=app)
 dbos_config = load_config()
-print(dbos_config["database"]["password"])
 
 # Now, let's setup a vector store to store embeddings
 # We will use BERT, served by Together.ai, and postgres/pgvector as a vector store
