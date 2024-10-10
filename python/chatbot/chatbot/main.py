@@ -70,7 +70,7 @@ def chat_workflow(chat: ChatSchema):
     insert_chat(chat.query, True)
     response = query_model(chat.query)
     insert_chat(response, False)
-    elapsed_time_ms = (time.time() - start_time) * 1000
+    elapsed_time_ms = (time.time() - start_time)
     wallclock_times_buffer.append((time.time(), elapsed_time_ms))
     return {"content": response, "isUser": True}
 
@@ -112,7 +112,7 @@ def update_cpu_usage():
         global last_cpu_time_ms
         process = psutil.Process()
         cpu_times = process.cpu_times()
-        cpu_time_ms = (cpu_times.system + cpu_times.user) * 1000
+        cpu_time_ms = (cpu_times.system + cpu_times.user)
         time_consumed = cpu_time_ms - last_cpu_time_ms
         if last_cpu_time_ms > 0:
             cpu_times_buffer.append((time.time(), time_consumed))
