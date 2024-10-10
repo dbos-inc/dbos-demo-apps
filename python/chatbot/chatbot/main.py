@@ -69,14 +69,15 @@ def create_langchain():
 
 chain = create_langchain()
 
-# Now, let's chat! We'll write the endpoint
+# Now, let's chat! We'll first write the endpoint
 # that handles each chat request.
 
 # This endpoint is a DBOS workflow with three steps:
 # 1. Store the incoming chat message in Postgres.
-# 2. Use LangChain to query the LLM to get its response
-# to the chat message.
+# 2. Use LangChain to query the LLM to respond to the chat message.
 # 3. Store the response in Postgres.
+
+# It also records the total duration of each request in an in-memory buffer.
 
 
 class ChatSchema(BaseModel):
@@ -98,10 +99,10 @@ def chat_workflow(chat: ChatSchema):
 
 # Next, let's write the function that actually queries LangChain
 # for each new message and returns its response.
-# It uses the username as a thread_id so different users see different
+# It uses your username as a thread_id so different users can have different
 # threads of conversation.
 
-# We annotate it with DBOS.step() to mark it as a step in our chat workflow.
+# We annotate this function with DBOS.step() to mark it as a step in our chat workflow.
 
 
 @DBOS.step()

@@ -38,17 +38,25 @@ You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redir
 
 ### Running Locally
 
-To run this app locally, you need a Postgres database.
-If you have Docker, you can start one with:
+First create a virtual environment:
+
+```shell
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+DBOS requires a Postgres database.
+If you don't already have one, you can start one with Docker:
 
 ```shell
 export PGPASSWORD=dbos
 python3 start_postgres_docker.py
 ```
 
-Then run:
+Then run the app in the virtual environment:
 
 ```shell
+pip install -r requirements.txt
 dbos migrate
 dbos start
 ```
