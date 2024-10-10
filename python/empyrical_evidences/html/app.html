@@ -39,15 +39,16 @@
     <script>
         function empyricalEvidences() {
             return {
-                papers: [],
-                paperName: '',
-                paperURL: '',
                 init () {
                     this.updatePapers();
                     setInterval(() => {
                         this.updatePapers();
                     }, 10000);
                 },
+                papers: [],
+                paperName: '',
+                paperURL: '',
+                uploadAnswer: '',
                 async uploadPaper() {
                     console.log(`Uploading paper ${this.paperName} hosted at ${this.paperURL}`);
                     try {
@@ -68,6 +69,7 @@
                         }
                     } catch (error) {
                         console.error("Error:", error);
+                        this.uploadAnswer = `Error: ${error}`;
                         this.paperName = "";
                         this.paperURL = "";
                     }
@@ -161,6 +163,11 @@
                 <button @click="uploadPaper" class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                     Upload paper
                 </button>
+                <!-- Display the response here -->
+                <div x-show="uploadAnswer" class="mt-4 p-2 border border-gray-300 rounded bg-gray-50">
+                    <h2 class="font-bold">Response:</h2>
+                    <p x-text="uploadAnswer"></p>
+                </div>
             </div>
 
             <!-- Papers List (Bottom Div) -->
