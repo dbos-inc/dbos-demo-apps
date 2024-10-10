@@ -29,7 +29,7 @@ from langchain_together import TogetherEmbeddings, ChatTogether
 from together import Together
 
 # Import DBOS lightweight annotations
-from dbos import DBOS, SetWorkflowUUID
+from dbos import DBOS, SetWorkflowID
 
 # Import the sqlalchemy schema representing papers metadata
 from schema import papers_metadata
@@ -66,7 +66,7 @@ vector_store = PGVector(
 @app.get("/uploadPaper")
 def upload_paper(paper_url: str, paper_title: str):
     paper_id = uuid.uuid4()
-    with SetWorkflowUUID(str(uuid.uuid4())):
+    with SetWorkflowID(str(uuid.uuid4())):
         handle = dbos.start_workflow(upload_paper_workflow, paper_url, paper_title, paper_id)
     return handle.get_result()
 
@@ -110,7 +110,7 @@ def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID)
 
 # Record the paper metadata in the database using a DBOS Transaction. Note the usage of `DBOS.sql_session` to execute SQL queries
 # Using this session, DBOS will automatically bundle the database queries in a transaction
-# It will also insert metadata for this communicator in the same transaction to provide exactly-once execution
+# It will also insert metadata for this step in the same transaction to provide exactly-once execution
 @dbos.transaction()
 def record_paper_metadata(paper_title: str, paper_url: str, paper_id: uuid.UUID):
     DBOS.sql_session.execute(
@@ -253,7 +253,7 @@ topics_search_prompt = ChatPromptTemplate.from_template(topics_search_template)
 @app.get("/startSearch")
 def search_paper(paper_name: str):
     DBOS.logger.info(f"Searching for comments on paper {paper_name}")
-    with SetWorkflowUUID(str(uuid.uuid4())):
+    with SetWorkflowID(str(uuid.uuid4())):
         handle = dbos.start_workflow(search_paper_workflow, paper_name)
     comments = handle.get_result()
     return comments
