@@ -23,7 +23,7 @@ dbos = DBOS(fastapi=app)
 
 def create_langchain():
     model = ChatOpenAI(model="gpt-3.5-turbo")
-    workflow = StateGraph(state_schema=MessagesState)
+    graph = StateGraph(state_schema=MessagesState)
     prompt = ChatPromptTemplate.from_messages(
         [
             (
@@ -39,13 +39,13 @@ def create_langchain():
         response = chain.invoke(state)
         return {"messages": response}
 
-    workflow.add_edge(START, "model")
-    workflow.add_node("model", call_model)
+    graph.add_node("model", call_model)
+    graph.add_edge(START, "model")
     db = DBOS.config["database"]
     connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
     pool = ConnectionPool(connection_string)
     checkpointer = PostgresSaver(pool)
-    return workflow.compile(checkpointer=checkpointer)
+    return graph.compile(checkpointer=checkpointer)
 
 
 chain = create_langchain()
