@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Empyrical Evidences</title>
+        <link
+        rel="icon"
+        type="image/x-icon"
+        href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico"
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script
+        defer
+        src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+        ></script>
+        <style>
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-block;
+            border-top: 3px solid #fff;
+            border-right: 3px solid transparent;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+            transform: rotate(0deg);
+            }
+            100% {
+            transform: rotate(360deg);
+            }
+        }
+        </style>
+    </head>
+    <script>
+        function empyricalEvidences() {
+            return {
+                init () {
+                    this.updatePapers();
+                    setInterval(() => {
+                        this.updatePapers();
+                    }, 10000);
+                },
+                papers: [],
+                paperName: '',
+                paperURL: '',
+                uploadAnswer: '',
+                async uploadPaper() {
+                    console.log(`Uploading paper ${this.paperName} hosted at ${this.paperURL}`);
+                    try {
+                        paperURLBase64 = btoa(this.paperURL);
+                        const response = await fetch(
+                            `/uploadPaper?paper_name=${this.paperName}&paper_url=${paperURLBase64}`,
+                            {
+                                method: "GET",
+                                headers: { "Content-Type": "application/json" },
+                            }
+                        );
+                        if (response.ok) {
+                            const { uuid, name, url } = await response.text();
+                            this.updatePapers();
+                        } else {
+                            const errorText = await response.text();
+                            console.log("Error", errorText);
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                        this.uploadAnswer = `Error: ${error}`;
+                        this.paperName = "";
+                        this.paperURL = "";
+                    }
+                },
+                async updatePapers() {
+                    try {
+                        const response = await fetch("/papers", {
+                            method: "GET",
+                            headers: { "Content-Type": "application/json" },
+                        });
+                        if (response.ok) {
+                            const papers = await response.json();
+                            this.papers = papers;
+                        } else {
+                            const errorText = await response.text();
+                            console.log("Error", errorText);
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                    }
+                },
+                paperAnswer: '',
+                paperQuestion: '',
+                questionnedPaperName: '',
+                async askPaper() {
+                    this.paperAnswer = '';
+                    try {
+                        const response = await fetch(`/askPaper`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                question: this.paperQuestion,
+                                paper_name: this.questionnedPaperName,
+                            }),
+                        });
+                        if (response.ok) {
+                            const data = await response.text();
+                            this.paperAnswer = data || "No response received.";
+                            console.log("Response", this.paperAnswer);
+                        } else {
+                            const errorText = await response.text();
+                            console.log("Error", errorText);
+                            this.paperAnswer = `Error: ${errorText}`;
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                    }
+                },
+                hnCommentsPaperName: '',
+                hnComments: [],
+                async searchComments() {
+                    this.hnComments = [];
+                    try {
+                        const response = await fetch(`/startSearch?paper_name=${this.hnCommentsPaperName}`, {
+                            method: "GET",
+                            headers: { "Content-Type": "application/json" },
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log("HN Comments", data);
+                            this.hnComments = data;
+                        } else {
+                            const errorText = await response.text();
+                            console.log("Error", errorText);
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                    }
+                },
+            };
+        }
+    </script>
+    <body x-data="empyricalEvidences()" class="h-screen md:p-1 bg-neutral-100 font-sans flex">
+        <!-- First Column: papers uploads / list -->
+        <div class="flex flex-col w-1/3 p-4">
+            <!-- Upload Form (Top Div) -->
+            <div class="flex flex-col">
+                <h1>Upload paper</h1>
+                <input
+                    type="text"
+                    x-model="paperName"
+                    placeholder="paper name"
+                    class="p-2 border border-gray-300 rounded mb-2"
+                />
+                <input
+                    type="text"
+                    x-model="paperURL"
+                    placeholder="paper URL"
+                    class="p-2 border border-gray-300 rounded mb-2"
+                />
+                <button @click="uploadPaper" class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    Upload paper
+                </button>
+                <!-- Display the response here -->
+                <div x-show="uploadAnswer" class="mt-4 p-2 border border-gray-300 rounded bg-gray-50">
+                    <h2 class="font-bold">Response:</h2>
+                    <p x-text="uploadAnswer"></p>
+                </div>
+            </div>
+
+            <!-- Papers List (Bottom Div) -->
+            <div class="flex flex-col mt-4">
+                <h1>Papers ingested</h1>
+                <ul>
+                    <template x-for="paper in papers" :key="paper.uuid">
+                        <li class="p-1">
+                            <a :href="paper.url" x-text="paper.name" class="text-blue-500 underline hover:text-blue-700" target="_blank"></a>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Second Column: ask a question to a paper -->
+        <div class="flex flex-col w-1/3 p-4">
+            <h1>Ask a question to a paper</h1>
+            <input
+                type="text"
+                x-model="questionnedPaperName"
+                placeholder="Paper name"
+                class="p-2 border border-gray-300 rounded mb-2"
+            />
+            <input
+                type="text"
+                x-model="paperQuestion"
+                placeholder="Question"
+                class="p-2 border border-gray-300 rounded mb-2"
+            />
+            <button @click="askPaper" class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Ask
+            </button>
+            <!-- Display the response here -->
+            <div x-show="paperAnswer" class="mt-4 p-2 border border-gray-300 rounded bg-gray-50">
+                <h2 class="font-bold">Response:</h2>
+                <p x-text="paperAnswer"></p>
+            </div>
+        </div>
+
+        <!-- Third Column: search for HN comments -->
+        <div class="flex flex-col w-1/3 p-4">
+            <h1>Search for Hacker News comments</h1>
+            <input
+                type="text"
+                x-model="hnCommentsPaperName"
+                placeholder="Paper name"
+                class="p-2 border border-gray-300 rounded mb-2"
+            />
+            <button @click="searchComments" class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Search relevant HN comments
+            </button>
+            <!-- Display the response here -->
+            <div x-show="hnComments.length" class="mt-4 p-2 border border-gray-300 rounded bg-gray-50">
+                <h2 class="font-bold">Hacker News comments:</h2>
+                <ul>
+                    <template x-for="comment in hnComments" :key="comment.topic">
+                        <li class="p-2 border-b">
+                            <!-- Display the topic -->
+                            Topic: <span class="font-bold" x-text="comment.topic"></span>
+
+                            <!-- Nested details for each topic -->
+                            <ul class="ml-4 mt-2">
+                                <li>
+                                    <!-- Link to the story -->
+                                    <a :href="comment.url" x-text="comment.story_title" class="text-blue-500 underline hover:text-blue-700" target="_blank"></a>
+                                </li>
+                                <li>
+                                    <!-- Display the comment -->
+                                    <span x-text="story.comment"></span>
+                                </li>
+                            </ul>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </div>
+    </body>
+</html>

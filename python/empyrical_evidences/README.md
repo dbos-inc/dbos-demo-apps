@@ -7,15 +7,15 @@
 
 ## What It Does
 
-This application searches Hacker News for comments relevant to your favorite academic papers.
-Specifically, it uses the Together.ai inference APIs to identify key topics in papers, then searches Hacker News for related comments and ranks them.
-It is serverlessly hosted on DBOS Cloud.
+This application lets you interact with your favorite academic papers.
+You can either ask a question to the paper, or search for comments on Hacker News related to the paper.
+The application uses Together.ai inference APIs for both features and is serverlessly hosted on DBOS Cloud.
 
 ## How It Works
 
 - First, you upload an academic paper. The app uses the Together.ai API to query the paper's embeddings and store them in Postgres using pgvector.
-- Then, you search Hacker News for comments relevant to the paper.
-  The app does this with a multi-agent workflow that first extracts the paper's key topics, then searches Hacker News for relevant comments, then ranks the comments.
+- Then, you can either ask a question to the paper or search Hacker News relevant comments.
+- Searching for comments on Hacker News is a multi-agents workflow that first extracts the paper's key topics, searches Hacker News for relevant comments, and ranks the comments.
 
 ## Why Use DBOS
 
@@ -85,6 +85,9 @@ dbos start
 
 ## Usage
 
+The application expose a simple frontend. Locally it default to `localhost:8000/`.
+This section documents the API usage.
+
 ### Uploading A Paper
 
 Call the `/uploadPaper` endpoint with query parameters `paper_url` (must be base64 encoded) and `paper_tile`. For example:
@@ -93,14 +96,27 @@ Call the `/uploadPaper` endpoint with query parameters `paper_url` (must be base
 curl "localhost:8000/uploadPaper?paper_url=aHR0cHM6Ly9wZW9wbGUuY3NhaWwubWl0LmVkdS90ZGFuZm9yZC82ODMwcGFwZXJzL3N0b25lYnJha2VyLWNzdG9yZS5wZGYK&paper_title=cstore"
 ```
 
-This will return a unique identifier for the paper. You will use that ID for your search.
+### Ask a question to the paper
+Call the `/askPaper` endpoint and set `paper_name` and `question` in the payload. For example:
+
+```bash
+curl -X POST "localhost:8000/askPaper" -d '{"paper_name": "cstore", "question": "What is the main idea of the paper?"}' -H "Content-Type: application/json"
+```
 
 ### Search Hacker News comments and rank them
 
 Call the `startSearch` endpoint with query parameter `paper_id`. For example:
 
 ```bash
-curl "localhost:8000/searchPaper?paper_id=c75178c7-7168-497b-a41f-381d8a557270
+curl "localhost:8000/startSearch?paper_name=cstore"
 ```
 
-The response will be in JSON.
+The response, a list of comments for each topic, will be in JSON and the schema is:
+```json
+[{
+    "topic",
+    "comment",
+    "url",
+    "story_title",
+}]
+```
