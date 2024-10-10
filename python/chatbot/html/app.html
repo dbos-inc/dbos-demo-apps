@@ -93,6 +93,7 @@
                 });
                 const data = await response.json();
                 addMessage(data.content);
+                await updateTimeCounters();
             } catch (error) {
                 console.error('Error sending message:', error);
             }
@@ -125,7 +126,7 @@
         fetchChatHistory();
 
         // Update time counters every second
-        setInterval(updateTimeCounters, 1000);
+        setInterval(updateTimeCounters, 5000);
     </script>
 </body>
 </html>
