@@ -98,6 +98,8 @@ def chat_workflow(chat: ChatSchema):
 
 # Next, let's write the function that actually queries LangChain
 # for each new message and returns its response.
+# It uses the username as a thread_id so different users see different
+# threads of conversation.
 
 # We annotate it with DBOS.step() to mark it as a step in our chat workflow.
 
@@ -111,7 +113,7 @@ def query_model(message: str, username: str) -> str:
 
 
 # Let's also write a history endpoint that retrieves all past chats
-# from the database.
+# from the database for a particular user.
 
 # This function is called when we open up the chatbot so it
 # can display your chat history.
@@ -122,18 +124,36 @@ def history_endpoint(username: str):
     return get_chats(username)
 
 
+# Next, let's write the database operations that read and write chats
+# using SQLAlchemy.
+
+# We annotate them with @DBOS.transaction to each of them to use a
+# pre-configured database connection.
+
+
 @DBOS.transaction()
 def insert_chat(username: str, content: str, is_user: bool):
     DBOS.sql_session.execute(
-        chat_history.insert().values(username=username, content=content, is_user=is_user)
+        chat_history.insert().values(
+            username=username, content=content, is_user=is_user
+        )
     )
 
 
 @DBOS.transaction()
 def get_chats(username: str):
-    stmt = chat_history.select().where(chat_history.c.username == username).order_by(chat_history.c.created_at.asc())
+    stmt = (
+        chat_history.select()
+        .where(chat_history.c.username == username)
+        .order_by(chat_history.c.created_at.asc())
+    )
     result = DBOS.sql_session.execute(stmt)
     return [{"content": row.content, "isUser": row.is_user} for row in result]
+
+
+# Let's also serve the app's frontend from an HTML file using FastAPI.
+# In production, we recommend using DBOS primarily for the backend,
+# with your frontend deployed elsewhere.
 
 
 @app.get("/")
@@ -141,6 +161,23 @@ def frontend():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return HTMLResponse(html)
+
+
+# Finally, let's write some code to track the CPU time and wall-clock
+# time consumed by your requests. This code runs once a second in a
+# background thread.
+
+# As you chat, you'll quickly notice that
+# while your requests may take a long time, they consume very little CPU
+# because they spend most of their time waiting for the LLM to respond.
+# This gap explains why DBOS is 50x cheaper than other serverless platforms
+# for AI workloads! DBOS bills only for the CPU time you actually consume,
+# while other platforms bill for the total request duration,
+# most of which is spent idly waiting for an LLM to respond.
+
+# We track the CPU consumption of this process using psutil.
+# We track wall-clock time by recording the duration of each
+# request in chat_workflow.
 
 
 last_cpu_time_ms = 0
@@ -152,6 +189,8 @@ def update_cpu_usage():
     while True:
         time.sleep(1)
         global last_cpu_time_ms
+        # Every second, record CPU time consumed by this process
+        # in the last second.
         process = psutil.Process()
         cpu_times = process.cpu_times()
         cpu_time = cpu_times.system + cpu_times.user
@@ -159,6 +198,8 @@ def update_cpu_usage():
         if last_cpu_time_ms > 0:
             cpu_times_buffer.append((time.time(), time_consumed))
         last_cpu_time_ms = cpu_time
+        # We only track usage in the last minute, so
+        # pop measurements more than 60 seconds old.
         for buf in [cpu_times_buffer, wallclock_times_buffer]:
             while buf and time.time() - buf[0][0] > 60:
                 buf.popleft()
@@ -168,7 +209,7 @@ threading.Thread(target=update_cpu_usage).start()
 
 
 @app.get("/times")
-def get_cpu_time():
+def times_endpoint():
     return {
         "cpu_time": sum([t for _, t in cpu_times_buffer]),
         "wall_clock_time": sum([t for _, t in wallclock_times_buffer]),
