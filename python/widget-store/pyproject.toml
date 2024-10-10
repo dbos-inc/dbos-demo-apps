@@ -6,7 +6,7 @@ authors = [
     {name = "Peter Kraft", email = "petereliaskraft@gmail.com"},
 ]
 dependencies = [
-    "dbos>=0.8.0a10",
+    "dbos>=0.10.0a0",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
