@@ -11,13 +11,14 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, SetWorkflowID, load_config, Queue
+from dbos import DBOS, Queue, SetWorkflowID, load_config
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
 from llama_index.core.postprocessor import FixedRecencyPostprocessor
 from llama_index.core.prompts import PromptTemplate
-from llama_index.core.schema import NodeRelationship, RelatedNodeInfo, TextNode
+from llama_index.core.schema import TextNode
+from llama_index.llms.openai import OpenAI
 from llama_index.vector_stores.postgres import PGVectorStore
 from slack_bolt import App, BoltRequest
 from slack_bolt.adapter.starlette.handler import to_bolt_request
@@ -29,13 +30,11 @@ DBOS(fastapi=app)
 # Define a queue to limit processing incoming messages to 10 per minute.
 # This is to prevent the bot from being overwhelmed by a large number of messages.
 # We also set the concurrency to 1 to ensure that messages are responded in the order they are received.
-work_queue = Queue("llamabot_queue", limiter={"limit": 10, "period": 60}, concurrency=1)
+work_queue = Queue("llamabot_queue", limiter={"limit": 300, "period": 60}, concurrency=1)
 
 # Then, let's initialize LlamaIndex to use the app's Postgres database as the vector store.
 # Note that we don't set up the schema and tables because we've already done that in the schema migration step.
-set_global_handler(
-    "simple", logger=DBOS.logger
-)  # Logs from LlamaIndex will be printed as the `DEBUG` level.
+set_global_handler("simple", logger=DBOS.logger)  # Logs from LlamaIndex will be printed as the `DEBUG` level.
 dbos_config = load_config()
 vector_store = PGVectorStore.from_params(
     database=dbos_config["database"]["app_db_name"],
@@ -84,6 +83,7 @@ def handle_message(request: BoltRequest) -> None:
         # endpoint to reply within 3 seconds.
         work_queue.enqueue(message_workflow, request.body["event"])
 
+
 # Now, let's write the main workflow function that processes incoming messages.
 @DBOS.workflow()
 def message_workflow(message: Dict[str, Any]) -> None:
@@ -100,10 +100,7 @@ def message_workflow(message: Dict[str, Any]) -> None:
             if block.get("type") == "rich_text":
                 for rich_text_section in block["elements"]:
                     for element in rich_text_section["elements"]:
-                        if (
-                            element.get("type") == "user"
-                            and element.get("user_id") == bot_user_id
-                        ):
+                        if element.get("type") == "user" and element.get("user_id") == bot_user_id:
                             for element in rich_text_section.get("elements"):
                                 if element.get("type") == "text":
                                     # The user is asking the bot a question
@@ -145,9 +142,7 @@ def message_workflow(message: Dict[str, Any]) -> None:
 
 # Post a message to a slack channel, optionally in a thread
 @DBOS.step()
-def post_slack_message(
-    message: str, channel: str, thread_ts: Optional[str] = None
-) -> None:
+def post_slack_message(message: str, channel: str, thread_ts: Optional[str] = None) -> None:
     slackapp.client.chat_postMessage(channel=channel, text=message, thread_ts=thread_ts)
 
 
@@ -170,9 +165,7 @@ def get_user_name(user_id: str) -> str:
 
 # Given a user's question and a slack message, answer the question with LlamaIndex and return the response
 @DBOS.step()
-def answer_question(
-    query: str, message: Dict[str, Any], replies: Optional[SlackResponse] = None
-) -> Any:
+def answer_question(query: str, message: Dict[str, Any], replies: Optional[SlackResponse] = None) -> Any:
     who_is_asking = get_user_name(message["user"])
     replies_stanza = ""
     if replies is not None:
@@ -188,11 +181,7 @@ def answer_question(
         "---------------------\n"
         "{context_str}"
         "\n---------------------\n"
-        "The person who is asking the question is called '"
-        + who_is_asking
-        + "'.\n"
-        + replies_stanza
-        + "\n"
+        "The person who is asking the question is called '" + who_is_asking + "'.\n" + replies_stanza + "\n"
         "You are a helpful AI assistant who has been listening to everything everyone has been saying. \n"
         "Given the most relevant chat messages above, please answer this question: {query_str}\n"
     )
@@ -202,7 +191,9 @@ def answer_question(
         date_key="when",  # the key in the metadata to find the date
     )
     query_engine = index.as_query_engine(
-        similarity_top_k=20, node_postprocessors=[postprocessor]
+        llm=OpenAI(model="gpt-4o-mini"),  # Use gpt-4o-mini model from OpenAI
+        similarity_top_k=20,
+        node_postprocessors=[postprocessor],
     )
     query_engine.update_prompts({"response_synthesizer:text_qa_template": qa_template})
     return query_engine.query(query)
