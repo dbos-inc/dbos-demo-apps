@@ -111,7 +111,7 @@
         // Function to fetch chat history
         async function fetchChatHistory() {
             try {
-                const response = await fetch('/history');
+                const response = await fetch(`/history/${encodeURIComponent(userName)}`);
                 const history = await response.json();
                 history.forEach(message => addMessage(message.content, message.isUser));
             } catch (error) {
@@ -127,7 +127,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({"message": message, "userName": userName}),
+                    body: JSON.stringify({"message": message, "username": userName}),
                 });
                 const data = await response.json();
                 addMessage(data.content);

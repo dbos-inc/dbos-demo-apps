@@ -81,15 +81,16 @@ chain = create_langchain()
 
 class ChatSchema(BaseModel):
     message: str
+    username: str
 
 
 @app.post("/chat")
 @DBOS.workflow()
 def chat_workflow(chat: ChatSchema):
     start_time = time.time()
-    insert_chat(chat.message, True)
-    response = query_model(chat.message)
-    insert_chat(response, False)
+    insert_chat(chat.username, chat.message, True)
+    response = query_model(chat.message, chat.username)
+    insert_chat(chat.username, response, False)
     elapsed_time = time.time() - start_time
     wallclock_times_buffer.append((time.time(), elapsed_time))
     return {"content": response, "isUser": True}
@@ -102,8 +103,8 @@ def chat_workflow(chat: ChatSchema):
 
 
 @DBOS.step()
-def query_model(message: str) -> str:
-    config = {"configurable": {"thread_id": "default_thread"}}
+def query_model(message: str, username: str) -> str:
+    config = {"configurable": {"thread_id": username}}
     input_messages = [HumanMessage(message)]
     output = chain.invoke({"messages": input_messages}, config)
     return output["messages"][-1].content
@@ -116,21 +117,21 @@ def query_model(message: str) -> str:
 # can display your chat history.
 
 
-@app.get("/history")
-def history_endpoint():
-    return get_chats()
+@app.get("/history/{username}")
+def history_endpoint(username: str):
+    return get_chats(username)
 
 
 @DBOS.transaction()
-def insert_chat(content, is_user):
+def insert_chat(username: str, content: str, is_user: bool):
     DBOS.sql_session.execute(
-        chat_history.insert().values(content=content, is_user=is_user)
+        chat_history.insert().values(username=username, content=content, is_user=is_user)
     )
 
 
 @DBOS.transaction()
-def get_chats():
-    stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
+def get_chats(username: str):
+    stmt = chat_history.select().where(chat_history.c.username == username).order_by(chat_history.c.created_at.asc())
     result = DBOS.sql_session.execute(stmt)
     return [{"content": row.content, "isUser": row.is_user} for row in result]
 

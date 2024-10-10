@@ -15,6 +15,7 @@ chat_history = Table(
     "chat_history",
     metadata,
     Column("message_id", Integer, primary_key=True, autoincrement=True),
+    Column("username", String, nullable=False),
     Column("content", String, nullable=False),
     Column("is_user", Boolean, nullable=False),
     Column(
