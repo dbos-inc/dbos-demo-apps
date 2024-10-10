@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBOS Chatbot</title>
+    <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+    <div class="sticky top-0 bg-gray-100 z-10 p-4 shadow-md">
+        <div class="container mx-auto flex items-center space-x-6">
+            <h1 class="text-3xl font-bold text-gray-800 whitespace">DBOS Chatbot</h1>
+            <div id="time-counters" class="flex flex-grow justify-end space-x-6">
+                <div class="flex flex-col items-center justify-center bg-white p-3 rounded-lg shadow-sm">
+                    <div class="flex items-center mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-blue-600">
+                            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                            <rect x="9" y="9" width="6" height="6"></rect>
+                            <line x1="9" y1="1" x2="9" y2="4"></line>
+                            <line x1="15" y1="1" x2="15" y2="4"></line>
+                            <line x1="9" y1="20" x2="9" y2="23"></line>
+                            <line x1="15" y1="20" x2="15" y2="23"></line>
+                            <line x1="20" y1="9" x2="23" y2="9"></line>
+                            <line x1="20" y1="14" x2="23" y2="14"></line>
+                            <line x1="1" y1="9" x2="4" y2="9"></line>
+                            <line x1="1" y1="14" x2="4" y2="14"></line>
+                        </svg>
+                        <span class="text-lg font-semibold text-gray-700">CPU Time</span>
+                    </div>
+                    <span id="cpu-time" class="text-3xl font-bold text-blue-600">0.00</span>
+                    <span class="text-sm text-gray-500">seconds in the last minute</span>
+                </div>
+                <div class="flex flex-col items-center justify-center bg-white p-3 rounded-lg shadow-sm">
+                    <div class="flex items-center mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-green-600">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span class="text-lg font-semibold text-gray-700">Wall-Clock Time</span>
+                    </div>
+                    <span id="wall-clock-time" class="text-3xl font-bold text-green-600">0.00</span>
+                    <span class="text-sm text-gray-500">seconds in the last minute</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 overflow-hidden flex flex-col">
+        <div id="chat-history" class="flex-1 overflow-y-auto p-4">
+            <!-- Chat messages will be inserted here -->
+        </div>
+        <form id="chat-form" class="p-4 bg-white">
+            <div class="flex">
+                <input type="text" id="message-input" placeholder="Type your message..." class="flex-1 p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Send</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Name prompt modal -->
+    <div id="name-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center" style="display: none;">
+        <div class="bg-white p-8 rounded-lg shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Welcome to the DBOS Chatbot</h2>
+            <p class="mb-4">Please enter your name to start chatting:</p>
+            <input type="text" id="name-input" class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <button id="submit-name" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Start Chatting</button>
+        </div>
+    </div>
+
+    <script>
+        const chatHistory = document.getElementById('chat-history');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const cpuTimeElement = document.getElementById('cpu-time');
+        const wallClockTimeElement = document.getElementById('wall-clock-time');
+        const nameModal = document.getElementById('name-modal');
+        const nameInput = document.getElementById('name-input');
+        const submitNameButton = document.getElementById('submit-name');
+        
+        let userName = '';
+
+        // Function to show the name prompt
+        function showNamePrompt() {
+            nameModal.style.display = 'flex';
+        }
+
+        // Function to hide the name prompt
+        function hideNamePrompt() {
+            nameModal.style.display = 'none';
+        }
+
+        // Event listener for name submission
+        submitNameButton.addEventListener('click', () => {
+            userName = nameInput.value.trim();
+            if (userName) {
+                hideNamePrompt();
+                fetchChatHistory();
+            }
+        });
+
+        // Function to add a message to the chat history
+        function addMessage(message, isUser = false) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `mb-2 p-2 rounded-lg ${isUser ? 'bg-blue-100 ml-auto' : 'bg-gray-100'}`;
+            messageElement.style.maxWidth = '80%';
+            messageElement.textContent = message;
+            chatHistory.appendChild(messageElement);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // Function to fetch chat history
+        async function fetchChatHistory() {
+            try {
+                const response = await fetch(`/history/${encodeURIComponent(userName)}`);
+                const history = await response.json();
+                history.forEach(message => addMessage(message.content, message.isUser));
+            } catch (error) {
+                console.error('Error fetching chat history:', error);
+            }
+        }
+
+        // Function to send a chat message
+        async function sendMessage(message) {
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({"message": message, "username": userName}),
+                });
+                const data = await response.json();
+                addMessage(data.content);
+                await updateTimeCounters();
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        }
+
+        // Function to update time counters
+        async function updateTimeCounters() {
+            try {
+                const response = await fetch("/times")
+                const data = await response.json()
+                cpuTimeElement.textContent = data.cpu_time.toFixed(2);
+                wallClockTimeElement.textContent = data.wall_clock_time.toFixed(2);
+            } catch (error) {
+                console.error('Error fetching time data:', error);
+            }
+        }
+
+        // Event listener for form submission
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                messageInput.value = '';
+                await sendMessage(message);
+            }
+        });
+
+        // Show name prompt when the page loads
+        showNamePrompt();
+
+        // Update time counters every second
+        setInterval(updateTimeCounters, 1000);
+    </script>
+</body>
+</html>
