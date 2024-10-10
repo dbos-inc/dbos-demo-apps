@@ -56,12 +56,47 @@
             </div>
         </form>
     </div>
+    
+    <!-- Name prompt modal -->
+    <div id="name-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center" style="display: none;">
+        <div class="bg-white p-8 rounded-lg shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Welcome to DBOS Chatbot</h2>
+            <p class="mb-4">Please enter your name to start chatting:</p>
+            <input type="text" id="name-input" class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <button id="submit-name" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Start Chatting</button>
+        </div>
+    </div>
+
     <script>
         const chatHistory = document.getElementById('chat-history');
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
         const cpuTimeElement = document.getElementById('cpu-time');
         const wallClockTimeElement = document.getElementById('wall-clock-time');
+        const nameModal = document.getElementById('name-modal');
+        const nameInput = document.getElementById('name-input');
+        const submitNameButton = document.getElementById('submit-name');
+        
+        let userName = '';
+
+        // Function to show the name prompt
+        function showNamePrompt() {
+            nameModal.style.display = 'flex';
+        }
+
+        // Function to hide the name prompt
+        function hideNamePrompt() {
+            nameModal.style.display = 'none';
+        }
+
+        // Event listener for name submission
+        submitNameButton.addEventListener('click', () => {
+            userName = nameInput.value.trim();
+            if (userName) {
+                hideNamePrompt();
+                fetchChatHistory();
+            }
+        });
 
         // Function to add a message to the chat history
         function addMessage(message, isUser = false) {
@@ -92,7 +127,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({"message": message}),
+                    body: JSON.stringify({"message": message, "userName": userName}),
                 });
                 const data = await response.json();
                 addMessage(data.content);
@@ -125,12 +160,11 @@
             }
         });
 
-        // Fetch chat history when the page loads
-        fetchChatHistory();
-        updateTimeCounters();
+        // Show name prompt when the page loads
+        showNamePrompt();
 
         // Update time counters every second
-        setInterval(updateTimeCounters, 5000);
+        setInterval(updateTimeCounters, 1000);
     </script>
 </body>
 </html>
