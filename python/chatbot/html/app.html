@@ -92,7 +92,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({"query": message}),
+                    body: JSON.stringify({"message": message}),
                 });
                 const data = await response.json();
                 addMessage(data.content);
