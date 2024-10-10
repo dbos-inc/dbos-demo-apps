@@ -288,7 +288,7 @@ def search_paper_workflow(paper_name: str):
     topics_number = "5"
     try:
         retriever = vector_store.as_retriever(
-            filter={"id": paper.uuid}
+            search_kwargs={'filter': {'id': str(paper.uuid), 'name': paper.name}}
         )
         chain = (
             {"context": retriever, "question": RunnablePassthrough()}
