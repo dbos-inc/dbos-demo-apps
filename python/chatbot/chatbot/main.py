@@ -51,16 +51,16 @@ def create_langchain():
 chain = create_langchain()
 
 
-class ChatSchema(BaseModel):
-    query: str
-
-
 @DBOS.step()
 def query_model(query: str) -> str:
     config = {"configurable": {"thread_id": "default_thread"}}
     input_messages = [HumanMessage(query)]
     output = chain.invoke({"messages": input_messages}, config)
     return output["messages"][-1].content
+
+
+class ChatSchema(BaseModel):
+    query: str
 
 
 @app.post("/chat")
@@ -70,8 +70,8 @@ def chat_workflow(chat: ChatSchema):
     insert_chat(chat.query, True)
     response = query_model(chat.query)
     insert_chat(response, False)
-    elapsed_time_ms = (time.time() - start_time)
-    wallclock_times_buffer.append((time.time(), elapsed_time_ms))
+    elapsed_time = time.time() - start_time
+    wallclock_times_buffer.append((time.time(), elapsed_time))
     return {"content": response, "isUser": True}
 
 
@@ -112,11 +112,11 @@ def update_cpu_usage():
         global last_cpu_time_ms
         process = psutil.Process()
         cpu_times = process.cpu_times()
-        cpu_time_ms = (cpu_times.system + cpu_times.user)
-        time_consumed = cpu_time_ms - last_cpu_time_ms
+        cpu_time = cpu_times.system + cpu_times.user
+        time_consumed = cpu_time - last_cpu_time_ms
         if last_cpu_time_ms > 0:
             cpu_times_buffer.append((time.time(), time_consumed))
-        last_cpu_time_ms = cpu_time_ms
+        last_cpu_time_ms = cpu_time
         for buf in [cpu_times_buffer, wallclock_times_buffer]:
             while buf and time.time() - buf[0][0] > 60:
                 buf.popleft()
