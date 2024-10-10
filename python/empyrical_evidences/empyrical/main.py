@@ -8,6 +8,7 @@ import uuid
 from io import BytesIO
 from PyPDF2 import PdfReader
 from sqlalchemy.engine import create_engine
+from sqlalchemy import URL
 from pydantic import BaseModel
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -22,14 +23,13 @@ from utils import decode_paper_url
 # Import FastAPI to serve requests
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
 
 # Import Together Python SDK and the Langchain Together.ai integration
 from langchain_together import TogetherEmbeddings, ChatTogether
 from together import Together
 
 # Import DBOS lightweight annotations
-from dbos import DBOS, SetWorkflowID
+from dbos import DBOS, SetWorkflowID, load_config
 
 # Import the sqlalchemy schema representing papers metadata
 from schema import papers_metadata
@@ -39,13 +39,22 @@ from schema import papers_metadata
 # The DBOS instance will manage durable execution
 app = FastAPI()
 dbos = DBOS(fastapi=app)
+dbos_config = load_config()
+print(dbos_config["database"]["password"])
 
 # Now, let's setup a vector store to store embeddings
 # We will use BERT, served by Together.ai, and postgres/pgvector as a vector store
 embeddings = TogetherEmbeddings(
     model="togethercomputer/m2-bert-80M-8k-retrieval",
 )
-db_url = dbos.app_db.engine.url
+db_url = URL.create(
+    "postgresql",
+    username=dbos_config["database"]["username"],
+    password=dbos_config["database"]["password"],
+    host=dbos_config["database"]["hostname"],
+    port=dbos_config["database"]["port"],
+    database=dbos_config["database"]["app_db_name"],
+)
 db_engine = create_engine(db_url)
 vector_store = PGVector(
     embeddings=embeddings,
@@ -132,8 +141,8 @@ def delete_paper_metadata(paper_id: uuid.UUID):
     )
     DBOS.logger.info(f"Deleted metadata for {paper_id}")
 
-# Download the paper from the URL using a DBOS Step. This function will execute at least once.
-# You can configure the retry behavior of the step. See https://docs.dbos.dev/.
+# Download the paper using a DBOS Step. This function will execute at least once
+# You can configure the retry behavior of the step. See https://docs.dbos.dev/
 @dbos.step()
 def download_paper(paper_url: str) -> bytes:
     DBOS.logger.info(f"Downloading paper from {paper_url}")
@@ -142,8 +151,7 @@ def download_paper(paper_url: str) -> bytes:
         raise Exception(f"Failed to download paper: {response.status_code}")
     return response.content
 
-# Store the paper embeddings in the vector store using a DBOS Step. This function will execute at least once.
-# This could be a DBOS transaction, but PGVector managers its own connections
+# Store the paper embeddings in the vector store using a DBOS step. This function will execute at least once
 @dbos.step()
 def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
     # Create large enough chunks to avoid rate limits from together.ai
@@ -310,7 +318,7 @@ def search_topics(topics: List[str]) -> Dict[str, List[Dict]]:
         results[topic] = search_hackernews(topic, window_size_hours=730)
     return results
 
-# Search for comments on a list of topics using a DBOS Step
+# Search for comments on a list of topics using a DBOS step
 @dbos.step()
 def search_hackernews(topic: str, window_size_hours: int) -> List[Dict[str, str]]:
     threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=window_size_hours)
