@@ -2,7 +2,7 @@
 
 This is a chatbot built with DBOS and LangChain.
 
-In addition to chatting, this bot displays both the duration of your requests and how much CPU time they consume.
+In addition to chatting, this bot displays both the amount of CPU time and wall-clock time consumed by your requests.
 As you chat, you'll quickly notice that while your requests may take a long time, they consume very little CPU&mdash;because they spend most of their time waiting for the LLM to respond.
 This gap explains why DBOS is 50x cheaper than other serverless platforms for AI workloads&mdash;because DBOS bills only for the CPU time you actually consume, while other platforms bill for the total request duration, most of which is spent idly waiting for an LLM to respond.
 
