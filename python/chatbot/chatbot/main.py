@@ -131,8 +131,3 @@ def get_cpu_time():
         "cpu_time": sum([t for _, t in cpu_times_buffer]),
         "wall_clock_time": sum([t for _, t in wallclock_times_buffer]),
     }
-
-
-@app.get("/wall_clock_time")
-def get_cpu_time():
-    return {"wall_clock_time": sum([t for _, t in wallclock_times_buffer])}
