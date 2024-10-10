@@ -108,7 +108,7 @@ wallclock_times_buffer = deque()
 
 def update_cpu_usage():
     while True:
-        time.sleep(2)
+        time.sleep(1)
         global last_cpu_time_ms
         process = psutil.Process()
         cpu_times = process.cpu_times()
