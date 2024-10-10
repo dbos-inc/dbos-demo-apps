@@ -72,10 +72,9 @@ vector_store = PGVector(
 # @app.get() is a FastAPI decorator that maps a URL to `upload_paper()`
 # `upload_paper()` will synchronously invoke a DBOS workflow (upload_paper_workflow), then return its result
 @app.get("/uploadPaper")
-def upload_paper(paper_url: str, paper_title: str):
-    paper_id = uuid.uuid4()
+def upload_paper(paper_url: str, paper_name: str):
     with SetWorkflowID(str(uuid.uuid4())):
-        handle = dbos.start_workflow(upload_paper_workflow, paper_url, paper_title, paper_id)
+        handle = dbos.start_workflow(upload_paper_workflow, paper_url, paper_name)
     return handle.get_result()
 
 # Let's register a DBOS workflow. It does three things:
@@ -84,14 +83,15 @@ def upload_paper(paper_url: str, paper_title: str):
 # 3. Store the paper embeddings in the vector store (at least once, using a DBOS 'step'
 # DBOS workflows are resilient to failure: if an error occurs, the workflow will resume exactly where it left off
 @dbos.workflow()
-def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID) -> str:
+def upload_paper_workflow(paper_url: str, paper_name: str) -> str:
     compensation_actions = []
 
     # We expect URLs in base64
     decoded_url = decode_paper_url(paper_url)
 
     # Create a record in the database for the paper. If this fails, record a compensation action
-    record_paper_metadata(paper_title, decoded_url, paper_id)
+    paper_id = uuid.uuid4()
+    record_paper_metadata(paper_name, decoded_url, paper_id)
     compensation_actions.append(lambda: delete_paper_metadata(paper_id))
 
     # Download the paper and breaks it down into pages.
@@ -107,28 +107,28 @@ def upload_paper_workflow(paper_url: str, paper_title: str, paper_id: uuid.UUID)
 
     # Retrieve the embeddings using Together.ai and store them in our vector store
     try:
-        store_paper_embeddings(pages, paper_id)
+        store_paper_embeddings(pages, paper_name, paper_url, paper_id)
     except Exception as e:
         DBOS.logger.error(f"Failed to store the embeddings: {e}")
         for action in compensation_actions:
             action()
         raise e
 
-    return {"title": paper_title, "url": decoded_url, "id": paper_id}
+    return {"name": paper_name, "url": decoded_url, "id": paper_id}
 
 # Record the paper metadata in the database using a DBOS Transaction. Note the usage of `DBOS.sql_session` to execute SQL queries
 # Using this session, DBOS will automatically bundle the database queries in a transaction
 # It will also insert metadata for this step in the same transaction to provide exactly-once execution
 @dbos.transaction()
-def record_paper_metadata(paper_title: str, paper_url: str, paper_id: uuid.UUID):
+def record_paper_metadata(paper_name: str, paper_url: str, paper_id: uuid.UUID):
     DBOS.sql_session.execute(
         papers_metadata.insert().values(
             uuid=paper_id,
-            name=paper_title,
+            name=paper_name,
             url=paper_url,
         )
     )
-    DBOS.logger.info(f"Recorded metadata for {paper_title}")
+    DBOS.logger.info(f"Recorded metadata for {paper_name}")
 
 # Delete the paper metadata in the database using a DBOS Transaction
 @dbos.transaction()
@@ -152,7 +152,7 @@ def download_paper(paper_url: str) -> bytes:
 
 # Store the paper embeddings in the vector store using a DBOS step. This function will execute at least once
 @dbos.step()
-def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
+def store_paper_embeddings(pages: List[str], paper_name: str, paper_url: str, paper_id: uuid.UUID):
     # Create large enough chunks to avoid rate limits from together.ai
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=3000,
@@ -162,7 +162,11 @@ def store_paper_embeddings(pages: List[str], paper_id: uuid.UUID):
 
     # Set the paper_id in the Document metadata
     DBOS.logger.info(f"Chunking {len(pages)} pages")
-    metadatas = [{"id": str(paper_id)} for _ in pages]
+    metadatas = [{
+        "id": str(paper_id),
+        "url": paper_url,
+        "name": paper_name,
+        } for _ in pages]
     documents = text_splitter.create_documents(pages, metadatas=metadatas)
     split_pages = text_splitter.split_documents(documents)
 
@@ -190,6 +194,7 @@ ask_paper_template = """ <s>[INST]
 
     Support your answer with excerpts from the paper.
     Excerpts should not include figures captions.
+    In the answer, make sure to include the paper name and the authors.
 
     [/INST]
 """
@@ -214,8 +219,9 @@ def ask_paper_endpoint(q: PaperQuestion):
     DBOS.logger.info(f"Asked question: '{q.question}' to paper {q.paper_name}")
     try:
         # Use our vector store to retrieve the paper embeddings
+        # We narrow the search to content associated with the paper's UUID
         retriever = vector_store.as_retriever(
-            filter={"id": paper.uuid}
+            search_kwargs={'filter': {'id': str(paper.uuid)}}
         )
         # The chain simply invokes the model with the question and parses the output
         chain = (

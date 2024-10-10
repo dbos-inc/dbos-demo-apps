@@ -54,7 +54,7 @@
                     try {
                         paperURLBase64 = btoa(this.paperURL);
                         const response = await fetch(
-                            `/uploadPaper?paper_title=${this.paperName}&paper_url=${paperURLBase64}`,
+                            `/uploadPaper?paper_name=${this.paperName}&paper_url=${paperURLBase64}`,
                             {
                                 method: "GET",
                                 headers: { "Content-Type": "application/json" },
