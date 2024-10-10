@@ -221,7 +221,7 @@ def ask_paper_endpoint(q: PaperQuestion):
         # Use our vector store to retrieve the paper embeddings
         # We narrow the search to content associated with the paper's UUID
         retriever = vector_store.as_retriever(
-            search_kwargs={'filter': {'id': str(paper.uuid)}}
+            search_kwargs={'filter': {'id': str(paper.uuid), 'name': paper.name}}
         )
         # The chain simply invokes the model with the question and parses the output
         chain = (
