@@ -1,8 +1,40 @@
 # Welcome to DBOS!
 
-This is a sample app built with DBOS and FastAPI.
-It displays greetings to visitors and keeps track of how many times each visitor has been greeted.
-Check out the source code in `<app-name>/main.py`!
+This is a chatbot built with DBOS and LangChain.
+
+In addition to chatting, this bot displays both the duration of your requests and how much CPU time they consume.
+As you chat, you'll quickly notice that while your requests may take a long time, they consume very little CPU&mdash;because they spend most of their time waiting for the LLM to respond.
+This gap explains why DBOS is 50x cheaper than other serverless platforms for AI workloads&mdash;because DBOS bills only for the CPU time you actually consume, while other platforms bill for the total request duration, most of which is spent idly waiting for an LLM to respond.
+
+## Creating an OpenAI Account
+
+To run this app, you need an OpenAI developer account.
+Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview).
+This bot uses `gpt-3.5-turbo` for text generation.
+Make sure you have some credits (<$1) to use it.
+
+Set your API key as an environment variable:
+
+```shell
+export OPENAI_API_KEY=<your_openai_key>
+```
+
+### Deploying to the Cloud
+
+To serverlessly deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
+
+```shell
+npm i -g @dbos-inc/dbos-cloud
+```
+
+Then, run this command to deploy your app:
+
+```shell
+dbos-cloud app deploy
+```
+
+This command outputs a URL&mdash;visit it to see your chatbot!
+You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
 
 ### Running Locally
 
@@ -21,21 +53,4 @@ dbos migrate
 dbos start
 ```
 
-Visit [`http://localhost:8000`](http://localhost:8000) to see your app!
-
-### Deploying to the Cloud
-
-To deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then, run this command to deploy your app:
-
-```shell
-dbos-cloud app deploy
-```
-
-This command outputs a URL--visit it to see your app!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
+Visit [`http://localhost:8000`](http://localhost:8000) to see your chatbot!
