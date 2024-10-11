@@ -184,6 +184,7 @@
             }
           } catch (error) {
             console.error("Error:", error);
+            this.resetId();
           }
         },
         sendPaymentRequest: async function (status) {
