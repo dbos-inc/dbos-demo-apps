@@ -5,7 +5,7 @@ This is a chatbot built with DBOS and LangChain.
 In addition to chatting, this bot displays both the amount of CPU time and wall-clock time consumed by your requests.
 As you chat, you'll quickly notice that while your requests may take a long time, they consume very little CPU.
 That's because they spend most of their time idle waiting for the LLM to respond.
-This gap explains why DBOS is 50x more cost-efficient than other serverless platforms for AI workloads&mdash;because DBOS bills only for the CPU time you actually consume, while other platforms bill for the total request duration.
+This gap explains why DBOS is [50x more cost-efficient](https://www.dbos.dev/blog/aws-lambda-hidden-wait-costs) than other serverless platforms for AI workloads&mdash;because DBOS bills only for the CPU time you actually consume, while other platforms bill for the total request duration.
 
 ## Creating an OpenAI Account
 
