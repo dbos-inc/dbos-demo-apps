@@ -157,6 +157,10 @@
         },
         purchase: async function (uuid) {
           try {
+            if (this.product.inventory <= 0) {
+              console.log("No more inventory!");
+              return;
+            }
             const response = await fetch("/checkout/" + uuid, {
               method: "POST",
               headers: {
