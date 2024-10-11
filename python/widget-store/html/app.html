@@ -157,6 +157,10 @@
         },
         purchase: async function (uuid) {
           try {
+            if (this.product.inventory <= 0) {
+              console.log("No more inventory!");
+              return;
+            }
             const response = await fetch("/checkout/" + uuid, {
               method: "POST",
               headers: {
@@ -180,6 +184,7 @@
             }
           } catch (error) {
             console.error("Error:", error);
+            this.resetId();
           }
         },
         sendPaymentRequest: async function (status) {
@@ -212,7 +217,7 @@
           if (this.updateOrdersInterval === null) {
             this.updateOrdersInterval = setInterval(() => {
               this.updateOrders();
-            }, 500);
+            }, 1000);
           }
         },
         updateOrders: async function () {

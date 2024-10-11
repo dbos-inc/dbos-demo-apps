@@ -56,13 +56,14 @@ def checkout_workflow():
     # Wait for a message that the customer has completed payment.
     payment_status = DBOS.recv(PAYMENT_STATUS)
 
-    # If payment succeeded, mark the order as paid.
+    # If payment succeeded, mark the order as paid and start the order dispatch workflow.
     # Otherwise, return reserved inventory and cancel the order.
     if payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
+        DBOS.start_workflow(dispatch_order_workflow, order_id)
     else:
-        DBOS.logger.warn(f"Payment failed for order {order_id}")
+        DBOS.logger.warning(f"Payment failed for order {order_id}")
         undo_reserve_inventory()
         update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
 
@@ -181,26 +182,33 @@ def restock():
     DBOS.sql_session.execute(products.update().values(inventory=100))
 
 
-# Now, let's write a scheduled job to dispatch orders that have been paid for.
-# Every 20 seconds, it updates the progress of every outstanding paid order,
+# Now, let's write a workflow to dispatch orders that have been paid for.
+# Every second, it updates the progress of a paid order,
 # then dispatches orders that are fully progressed.
+@DBOS.workflow()
+def dispatch_order_workflow(order_id):
+    for _ in range(10):
+        DBOS.sleep(1)
+        update_order_progress(order_id)
 
 
-@DBOS.scheduled("*/20 * * * * *")
 @DBOS.transaction()
-def update_order_progress(scheduled_time, actual_time):
+def update_order_progress(order_id):
     # Update the progress of paid orders.
-    DBOS.sql_session.execute(
+    progress_remaining = DBOS.sql_session.execute(
         orders.update()
-        .where(orders.c.order_status == OrderStatus.PAID.value)
+        .where(orders.c.order_id == order_id)
         .values(progress_remaining=orders.c.progress_remaining - 1)
-    )
-    # Dispatch fully-progressed orders.
-    DBOS.sql_session.execute(
-        orders.update()
-        .where(orders.c.progress_remaining == 0)
-        .values(order_status=OrderStatus.DISPATCHED.value)
-    )
+        .returning(orders.c.progress_remaining)
+    ).scalar_one()
+
+    # Dispatch if the order is fully-progressed.
+    if progress_remaining == 0:
+        DBOS.sql_session.execute(
+            orders.update()
+            .where(orders.c.order_id == order_id)
+            .values(order_status=OrderStatus.DISPATCHED.value)
+        )
 
 
 # Next, let's serve the app's frontend from an HTML file using FastAPI.
