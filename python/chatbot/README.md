@@ -1,17 +1,18 @@
-# Welcome to DBOS!
+# LLM-Powered Chatbot
 
 This is a chatbot built with DBOS and LangChain.
 
 In addition to chatting, this bot displays both the amount of CPU time and wall-clock time consumed by your requests.
-As you chat, you'll quickly notice that while your requests may take a long time, they consume very little CPU&mdash;because they spend most of their time waiting for the LLM to respond.
-This gap explains why DBOS is 50x cheaper than other serverless platforms for AI workloads&mdash;because DBOS bills only for the CPU time you actually consume, while other platforms bill for the total request duration, most of which is spent idly waiting for an LLM to respond.
+As you chat, you'll quickly notice that while your requests may take a long time, they consume very little CPU.
+That's because they spend most of their time idle waiting for the LLM to respond.
+This gap explains why DBOS is 50x more cost-efficient than other serverless platforms for AI workloads&mdash;because DBOS bills only for the CPU time you actually consume, while other platforms bill for the total request duration.
 
 ## Creating an OpenAI Account
 
 To run this app, you need an OpenAI developer account.
 Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview).
 This bot uses `gpt-3.5-turbo` for text generation.
-Make sure you have some credits (<$1) to use it.
+Make sure you have some credits (~$1) to use it.
 
 Set your API key as an environment variable:
 
