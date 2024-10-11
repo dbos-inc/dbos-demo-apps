@@ -85,7 +85,7 @@ dbos start
 
 ## Usage
 
-The application expose a simple frontend. Locally it default to `localhost:8000/`.
+The application exposes a simple frontend. Locally it default to `localhost:8000/`.
 This section documents the API usage.
 
 ### Uploading A Paper
@@ -93,7 +93,7 @@ This section documents the API usage.
 Call the `/uploadPaper` endpoint with query parameters `paper_url` (must be base64 encoded) and `paper_tile`. For example:
 
 ```bash
-curl "localhost:8000/uploadPaper?paper_url=aHR0cHM6Ly9wZW9wbGUuY3NhaWwubWl0LmVkdS90ZGFuZm9yZC82ODMwcGFwZXJzL3N0b25lYnJha2VyLWNzdG9yZS5wZGYK&paper_title=cstore"
+curl "localhost:8000/uploadPaper?paper_url=aHR0cHM6Ly9wZW9wbGUuY3NhaWwubWl0LmVkdS90ZGFuZm9yZC82ODMwcGFwZXJzL3N0b25lYnJha2VyLWNzdG9yZS5wZGYK&paper_name=cstore"
 ```
 
 ### Ask a question to the paper
