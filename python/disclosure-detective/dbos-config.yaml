@@ -16,6 +16,7 @@ database:
   app_db_name: disclosure_detective
   migrate:
     - alembic upgrade head
+    - python3 migrations/setup_llamaindex.py
 telemetry:
   logs:
     logLevel: INFO
