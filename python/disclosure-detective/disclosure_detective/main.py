@@ -2,10 +2,10 @@ import os
 from tempfile import TemporaryDirectory
 from typing import List
 
-from fastapi.responses import HTMLResponse
 import requests
 from dbos import DBOS, load_config
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
 from llama_index.readers.file import PDFReader
 from llama_index.vector_stores.postgres import PGVectorStore
@@ -105,6 +105,7 @@ def get_chats():
     stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
     result = DBOS.sql_session.execute(stmt)
     return [{"content": row.content, "isUser": row.is_user} for row in result]
+
 
 @app.get("/")
 def frontend():
