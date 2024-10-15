@@ -2,17 +2,22 @@ import os
 from tempfile import TemporaryDirectory
 from typing import List
 
-from pydantic import BaseModel, HttpUrl
+from fastapi.responses import HTMLResponse
 import requests
+from dbos import DBOS, load_config
 from fastapi import FastAPI
-from dbos import load_config
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
 from llama_index.readers.file import PDFReader
 from llama_index.vector_stores.postgres import PGVectorStore
+from pydantic import BaseModel, HttpUrl
+
+from .schema import chat_history
 
 apple_2024_10K_url = "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf"
 
 app = FastAPI()
+DBOS(fastapi=app)
+
 
 def construct_index():
     Settings.chunk_size = 512
@@ -27,10 +32,12 @@ def construct_index():
         perform_setup=False,  # Set up during migration step
     )
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    return VectorStoreIndex([], storage_context=storage_context)
+    index = VectorStoreIndex([], storage_context=storage_context)
+    chat_engine = index.as_chat_engine()
+    return index, chat_engine
 
 
-index = construct_index()
+index, chat_engine = construct_index()
 
 
 def index_document(document_url) -> int:
@@ -52,11 +59,13 @@ def index_document(document_url) -> int:
 class URLList(BaseModel):
     urls: List[HttpUrl]
 
+
 """
 curl -X POST "http://localhost:8000/index" \
      -H "Content-Type: application/json" \
      -d '{"urls": ["https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf"]}'
 """
+
 
 @app.post("/index")
 async def index_endpoint(urls: URLList):
@@ -65,12 +74,40 @@ async def index_endpoint(urls: URLList):
         indexed_pages += index_document(url)
     return {"indexed_pages": indexed_pages}
 
-query_engine = index.as_chat_engine()
 
-response = query_engine.chat("What was Apple's total revenue in 2023?")
+class ChatSchema(BaseModel):
+    message: str
 
-print(response)
 
-response = query_engine.chat("What was Apple's total revenue in 2022?")
+@app.post("/chat")
+@DBOS.workflow()
+def chat_workflow(chat: ChatSchema):
+    insert_chat(chat.message, True)
+    response = query_model(chat.message)
+    insert_chat(response, False)
+    return {"content": response, "isUser": True}
 
-print(response)
+
+@DBOS.step()
+def query_model(message: str) -> str:
+    return str(chat_engine.chat(message))
+
+
+@DBOS.transaction()
+def insert_chat(content: str, is_user: bool):
+    DBOS.sql_session.execute(
+        chat_history.insert().values(content=content, is_user=is_user)
+    )
+
+
+@DBOS.transaction()
+def get_chats():
+    stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
+    result = DBOS.sql_session.execute(stmt)
+    return [{"content": row.content, "isUser": row.is_user} for row in result]
+
+@app.get("/")
+def frontend():
+    with open(os.path.join("html", "app.html")) as file:
+        html = file.read()
+    return HTMLResponse(html)
