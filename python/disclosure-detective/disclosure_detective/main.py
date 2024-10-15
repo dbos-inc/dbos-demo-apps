@@ -1,10 +1,10 @@
 import os
 from tempfile import TemporaryDirectory
 from typing import List
-from dbos import DBOS, load_config
 
 import requests
-from llama_index.core import VectorStoreIndex, StorageContext, Settings, Document
+from dbos import DBOS, load_config
+from llama_index.core import Document, Settings, StorageContext, VectorStoreIndex
 from llama_index.readers.file import PDFReader
 from llama_index.vector_stores.postgres import PGVectorStore
 
@@ -28,31 +28,33 @@ def fetch_and_read_document(
             return reader.load_data(temp_file_path)
 
 
-apple_doc = fetch_and_read_document(apple_2024_10K_url)
+def construct_index():
+    dbos_config = load_config()
+    db = dbos_config["database"]
+    vector_store = PGVectorStore.from_params(
+        database=db["app_db_name"],
+        host=db["hostname"],
+        password=db["password"],
+        port=db["port"],
+        user=db["username"],
+        perform_setup=False,  # Set up during migration step
+    )
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    return VectorStoreIndex([], storage_context=storage_context)
 
-dbos_config = load_config()
-db = dbos_config["database"]
-vector_store = PGVectorStore.from_params(
-    database=db["app_db_name"],
-    host=db["hostname"],
-    password=db["password"],
-    port=db["port"],
-    user=db["username"],
-    perform_setup=False,  # Set up during migration step
-)
-storage_context = StorageContext.from_defaults(vector_store=vector_store)
-index = VectorStoreIndex.from_documents(apple_doc, storage_context=storage_context)
+
+index = construct_index()
+apple_doc = fetch_and_read_document(apple_2024_10K_url)
+for doc in apple_doc:
+    index.insert(doc)
+
 
 query_engine = index.as_chat_engine()
 
-response = query_engine.chat("My name is steve")
+response = query_engine.chat("What was Apple's total revenue in 2023?")
 
 print(response)
 
-response = query_engine.chat("How much did Apple make in 2023?")
-
-print(response)
-
-response = query_engine.chat("What is my name?  How much did Apple make in 2022?")
+response = query_engine.chat("What was Apple's total revenue in 2022?")
 
 print(response)
