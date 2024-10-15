@@ -1,7 +1,10 @@
 import os
 from tempfile import TemporaryDirectory
+from typing import List
 
+from pydantic import BaseModel, HttpUrl
 import requests
+from fastapi import FastAPI
 from dbos import load_config
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
 from llama_index.readers.file import PDFReader
@@ -9,6 +12,7 @@ from llama_index.vector_stores.postgres import PGVectorStore
 
 apple_2024_10K_url = "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf"
 
+app = FastAPI()
 
 def construct_index():
     Settings.chunk_size = 512
@@ -45,7 +49,21 @@ def index_document(document_url) -> int:
     return len(pages)
 
 
-index_document(apple_2024_10K_url)
+class URLList(BaseModel):
+    urls: List[HttpUrl]
+
+"""
+curl -X POST "http://localhost:8000/index" \
+     -H "Content-Type: application/json" \
+     -d '{"urls": ["https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf"]}'
+"""
+
+@app.post("/index")
+async def index_endpoint(urls: URLList):
+    indexed_pages = 0
+    for url in urls.urls:
+        indexed_pages += index_document(url)
+    return {"indexed_pages": indexed_pages}
 
 query_engine = index.as_chat_engine()
 
