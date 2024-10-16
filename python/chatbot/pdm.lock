@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:c0e87bb1aa14475b40dc69775497e82596a379cce03836ba1f712578c2570ef6"
+content_hash = "sha256:7fd9829c372e8b610907d6c17a3bf8182f049f964d9a76c65f8feb1296714ce5"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -224,29 +224,29 @@ files = [
 
 [[package]]
 name = "dbos"
-version = "0.9.0"
+version = "0.10.0a3"
 requires_python = ">=3.9"
 summary = "Ultra-lightweight durable execution in Python"
 groups = ["default"]
 dependencies = [
-    "alembic>=1.13.2",
-    "fastapi[standard]>=0.112.1",
-    "jsonpickle>=3.2.2",
+    "alembic>=1.13.3",
+    "fastapi[standard]>=0.115.2",
+    "jsonpickle>=3.3.0",
     "jsonschema>=4.23.0",
-    "opentelemetry-api>=1.26.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.26.0",
-    "opentelemetry-sdk>=1.26.0",
+    "opentelemetry-api>=1.27.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.27.0",
+    "opentelemetry-sdk>=1.27.0",
     "psutil>=6.0.0",
-    "psycopg>=3.2.1",
+    "psycopg>=3.2.3",
     "python-dateutil>=2.9.0.post0",
     "pyyaml>=6.0.2",
     "tomlkit>=0.13.2",
-    "typer>=0.12.3",
+    "typer>=0.12.5",
     "typing-extensions>=4.12.2; python_version < \"3.10\"",
 ]
 files = [
-    {file = "dbos-0.9.0-py3-none-any.whl", hash = "sha256:0ea527daf331975601f41752bea5691b07b27d2808ac6fb72e5a61d77cb627c9"},
-    {file = "dbos-0.9.0.tar.gz", hash = "sha256:f73e9f6909e813af9045b6816b7b301e1c69dc48c028e3211bd9da55c77bad88"},
+    {file = "dbos-0.10.0a3-py3-none-any.whl", hash = "sha256:84bf75ad8c8b47fa48b08c4e2edc645a19f4b181b583c4a5d45b7360152c4f94"},
+    {file = "dbos-0.10.0a3.tar.gz", hash = "sha256:f58aaa0d5941d786f923b8336a31437fb8360a2b63b8577188e7c6c338a5e94d"},
 ]
 
 [[package]]
@@ -314,18 +314,18 @@ files = [
 
 [[package]]
 name = "fastapi"
-version = "0.115.0"
+version = "0.115.2"
 requires_python = ">=3.8"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 groups = ["default"]
 dependencies = [
     "pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4",
-    "starlette<0.39.0,>=0.37.2",
+    "starlette<0.41.0,>=0.37.2",
     "typing-extensions>=4.8.0",
 ]
 files = [
-    {file = "fastapi-0.115.0-py3-none-any.whl", hash = "sha256:17ea427674467486e997206a5ab25760f6b09e069f099b96f5b55a32fb6f1631"},
-    {file = "fastapi-0.115.0.tar.gz", hash = "sha256:f93b4ca3529a8ebc6fc3fcf710e5efa8de3df9b41570958abf1d97d843138004"},
+    {file = "fastapi-0.115.2-py3-none-any.whl", hash = "sha256:61704c71286579cc5a598763905928f24ee98bfcc07aabe84cfefb98812bbc86"},
+    {file = "fastapi-0.115.2.tar.gz", hash = "sha256:3995739e0b09fa12f984bce8fa9ae197b35d433750d3d312422d846e283697ee"},
 ]
 
 [[package]]
@@ -361,7 +361,7 @@ files = [
 
 [[package]]
 name = "fastapi"
-version = "0.115.0"
+version = "0.115.2"
 extras = ["standard"]
 requires_python = ">=3.8"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
@@ -369,15 +369,15 @@ groups = ["default"]
 dependencies = [
     "email-validator>=2.0.0",
     "fastapi-cli[standard]>=0.0.5",
-    "fastapi==0.115.0",
+    "fastapi==0.115.2",
     "httpx>=0.23.0",
     "jinja2>=2.11.2",
     "python-multipart>=0.0.7",
     "uvicorn[standard]>=0.12.0",
 ]
 files = [
-    {file = "fastapi-0.115.0-py3-none-any.whl", hash = "sha256:17ea427674467486e997206a5ab25760f6b09e069f099b96f5b55a32fb6f1631"},
-    {file = "fastapi-0.115.0.tar.gz", hash = "sha256:f93b4ca3529a8ebc6fc3fcf710e5efa8de3df9b41570958abf1d97d843138004"},
+    {file = "fastapi-0.115.2-py3-none-any.whl", hash = "sha256:61704c71286579cc5a598763905928f24ee98bfcc07aabe84cfefb98812bbc86"},
+    {file = "fastapi-0.115.2.tar.gz", hash = "sha256:3995739e0b09fa12f984bce8fa9ae197b35d433750d3d312422d846e283697ee"},
 ]
 
 [[package]]

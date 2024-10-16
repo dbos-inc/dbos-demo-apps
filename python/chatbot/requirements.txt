@@ -10,16 +10,14 @@ certifi==2024.8.30
 charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6; platform_system == "Windows" or sys_platform == "win32"
-dbos==0.9.0
+dbos==0.10.0a3
 deprecated==1.2.14
 distro==1.9.0
 dnspython==2.7.0
 email-validator==2.2.0
 exceptiongroup==1.2.2; python_version < "3.11"
-fastapi==0.115.0
-fastapi-cli==0.0.5
 fastapi-cli[standard]==0.0.5
-fastapi[standard]==0.115.0
+fastapi[standard]==0.115.2
 googleapis-common-protos==1.65.0
 greenlet==3.1.1; (platform_machine == "win32" or platform_machine == "WIN32" or platform_machine == "AMD64" or platform_machine == "amd64" or platform_machine == "x86_64" or platform_machine == "ppc64le" or platform_machine == "aarch64") and python_version < "3.13"
 h11==0.14.0
@@ -90,7 +88,6 @@ typer==0.12.5
 typing-extensions==4.12.2
 tzdata==2024.2; sys_platform == "win32"
 urllib3==2.2.3
-uvicorn==0.31.0
 uvicorn[standard]==0.31.0
 uvloop==0.20.0; (sys_platform != "cygwin" and sys_platform != "win32") and platform_python_implementation != "PyPy"
 watchfiles==0.24.0
