@@ -1,4 +1,4 @@
-# In this app, we use DBOS and LlamaIndex to build and serverlessly deploy a chatbot agent that can index PDF documents and answer questions about them.
+# In this app, we use DBOS and LlamaIndex to build and serverlessly deploy a chat agent that can index PDF documents and answer questions about them.
 
 # First, let's do imports and initialize DBOS.
 
