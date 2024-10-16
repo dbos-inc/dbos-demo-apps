@@ -97,11 +97,6 @@ def chat_workflow(chat: ChatSchema):
     return {"content": response, "isUser": True}
 
 
-@DBOS.step()
-def query_model(message: str) -> str:
-    return str(chat_engine.chat(message))
-
-
 @DBOS.transaction()
 def insert_chat(content: str, is_user: bool):
     DBOS.sql_session.execute(
@@ -109,16 +104,21 @@ def insert_chat(content: str, is_user: bool):
     )
 
 
-@DBOS.transaction()
-def get_chats():
-    stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
-    result = DBOS.sql_session.execute(stmt)
-    return [{"content": row.content, "isUser": row.is_user} for row in result]
+@DBOS.step()
+def query_model(message: str) -> str:
+    return str(chat_engine.chat(message))
 
 
 @app.get("/history")
 def history_endpoint():
     return get_chats()
+
+
+@DBOS.transaction()
+def get_chats():
+    stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
+    result = DBOS.sql_session.execute(stmt)
+    return [{"content": row.content, "isUser": row.is_user} for row in result]
 
 
 @app.get("/")
