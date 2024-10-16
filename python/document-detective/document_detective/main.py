@@ -1,3 +1,7 @@
+# In this app, we use DBOS and LlamaIndex to build and serverlessly deploy a chatbot agent that can ingest PDF documents and answer questions about them.
+
+# First, let's do imports and initialize DBOS.
+
 import os
 from tempfile import TemporaryDirectory
 from typing import List
@@ -13,14 +17,11 @@ from pydantic import BaseModel, HttpUrl
 
 from .schema import chat_history
 
-"""
-curl -X POST "http://localhost:8000/index" \
-     -H "Content-Type: application/json" \
-     -d '{"urls": ["https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf", "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/b4266e40-1de6-4a34-9dfb-8632b8bd57e0.pdf", "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/42ede86f-6518-450f-bc88-60211bf39c6d.pdf"]}'
-"""
-
 app = FastAPI()
 DBOS(fastapi=app)
+
+
+# Next, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
 
 
 def configure_index():
@@ -43,6 +44,21 @@ def configure_index():
 
 index, chat_engine = configure_index()
 
+
+# Now, let's write the document ingestion pipeline. Because ingesting documents may
+# take a long time, we need to build a pipeline that's both concurrent and reliable.
+# It needs to process multiple documents at once and it needs to be resilient to failures,
+# so if the application is interrupted or restarted, or encounters an error, it can
+# recover from where it left off instead of restarting from the beginning or losing
+# some documents entirely.
+
+# We'll build a concurrent, reliable data ingestion pipeline using DBOS queues and
+# durable execution. This workflow takes in a batch of document URLs and enqueues
+# them for ingestion. It then waits for them all to complete and counts how
+# many total documents and pages were ingested. If it's ever interrupted or restarted,
+# it recovers the ingestion of each document from the last completed step, guaranteeing
+# that every document gets ingested and none are lost.
+
 queue = Queue("indexing_queue")
 
 
@@ -58,7 +74,15 @@ def indexing_workflow(urls: List[HttpUrl]):
     DBOS.logger.info(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
 
 
-@DBOS.step()
+# This function ingests a PDF document from a URL. It downloads it, scans it into pages,
+# then uses LlamaIndex to embed it and store the embedding in Postgres.
+
+# We annotate this function with DBOS.step() to mark it as a step in our indexing workflow.
+# Additionally, in case of transient failures (for example in downloading the document), we set it
+# to automatically retry indexing up to 5 times with exponential backoff.
+
+
+@DBOS.step(retries_allowed=True, max_attempts=5)
 def index_document(document_url: HttpUrl) -> int:
     with TemporaryDirectory() as temp_dir:
         temp_file_path = os.path.join(temp_dir, "file.pdf")
@@ -75,6 +99,19 @@ def index_document(document_url: HttpUrl) -> int:
     return len(pages)
 
 
+# This is the endpoint for indexing. It starts the indexing workflow in the background
+# on a batch of documents.
+
+# To test it out, try this example cURL command to index Apple's SEC 10-K filings
+# for 2021, 2022, and 2023.
+
+"""
+curl -X POST "http://localhost:8000/index" \
+     -H "Content-Type: application/json" \
+     -d '{"urls": ["https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf", "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/b4266e40-1de6-4a34-9dfb-8632b8bd57e0.pdf", "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/42ede86f-6518-450f-bc88-60211bf39c6d.pdf"]}'
+"""
+
+
 class URLList(BaseModel):
     urls: List[HttpUrl]
 
@@ -82,6 +119,14 @@ class URLList(BaseModel):
 @app.post("/index")
 async def index_endpoint(urls: URLList):
     DBOS.start_workflow(indexing_workflow, urls.urls)
+
+
+# Now, let's chat!
+
+# Each time we get a chat message, we call this workflow with three steps:
+# 1. Store the incoming chat message in Postgres.
+# 2. Query LlamaIndex to respond to the message using RAG.
+# 3. Store the response in Postgres.
 
 
 class ChatSchema(BaseModel):
@@ -109,6 +154,13 @@ def query_model(message: str) -> str:
     return str(chat_engine.chat(message))
 
 
+# Let's also write a history endpoint that retrieves all past chats
+# from the database for a particular user.
+
+# This function is called when we open up the chatbot so it
+# can display your chat history.
+
+
 @app.get("/history")
 def history_endpoint():
     return get_chats()
@@ -119,6 +171,11 @@ def get_chats():
     stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
     result = DBOS.sql_session.execute(stmt)
     return [{"content": row.content, "isUser": row.is_user} for row in result]
+
+
+# Finallly, let's serve the app's frontend from an HTML file using FastAPI.
+# In production, we recommend using DBOS primarily for the backend,
+# with your frontend deployed elsewhere.
 
 
 @app.get("/")
