@@ -3,7 +3,7 @@ name = "earthquake-tracker"
 version = "0.1.0"
 description = "Record and display earthquakes in real time"
 dependencies = [
-    "dbos>=0.8.0a10",
+    "dbos>=0.10.0a3",
     "streamlit>=1.37.1",
     "plotly>=5.24.0",
 ]
