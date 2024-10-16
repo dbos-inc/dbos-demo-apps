@@ -1,4 +1,4 @@
-# In this app, we use DBOS and LlamaIndex to build and serverlessly deploy a chatbot agent that can ingest PDF documents and answer questions about them.
+# In this app, we use DBOS and LlamaIndex to build and serverlessly deploy a chatbot agent that can index PDF documents and answer questions about them.
 
 # First, let's do imports and initialize DBOS.
 
@@ -45,7 +45,7 @@ def configure_index():
 index, chat_engine = configure_index()
 
 
-# Now, let's write the document ingestion pipeline. Because ingesting documents may
+# Now, let's write the document ingestion pipeline. Because ingesting and indexing documents may
 # take a long time, we need to build a pipeline that's both concurrent and reliable.
 # It needs to process multiple documents at once and it needs to be resilient to failures,
 # so if the application is interrupted or restarted, or encounters an error, it can
