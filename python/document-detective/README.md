@@ -1,1 +1,1 @@
-# disclosure-detective
+# Document Detective

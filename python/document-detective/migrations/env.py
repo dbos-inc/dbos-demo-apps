@@ -18,7 +18,7 @@ config.set_main_option("sqlalchemy.url", get_dbos_database_url())
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from disclosure_detective.schema import metadata
+from document_detective.schema import metadata
 
 target_metadata = metadata
 
