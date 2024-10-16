@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 from typing import List
 
 import requests
-from dbos import DBOS, load_config
+from dbos import DBOS, Queue, WorkflowHandle, load_config
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
@@ -13,13 +13,17 @@ from pydantic import BaseModel, HttpUrl
 
 from .schema import chat_history
 
-apple_2024_10K_url = "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf"
+"""
+curl -X POST "http://localhost:8000/index" \
+     -H "Content-Type: application/json" \
+     -d '{"urls": ["https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf"]}'
+"""
 
 app = FastAPI()
 DBOS(fastapi=app)
 
 
-def construct_index():
+def configure_index():
     Settings.chunk_size = 512
     dbos_config = load_config()
     db = dbos_config["database"]
@@ -37,10 +41,25 @@ def construct_index():
     return index, chat_engine
 
 
-index, chat_engine = construct_index()
+index, chat_engine = configure_index()
+
+queue = Queue("indexing_queue")
 
 
-def index_document(document_url) -> int:
+@DBOS.workflow()
+def indexing_workflow(urls: List[HttpUrl]):
+    handles: List[WorkflowHandle] = []
+    for url in urls:
+        handle = queue.enqueue(index_document, url)
+        handles.append(handle)
+    indexed_pages = 0
+    for handle in handles:
+        indexed_pages += handle.get_result()
+    DBOS.logger.info(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
+
+
+@DBOS.step()
+def index_document(document_url: HttpUrl) -> int:
     with TemporaryDirectory() as temp_dir:
         temp_file_path = os.path.join(temp_dir, "file.pdf")
         with open(temp_file_path, "wb") as temp_file:
@@ -60,19 +79,9 @@ class URLList(BaseModel):
     urls: List[HttpUrl]
 
 
-"""
-curl -X POST "http://localhost:8000/index" \
-     -H "Content-Type: application/json" \
-     -d '{"urls": ["https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf"]}'
-"""
-
-
 @app.post("/index")
 async def index_endpoint(urls: URLList):
-    indexed_pages = 0
-    for url in urls.urls:
-        indexed_pages += index_document(url)
-    return {"indexed_pages": indexed_pages}
+    DBOS.start_workflow(indexing_workflow, urls.urls)
 
 
 class ChatSchema(BaseModel):
