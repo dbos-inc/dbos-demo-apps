@@ -20,3 +20,5 @@ database:
 telemetry:
   logs:
     logLevel: INFO
+env:
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
