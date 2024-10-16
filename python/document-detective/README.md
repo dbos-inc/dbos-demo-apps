@@ -63,7 +63,7 @@ Visit [`http://localhost:8000`](http://localhost:8000) to see your chat agent!
 
 To index a batch of PDF documents, send a list of their URLs in a POST request to the `/index` endpoint.
 
-For example, try this cURL command to index Apple's 10-K filings for 2021, 2022, and 2023:
+For example, try this cURL command to index Apple's SEC 10-K filings for 2021, 2022, and 2023:
 
 ```shell
 curl -X POST "http://localhost:8000/index" \
