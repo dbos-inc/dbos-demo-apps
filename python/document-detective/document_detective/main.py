@@ -116,6 +116,11 @@ def get_chats():
     return [{"content": row.content, "isUser": row.is_user} for row in result]
 
 
+@app.get("/history")
+def history_endpoint():
+    return get_chats()
+
+
 @app.get("/")
 def frontend():
     with open(os.path.join("html", "app.html")) as file:

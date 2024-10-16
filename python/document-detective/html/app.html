@@ -42,6 +42,16 @@
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
 
+        async function fetchChatHistory() {
+            try {
+                const response = await fetch(`/history`);
+                const history = await response.json();
+                history.forEach(message => addMessage(message.content, message.isUser));
+            } catch (error) {
+                console.error('Error fetching chat history:', error);
+            }
+        }
+
         function addMessage(message, isUser = false) {
             const messageElement = document.createElement('div');
             messageElement.className = `mb-3 p-3 rounded-lg ${isUser ? 'bg-indigo-100 ml-auto text-right' : 'bg-white'} shadow-sm`;
@@ -76,6 +86,8 @@
                 await sendMessage(message);
             }
         });
+
+        fetchChatHistory();
     </script>
 </body>
 </html>
