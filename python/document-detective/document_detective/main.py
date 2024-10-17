@@ -173,7 +173,7 @@ def get_chats():
     return [{"content": row.content, "isUser": row.is_user} for row in result]
 
 
-# Finallly, let's serve the app's frontend from an HTML file using FastAPI.
+# Finally, let's serve the app's frontend from an HTML file using FastAPI.
 # In production, we recommend using DBOS primarily for the backend,
 # with your frontend deployed elsewhere.
 
