@@ -155,7 +155,7 @@ def query_model(message: str) -> str:
 
 
 # Let's also write a history endpoint that retrieves all past chats
-# from the database for a particular user.
+# from the database.
 
 # This function is called when we open up the chatbot so it
 # can display your chat history.
