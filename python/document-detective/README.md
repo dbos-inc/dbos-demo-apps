@@ -72,4 +72,4 @@ curl -X POST "http://localhost:8000/index" \
 
 ```
 
-URL will be `http://localhost:8000` locally and your app URL in DBOS Cloud.
+The application URL you should use is `http://localhost:8000` locally and your app URL in DBOS Cloud.
