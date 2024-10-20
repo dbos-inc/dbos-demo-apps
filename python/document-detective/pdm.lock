@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:d75933bedf4964e8f58c4252942d730738803b1f49be43e7afbedb22e62536ff"
+content_hash = "sha256:7f225ef071cee40dc4d29198c6418b972952f993679c4dfcfbf7259c3416927d"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -447,7 +447,7 @@ files = [
 
 [[package]]
 name = "dbos"
-version = "0.10.0"
+version = "0.11.0a2"
 requires_python = ">=3.9"
 summary = "Ultra-lightweight durable execution in Python"
 groups = ["default"]
@@ -460,7 +460,7 @@ dependencies = [
     "opentelemetry-exporter-otlp-proto-http>=1.27.0",
     "opentelemetry-sdk>=1.27.0",
     "psutil>=6.0.0",
-    "psycopg>=3.2.3",
+    "psycopg>=3.1",
     "python-dateutil>=2.9.0.post0",
     "pyyaml>=6.0.2",
     "tomlkit>=0.13.2",
@@ -468,8 +468,8 @@ dependencies = [
     "typing-extensions>=4.12.2; python_version < \"3.10\"",
 ]
 files = [
-    {file = "dbos-0.10.0-py3-none-any.whl", hash = "sha256:c1c07f8d42f83ea91b50f8831906e9487842c3d88110086000c5ba44dc84b48d"},
-    {file = "dbos-0.10.0.tar.gz", hash = "sha256:840d09cb2fcd67b793b3434901b03fa9523627151f84d974ff8dd7c143d123d7"},
+    {file = "dbos-0.11.0a2-py3-none-any.whl", hash = "sha256:e2436651b05ae263394cfa8efa36dcd94bbce8ba83cabe0a4520e1be71149652"},
+    {file = "dbos-0.11.0a2.tar.gz", hash = "sha256:e6383448153ac407ea0e506d2e7a9cc87d04e9217299aefef8caee77e7fe48a6"},
 ]
 
 [[package]]

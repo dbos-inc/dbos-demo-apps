@@ -1,27 +1,31 @@
-import re
+import os
 from logging.config import fileConfig
-
+from sqlalchemy import URL, engine_from_config, pool
 from alembic import context
-from dbos import get_dbos_database_url
-from sqlalchemy import engine_from_config, pool
+from dbos import load_config
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Load the database URL from the DBOS config
-# Alembic requires the % in URL-escaped parameters to itself be escaped to %%.
-escaped_conn_string = re.sub(
-    r"%(?=[0-9A-Fa-f]{2})",
-    "%%",
-    get_dbos_database_url(),
+# Load DBOS Config and parse the database URL
+dbos_config_path = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "dbos-config.yaml"
 )
-config.set_main_option("sqlalchemy.url", escaped_conn_string)
+dbos_config = load_config(dbos_config_path)
+db_url = URL.create(
+    "postgresql",
+    username=dbos_config["database"]["username"],
+    password=dbos_config["database"]["password"],
+    host=dbos_config["database"]["hostname"],
+    port=dbos_config["database"]["port"],
+    database=dbos_config["database"]["app_db_name"],
+)
+config.set_main_option("sqlalchemy.url", db_url.render_as_string(hide_password=False))
 
 # add your model's MetaData object here
 # for 'autogenerate' support

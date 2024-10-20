@@ -6,7 +6,7 @@ authors = [
     {name = "Peter Kraft", email = "petereliaskraft@gmail.com"},
 ]
 dependencies = [
-    "dbos>=0.7.0a9",
+    "dbos>=0.11.0a2",
     "slack-sdk>=3.31.0",
 ]
 requires-python = ">=3.9"
