@@ -10,7 +10,7 @@ certifi==2024.8.30
 charset-normalizer==3.3.2
 click==8.1.7
 dataclasses-json==0.6.7
-dbos==0.7.1
+dbos==0.11.0a2
 Deprecated==1.2.14
 dirtyjson==1.0.8
 distro==1.9.0

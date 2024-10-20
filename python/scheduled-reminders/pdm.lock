@@ -5,14 +5,14 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:0c0f9e7c2564c031b56a29ba95e47166f3ee7547bcca8dce116729b93c47dfe9"
+content_hash = "sha256:47ade9d67b19ef3ede01df5dd8c394d854e0b14d0d0dfbb6d3ca327a1d9f166f"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
 
 [[package]]
 name = "alembic"
-version = "1.13.2"
+version = "1.13.3"
 requires_python = ">=3.8"
 summary = "A database migration tool for SQLAlchemy."
 groups = ["default"]
@@ -24,8 +24,8 @@ dependencies = [
     "typing-extensions>=4",
 ]
 files = [
-    {file = "alembic-1.13.2-py3-none-any.whl", hash = "sha256:6b8733129a6224a9a711e17c99b08462dbf7cc9670ba8f2e2ae9af860ceb1953"},
-    {file = "alembic-1.13.2.tar.gz", hash = "sha256:1ff0ae32975f4fd96028c39ed9bb3c867fe3af956bd7bb37343b54c9fe7445ef"},
+    {file = "alembic-1.13.3-py3-none-any.whl", hash = "sha256:908e905976d15235fae59c9ac42c4c5b75cfcefe3d27c0fbf7ae15a37715d80e"},
+    {file = "alembic-1.13.3.tar.gz", hash = "sha256:203503117415561e203aa14541740643a611f641517f0209fcae63e9fa09f1a2"},
 ]
 
 [[package]]
@@ -220,29 +220,29 @@ files = [
 
 [[package]]
 name = "dbos"
-version = "0.7.0a9"
+version = "0.11.0a2"
 requires_python = ">=3.9"
 summary = "Ultra-lightweight durable execution in Python"
 groups = ["default"]
 dependencies = [
-    "alembic>=1.13.2",
-    "fastapi[standard]>=0.112.1",
-    "jsonpickle>=3.2.2",
+    "alembic>=1.13.3",
+    "fastapi[standard]>=0.115.2",
+    "jsonpickle>=3.3.0",
     "jsonschema>=4.23.0",
-    "opentelemetry-api>=1.26.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.26.0",
-    "opentelemetry-sdk>=1.26.0",
+    "opentelemetry-api>=1.27.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.27.0",
+    "opentelemetry-sdk>=1.27.0",
     "psutil>=6.0.0",
-    "psycopg>=3.2.1",
+    "psycopg>=3.1",
     "python-dateutil>=2.9.0.post0",
     "pyyaml>=6.0.2",
     "tomlkit>=0.13.2",
-    "typer>=0.12.3",
+    "typer>=0.12.5",
     "typing-extensions>=4.12.2; python_version < \"3.10\"",
 ]
 files = [
-    {file = "dbos-0.7.0a9-py3-none-any.whl", hash = "sha256:780469387d151d8e863299ccf75a5cd7860d5926379e41d9689b0ea6afea28d0"},
-    {file = "dbos-0.7.0a9.tar.gz", hash = "sha256:00a9c104f197db6248367eac98706f3ebc702295c346439befbf3c4c4db84515"},
+    {file = "dbos-0.11.0a2-py3-none-any.whl", hash = "sha256:e2436651b05ae263394cfa8efa36dcd94bbce8ba83cabe0a4520e1be71149652"},
+    {file = "dbos-0.11.0a2.tar.gz", hash = "sha256:e6383448153ac407ea0e506d2e7a9cc87d04e9217299aefef8caee77e7fe48a6"},
 ]
 
 [[package]]
@@ -299,18 +299,18 @@ files = [
 
 [[package]]
 name = "fastapi"
-version = "0.115.0"
+version = "0.115.2"
 requires_python = ">=3.8"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 groups = ["default"]
 dependencies = [
     "pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4",
-    "starlette<0.39.0,>=0.37.2",
+    "starlette<0.41.0,>=0.37.2",
     "typing-extensions>=4.8.0",
 ]
 files = [
-    {file = "fastapi-0.115.0-py3-none-any.whl", hash = "sha256:17ea427674467486e997206a5ab25760f6b09e069f099b96f5b55a32fb6f1631"},
-    {file = "fastapi-0.115.0.tar.gz", hash = "sha256:f93b4ca3529a8ebc6fc3fcf710e5efa8de3df9b41570958abf1d97d843138004"},
+    {file = "fastapi-0.115.2-py3-none-any.whl", hash = "sha256:61704c71286579cc5a598763905928f24ee98bfcc07aabe84cfefb98812bbc86"},
+    {file = "fastapi-0.115.2.tar.gz", hash = "sha256:3995739e0b09fa12f984bce8fa9ae197b35d433750d3d312422d846e283697ee"},
 ]
 
 [[package]]
@@ -346,7 +346,7 @@ files = [
 
 [[package]]
 name = "fastapi"
-version = "0.115.0"
+version = "0.115.2"
 extras = ["standard"]
 requires_python = ">=3.8"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
@@ -354,15 +354,15 @@ groups = ["default"]
 dependencies = [
     "email-validator>=2.0.0",
     "fastapi-cli[standard]>=0.0.5",
-    "fastapi==0.115.0",
+    "fastapi==0.115.2",
     "httpx>=0.23.0",
     "jinja2>=2.11.2",
     "python-multipart>=0.0.7",
     "uvicorn[standard]>=0.12.0",
 ]
 files = [
-    {file = "fastapi-0.115.0-py3-none-any.whl", hash = "sha256:17ea427674467486e997206a5ab25760f6b09e069f099b96f5b55a32fb6f1631"},
-    {file = "fastapi-0.115.0.tar.gz", hash = "sha256:f93b4ca3529a8ebc6fc3fcf710e5efa8de3df9b41570958abf1d97d843138004"},
+    {file = "fastapi-0.115.2-py3-none-any.whl", hash = "sha256:61704c71286579cc5a598763905928f24ee98bfcc07aabe84cfefb98812bbc86"},
+    {file = "fastapi-0.115.2.tar.gz", hash = "sha256:3995739e0b09fa12f984bce8fa9ae197b35d433750d3d312422d846e283697ee"},
 ]
 
 [[package]]

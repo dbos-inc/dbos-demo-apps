@@ -1,3 +1,4 @@
+import re
 from logging.config import fileConfig
 
 from alembic import context
@@ -13,8 +14,14 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# programmatically set the sqlalchemy.url field from DBOS Config
-config.set_main_option("sqlalchemy.url", get_dbos_database_url())
+# Load the database URL from the DBOS config
+# Alembic requires the % in URL-escaped parameters to itself be escaped to %%.
+escaped_conn_string = re.sub(
+    r"%(?=[0-9A-Fa-f]{2})",
+    "%%",
+    get_dbos_database_url(),
+)
+config.set_main_option("sqlalchemy.url", escaped_conn_string)
 
 # Load metadata for autogeneration
 from earthquake_tracker.schema import metadata
