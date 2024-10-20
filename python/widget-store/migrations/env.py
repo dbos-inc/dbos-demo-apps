@@ -1,3 +1,4 @@
+import re
 from logging.config import fileConfig
 
 from alembic import context
@@ -14,7 +15,13 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Load the database URL from the DBOS config
-config.set_main_option("sqlalchemy.url", get_dbos_database_url())
+# Alembic requires the % in URL-escaped parameters to itself be escaped to %%.
+escaped_conn_string = re.sub(
+    r"%(?=[0-9A-Fa-f]{2})",
+    "%%",
+    get_dbos_database_url(),
+)
+config.set_main_option("sqlalchemy.url", escaped_conn_string)
 
 # Import our schema for migration autogeneration
 from widget_store.schema import metadata
