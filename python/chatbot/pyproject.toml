@@ -6,7 +6,7 @@ authors = [
     {name = "Peter Kraft", email = "petereliaskraft@gmail.com"},
 ]
 dependencies = [
-    "dbos>=0.11.0a2",
+    "dbos>=0.13.0a0",
     "langchain-core>=0.3.9",
     "langgraph>=0.2.34",
     "langchain-openai>=0.2.2",
