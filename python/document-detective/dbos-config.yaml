@@ -13,7 +13,6 @@ database:
   port: 5432
   username: postgres
   password: ${PGPASSWORD}
-  app_db_name: document_detective
   migrate:
     - alembic upgrade head
     - python3 migrations/setup_llamaindex.py
