@@ -10,7 +10,7 @@ certifi==2024.8.30
 charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6; platform_system == "Windows" or sys_platform == "win32"
-dbos==0.11.0a2
+dbos==0.13.0a0
 deprecated==1.2.14
 dnspython==2.6.1
 email-validator==2.2.0
@@ -46,7 +46,8 @@ pathspec==0.12.1
 platformdirs==4.2.2
 protobuf==4.25.4
 psutil==6.0.0
-psycopg==3.2.2
+psycopg-binary==3.2.3; implementation_name != "pypy"
+psycopg[binary]==3.2.3
 pydantic==2.8.2
 pydantic-core==2.20.1
 pygments==2.18.0
