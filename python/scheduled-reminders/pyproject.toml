@@ -2,7 +2,7 @@
 name = "scheduled-reminders"
 version = "0.1.0"
 dependencies = [
-    "dbos>=0.11.0a2",
+    "dbos>=0.13.0a0",
     "sendgrid>=6.11.0",
 ]
 requires-python = ">=3.9"
