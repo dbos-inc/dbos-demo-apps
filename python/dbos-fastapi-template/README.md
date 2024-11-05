@@ -50,7 +50,7 @@ dbos-cloud db local
 <details>
 <summary><strong>Starting Postgres with Docker</strong></summary>
 
-If you have Docker, you can start a Postgres locally with:
+If you have Docker, you can start a Postgres database locally with:
 
 ```shell
 export PGPASSWORD=dbos
