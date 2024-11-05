@@ -7,7 +7,7 @@ name: dbos-fastapi-template
 language: python
 runtimeConfig:
   start:
-    - "fastapi run dbos_fastapi_template/main.py"
+    - "fastapi run app/main.py"
 database:
   hostname: localhost
   port: 5432

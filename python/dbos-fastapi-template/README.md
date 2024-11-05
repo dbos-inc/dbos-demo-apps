@@ -1,7 +1,7 @@
 # Welcome to DBOS!
 
 This is a template app built with DBOS and FastAPI.
-Check out the source code in `<app-name>/main.py`!
+Check out the source code in `app/main.py`!
 
 ### Getting Started
 

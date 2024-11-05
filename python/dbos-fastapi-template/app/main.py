@@ -53,6 +53,9 @@ def readme() -> HTMLResponse:
                 Visit <code class="bg-gray-100 px-1 rounded"><a href="/hello" class="text-blue-600 hover:underline">/hello</a></code> to see a "Hello, World!" message.
             </p>
             <p class="mb-4">
+                To manage your DBOS applications, visit the <a href="https://console.dbos.dev" class="text-blue-600 hover:underline">cloud console</a>.
+            </p>
+            <p class="mb-4">
                 To learn more about DBOS, check out the <a href="https://docs.dbos.dev" class="text-blue-600 hover:underline">docs</a>.
             </p>
         </body>
