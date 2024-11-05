@@ -49,13 +49,10 @@ def readme() -> HTMLResponse:
         <body class="font-sans text-gray-800 p-6 max-w-2xl mx-auto">
             <h1 class="text-xl font-semibold mb-4">Welcome to DBOS!</h1>
             <p class="mb-4">
-                This is a template built with DBOS and FastAPI.
+                This is a template built with DBOS and FastAPI. Visit <code class="bg-gray-100 px-1 rounded"><a href="/hello" class="text-blue-600 hover:underline">/hello</a></code> to see a "Hello, World!" message.
             </p>
             <p class="mb-4">
-                Visit <code class="bg-gray-100 px-1 rounded"><a href="/hello" class="text-blue-600 hover:underline">/hello</a></code> to see a "Hello, World!" message.
-            </p>
-            <p class="mb-4">
-                To get started, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, then visit the <a href="https://console.dbos.dev/applications" class="text-blue-600 hover:underline">cloud console</a> to redeploy this app.
+                To get started building, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, then visit the <a href="https://console.dbos.dev/applications" class="text-blue-600 hover:underline">cloud console</a> to redeploy your app.
             </p>
             <p class="mb-4">
                 To learn more about DBOS, check out the <a href="https://docs.dbos.dev" class="text-blue-600 hover:underline">docs</a>.
