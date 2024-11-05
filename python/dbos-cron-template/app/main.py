@@ -13,7 +13,7 @@ counter = 0
 # Learn more about scheduled functions here: https://docs.dbos.dev/python/tutorials/scheduled-workflows
 
 @DBOS.scheduled("* * * * *")
-@DBOS.workflow()
+@DBOS.step()
 def scheduled_function(scheduled_time, actual_time):
     global counter
     counter += 1
