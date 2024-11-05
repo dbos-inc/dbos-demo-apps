@@ -26,7 +26,7 @@ To run this app locally, you need to connect it to a Postgres database.
 You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
 
 <details>
-<summary>Connecting to a DBOS Cloud Postgres database</summary>
+<summary><strong>Connecting to a DBOS Cloud Postgres database</strong></summary>
 
 First install the DBOS Cloud CLI (requires Node):
 
@@ -48,7 +48,7 @@ dbos-cloud db local
 </details>
 
 <details>
-<summary>Starting Postgres with Docker</summary>
+<summary><strong>Starting Postgres with Docker</strong></summary>
 
 If you have Docker, you can start a Postgres locally with:
 
