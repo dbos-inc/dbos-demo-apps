@@ -57,20 +57,3 @@ dbos start
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your app!
-
-### Deploying to DBOS Cloud
-
-To deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then, run this command to deploy your app:
-
-```shell
-dbos-cloud app deploy
-```
-
-This command outputs a URL: visit it to see your app!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
