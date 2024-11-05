@@ -10,6 +10,7 @@ app = FastAPI()
 DBOS(fastapi=app)
 
 # This is a simple DBOS workflow with two steps.
+# It is served via FastAPI from the /hello endpoint.
 # You can use workflows to build crashproof applications.
 # Learn more here: https://docs.dbos.dev/python/programming-guide
 
@@ -42,6 +43,7 @@ def readme() -> HTMLResponse:
         <html lang="en">
         <head>
             <title>Welcome to DBOS!</title>
+            <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
             <script src="https://cdn.tailwindcss.com"></script>
         </head>
         <body class="font-sans text-gray-800 p-6 max-w-2xl mx-auto">
@@ -53,7 +55,7 @@ def readme() -> HTMLResponse:
                 Visit <code class="bg-gray-100 px-1 rounded"><a href="/hello" class="text-blue-600 hover:underline">/hello</a></code> to see a "Hello, World!" message.
             </p>
             <p class="mb-4">
-                To manage your DBOS applications, visit the <a href="https://console.dbos.dev" class="text-blue-600 hover:underline">cloud console</a>.
+                To get started, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, then visit the <a href="https://console.dbos.dev/applications" class="text-blue-600 hover:underline">cloud console</a> to redeploy this app.
             </p>
             <p class="mb-4">
                 To learn more about DBOS, check out the <a href="https://docs.dbos.dev" class="text-blue-600 hover:underline">docs</a>.
