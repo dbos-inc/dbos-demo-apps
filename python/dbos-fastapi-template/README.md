@@ -28,7 +28,7 @@ You can use a DBOS Cloud database, a Docker container, or a local Postgres insta
 <details>
 <summary>Connecting to a DBOS Cloud Postgres database</summary>
 
-To use a DBOS Cloud database, first install the DBOS Cloud CLI (requires Node):
+First install the DBOS Cloud CLI (requires Node):
 
 ```shell
 npm i -g @dbos-inc/dbos-cloud
@@ -50,7 +50,7 @@ dbos-cloud db local
 <details>
 <summary>Starting Postgres with Docker</summary>
 
-Alternatively, if you have Docker, you can start a Postgres locally with:
+If you have Docker, you can start a Postgres locally with:
 
 ```shell
 export PGPASSWORD=dbos
