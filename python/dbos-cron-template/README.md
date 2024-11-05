@@ -1,6 +1,6 @@
 # Welcome to DBOS!
 
-This is a template app built with DBOS and FastAPI.
+This is a template application using DBOS to run some code on a (cron) schedule.
 
 ### Getting Started
 
@@ -57,7 +57,6 @@ export PGPASSWORD=dbos
 python3 start_postgres_docker.py
 ```
 </details>
-
 
 After connecting to Postgres, create a virtual environment and install dependencies:
 
