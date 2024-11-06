@@ -1,10 +1,10 @@
 # Welcome to DBOS!
 
-This is a template application using DBOS to run some code on a (cron) schedule.
+This is a template application using DBOS to run code on a (cron) schedule.
 
 ### Getting Started
 
-To get started building, edit this app's code in `app/main.py`.
+To get started building, edit `app/main.py`.
 Then, commit your changes and visit the [cloud console](https://console.dbos.dev/applications) to redeploy it from GitHub!
 
 You can also deploy this app via the DBOS Cloud CLI.
