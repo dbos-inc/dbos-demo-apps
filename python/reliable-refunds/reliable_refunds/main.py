@@ -1,15 +1,12 @@
-# In this app, we use DBOS and LlamaIndex to build and serverlessly deploy a chat agent that can index PDF documents and answer questions about them.
-
-# First, let's do imports and initialize DBOS.
-
+import json
 import os
 
-from dbos import DBOS, load_config
+from dbos import DBOS, DBOSConfiguredInstance
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from llama_index.core import Settings, StorageContext, VectorStoreIndex
-from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel
+from swarm import Agent, Swarm
+from swarm.repl.repl import pretty_print_messages
 
 from .schema import chat_history
 
@@ -17,36 +14,38 @@ app = FastAPI()
 DBOS(fastapi=app)
 
 
-# Next, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
+@DBOS.dbos_class()
+class DurableSwarm(Swarm, DBOSConfiguredInstance):
+    def __init__(self, client=None):
+        Swarm.__init__(self, client)
+        DBOSConfiguredInstance.__init__(self, "openai_client")
+
+    @DBOS.step()
+    def get_chat_completion(self, *args, **kwargs):
+        return super().get_chat_completion(*args, **kwargs)
+
+    @DBOS.workflow()
+    def run(self, *args, **kwargs):
+        response = super().run(*args, **kwargs)
+        pretty_print_messages(response.messages)
+        return response
 
 
-def configure_index():
-    Settings.chunk_size = 512
-    dbos_config = load_config()
-    db = dbos_config["database"]
-    vector_store = PGVectorStore.from_params(
-        database=db["app_db_name"],
-        host=db["hostname"],
-        password=db["password"],
-        port=db["port"],
-        user=db["username"],
-        perform_setup=False,  # Set up during migration step
-    )
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    index = VectorStoreIndex([], storage_context=storage_context)
-    chat_engine = index.as_chat_engine()
-    return index, chat_engine
+def get_weather(location, time="now"):
+    """Get the current weather in a given location. Location MUST be a city."""
+    return json.dumps({"location": location, "temperature": "65", "time": time})
 
 
-index, chat_engine = configure_index()
+weather_agent = Agent(
+    name="Weather Agent",
+    instructions="You are a helpful agent.",
+    functions=[get_weather],
+)
 
 
-# Now, let's chat!
+client = DurableSwarm()
 
-# Each time we get a chat message, we call this workflow with three steps:
-# 1. Store the incoming chat message in Postgres.
-# 2. Query LlamaIndex to respond to the message using RAG.
-# 3. Store the response in Postgres.
+messages = []
 
 
 class ChatSchema(BaseModel):
@@ -57,9 +56,13 @@ class ChatSchema(BaseModel):
 @DBOS.workflow()
 def chat_workflow(chat: ChatSchema):
     insert_chat(chat.message, True)
-    response = query_model(chat.message)
-    insert_chat(response, False)
-    return {"content": response, "isUser": True}
+    messages.append({"role": "user", "content": chat.message})
+    response = client.run(agent=weather_agent, messages=messages)
+    messages.extend(response.messages)
+    content = [r["content"] for r in response.messages if r["content"]]
+    for c in content:
+        insert_chat(c, False)
+    return {"content": "\n".join(content), "isUser": True}
 
 
 @DBOS.transaction()
@@ -67,18 +70,6 @@ def insert_chat(content: str, is_user: bool):
     DBOS.sql_session.execute(
         chat_history.insert().values(content=content, is_user=is_user)
     )
-
-
-@DBOS.step()
-def query_model(message: str) -> str:
-    return str(chat_engine.chat(message))
-
-
-# Let's also write a history endpoint that retrieves all past chats
-# from the database.
-
-# This function is called when we open up the chatbot so it
-# can display your chat history.
 
 
 @app.get("/history")
@@ -91,11 +82,6 @@ def get_chats():
     stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
     result = DBOS.sql_session.execute(stmt)
     return [{"content": row.content, "isUser": row.is_user} for row in result]
-
-
-# Finally, let's serve the app's frontend from an HTML file using FastAPI.
-# In production, we recommend using DBOS primarily for the backend,
-# with your frontend deployed elsewhere.
 
 
 @app.get("/")
