@@ -13,6 +13,7 @@ database:
   port: 5432
   username: postgres
   password: ${PGPASSWORD}
+  app_db_name: scheduled_reminders
   migrate:
     - echo "no migrations"
 telemetry:

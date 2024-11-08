@@ -69,20 +69,42 @@ def update_purchase_status(order_id: int, status: OrderStatus):
     DBOS.sql_session.execute(query)
 
 
+admin_email = os.environ.get("ADMIN_EMAIL", None)
+if admin_email is None:
+    raise Exception("Error: ADMIN_EMAIL is not set")
+
+callback_domain = os.environ.get("CALLBACK_DOMAIN", None)
+if callback_domain is None:
+    raise Exception("Error: CALLBACK_DOMAIN is not set")
+
+@DBOS.workflow()
+def approval_workflow():
+    workflow_id = DBOS.workflow_id
+    send_email(workflow_id)
+    status = DBOS.recv(timeout_seconds=120)
+    if status == "approve":
+        DBOS.logger.info("Refund approved :)")
+        return "Approved"
+    else:
+        DBOS.logger.info("Refund rejected :/")
+        return "Rejected"
+
 @DBOS.step()
 def send_email(purchase: Purchase):
-    message = f"""
+    content = "".join([callback_domain, f"approval/{DBOS.workflow_id}"])
+    msg = f"""
     Can you approve or deny this refund request?
     Order ID: {purchase.order_id}
     Item: {purchase.item}
     Order Date: {purchase.order_date}
     Price: {purchase.price}
+    Click <a href='{content}/approve'>approve</a> or <a href='{content}/reject'>reject</a>.
     """
     message = Mail(
         from_email=from_email,
         to_emails=admin_email,
         subject="Refund Validation",
-        html_content=message,
+        html_content=msg,
     )
     email_client = SendGridAPIClient(sg_api_key)
     email_client.send(message)
@@ -97,7 +119,6 @@ def process_refund(purchase_json: str):
     update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
     send_email(purchase)
     update_purchase_status(purchase.order_id, OrderStatus.REFUNDED)
-
 
 refund_agent = Agent(
     name="Refund Agent",
@@ -165,3 +186,8 @@ def frontend():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return HTMLResponse(html)
+
+@app.get("/approval/{workflow_id}/{status}")
+def approval_endpoint(workflow_id: str, status: str):
+    DBOS.send(workflow_id, status)
+    return {"message": "Thank you for your response!"}
