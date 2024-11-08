@@ -45,8 +45,6 @@ weather_agent = Agent(
 
 client = DurableSwarm()
 
-messages = []
-
 
 class ChatSchema(BaseModel):
     message: str
@@ -55,33 +53,38 @@ class ChatSchema(BaseModel):
 @app.post("/chat")
 @DBOS.workflow()
 def chat_workflow(chat: ChatSchema):
-    insert_chat(chat.message, True)
-    messages.append({"role": "user", "content": chat.message})
+    message = {"role": "user", "content": chat.message}
+    insert_chat(message)
+    messages = get_chats()
     response = client.run(agent=weather_agent, messages=messages)
-    messages.extend(response.messages)
+    for m in response.messages:
+        insert_chat(m)
     content = [r["content"] for r in response.messages if r["content"]]
-    for c in content:
-        insert_chat(c, False)
     return {"content": "\n".join(content), "isUser": True}
 
 
 @DBOS.transaction()
-def insert_chat(content: str, is_user: bool):
+def insert_chat(message: dict):
     DBOS.sql_session.execute(
-        chat_history.insert().values(content=content, is_user=is_user)
+        chat_history.insert().values(message_json=json.dumps(message))
     )
 
 
 @app.get("/history")
 def history_endpoint():
-    return get_chats()
+    messages = get_chats()
+    return [
+        {"content": m["content"], "isUser": m["role"] == "user"}
+        for m in messages
+        if m["content"]
+    ]
 
 
 @DBOS.transaction()
 def get_chats():
     stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
     result = DBOS.sql_session.execute(stmt)
-    return [{"content": row.content, "isUser": row.is_user} for row in result]
+    return [json.loads(row.message_json) for row in result]
 
 
 @app.get("/")

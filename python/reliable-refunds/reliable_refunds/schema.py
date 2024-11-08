@@ -15,8 +15,7 @@ chat_history = Table(
     "chat_history",
     metadata,
     Column("message_id", Integer, primary_key=True, autoincrement=True),
-    Column("content", String, nullable=False),
-    Column("is_user", Boolean, nullable=False),
+    Column("message_json", String, nullable=False),
     Column(
         "created_at",
         BigInteger,
