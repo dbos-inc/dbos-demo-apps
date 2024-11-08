@@ -86,6 +86,7 @@ def send_email(purchase: Purchase):
     )
     email_client = SendGridAPIClient(sg_api_key)
     email_client.send(message)
+    DBOS.logger.info(f"Message sent from {from_email} to {admin_email}")
 
 
 @DBOS.workflow()
@@ -94,7 +95,7 @@ def process_refund(purchase_json: str):
     print(purchase_json)
     print(purchase)
     update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
-    # send_email(purchase)
+    send_email(purchase)
     update_purchase_status(purchase.order_id, OrderStatus.REFUNDED)
 
 
