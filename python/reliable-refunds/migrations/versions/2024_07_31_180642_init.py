@@ -35,7 +35,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "purchases",
-        sa.Column("order_id", sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column("order_id", sa.Integer, primary_key=True),
         sa.Column("item", sa.String, nullable=False),
         sa.Column("order_date", sa.String, nullable=False),
         sa.Column("price", sa.DECIMAL(10, 2), nullable=False),

@@ -13,30 +13,35 @@ base_date = datetime.now()
 # Sample data
 sample_purchases = [
     {
+        "order_id": 1,
         "item": "Laptop Pro X1",
         "order_date": base_date.strftime("%Y-%m-%d"),
         "price": Decimal("1299.99"),
         "order_status": schema.OrderStatus.PURCHASED.value,
     },
     {
+        "order_id": 2,
         "item": "Wireless Headphones",
         "order_date": (base_date - timedelta(days=1)).strftime("%Y-%m-%d"),
         "price": Decimal("89.99"),
         "order_status": schema.OrderStatus.PURCHASED.value,
     },
     {
+        "order_id": 3,
         "item": "Samsung QLED 4K TV ",
         "order_date": (base_date - timedelta(days=2)).strftime("%Y-%m-%-d"),
         "price": Decimal("1199.99"),
         "order_status": schema.OrderStatus.PURCHASED.value,
     },
     {
+        "order_id": 4,
         "item": "Smart Watch Series 5",
         "order_date": (base_date - timedelta(days=3)).strftime("%Y-%m-%d"),
         "price": Decimal("349.99"),
         "order_status": schema.OrderStatus.PURCHASED.value,
     },
     {
+        "order_id": 5,
         "item": "Phone Case",
         "order_date": (base_date - timedelta(days=4)).strftime("%Y-%m-%d"),
         "price": Decimal("19.99"),

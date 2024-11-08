@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Optional
 
 from dbos import DBOS, DBOSConfiguredInstance
 from fastapi import FastAPI
@@ -8,7 +9,7 @@ from pydantic import BaseModel
 from swarm import Agent, Swarm
 from swarm.repl.repl import pretty_print_messages
 
-from .schema import chat_history
+from .schema import Purchase, chat_history, purchases
 
 app = FastAPI()
 DBOS(fastapi=app)
@@ -31,15 +32,28 @@ class DurableSwarm(Swarm, DBOSConfiguredInstance):
         return response
 
 
-def get_weather(location, time="now"):
-    """Get the current weather in a given location. Location MUST be a city."""
-    return json.dumps({"location": location, "temperature": "65", "time": time})
+@DBOS.transaction()
+def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
+    query = purchases.select().where(purchases.c.order_id == order_id)
+    result = DBOS.sql_session.execute(query)
+    row = result.first()
+
+    if row is None:
+        return None
+
+    return Purchase.from_row(row)
 
 
-weather_agent = Agent(
-    name="Weather Agent",
-    instructions="You are a helpful agent.",
-    functions=[get_weather],
+refund_agent = Agent(
+    name="Refund Agent",
+    instructions="""
+    You are a helpful refund agent. You always speak in fluent, natural, conversational language.
+    Take these steps when someone asks for a refund:
+    1. Ask for their order_id
+    2. Look up their order and retrieve the item, order date, and price.
+    Ask them to confirm they want to refund this item.
+    """,
+    functions=[get_purchase_by_id],
 )
 
 
@@ -56,7 +70,7 @@ def chat_workflow(chat: ChatSchema):
     message = {"role": "user", "content": chat.message}
     insert_chat(message)
     messages = get_chats()
-    response = client.run(agent=weather_agent, messages=messages)
+    response = client.run(agent=refund_agent, messages=messages)
     for m in response.messages:
         insert_chat(m)
     return [
