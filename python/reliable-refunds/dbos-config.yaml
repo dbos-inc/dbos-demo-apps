@@ -15,7 +15,7 @@ database:
   password: ${PGPASSWORD}
   migrate:
     - alembic upgrade head
-    - python3 migrations/setup_llamaindex.py
+    - python3 -m migrations.reset_database
 telemetry:
   logs:
     logLevel: INFO
