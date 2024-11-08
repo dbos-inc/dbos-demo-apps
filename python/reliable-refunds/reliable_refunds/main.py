@@ -6,6 +6,8 @@ from dbos import DBOS, DBOSConfiguredInstance
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from swarm import Agent, Swarm
 from swarm.repl.repl import pretty_print_messages
 
@@ -43,6 +45,23 @@ def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
 
     return Purchase.from_row(row)
 
+sg_api_key = os.environ.get("SENDGRID_API_KEY", None)
+if sg_api_key is None:
+    raise Exception("Error: SENDGRID_API_KEY is not set")
+
+from_email = os.environ.get("SENDGRID_FROM_EMAIL", None)
+if from_email is None:
+    raise Exception("Error: SENDGRID_FROM_EMAIL is not set")
+
+@DBOS.step()
+def send_email(to_email: str, subject: str, message: str):
+    message = Mail(
+        from_email=from_email, to_emails=to_email, subject=subject, html_content=message
+    )
+    email_client = SendGridAPIClient(sg_api_key)
+    email_client.send(message)
+    DBOS.logger.info(f"Email sent to {to_email}")
+
 
 refund_agent = Agent(
     name="Refund Agent",
@@ -51,9 +70,10 @@ refund_agent = Agent(
     Take these steps when someone asks for a refund:
     1. Ask for their order_id
     2. Look up their order and retrieve the item, order date, and price.
-    Ask them to confirm they want to refund this item.
+    3. Ask them to confirm they want to refund this item.
+    4. If they confirm, ask for their email address. Then send an email with the subject "Refund Confirmation" and the message "Your refund is being processed. Thank you for shopping with us!"
     """,
-    functions=[get_purchase_by_id],
+    functions=[get_purchase_by_id, send_email],
 )
 
 

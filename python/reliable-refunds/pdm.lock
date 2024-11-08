@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:9ac677cf96b8693dad0b68930c8149e68b3893b658b03868b437ce77e2f65ea5"
+content_hash = "sha256:b051d74d95ef87dcf96cfff0a8d814febcdf45241138cad4440bf32a55c192b6"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -1721,6 +1721,17 @@ files = [
 ]
 
 [[package]]
+name = "python-http-client"
+version = "3.3.7"
+requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+summary = "HTTP REST client, simplified for Python"
+groups = ["default"]
+files = [
+    {file = "python_http_client-3.3.7-py3-none-any.whl", hash = "sha256:ad371d2bbedc6ea15c26179c6222a78bc9308d272435ddf1d5c84f068f249a36"},
+    {file = "python_http_client-3.3.7.tar.gz", hash = "sha256:bf841ee45262747e00dec7ee9971dfb8c7d83083f5713596488d67739170cea0"},
+]
+
+[[package]]
 name = "python-multipart"
 version = "0.0.17"
 requires_python = ">=3.8"
@@ -1900,6 +1911,21 @@ files = [
 ]
 
 [[package]]
+name = "sendgrid"
+version = "6.11.0"
+requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+summary = "Twilio SendGrid library for Python"
+groups = ["default"]
+dependencies = [
+    "python-http-client>=3.2.1",
+    "starkbank-ecdsa>=2.0.1",
+]
+files = [
+    {file = "sendgrid-6.11.0-py3-none-any.whl", hash = "sha256:43ecf5bb742ea5850c7cfe68f5e7d9948772352306d4e83e119899959538b884"},
+    {file = "sendgrid-6.11.0.tar.gz", hash = "sha256:71424b2a97f5a034121ea3b2666c653ba0ed315982f0d57b7851c0c9503dc5ab"},
+]
+
+[[package]]
 name = "shellingham"
 version = "1.5.4"
 requires_python = ">=3.7"
@@ -1978,6 +2004,15 @@ files = [
     {file = "SQLAlchemy-2.0.36-cp313-cp313-win_amd64.whl", hash = "sha256:8c78ac40bde930c60e0f78b3cd184c580f89456dd87fc08f9e3ee3ce8765ce88"},
     {file = "SQLAlchemy-2.0.36-py3-none-any.whl", hash = "sha256:fddbe92b4760c6f5d48162aef14824add991aeda8ddadb3c31d56eb15ca69f8e"},
     {file = "sqlalchemy-2.0.36.tar.gz", hash = "sha256:7f2767680b6d2398aea7082e45a774b2b0767b5c8d8ffb9c8b683088ea9b29c5"},
+]
+
+[[package]]
+name = "starkbank-ecdsa"
+version = "2.2.0"
+summary = "A lightweight and fast pure python ECDSA library"
+groups = ["default"]
+files = [
+    {file = "starkbank-ecdsa-2.2.0.tar.gz", hash = "sha256:9399c3371b899d4a235b68a1ed7919d202fbf024bd2c863ae8ebdad343c2a63a"},
 ]
 
 [[package]]
