@@ -59,8 +59,11 @@ def chat_workflow(chat: ChatSchema):
     response = client.run(agent=weather_agent, messages=messages)
     for m in response.messages:
         insert_chat(m)
-    content = [r["content"] for r in response.messages if r["content"]]
-    return {"content": "\n".join(content), "isUser": True}
+    return [
+        {"content": m["content"], "isUser": m["role"] == "user"}
+        for m in response.messages
+        if m["content"]
+    ]
 
 
 @DBOS.transaction()

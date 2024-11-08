@@ -71,7 +71,7 @@
                     body: JSON.stringify({"message": message}),
                 });
                 const data = await response.json();
-                addMessage(data.content);
+                data.forEach(message => addMessage(message.content, message.isUser));
             } catch (error) {
                 console.error('Error sending message:', error);
             }
