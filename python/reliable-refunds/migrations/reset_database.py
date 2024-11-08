@@ -25,9 +25,9 @@ sample_purchases = [
         "order_status": schema.OrderStatus.PURCHASED.value,
     },
     {
-        "item": "USB-C Cable Pack",
+        "item": "Samsung QLED 4K TV ",
         "order_date": (base_date - timedelta(days=2)).strftime("%Y-%m-%-d"),
-        "price": Decimal("24.99"),
+        "price": Decimal("1199.99"),
         "order_status": schema.OrderStatus.PURCHASED.value,
     },
     {
