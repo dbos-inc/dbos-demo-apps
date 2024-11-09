@@ -83,7 +83,8 @@
 
         function addMessage(message, isUser = false) {
             const messageElement = document.createElement('div');
-            messageElement.className = `mb-3 p-3 rounded-lg ${isUser ? 'bg-sky-200 ml-auto text-right' : 'bg-white'} shadow-sm max-w-fit`;
+            messageElement.className = `mb-3 p-3 rounded-lg ${isUser ? 'bg-sky-200 ml-auto text-right' : 'bg-white'} shadow-sm w-fit`;
+            messageElement.style.maxWidth = '80%';
             messageElement.textContent = message;
             chatHistory.appendChild(messageElement);
             chatHistory.scrollTop = chatHistory.scrollHeight;
