@@ -117,11 +117,13 @@ def send_email(purchase: Purchase):
 @DBOS.workflow()
 def process_refund(purchase_json: str):
     purchase = Purchase.from_dict(json.loads(purchase_json))
-    print(purchase_json)
-    print(purchase)
-    update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
-    DBOS.start_workflow(approval_workflow, purchase)
-    return f"We're reviewing your refund for order_id: {purchase.order_id}. Please check your order status later."
+    if purchase.price > 1000:
+        update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
+        DBOS.start_workflow(approval_workflow, purchase)
+        return f"Because order_id {purchase.order_id} exceeds our cost threshold, your refund request must undergo manual review. Please check your order status later."
+    else:
+        update_purchase_status(purchase.order_id, OrderStatus.REFUNDED)
+        return f"Your refund for order_id {purchase.order_id} has been approved."
 
 refund_agent = Agent(
     name="Refund Agent",
