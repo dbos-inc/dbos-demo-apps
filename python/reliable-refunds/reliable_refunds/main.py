@@ -205,3 +205,8 @@ def frontend():
 def approval_endpoint(workflow_id: str, status: str):
     DBOS.send(workflow_id, status)
     return {"message": "Refund validation complete"}
+
+
+@app.post("/crash")
+def crash():
+    os._exit(1)

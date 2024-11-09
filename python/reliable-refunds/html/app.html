@@ -14,15 +14,33 @@
         .header-bg {
             background-image: linear-gradient(135deg, #667eea 0%, #4ba29e 100%);
         }
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .crash-button:hover {
+            animation: pulse-red 2s infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
     <div class="sticky top-0 header-bg z-10 p-6 shadow-lg">
-        <div class="container mx-auto flex items-center space-x-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-            <h1 class="text-3xl font-semibold text-white tracking-wide">DBOS Customer Service</h1>
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <h1 class="text-3xl font-semibold text-white tracking-wide">DBOS Customer Service</h1>
+            </div>
+            <button
+                id="crash-btn"
+                class="crash-button bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg transition duration-300 ease-in-out transform hover:shadow-xl flex items-center space-x-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>Crash System</span>
+            </button>
         </div>
     </div>
     <div class="flex-1 overflow-hidden flex flex-col">
@@ -51,6 +69,7 @@
         const chatHistory = document.getElementById('chat-history');
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
+        const crashBtn = document.getElementById('crash-btn');
 
         async function fetchChatHistory() {
             try {
@@ -85,6 +104,16 @@
                 console.error('Error sending message:', error);
             }
         }
+
+        crashBtn.addEventListener('click', async () => {
+            try {
+                await fetch('/crash', {
+                    method: 'POST',
+                });
+            } catch (error) {
+                console.error('Error crashing system:', error);
+            }
+        });
 
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
