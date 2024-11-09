@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 from decimal import Decimal
+import json
 
 from dbos import get_dbos_database_url
 from sqlalchemy import create_engine, delete
@@ -49,6 +50,12 @@ sample_purchases = [
     },
 ]
 
+# Initial chat message
+initial_chat = {
+    "role": "assistant",
+    "content": "Hi there! Do you need help refunding an order?",
+}
+
 engine = create_engine(get_dbos_database_url())
 
 with engine.connect() as connection:
@@ -58,6 +65,10 @@ with engine.connect() as connection:
 
     # Create the insert statement
     insert_stmt = schema.purchases.insert().values(sample_purchases)
+    connection.execute(insert_stmt)
+
+    # Insert the initial chat message
+    insert_stmt = schema.chat_history.insert().values(message_json=json.dumps(initial_chat))
     connection.execute(insert_stmt)
 
     # Commit the transaction
