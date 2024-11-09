@@ -68,7 +68,9 @@ with engine.connect() as connection:
     connection.execute(insert_stmt)
 
     # Insert the initial chat message
-    insert_stmt = schema.chat_history.insert().values(message_json=json.dumps(initial_chat))
+    insert_stmt = schema.chat_history.insert().values(
+        message_json=json.dumps(initial_chat)
+    )
     connection.execute(insert_stmt)
 
     # Commit the transaction

@@ -77,6 +77,7 @@ callback_domain = os.environ.get("CALLBACK_DOMAIN", None)
 if callback_domain is None:
     raise Exception("Error: CALLBACK_DOMAIN is not set")
 
+
 @DBOS.workflow()
 def approval_workflow(purchase: Purchase):
     send_email(purchase)
@@ -89,6 +90,7 @@ def approval_workflow(purchase: Purchase):
         DBOS.logger.info("Refund rejected :/")
         update_purchase_status(purchase.order_id, OrderStatus.REFUND_REJECTED)
         return "Rejected"
+
 
 @DBOS.step()
 def send_email(purchase: Purchase):
@@ -116,7 +118,11 @@ def send_email(purchase: Purchase):
 
 @DBOS.workflow()
 def process_refund(purchase_json: str):
-    purchase = Purchase.from_dict(json.loads(purchase_json))
+    try:
+        purchase = Purchase.from_dict(json.loads(purchase_json))
+    except Exception as e:
+        DBOS.logger.error(f"Input validation failed for {purchase_json}: {e}")
+        return "Refund failed"
     if purchase.price > 1000:
         update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
         DBOS.start_workflow(approval_workflow, purchase)
@@ -124,6 +130,7 @@ def process_refund(purchase_json: str):
     else:
         update_purchase_status(purchase.order_id, OrderStatus.REFUNDED)
         return f"Your refund for order_id {purchase.order_id} has been approved."
+
 
 refund_agent = Agent(
     name="Refund Agent",
@@ -192,6 +199,7 @@ def frontend():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return HTMLResponse(html)
+
 
 @app.get("/approval/{workflow_id}/{status}")
 def approval_endpoint(workflow_id: str, status: str):
