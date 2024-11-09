@@ -159,7 +159,7 @@ def chat_workflow(chat: ChatSchema):
     return [
         {"content": m["content"], "isUser": m["role"] == "user"}
         for m in response.messages
-        if m["content"]
+        if m["content"] and m["role"] != "tool"
     ]
 
 
@@ -176,7 +176,7 @@ def history_endpoint():
     return [
         {"content": m["content"], "isUser": m["role"] == "user"}
         for m in messages
-        if m["content"]
+        if m["content"] and m["role"] != "tool"
     ]
 
 
@@ -196,4 +196,4 @@ def frontend():
 @app.get("/approval/{workflow_id}/{status}")
 def approval_endpoint(workflow_id: str, status: str):
     DBOS.send(workflow_id, status)
-    return {"message": "Thank you for your response!"}
+    return {"message": "Refund validation complete"}
