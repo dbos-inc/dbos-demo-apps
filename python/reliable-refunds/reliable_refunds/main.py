@@ -122,7 +122,7 @@ def process_refund(purchase_json: str):
         purchase = Purchase.from_dict(json.loads(purchase_json))
     except Exception as e:
         DBOS.logger.error(f"Input validation failed for {purchase_json}: {e}")
-        return "Refund failed"
+        return "We're unable to process your refund. Please check your input and try again."
     if purchase.price > 1000:
         update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
         DBOS.start_workflow(approval_workflow, purchase)

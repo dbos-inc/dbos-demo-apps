@@ -12,7 +12,7 @@
             font-family: 'Poppins', sans-serif;
         }
         .header-bg {
-            background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-image: linear-gradient(135deg, #667eea 0%, #4ba29e 100%);
         }
     </style>
 </head>
@@ -30,9 +30,19 @@
             <!-- Chat messages will be inserted here -->
         </div>
         <form id="chat-form" class="p-4 bg-white shadow-inner">
-            <div class="flex">
-                <input type="text" id="message-input" placeholder="Type your message..." class="flex-1 p-3 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                <button type="submit" class="bg-indigo-500 text-white px-6 py-3 rounded-r-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200">Send</button>
+            <div class="flex items-center space-x-2">
+                <input
+                    type="text"
+                    id="message-input"
+                    placeholder="Type your message..."
+                    class="flex-1 p-3 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-sky-400"
+                />
+                <button
+                    type="submit"
+                    class="bg-sky-500 text-white px-6 py-3 rounded-lg text-base hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-400 transition duration-200"
+                >
+                    Send
+                </button>
             </div>
         </form>
     </div>
@@ -54,8 +64,7 @@
 
         function addMessage(message, isUser = false) {
             const messageElement = document.createElement('div');
-            messageElement.className = `mb-3 p-3 rounded-lg ${isUser ? 'bg-indigo-100 ml-auto text-right' : 'bg-white'} shadow-sm`;
-            messageElement.style.maxWidth = '80%';
+            messageElement.className = `mb-3 p-3 rounded-lg ${isUser ? 'bg-sky-200 ml-auto text-right' : 'bg-white'} shadow-sm max-w-fit`;
             messageElement.textContent = message;
             chatHistory.appendChild(messageElement);
             chatHistory.scrollTop = chatHistory.scrollHeight;
