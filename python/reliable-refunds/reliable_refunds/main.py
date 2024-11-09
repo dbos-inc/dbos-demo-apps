@@ -78,27 +78,30 @@ if callback_domain is None:
     raise Exception("Error: CALLBACK_DOMAIN is not set")
 
 @DBOS.workflow()
-def approval_workflow():
-    workflow_id = DBOS.workflow_id
-    send_email(workflow_id)
+def approval_workflow(purchase: Purchase):
+    send_email(purchase)
     status = DBOS.recv(timeout_seconds=120)
     if status == "approve":
         DBOS.logger.info("Refund approved :)")
+        update_purchase_status(purchase.order_id, OrderStatus.REFUNDED)
         return "Approved"
     else:
         DBOS.logger.info("Refund rejected :/")
+        update_purchase_status(purchase.order_id, OrderStatus.REFUND_REJECTED)
         return "Rejected"
 
 @DBOS.step()
 def send_email(purchase: Purchase):
-    content = "".join([callback_domain, f"approval/{DBOS.workflow_id}"])
+    content = f"{callback_domain}/approval/{DBOS.workflow_id}"
     msg = f"""
-    Can you approve or deny this refund request?
-    Order ID: {purchase.order_id}
-    Item: {purchase.item}
-    Order Date: {purchase.order_date}
-    Price: {purchase.price}
-    Click <a href='{content}/approve'>approve</a> or <a href='{content}/reject'>reject</a>.
+    <p>
+        Can you approve or deny this refund request? <br />
+        Order ID: {purchase.order_id} <br />
+        Item: {purchase.item} <br />
+        Order Date: {purchase.order_date} <br />
+        Price: {purchase.price} <br />
+        Click <a href='{content}/approve'>approve</a> or <a href='{content}/reject'>reject</a>.
+    </p>
     """
     message = Mail(
         from_email=from_email,
@@ -117,8 +120,8 @@ def process_refund(purchase_json: str):
     print(purchase_json)
     print(purchase)
     update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
-    send_email(purchase)
-    update_purchase_status(purchase.order_id, OrderStatus.REFUNDED)
+    DBOS.start_workflow(approval_workflow, purchase)
+    return f"We're reviewing your refund for order_id: {purchase.order_id}. Please check your order status later."
 
 refund_agent = Agent(
     name="Refund Agent",
@@ -129,6 +132,7 @@ refund_agent = Agent(
     2. Look up their order and retrieve the item, order date, and price.
     3. Ask them to confirm they want to refund this item.
     4. If they confirm, process the refund with their full purchase information.
+    If the customer asks for the status of a refund, look up their order and retrieve the item, order date, and price.
     """,
     functions=[get_purchase_by_id, process_refund],
 )
