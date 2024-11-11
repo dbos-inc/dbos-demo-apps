@@ -17,6 +17,7 @@ from .schema import OrderStatus, Purchase, chat_history, purchases
 
 # Get the directory containing the script
 script_dir = os.path.dirname(os.path.abspath(__file__))
+html_dir = os.path.join(os.path.dirname(script_dir), "html")
 
 app = FastAPI()
 DBOS(fastapi=app)
@@ -134,11 +135,7 @@ def approval_workflow(purchase: Purchase):
 @DBOS.step()
 def send_email(purchase: Purchase):
     content = f"{callback_domain}/approval/{DBOS.workflow_id}"
-    msg = Template(
-        Path(
-            os.path.join(os.path.dirname(script_dir), "html", "email.html")
-        ).read_text()
-    ).substitute(
+    msg = Template(Path(os.path.join(html_dir, "email.html")).read_text()).substitute(
         purchaseid=purchase.order_id,
         purchaseitem=purchase.item,
         orderdate=purchase.order_date,
@@ -227,7 +224,11 @@ def frontend():
 @app.get("/approval/{workflow_id}/{status}")
 def approval_endpoint(workflow_id: str, status: str):
     DBOS.send(workflow_id, status)
-    return {"message": "Refund validation complete"}
+    msg = Template(Path(os.path.join(html_dir, "confirm.html")).read_text()).substitute(
+        result=status,
+        wfid=workflow_id,
+    )
+    return HTMLResponse(msg)
 
 
 @app.post("/reset")
