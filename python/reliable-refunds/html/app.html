@@ -32,15 +32,26 @@
                 </svg>
                 <h1 class="text-3xl font-semibold text-white tracking-wide">DBOS Customer Service</h1>
             </div>
-            <button
-                id="crash-btn"
-                class="crash-button bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg transition duration-300 ease-in-out transform hover:shadow-xl flex items-center space-x-2"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <span>Crash System</span>
-            </button>
+            <div class="flex items-center space-x-4">
+                <button
+                    id="reset-btn"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg transition duration-300 ease-in-out transform hover:shadow-xl flex items-center space-x-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Reset</span>
+                </button>
+                <button
+                    id="crash-btn"
+                    class="crash-button bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg transition duration-300 ease-in-out transform hover:shadow-xl flex items-center space-x-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Crash System</span>
+                </button>
+            </div>
         </div>
     </div>
     <div class="flex-1 overflow-hidden flex flex-col">
@@ -70,6 +81,7 @@
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
         const crashBtn = document.getElementById('crash-btn');
+        const resetBtn = document.getElementById('reset-btn');
 
         async function fetchChatHistory() {
             try {
@@ -113,6 +125,17 @@
                 });
             } catch (error) {
                 console.error('Error crashing system:', error);
+            }
+        });
+
+        resetBtn.addEventListener('click', async () => {
+            try {
+                await fetch('/reset', {
+                    method: 'POST',
+                });
+                window.location.reload();
+            } catch (error) {
+                console.error('Error resetting system:', error);
             }
         });
 

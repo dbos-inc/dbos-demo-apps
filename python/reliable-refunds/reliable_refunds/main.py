@@ -201,6 +201,15 @@ def approval_endpoint(workflow_id: str, status: str):
     return {"message": "Refund validation complete"}
 
 
+@app.post("/reset")
+@DBOS.transaction()
+def reset():
+    DBOS.sql_session.execute(chat_history.delete())
+    DBOS.sql_session.execute(
+        purchases.update().values(order_status=OrderStatus.PURCHASED.value)
+    )
+
+
 @app.post("/crash")
 def crash():
     os._exit(1)
