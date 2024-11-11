@@ -69,10 +69,10 @@ def refund_agent():
     You are a helpful refund agent. You always speak in fluent, natural, conversational language.
     Take these steps when someone asks for a refund:
     1. Ask for their order_id if they haven't provided it.
-    2. Look up their order using get_purchase_by_id and retrieve the item, order date, and price.
+    2. Look up their order_id using get_purchase_by_id and retrieve the item, order date, and price.
     3. Ask them to confirm they want to refund this item.
-    4. If they confirm, process the refund with their full purchase information using process_refund.
-    If the customer asks for the status of an order or refund, look up their order using get_purchase_by_id and retrieve its latest status.
+    4. If they confirm, process the refund for their order_id using process_refund.
+    If the customer asks for the status of an order or refund, look up their order_id using get_purchase_by_id and retrieve its latest status.
     """,
         functions=[get_purchase_by_id, process_refund],
     )
@@ -94,11 +94,10 @@ def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
 
 
 @DBOS.workflow()
-def process_refund(purchase_json: str):
-    try:
-        purchase = Purchase.from_dict(json.loads(purchase_json))
-    except Exception as e:
-        DBOS.logger.error(f"Input validation failed for {purchase_json}: {e}")
+def process_refund(order_id: int):
+    purchase = get_purchase_by_id(order_id)
+    if purchase is None:
+        DBOS.logger.error(f"Refunding invalid order {order_id}")
         return "We're unable to process your refund. Please check your input and try again."
     DBOS.logger.info(f"Processing refund for purchase {purchase}")
     if purchase.price > 1000:
