@@ -1,5 +1,7 @@
 import json
 import os
+from pathlib import Path
+from string import Template
 from typing import Optional
 
 from dbos import DBOS, DBOSConfiguredInstance
@@ -12,6 +14,9 @@ from swarm import Agent, Swarm
 from swarm.repl.repl import pretty_print_messages
 
 from .schema import OrderStatus, Purchase, chat_history, purchases
+
+# Get the directory containing the script
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 app = FastAPI()
 DBOS(fastapi=app)
@@ -130,16 +135,18 @@ def approval_workflow(purchase: Purchase):
 @DBOS.step()
 def send_email(purchase: Purchase):
     content = f"{callback_domain}/approval/{DBOS.workflow_id}"
-    msg = f"""
-    <p>
-        Can you approve or deny this refund request? <br />
-        Order ID: {purchase.order_id} <br />
-        Item: {purchase.item} <br />
-        Order Date: {purchase.order_date} <br />
-        Price: {purchase.price} <br />
-        Click <a href='{content}/approve'>approve</a> or <a href='{content}/reject'>reject</a>.
-    </p>
-    """
+    msg = Template(
+        Path(
+            os.path.join(os.path.dirname(script_dir), "html", "email.html")
+        ).read_text()
+    ).substitute(
+        purchaseid=purchase.order_id,
+        purchaseitem=purchase.item,
+        orderdate=purchase.order_date,
+        price=purchase.price,
+        content=content,
+    )
+
     message = Mail(
         from_email=from_email,
         to_emails=admin_email,
