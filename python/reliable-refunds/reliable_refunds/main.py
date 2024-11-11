@@ -53,6 +53,10 @@ if callback_domain is None:
     raise Exception("Error: CALLBACK_DOMAIN is not set")
 
 
+# This is our refund agent. It follows these instructions to process refunds.
+# It uses two tools: one to look up order status, one to actually process refunds.
+
+
 def refund_agent():
     return Agent(
         name="Refund Agent",
@@ -69,12 +73,19 @@ def refund_agent():
     )
 
 
+# This tool lets the agent look up the details of an order given its ID.
+
+
 @DBOS.transaction()
 def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
     query = purchases.select().where(purchases.c.order_id == order_id)
     result = DBOS.sql_session.execute(query)
     row = result.first()
     return Purchase.from_row(row) if row is not None else None
+
+
+# This tool processes a refund for an order. If the order exceeds a cost threshold,
+# it escalates to manual review.
 
 
 @DBOS.workflow()
@@ -93,6 +104,10 @@ def process_refund(purchase_json: str):
         return f"Your refund for order_id {purchase.order_id} has been approved."
 
 
+# This workflow manages manual review. It sends an email to a reviewer, then waits up to a week
+# for the reviewer to approve or deny the refund request.
+
+
 @DBOS.workflow()
 def approval_workflow(purchase: Purchase):
     send_email(purchase)
@@ -105,6 +120,10 @@ def approval_workflow(purchase: Purchase):
         DBOS.logger.info("Refund rejected :/")
         update_purchase_status(purchase.order_id, OrderStatus.REFUND_REJECTED)
         return "Rejected"
+
+
+# This function sends an email to a manual reviewer. The email contains links that send notifications
+# to the approval workflow to approve or deny a refund.
 
 
 @DBOS.step()
@@ -129,6 +148,9 @@ def send_email(purchase: Purchase):
     email_client = SendGridAPIClient(sg_api_key)
     email_client.send(message)
     DBOS.logger.info(f"Message sent from {from_email} to {admin_email}")
+
+
+# This function updates the status of a purchase.
 
 
 @DBOS.transaction()
