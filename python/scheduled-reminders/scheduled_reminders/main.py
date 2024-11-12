@@ -31,14 +31,14 @@ DBOS(fastapi=app)
 
 
 @DBOS.workflow()
-def reminder_workflow(to_email: str, send_date: datetime, start_date: datetime):
+def reminder_workflow(
+    to_email: str, send_date: datetime, start_date: datetime, seconds_to_wait: int
+):
     send_email(
         to_email,
         subject="DBOS Reminder Confirmation",
         message=f"Thank you for signing up for DBOS reminders! You will receive a reminder on {send_date}.",
     )
-    days_to_wait = (send_date - start_date).days
-    seconds_to_wait = days_to_wait * 24 * 60 * 60
     DBOS.sleep(seconds_to_wait)
     send_email(
         to_email,
@@ -92,7 +92,11 @@ def email_endpoint(request: RequestSchema):
     send_date = datetime.strptime(request.date, "%Y-%m-%d").date()
     today_date = datetime.now().date()
     with SetWorkflowID(f"{request.email}-{request.date}"):
-        DBOS.start_workflow(reminder_workflow, request.email, send_date, today_date)
+        days_to_wait = (send_date - today_date).days
+        seconds_to_wait = days_to_wait * 24 * 60 * 60
+        DBOS.start_workflow(
+            reminder_workflow, request.email, send_date, today_date, seconds_to_wait
+        )
 
 
 # Finally, let's serve the app's frontend from an HTML file using FastAPI.
