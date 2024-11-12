@@ -1,5 +1,7 @@
 import json
 import os
+from pathlib import Path
+from string import Template
 from typing import Optional
 
 from dbos import DBOS, DBOSConfiguredInstance
@@ -12,6 +14,10 @@ from swarm import Agent, Swarm
 from swarm.repl.repl import pretty_print_messages
 
 from .schema import OrderStatus, Purchase, chat_history, purchases
+
+# Get the directory containing the script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+html_dir = os.path.join(os.path.dirname(script_dir), "html")
 
 app = FastAPI()
 DBOS(fastapi=app)
@@ -64,10 +70,10 @@ def refund_agent():
     You are a helpful refund agent. You always speak in fluent, natural, conversational language.
     Take these steps when someone asks for a refund:
     1. Ask for their order_id if they haven't provided it.
-    2. Look up their order and retrieve the item, order date, and price.
+    2. Look up their order_id using get_purchase_by_id and retrieve the item, order date, and price.
     3. Ask them to confirm they want to refund this item.
-    4. If they confirm, process the refund with their full purchase information.
-    If the customer asks for the status of a refund, look up their order and retrieve the item, order date, and price.
+    4. If they confirm, process the refund for their order_id using process_refund.
+    If the customer asks for the status of an order or refund, look up their order_id using get_purchase_by_id and retrieve its latest status.
     """,
         functions=[get_purchase_by_id, process_refund],
     )
@@ -89,12 +95,12 @@ def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
 
 
 @DBOS.workflow()
-def process_refund(purchase_json: str):
-    try:
-        purchase = Purchase.from_dict(json.loads(purchase_json))
-    except Exception as e:
-        DBOS.logger.error(f"Input validation failed for {purchase_json}: {e}")
+def process_refund(order_id: int):
+    purchase = get_purchase_by_id(order_id)
+    if purchase is None:
+        DBOS.logger.error(f"Refunding invalid order {order_id}")
         return "We're unable to process your refund. Please check your input and try again."
+    DBOS.logger.info(f"Processing refund for purchase {purchase}")
     if purchase.price > 1000:
         update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
         DBOS.start_workflow(approval_workflow, purchase)
@@ -129,16 +135,14 @@ def approval_workflow(purchase: Purchase):
 @DBOS.step()
 def send_email(purchase: Purchase):
     content = f"{callback_domain}/approval/{DBOS.workflow_id}"
-    msg = f"""
-    <p>
-        Can you approve or deny this refund request? <br />
-        Order ID: {purchase.order_id} <br />
-        Item: {purchase.item} <br />
-        Order Date: {purchase.order_date} <br />
-        Price: {purchase.price} <br />
-        Click <a href='{content}/approve'>approve</a> or <a href='{content}/reject'>reject</a>.
-    </p>
-    """
+    msg = Template(Path(os.path.join(html_dir, "email.html")).read_text()).substitute(
+        purchaseid=purchase.order_id,
+        purchaseitem=purchase.item,
+        orderdate=purchase.order_date,
+        price=purchase.price,
+        content=content,
+    )
+
     message = Mail(
         from_email=from_email,
         to_emails=admin_email,
@@ -220,7 +224,11 @@ def frontend():
 @app.get("/approval/{workflow_id}/{status}")
 def approval_endpoint(workflow_id: str, status: str):
     DBOS.send(workflow_id, status)
-    return {"message": "Refund validation complete"}
+    msg = Template(Path(os.path.join(html_dir, "confirm.html")).read_text()).substitute(
+        result=status,
+        wfid=workflow_id,
+    )
+    return HTMLResponse(msg)
 
 
 @app.post("/reset")
