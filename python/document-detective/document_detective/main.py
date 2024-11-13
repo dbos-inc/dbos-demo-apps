@@ -95,9 +95,10 @@ def index_document(document_url: HttpUrl) -> int:
             temp_file.seek(0)
             reader = HTMLTagReader(tag="p")
             documents = reader.load_data(temp_file_path)
-    for document in documents:
+    for i, document in enumerate(documents):
+        document.id_ = f"{document_url}-{i}"
         print(document)
-        index.insert(document)
+    index.refresh(documents)
     return len(documents)
 
 
