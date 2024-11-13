@@ -11,7 +11,8 @@ from dbos import DBOS, Queue, WorkflowHandle, load_config
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
-from llama_index.readers.file import PDFReader
+from llama_index.readers.file import HTMLTagReader
+from llama_index.core.node_parser import HTMLNodeParser
 from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel, HttpUrl
 
@@ -82,21 +83,22 @@ def indexing_workflow(urls: List[HttpUrl]):
 # to automatically retry indexing up to 5 times with exponential backoff.
 
 
-@DBOS.step(retries_allowed=True, max_attempts=5)
+@DBOS.step(retries_allowed=False, max_attempts=5)
 def index_document(document_url: HttpUrl) -> int:
     with TemporaryDirectory() as temp_dir:
-        temp_file_path = os.path.join(temp_dir, "file.pdf")
+        temp_file_path = os.path.join(temp_dir, "file.html")
         with open(temp_file_path, "wb") as temp_file:
             with requests.get(document_url, stream=True) as r:
                 r.raise_for_status()
                 for page in r.iter_content(chunk_size=8192):
                     temp_file.write(page)
             temp_file.seek(0)
-            reader = PDFReader()
-            pages = reader.load_data(temp_file_path)
-    for page in pages:
-        index.insert(page)
-    return len(pages)
+            reader = HTMLTagReader(tag="p")
+            documents = reader.load_data(temp_file_path)
+    for document in documents:
+        print(document)
+        index.insert(document)
+    return len(documents)
 
 
 # This is the endpoint for indexing. It starts the indexing workflow in the background
@@ -108,7 +110,7 @@ def index_document(document_url: HttpUrl) -> int:
 """
 curl -X POST "http://localhost:8000/index" \
      -H "Content-Type: application/json" \
-     -d '{"urls": ["https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf", "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/b4266e40-1de6-4a34-9dfb-8632b8bd57e0.pdf", "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/42ede86f-6518-450f-bc88-60211bf39c6d.pdf"]}'
+     -d '{"urls": ["https://docs.dbos.dev/python/tutorials/workflow-tutorial"]}'
 """
 
 
