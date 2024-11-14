@@ -3,16 +3,19 @@
 # First, let's do imports and initialize DBOS.
 
 import os
+from collections import deque
 from tempfile import TemporaryDirectory
 from typing import List
+from urllib.parse import urljoin, urlparse
 
 import requests
+from bs4 import BeautifulSoup
 from dbos import DBOS, Queue, WorkflowHandle, load_config
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
-from llama_index.readers.file import HTMLTagReader
 from llama_index.core.node_parser import HTMLNodeParser
+from llama_index.readers.file import HTMLTagReader
 from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel, HttpUrl
 
@@ -64,15 +67,92 @@ queue = Queue("indexing_queue")
 
 
 @DBOS.workflow()
-def indexing_workflow(urls: List[HttpUrl]):
+def indexing_workflow(docs_url: str):
+    urls = crawl_website(docs_url)
     handles: List[WorkflowHandle] = []
     for url in urls:
         handle = queue.enqueue(index_document, url)
         handles.append(handle)
-    indexed_pages = 0
+    indexed_documents = 0
     for handle in handles:
-        indexed_pages += handle.get_result()
-    DBOS.logger.info(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
+        indexed_documents += handle.get_result()
+    DBOS.logger.info(
+        f"Indexed {len(urls)} pages totaling {indexed_documents} documents"
+    )
+
+
+@DBOS.step()
+def crawl_website(start_url, max_pages=1000):
+    # Normalize the start URL and extract the domain
+    start_url = start_url.rstrip("/")
+    domain = urlparse(start_url).netloc
+
+    # Initialize data structures
+    queue = deque([start_url])
+    discovered_urls = set([start_url])
+    crawled_urls = set()
+
+    # Initialize session for better performance
+    session = requests.Session()
+
+    # Set headers to mimic a browser
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+
+    while queue and len(crawled_urls) < max_pages:
+        current_url = queue.popleft()
+
+        if current_url in crawled_urls:
+            continue
+
+        try:
+            # Mark as crawled
+            crawled_urls.add(current_url)
+
+            # Fetch the page
+            response = session.get(current_url, headers=headers, timeout=10)
+            response.raise_for_status()
+
+            # Parse HTML
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            # Find all links
+            for link in soup.find_all("a", href=True):
+                href = link["href"]
+
+                # Convert relative URL to absolute URL
+                absolute_url = urljoin(current_url, href)
+
+                # Clean the URL
+                parsed = urlparse(absolute_url)
+                absolute_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+                if parsed.query:
+                    absolute_url += f"?{parsed.query}"
+
+                # Skip if not in the same domain or already discovered
+                if (
+                    parsed.netloc != domain
+                    or absolute_url in discovered_urls
+                    or any(
+                        ext in absolute_url.lower()
+                        for ext in [".pdf", ".jpg", ".png", ".gif"]
+                    )
+                ):
+                    continue
+
+                # Add to queue and discovered set
+                queue.append(absolute_url)
+                discovered_urls.add(absolute_url)
+
+                print(f"Discovered: {absolute_url}")
+
+        except Exception as e:
+            print(f"Error crawling {current_url}: {str(e)}")
+            discovered_urls.remove(current_url)
+            continue
+
+    return discovered_urls
 
 
 # This function ingests a PDF document from a URL. It downloads it, scans it into pages,
@@ -102,26 +182,16 @@ def index_document(document_url: HttpUrl) -> int:
     return len(documents)
 
 
-# This is the endpoint for indexing. It starts the indexing workflow in the background
-# on a batch of documents.
+# This is the endpoint for indexing. It starts the indexing workflow in the background.
 
-# To test it out, try this example cURL command to index Apple's SEC 10-K filings
-# for 2021, 2022, and 2023.
-
-"""
-curl -X POST "http://localhost:8000/index" \
-     -H "Content-Type: application/json" \
-     -d '{"urls": ["https://docs.dbos.dev/python/tutorials/workflow-tutorial"]}'
-"""
-
-
-class URLList(BaseModel):
-    urls: List[HttpUrl]
+docs_url = os.environ.get("DOCS_URL", None)
+if docs_url is None:
+    raise Exception("Error: DOCS_URL is not set")
 
 
 @app.post("/index")
-async def index_endpoint(urls: URLList):
-    DBOS.start_workflow(indexing_workflow, urls.urls)
+async def index_endpoint():
+    DBOS.start_workflow(indexing_workflow, docs_url)
 
 
 # Now, let's chat!
