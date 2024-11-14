@@ -238,6 +238,12 @@ def reset():
     DBOS.sql_session.execute(
         purchases.update().values(order_status=OrderStatus.PURCHASED.value)
     )
+    initial_chat = {
+        "role": "assistant",
+        "content": "Hi there! Do you need help refunding an order?",
+    }
+    insert_stmt = chat_history.insert().values(message_json=json.dumps(initial_chat))
+    DBOS.sql_session.execute(insert_stmt)
 
 
 @app.post("/crash")
