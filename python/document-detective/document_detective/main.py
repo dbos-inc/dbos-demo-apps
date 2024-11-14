@@ -71,6 +71,7 @@ def indexing_workflow(docs_url: str):
     urls = crawl_website(docs_url)
     handles: List[WorkflowHandle] = []
     for url in urls:
+        DBOS.logger.info(f"Indexing URL: {url}")
         handle = queue.enqueue(index_document, url)
         handles.append(handle)
     indexed_documents = 0
@@ -145,10 +146,8 @@ def crawl_website(start_url, max_pages=1000):
                 queue.append(absolute_url)
                 discovered_urls.add(absolute_url)
 
-                print(f"Discovered: {absolute_url}")
-
         except Exception as e:
-            print(f"Error crawling {current_url}: {str(e)}")
+            DBOS.logger.warning(f"Error crawling {current_url}: {str(e)}")
             discovered_urls.remove(current_url)
             continue
 
@@ -177,7 +176,7 @@ def index_document(document_url: HttpUrl) -> int:
             documents = reader.load_data(temp_file_path)
     for i, document in enumerate(documents):
         document.id_ = f"{document_url}-{i}"
-        print(document)
+        DBOS.logger.info(f"Indexing document: {str(document)}")
     index.refresh(documents)
     return len(documents)
 
