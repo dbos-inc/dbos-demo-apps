@@ -68,17 +68,17 @@
         <div id="chat-history" class="grow overflow-y-auto p-4">
             <!-- Chat messages will be inserted here -->
         </div>
-        <form id="chat-form" class="sticky bottom-0 p-4 bg-white shadow-inner">
-            <div class="flex items-center space-x-2">
+        <form id="chat-form" class="sticky bottom-0 p-4 bg-white shadow-inner w-full">
+            <div class="flex items-center space-x-2 w-full">
                 <input
                     type="text"
                     id="message-input"
-                    placeholder="Type your message..."
-                    class="flex-1 p-3 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    placeholder="Type message..."
+                    class="flex-1 p-3 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-sky-400 overflow-x-auto min-w-1"
                 />
                 <button
                     type="submit"
-                    class="bg-sky-500 text-white px-6 py-3 rounded-lg text-base hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-400 transition duration-200"
+                    class="bg-sky-500 text-white px-3 py-2 md:px-6 md:py-3 rounded-lg text-sm md:text-base hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-400 transition duration-200 flex-shrink-0"
                 >
                     Send
                 </button>
