@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from pathlib import Path
 from string import Template
 from typing import Optional
@@ -141,6 +142,7 @@ def send_email(purchase: Purchase):
         orderdate=purchase.order_date,
         price=purchase.price,
         content=content,
+        datetime=time.strftime("%Y-%m-%d %H:%M:%S"),
     )
 
     message = Mail(
