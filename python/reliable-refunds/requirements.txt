@@ -15,7 +15,7 @@ cfgv==3.4.0
 charset-normalizer==3.4.0
 click==8.1.7
 colorama==0.4.6; platform_system == "Windows" or sys_platform == "win32"
-dbos==0.13.0a0
+dbos==0.13.0
 deprecated==1.2.14
 distlib==0.3.9
 distro==1.9.0
@@ -66,7 +66,6 @@ pluggy==1.5.0
 pre-commit==4.0.1
 propcache==0.2.0
 protobuf==5.28.3
-psutil==6.1.0
 psycopg-binary==3.2.3; implementation_name != "pypy"
 psycopg[binary]==3.2.3
 pydantic==2.9.2

@@ -3,7 +3,7 @@ name = "reliable-refunds"
 version = "0.1.0"
 
 dependencies = [
-    "dbos>=0.13.0a0",
+    "dbos>=0.13.0",
     "swarm @ git+https://github.com/openai/swarm.git",
     "sendgrid>=6.11.0",
 ]
