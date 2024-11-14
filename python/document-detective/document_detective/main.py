@@ -4,7 +4,6 @@
 
 import os
 from collections import deque
-from tempfile import TemporaryDirectory
 from typing import List
 from urllib.parse import urljoin, urlparse
 
@@ -13,9 +12,8 @@ from bs4 import BeautifulSoup
 from dbos import DBOS, Queue, WorkflowHandle, load_config
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from llama_index.core import Settings, StorageContext, VectorStoreIndex
+from llama_index.core import Settings, StorageContext, VectorStoreIndex, Document
 from llama_index.core.node_parser import HTMLNodeParser
-from llama_index.readers.file import HTMLTagReader
 from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel, HttpUrl
 
@@ -23,7 +21,6 @@ from .schema import chat_history
 
 app = FastAPI()
 DBOS(fastapi=app)
-
 
 # Next, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
 
@@ -68,7 +65,8 @@ queue = Queue("indexing_queue")
 
 @DBOS.workflow()
 def indexing_workflow(docs_url: str):
-    urls = crawl_website(docs_url)
+    # urls = crawl_website(docs_url)
+    urls = ["https://docs.dbos.dev/python/tutorials/workflow-tutorial"]
     handles: List[WorkflowHandle] = []
     for url in urls:
         DBOS.logger.info(f"Indexing URL: {url}")
@@ -164,22 +162,15 @@ def crawl_website(start_url, max_pages=1000):
 
 @DBOS.step(retries_allowed=False, max_attempts=5)
 def index_document(document_url: HttpUrl) -> int:
-    with TemporaryDirectory() as temp_dir:
-        temp_file_path = os.path.join(temp_dir, "file.html")
-        with open(temp_file_path, "wb") as temp_file:
-            with requests.get(document_url, stream=True) as r:
-                r.raise_for_status()
-                for page in r.iter_content(chunk_size=8192):
-                    temp_file.write(page)
-            temp_file.seek(0)
-            reader = HTMLTagReader(tag="p")
-            documents = reader.load_data(temp_file_path)
-    for i, document in enumerate(documents):
-        document.id_ = f"{document_url}-{i}"
-        DBOS.logger.info(f"Indexing document: {str(document)}")
-    index.refresh(documents)
-    return len(documents)
-
+    with requests.get(document_url) as r:
+        r.raise_for_status()
+        document = Document(doc_id=document_url, text=r.text)
+    parser = HTMLNodeParser(tags=["p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "b", "i", "u", "section", "code"])
+    nodes = parser.get_nodes_from_documents(documents=[document])
+    index.insert_nodes(nodes)
+    for node in nodes:
+        print(node)
+    return len(nodes)
 
 # This is the endpoint for indexing. It starts the indexing workflow in the background.
 
