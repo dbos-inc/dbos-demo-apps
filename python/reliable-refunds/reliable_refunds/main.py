@@ -142,7 +142,7 @@ def send_email(purchase: Purchase):
         orderdate=purchase.order_date,
         price=purchase.price,
         content=content,
-        datetime=time.strftime("%Y-%m-%d %H:%M:%S"),
+        datetime=time.strftime("%Y-%m-%d %H:%M:%S %Z"),
     )
 
     message = Mail(
