@@ -10,13 +10,14 @@
 
 # First, let's do imports and configure Streamlit with a title and some custom CSS.
 
-import dbos
 import os
+
+import dbos
 import pandas as pd
-import streamlit as st
 import plotly.express as px
-from schema import stock_prices, alerts
-from sqlalchemy import create_engine, desc, select, insert, delete
+import streamlit as st
+from schema import alerts, stock_prices
+from sqlalchemy import create_engine, delete, desc, insert, select
 
 st.set_page_config(page_title="Stock Prices", page_icon=":chart_with_upwards_trend:")
 
