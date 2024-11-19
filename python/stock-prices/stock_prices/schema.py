@@ -1,13 +1,5 @@
-from sqlalchemy import (
-    Column,
-    MetaData,
-    String,
-    Table,
-    Numeric,
-    TIMESTAMP,
-    func,
-    UniqueConstraint,
-)
+from sqlalchemy import (TIMESTAMP, Column, MetaData, Numeric, String, Table,
+                        UniqueConstraint, func)
 
 metadata = MetaData()
 

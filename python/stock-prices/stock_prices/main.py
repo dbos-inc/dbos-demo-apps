@@ -7,14 +7,15 @@
 
 # First, let's do imports, and initialize DBOS.
 
-from dbos import DBOS
-from schema import stock_prices, alerts
-import yfinance as yf
-from twilio.rest import Client
-import os
-import pytz
 import datetime
+import os
 import threading
+
+import pytz
+import yfinance as yf
+from dbos import DBOS
+from schema import alerts, stock_prices
+from twilio.rest import Client
 
 DBOS()
 
