@@ -52,7 +52,7 @@ def readme() -> HTMLResponse:
                 This is a template built with DBOS and FastAPI. Visit <code class="bg-gray-100 px-1 rounded"><a href="/hello" target="_blank" class="text-blue-600 hover:underline">/hello</a></code> to see a "Hello, World!" message.
             </p>
             <p class="mb-4">
-                To get started building, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, then visit the <a href="https://console.dbos.dev/applications" target="_blank" class="text-blue-600 hover:underline">cloud console</a> to redeploy your app.
+                To start building, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, commit your changes, then visit the <a href="https://console.dbos.dev/applications" target="_blank" class="text-blue-600 hover:underline">cloud console</a> to redeploy your app.
             </p>
             <p class="mb-4">
                 To learn how to build crashproof apps with DBOS, visit the <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline">docs</a>!
