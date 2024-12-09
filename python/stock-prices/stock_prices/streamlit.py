@@ -63,7 +63,7 @@ with st.sidebar:
     display_mode = st.selectbox(
         "Select Display Mode",
         options=["Stock Prices", "Rate of Change"],
-        index=1,  # Select "Rate of Change" by default
+        index=0,  # Select "Stock Prices" by default
     )
 
 if stock_symbol_filter == "All":
@@ -73,7 +73,7 @@ else:
         stocks_prices_df["stock_symbol"] == stock_symbol_filter
     ]
 if display_mode == "Stock Prices":
-    y_label = "Stock Price"
+    y_label = "Stock Price ($)"
     y_column = "stock_price"
 else:
     y_label = "Rate of Change (%)"
