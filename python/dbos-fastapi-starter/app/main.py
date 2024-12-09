@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from decimal import Decimal, getcontext
+from math import factorial
 
 from dbos import DBOS
+import time
 
 # Welcome to DBOS!
 # This is a template application built with DBOS and FastAPI.
@@ -15,22 +18,54 @@ DBOS(fastapi=app)
 # Learn more here: https://docs.dbos.dev/python/programming-guide
 
 
-@DBOS.step()
-def hello_step() -> str:
-    return "Hello"
-
 
 @DBOS.step()
-def world_step() -> str:
-    return "world"
+def calculate_pi_ramanujan(n: int):
+    """
+    Calculate π up to n digits of precision using Ramanujan's formula:
+    1/π = (2√2/9801) * sum(((4k)!*(1103+26390k))/(k!^4 * 396^(4k)))
+    """
+    getcontext().prec = n + 10  # Add extra precision for accuracy
+    
+    sum_total = Decimal('0')
+    k = 0
+    
+    while True:
+        # Calculate numerator components
+        num_a = factorial(4 * k)
+        num_b = 1103 + (26390 * k)
+        
+        # Calculate denominator components
+        den_a = factorial(k) ** 4
+        den_b = 396 ** (4 * k)
+        
+        # Calculate term
+        term = Decimal(num_a * num_b) / Decimal(den_a * den_b)
+        
+        # Add to running sum
+        sum_total += term
+        
+        # Check if term is small enough to stop
+        if term < Decimal('1e-' + str(n)):
+            break
+            
+        k += 1
+    
+    # Final calculation
+    pi = Decimal('9801') / (Decimal('2').sqrt() * 2 * sum_total)
+    
+    return pi
 
-
-@app.get("/hello")
 @DBOS.workflow()
-def hello_world() -> str:
-    hello = hello_step()
-    world = world_step()
-    return f"{hello}, {world}!"
+def calculate_nth_digit_of_pi(n: int) -> None:
+    pi = calculate_pi_ramanujan(n)
+    nth_digit = int(str(pi)[n])
+    DBOS.logger.info(f"The {n}th digit of π is {nth_digit}")
+
+
+@app.get("/calculate/{n}")
+def calculation_endpoint(n: int) -> None:
+    DBOS.start_workflow(calculate_nth_digit_of_pi, n)
 
 
 # This code uses FastAPI to serve an HTML + CSS readme from the root path.
