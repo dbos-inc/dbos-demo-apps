@@ -38,8 +38,17 @@
         let intervalId;
         let currentId = null;
 
+        // Check URL for existing ID on page load
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlId = urlParams.get('id');
+        if (urlId && urlId.length === 6) {
+            currentId = urlId;
+            checkProgress();
+            intervalId = setInterval(checkProgress, 500);
+        }
+
         async function crashApp() {
-            await fetch('/crash', { 
+            await fetch('/crash', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -74,7 +83,6 @@
             }
         }
     </script>
-
     <p class="mb-4">
         To start building your own crashproof application, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, commit your changes, then visit the <a href="https://console.dbos.dev/applications/dbos-fastapi-starter" target="_blank" class="text-blue-600 hover:underline">cloud console</a> to redeploy your app.
     </p>
