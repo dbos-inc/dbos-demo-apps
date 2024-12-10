@@ -41,7 +41,6 @@
                 .join('');
         }
 
-        let intervalId;
         let currentId = null;
 
         // Check URL for existing ID on page load
@@ -49,9 +48,10 @@
         const urlId = urlParams.get('id');
         if (urlId && urlId.length === 6) {
             currentId = urlId;
-            checkProgress();
-            intervalId = setInterval(checkProgress, 500);
         }
+        
+        checkProgress();
+        setInterval(checkProgress, 1000);
 
         function showReconnecting() {
             document.getElementById('reconnecting').classList.remove('hidden');
@@ -79,11 +79,7 @@
            
             currentId = randomString;
             await fetch(`/background/${currentId}/10`, { method: 'GET' });
-           
-            // Start checking progress only after starting the job
-            checkProgress();
-            if (intervalId) clearInterval(intervalId);
-            intervalId = setInterval(checkProgress, 500);
+        
         }
        
         async function checkProgress() {
