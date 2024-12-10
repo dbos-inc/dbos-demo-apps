@@ -1,6 +1,7 @@
+import os
 import time
 
-from dbos import DBOS
+from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
@@ -11,14 +12,16 @@ from fastapi.responses import HTMLResponse
 app = FastAPI()
 DBOS(fastapi=app)
 
-# This endpoint uses DBOS to launch a reliable background task with N steps.
+steps_event = "steps_event"
+
+# This endpoint uses DBOS to launch a reliable and idempotent background task with N steps.
 
 
-@app.get("/background/{n}")
-def launch_background_task(n: int) -> None:
+@app.get("/background/{id}/{n}")
+def launch_background_task(id: str, n: int) -> None:
     DBOS.logger.info(f"Starting a background task with {n} steps!")
-    DBOS.start_workflow(example_workflow, n)
-
+    with SetWorkflowID(id):
+        DBOS.start_workflow(example_workflow, n)
 
 # This workflow simulates a background task with N steps.
 
@@ -29,8 +32,12 @@ def launch_background_task(n: int) -> None:
 
 @DBOS.workflow()
 def example_workflow(n: int) -> None:
-    for i in range(n):
+    global active_workflow
+    DBOS.set_event(steps_event, 0)
+    active_workflow = DBOS.workflow_id
+    for i in range(1, n + 1):
         do_work(i)
+        DBOS.set_event(steps_event, i)
 
 
 @DBOS.step()
@@ -39,37 +46,17 @@ def do_work(i: int):
     DBOS.logger.info(f"Completed step {i}!")
 
 
+@app.get("/last_step/{id}")
+def get_last_completed_step(id: str):
+    step = DBOS.get_event(id, steps_event)
+    return step if step is not None else 0
+
+
 # This code uses FastAPI to serve an HTML + CSS readme from the root path.
 
 
 @app.get("/")
-def readme() -> HTMLResponse:
-    readme = """
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <title>Welcome to DBOS!</title>
-            <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
-            <script src="https://cdn.tailwindcss.com"></script>
-        </head>
-        <body class="font-sans text-gray-800 p-6 max-w-2xl mx-auto">
-            <h1 class="text-xl font-semibold mb-4">Welcome to DBOS!</h1>
-            <p class="mb-4">
-                Click <span class="cursor-pointer text-blue-600 hover:underline" onclick="fetch('/background/10', { method: 'GET' })">here</span> to launch a reliable background job.
-            </p>
-            <p class="mb-4">
-                To view the logs for your background job, visit <a href="https://console.dbos.dev/applications/dbos-fastapi-starter" target="_blank" class="text-blue-600 hover:underline">here</a> and click "View Application Logs".
-            </p>
-            <p class="mb-4">
-                To view the status of your background job, click <a href="https://console.dbos.dev/applications/dbos-fastapi-starter/workflows" target="_blank" class="text-blue-600 hover:underline">here</a>.
-            </p>
-            <p class="mb-4">
-                To start building your own crashproof application, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, commit your changes, then visit the <a href="https://console.dbos.dev/applications/dbos-fastapi-starter" target="_blank" class="text-blue-600 hover:underline">cloud console</a> to redeploy your app.
-            </p>
-            <p class="mb-4">
-                To learn how to build crashproof apps with DBOS, visit the <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline">docs</a>!
-            </p>
-        </body>
-        </html>
-        """
-    return HTMLResponse(readme)
+def readme():
+    with open(os.path.join("html", "app.html")) as file:
+        html = file.read()
+    return HTMLResponse(html)
