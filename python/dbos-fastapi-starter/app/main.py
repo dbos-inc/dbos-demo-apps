@@ -63,7 +63,7 @@ def crash_application():
     os._exit(1)
 
 
-# This code serves an HTML + CSS readme from the root path.
+# This code serves the HTML readme from the root path.
 
 
 @app.get("/")

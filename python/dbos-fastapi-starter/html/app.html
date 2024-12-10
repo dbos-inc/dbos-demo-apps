@@ -15,7 +15,7 @@
         <span class="text-yellow-700">Reconnecting...</span>
     </div>
     <p class="mb-4">
-        DBOS helps you build <strong>crashproof</strong> applications&mdash;no matter how many times you crash this app, your background task will always recover after a few seconds.
+        DBOS helps you build applications that are <strong>resilient to any failure</strong>&mdash;no matter how many times you crash this app, your background task will always recover from its last completed step in about ten seconds.
     </p>
     <div class="flex gap-4 mb-4">
         <button
@@ -34,7 +34,6 @@
     </div>
     <p id="status" class="mb-4 text-gray-600"></p>
     <script>
-        // Rest of the JavaScript remains exactly the same
         function generateRandomString() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             return Array.from(crypto.getRandomValues(new Uint8Array(6)))
