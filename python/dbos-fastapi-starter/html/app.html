@@ -16,35 +16,52 @@
         }
     </script>
     <h1 class="text-xl font-semibold mb-4">Welcome to DBOS!</h1>
-    <button
-        onclick="startBackgroundJob()"
-        class="mb-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-    >
-        Launch a reliable background job
-    </button>
+    <div class="flex gap-4 mb-4">
+        <button
+            onclick="startBackgroundJob()"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+            Launch a reliable background job
+        </button>
+        <button
+            onclick="crashApp()"
+            class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded shadow transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+        >
+            Crash the application
+        </button>
+    </div>
     <p id="status" class="mb-4 text-gray-600"></p>
     <script>
         let intervalId;
         let currentId = null;
+
+        async function crashApp() {
+            await fetch('/crash', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
 
         async function startBackgroundJob() {
             const randomString = generateRandomString();
             const urlParams = new URLSearchParams(window.location.search);
             urlParams.set('id', randomString);
             window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
-            
+           
             currentId = randomString;
             await fetch(`/background/${currentId}/10`, { method: 'GET' });
-            
+           
             // Start checking progress only after starting the job
             checkProgress();
             if (intervalId) clearInterval(intervalId);
             intervalId = setInterval(checkProgress, 500);
         }
-        
+       
         async function checkProgress() {
             if (!currentId) return;
-            
+           
             try {
                 const response = await fetch(`/last_step/${currentId}`);
                 const step = await response.text();
@@ -54,6 +71,9 @@
             }
         }
     </script>
+    <p class="mb-4">
+        DBOS applications are <strong>crashproof</strong>&mdash;no matter how many times you crash the application, your background task will always recover.
+    </p>
     <p class="mb-4">
         To start building your own crashproof application, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, commit your changes, then visit the <a href="https://console.dbos.dev/applications/dbos-fastapi-starter" target="_blank" class="text-blue-600 hover:underline">cloud console</a> to redeploy your app.
     </p>

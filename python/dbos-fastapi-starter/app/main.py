@@ -17,11 +17,12 @@ steps_event = "steps_event"
 # This endpoint uses DBOS to launch a reliable and idempotent background task with N steps.
 
 
-@app.get("/background/{id}/{n}")
-def launch_background_task(id: str, n: int) -> None:
+@app.get("/background/{task_id}/{n}")
+def launch_background_task(task_id: str, n: int) -> None:
     DBOS.logger.info(f"Starting a background task with {n} steps!")
-    with SetWorkflowID(id):
+    with SetWorkflowID(task_id):
         DBOS.start_workflow(example_workflow, n)
+
 
 # This workflow simulates a background task with N steps.
 
@@ -46,10 +47,21 @@ def do_work(i: int):
     DBOS.logger.info(f"Completed step {i}!")
 
 
-@app.get("/last_step/{id}")
-def get_last_completed_step(id: str):
-    step = DBOS.get_event(id, steps_event)
+# This endpoint retrieves the status of a specific background task.
+
+
+@app.get("/last_step/{task_id}")
+def get_last_completed_step(task_id: str):
+    step = DBOS.get_event(task_id, steps_event)
     return step if step is not None else 0
+
+
+# This endpoint crashes the application. For demonstration purposes only :)
+
+
+@app.post("/crash")
+def crash_application():
+    os._exit(1)
 
 
 # This code uses FastAPI to serve an HTML + CSS readme from the root path.
