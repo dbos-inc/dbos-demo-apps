@@ -39,7 +39,7 @@ def background_task(n: int) -> None:
 
 @DBOS.step()
 def background_task_step(i: int):
-    time.sleep(1)
+    time.sleep(2)
     DBOS.logger.info(f"Completed step {i}!")
 
 
