@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Welcome to DBOS!</title>
+    <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="font-sans text-gray-800 p-6 max-w-2xl mx-auto">
+    <h1 class="text-xl font-semibold mb-4">Welcome to DBOS!</h1>
+    <div id="reconnecting" class="hidden mb-4 bg-yellow-100 p-2 rounded-md text-center flex items-center justify-center gap-2">
+        <svg class="animate-spin h-5 w-5 text-yellow-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-yellow-700">Reconnecting...</span>
+    </div>
+    <p class="mb-4">
+        DBOS helps you build applications that are <strong>resilient to any failure</strong>&mdash;no matter how many times you crash this app, your background task will always recover from its last completed step in about ten seconds.
+    </p>
+    <div class="flex gap-4 mb-4">
+        <button
+            onclick="startBackgroundJob()"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+            Launch a reliable background task
+        </button>
+        <button
+            onclick="crashApp()"
+            id="crash-button"
+            disabled
+            class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded shadow transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:bg-red-600"        >
+            Crash the application
+        </button>
+    </div>
+    <p id="status" class="mb-4 text-gray-600"></p>
+    <script>
+        function generateRandomString() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            return Array.from(crypto.getRandomValues(new Uint8Array(6)))
+                .map(x => chars[x % chars.length])
+                .join('');
+        }
+
+        let currentId = null;
+
+        // Check URL for existing ID on page load
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlId = urlParams.get('id');
+        if (urlId && urlId.length > 0) {
+            currentId = urlId;
+            enableCrashButton();
+        }
+        
+        checkProgress();
+        setInterval(checkProgress, 2000);
+
+        function showReconnecting() {
+            document.getElementById('reconnecting').classList.remove('hidden');
+        }
+
+        function hideReconnecting() {
+            document.getElementById('reconnecting').classList.add('hidden');
+        }
+
+        async function crashApp() {
+            await fetch('/crash', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            showReconnecting();
+        }
+
+        function enableCrashButton() {
+            document.getElementById('crash-button').disabled = false;
+        }
+
+        async function startBackgroundJob() {
+            const randomString = generateRandomString();
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('id', randomString);
+            window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+           
+            currentId = randomString;
+            await fetch(`/background/${currentId}/10`, { method: 'GET' });
+            enableCrashButton();
+        }
+       
+        async function checkProgress() {
+            if (!currentId) return;
+           
+            try {
+                const response = await fetch(`/last_step/${currentId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const step = await response.text();
+                document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 10</b> steps`;
+                hideReconnecting();
+            } catch (error) {
+                console.error('Error checking progress:', error);
+                showReconnecting();
+            }
+        }
+    </script>
+    <p class="mb-4">
+        To start building your own crashproof application, access your source code from the <a href="https://console.dbos.dev/applications/dbos-fastapi-starter" target="_blank" class="text-blue-600 hover:underline">cloud console</a>, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, then redeploy your app.
+    </p>
+    <p class="mb-4">
+        To learn how to build crashproof apps with DBOS, check out the <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline">programming guide</a>!
+    </p>
+</body>
+</html>

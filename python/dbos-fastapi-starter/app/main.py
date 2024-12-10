@@ -1,63 +1,73 @@
+import os
+import time
+
+from dbos import DBOS, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-from dbos import DBOS
-
 # Welcome to DBOS!
 # This is a template application built with DBOS and FastAPI.
+# It shows you how to use DBOS to build background tasks that are resilient to any failure.
 
 app = FastAPI()
 DBOS(fastapi=app)
 
-# This is a simple DBOS workflow with two steps.
-# It is served via FastAPI from the /hello endpoint.
-# You can use workflows to build crashproof applications.
-# Learn more here: https://docs.dbos.dev/python/programming-guide
+steps_event = "steps_event"
+
+# This endpoint uses DBOS to idempotently launch a crashproof background task with N steps.
 
 
-@DBOS.step()
-def hello_step() -> str:
-    return "Hello"
+@app.get("/background/{task_id}/{n}")
+def launch_background_task(task_id: str, n: int) -> None:
+    with SetWorkflowID(task_id):
+        DBOS.start_workflow(background_task, n)
 
 
-@DBOS.step()
-def world_step() -> str:
-    return "world"
+# This workflow simulates a background task with N steps.
+
+# DBOS workflows are resilient to any failure--if your program is crashed,
+# interrupted, or restarted while running this workflow, the workflow automatically
+# resumes from the last completed step.
 
 
-@app.get("/hello")
 @DBOS.workflow()
-def hello_world() -> str:
-    hello = hello_step()
-    world = world_step()
-    return f"{hello}, {world}!"
+def background_task(n: int) -> None:
+    for i in range(1, n + 1):
+        background_task_step(i)
+        DBOS.set_event(steps_event, i)
 
 
-# This code uses FastAPI to serve an HTML + CSS readme from the root path.
+@DBOS.step()
+def background_task_step(i: int):
+    time.sleep(2)
+    DBOS.logger.info(f"Completed step {i}!")
+
+
+# This endpoint retrieves the status of a specific background task.
+
+
+@app.get("/last_step/{task_id}")
+def get_last_completed_step(task_id: str):
+    try:
+        step = DBOS.get_event(task_id, steps_event)
+    except KeyError: # If the task hasn't started yet
+        return 0
+    return step if step is not None else 0
+
+
+# This endpoint crashes the application. For demonstration purposes only :)
+
+
+@app.post("/crash")
+def crash_application():
+    os._exit(1)
+
+
+# This code serves the HTML readme from the root path.
 
 
 @app.get("/")
-def readme() -> HTMLResponse:
-    readme = """
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <title>Welcome to DBOS!</title>
-            <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
-            <script src="https://cdn.tailwindcss.com"></script>
-        </head>
-        <body class="font-sans text-gray-800 p-6 max-w-2xl mx-auto">
-            <h1 class="text-xl font-semibold mb-4">Welcome to DBOS!</h1>
-            <p class="mb-4">
-                This is a template built with DBOS and FastAPI. Visit <code class="bg-gray-100 px-1 rounded"><a href="/hello" target="_blank" class="text-blue-600 hover:underline">/hello</a></code> to see a "Hello, World!" message.
-            </p>
-            <p class="mb-4">
-                To start building, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, commit your changes, then visit the <a href="https://console.dbos.dev/applications" target="_blank" class="text-blue-600 hover:underline">cloud console</a> to redeploy your app.
-            </p>
-            <p class="mb-4">
-                To learn how to build crashproof apps with DBOS, visit the <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline">docs</a>!
-            </p>
-        </body>
-        </html>
-        """
-    return HTMLResponse(readme)
+def readme():
+    with open(os.path.join("html", "app.html")) as file:
+        html = file.read()
+    return HTMLResponse(html)
