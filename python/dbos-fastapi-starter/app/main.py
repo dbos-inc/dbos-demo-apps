@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 
 # Welcome to DBOS!
 # This is a template application built with DBOS and FastAPI.
-# It shows you how to build crashproof background tasks with DBOS.
+# It shows you how to use DBOS to build background tasks that are resilient to any failure.
 
 app = FastAPI()
 DBOS(fastapi=app)
