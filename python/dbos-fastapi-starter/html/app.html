@@ -77,17 +77,17 @@
             try {
                 const response = await fetch(`/last_step/${currentId}`);
                 const step = await response.text();
-                document.getElementById('status').textContent = `Your background task has completed ${step} of 10 steps`;
+                document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 10</b> steps`;
             } catch (error) {
                 console.error('Error checking progress:', error);
             }
         }
     </script>
     <p class="mb-4">
-        To start building your own crashproof application, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, commit your changes, then visit the <a href="https://console.dbos.dev/applications/dbos-fastapi-starter" target="_blank" class="text-blue-600 hover:underline">cloud console</a> to redeploy your app.
+        To start building your own crashproof application, access your source code from the <a href="https://console.dbos.dev/applications/dbos-fastapi-starter" target="_blank" class="text-blue-600 hover:underline">cloud console</a>, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, then redeploy your app.
     </p>
     <p class="mb-4">
-        To learn how to build crashproof apps with DBOS, visit the <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline">docs</a>!
+        To learn how to build crashproof apps with DBOS, check out the <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline">programming guide</a>!
     </p>
 </body>
 </html>
