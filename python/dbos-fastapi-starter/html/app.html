@@ -15,7 +15,7 @@
         <span class="text-yellow-700">Reconnecting...</span>
     </div>
     <p class="mb-4">
-        DBOS helps you build <strong>crashproof</strong> applications&mdash;no matter how many times you crash this app, your background task will always recover.
+        DBOS helps you build <strong>crashproof</strong> applications&mdash;no matter how many times you crash this app, your background task will always recover after a few seconds.
     </p>
     <div class="flex gap-4 mb-4">
         <button
@@ -91,6 +91,9 @@
            
             try {
                 const response = await fetch(`/last_step/${currentId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const step = await response.text();
                 document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 10</b> steps`;
                 hideReconnecting();
