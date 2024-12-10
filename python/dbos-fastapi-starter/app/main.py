@@ -48,7 +48,10 @@ def background_task_step(i: int):
 
 @app.get("/last_step/{task_id}")
 def get_last_completed_step(task_id: str):
-    step = DBOS.get_event(task_id, steps_event)
+    try:
+        step = DBOS.get_event(task_id, steps_event)
+    except KeyError: # If the task hasn't started yet
+        return 0
     return step if step is not None else 0
 
 

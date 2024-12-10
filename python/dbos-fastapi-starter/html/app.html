@@ -6,16 +6,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="font-sans text-gray-800 p-6 max-w-2xl mx-auto">
-    <script>
-        // Generate 6-character random string
-        function generateRandomString() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            return Array.from(crypto.getRandomValues(new Uint8Array(6)))
-                .map(x => chars[x % chars.length])
-                .join('');
-        }
-    </script>
     <h1 class="text-xl font-semibold mb-4">Welcome to DBOS!</h1>
+    <div id="reconnecting" class="hidden mb-4 bg-yellow-100 p-2 rounded-md text-center flex items-center justify-center gap-2">
+        <svg class="animate-spin h-5 w-5 text-yellow-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-yellow-700">Reconnecting...</span>
+    </div>
     <p class="mb-4">
         DBOS helps you build <strong>crashproof</strong> applications&mdash;no matter how many times you crash this app, your background task will always recover.
     </p>
@@ -35,6 +33,14 @@
     </div>
     <p id="status" class="mb-4 text-gray-600"></p>
     <script>
+        // Rest of the JavaScript remains exactly the same
+        function generateRandomString() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            return Array.from(crypto.getRandomValues(new Uint8Array(6)))
+                .map(x => chars[x % chars.length])
+                .join('');
+        }
+
         let intervalId;
         let currentId = null;
 
@@ -47,6 +53,14 @@
             intervalId = setInterval(checkProgress, 500);
         }
 
+        function showReconnecting() {
+            document.getElementById('reconnecting').classList.remove('hidden');
+        }
+
+        function hideReconnecting() {
+            document.getElementById('reconnecting').classList.add('hidden');
+        }
+
         async function crashApp() {
             await fetch('/crash', {
                 method: 'POST',
@@ -54,6 +68,7 @@
                     'Content-Type': 'application/json'
                 }
             });
+            showReconnecting();
         }
 
         async function startBackgroundJob() {
@@ -78,8 +93,10 @@
                 const response = await fetch(`/last_step/${currentId}`);
                 const step = await response.text();
                 document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 10</b> steps`;
+                hideReconnecting();
             } catch (error) {
                 console.error('Error checking progress:', error);
+                showReconnecting();
             }
         }
     </script>
