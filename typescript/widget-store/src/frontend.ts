@@ -1,4 +1,4 @@
-import { GetApi, HandlerContext } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import path from "path";
 import { Liquid } from "liquidjs";
 
@@ -11,8 +11,8 @@ async function render(file: string, ctx?: object): Promise<string> {
 }
 
 export class Frontend {
-  @GetApi("/")
-  static frontend(_ctxt: HandlerContext) {
+  @DBOS.getApi("/")
+  static frontend() {
     return render("app.html", {});
   }
 }
