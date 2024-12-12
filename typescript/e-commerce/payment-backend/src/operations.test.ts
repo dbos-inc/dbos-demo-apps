@@ -1,20 +1,27 @@
-import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
-import { PlaidPayments, PaymentItem, PaymentSessionInformation, payment_complete_topic } from "./operations";
+import { DBOS } from "@dbos-inc/dbos-sdk";
+import { PaymentItem, PaymentSessionInformation, payment_complete_topic } from "./operations";
 import request from "supertest";
+
+// CB TODO REMOVE BEFORE MERGE
+function setAppConfig<T>(key: string, newValue: T): void {
+  const conf = DBOS.dbosConfig?.application as Record<string, any>;
+  if (!conf) throw new Error();
+  conf[key] = newValue;
+}
 
 describe("operations", () => {
 
-  let testRuntime: TestingRuntime;
-
   beforeAll(async () => {
-    testRuntime = await createTestingRuntime();
-    testRuntime.setConfig('unittest', true);
-    await testRuntime.queryUserDB<void>(`delete from items;`);
-    await testRuntime.queryUserDB<void>(`delete from session;`);
+    await DBOS.launch();
+    await DBOS.launchAppHTTPServer();
+    await DBOS.executor.queryUserDB(`delete from items;`);
+    await DBOS.executor.queryUserDB(`delete from session;`);
+
+    setAppConfig('unittest', true);
   });
 
   afterAll(async () => {
-    await testRuntime.destroy();
+    await DBOS.shutdown();
   });
 
   test("foo", async () => {
@@ -29,7 +36,7 @@ describe("operations", () => {
       ]
     };
 
-    const resp1 = await request(testRuntime.getHandlersCallback())
+    const resp1 = await request(DBOS.getHTTPHandlersCallback())
       .post("/api/create_payment_session")
       .send(req);
     expect(resp1.status).toBe(200);
@@ -40,7 +47,7 @@ describe("operations", () => {
     const url = new URL(resp1.body.url as string);
     expect(url.pathname).toBe(`/payment/${session_id}`);
 
-    const resp2 = await request(testRuntime.getHandlersCallback())
+    const resp2 = await request(DBOS.getHTTPHandlersCallback())
       .get(`/api/session_info/${session_id}`);
     expect(resp2.status).toBe(200);
 
@@ -53,7 +60,7 @@ describe("operations", () => {
     expect(body.items.length).toBe(req.items.length);
 
     // send a payment_complete_topic message to complete the workflow
-    await testRuntime.send(session_id, null, payment_complete_topic);
-    await testRuntime.retrieveWorkflow(session_id).getResult();
+    await DBOS.send(session_id, null, payment_complete_topic);
+    await DBOS.retrieveWorkflow(session_id).getResult();
   });
 });
