@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@dbos-inc/communicator-email-ses": "^1.24.15",
-    "@dbos-inc/dbos-sdk": "^1.30.6-preview",
+    "@dbos-inc/dbos-sdk": "^1.30.7-preview",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
     "uuid": "^9.0.1"

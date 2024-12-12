@@ -1,11 +1,10 @@
-import { HandlerContext, GetApi} from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { WebSocket } from 'ws';
 
 
 export class Hello {
-
-  @GetApi('/') // Serve a quick readme for the app
-  static async readme(_ctxt: HandlerContext) {
+  @DBOS.getApi('/') // Serve a quick readme for the app
+  static async readme() {
     const readme = `<html><body><p>
            Welcome to the DBOS Websockets demo app!<br><br>
 
@@ -18,14 +17,14 @@ export class Hello {
   }
 
 
-  @GetApi('/ws') 
-  static async sendToClient(ctx: HandlerContext) {
+  @DBOS.getApi('/ws') 
+  static async sendToClient() {
 
     // Upgrade the request to a WebSocket
     const wss = new WebSocket.Server({ noServer: true });
 
-    wss.handleUpgrade(ctx.koaContext.req, ctx.koaContext.socket, Buffer.alloc(0), (ws) => {
-        wss.emit('connection', ws, ctx.koaContext.req);
+    wss.handleUpgrade(DBOS.koaContext.req, DBOS.koaContext.socket, Buffer.alloc(0), (ws) => {
+        wss.emit('connection', ws, DBOS.koaContext.req);
 
         (async function poll() {
           try {
@@ -54,7 +53,7 @@ export class Hello {
         });
     });
 
-    ctx.koaContext.respond = false;
+    DBOS.koaContext.respond = false;
 
     return Promise.resolve();
   }
