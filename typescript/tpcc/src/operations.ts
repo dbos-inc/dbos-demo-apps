@@ -1,4 +1,4 @@
-import { TransactionContext, Transaction, GetApi, HandlerContext, ArgSources, ArgSource } from '@dbos-inc/dbos-sdk';
+import { DBOS, ArgSources, ArgSource } from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 import { getRandomInt, getCustomerName } from "./utils";
 
@@ -9,8 +9,8 @@ const INVALID_ITEM_ID = -12345;
 
 export class TPCC {
 
-  @GetApi('/payment/:warehouses')
-  static async paymentHandler(ctxt: HandlerContext, @ArgSource(ArgSources.URL) warehouses: number) {
+  @DBOS.getApi('/payment/:warehouses')
+  static async paymentHandler(@ArgSource(ArgSources.URL) warehouses: number) {
     const w_id = getRandomInt(warehouses) + 1;
     const d_id = getRandomInt(DIST_PER_WAREHOUSE) + 1;
     let c_d_id, c_w_id;
@@ -35,17 +35,17 @@ export class TPCC {
     const h_amount = (getRandomInt(500000) + 100) / 100;
 
     try {
-      const res = await ctxt.invoke(TPCC).payment(w_id, d_id, c_w_id, c_d_id, customer, h_amount);
+      const res = await TPCC.payment(w_id, d_id, c_w_id, c_d_id, customer, h_amount);
       return res;
     } catch (err) {
       const error = err as Error;
-      ctxt.logger.error(`Error payment: ${error.message}`);
+      DBOS.logger.error(`Error payment: ${error.message}`);
       return `Error payment: ${error.message}`;
     }
   }
 
-  @GetApi('/neworder/:warehouses')
-  static async newOrderHandler(ctxt: HandlerContext, @ArgSource(ArgSources.URL) warehouses: number) {
+  @DBOS.getApi('/neworder/:warehouses')
+  static async newOrderHandler(@ArgSource(ArgSources.URL) warehouses: number) {
     const w_id = getRandomInt(warehouses) + 1;
     const districtID = getRandomInt(DIST_PER_WAREHOUSE) + 1;
     const customerID = getRandomInt(CUSTOMER_PER_DIST) + 1;
@@ -68,24 +68,23 @@ export class TPCC {
     }
   
     try {
-      const res = await ctxt.invoke(TPCC).newOrder(w_id, districtID, customerID, orderLines);
+      const res = await TPCC.newOrder(w_id, districtID, customerID, orderLines);
       return res;
     } catch (err) {
       const error = err as Error;
-      ctxt.logger.error(`Error new order: ${error.message}`);
+      DBOS.logger.error(`Error new order: ${error.message}`);
       return `Error new order: ${error.message}`;
     }
   }
 
-  @Transaction({isolationLevel: "REPEATABLE READ"})  // Run this function as a database transaction
+  @DBOS.transaction({isolationLevel: "REPEATABLE READ"})  // Run this function as a database transaction
   static async newOrder(
-    ctxt: TransactionContext<Knex>,
     warehouseID: number,
     districtID: number,
     customerID: number,
     orderLines: readonly { itemID: number, supplierWarehouseID: number, quantity: number, }[],
   ) {
-    const client = ctxt.client;
+    const client = DBOS.knexClient;
 
     // The row in the WAREHOUSE table with matching W_ID is selected and W_TAX, the warehouse tax rate, is retrieved
     const r0 = await client<Warehouse>("warehouse")
@@ -235,9 +234,8 @@ export class TPCC {
     };
   }
 
-  @Transaction({isolationLevel: "REPEATABLE READ"})
+  @DBOS.transaction({isolationLevel: "REPEATABLE READ"})
   static async payment(
-    ctxt: TransactionContext<Knex>,
     w_id: number,
     d_id: number,
     c_w_id: number,
@@ -245,7 +243,7 @@ export class TPCC {
     customerID: string | number,
     h_amount: number
   ) {
-    const client = ctxt.client;
+    const client = DBOS.knexClient;
 
     // The row in the WAREHOUSE table with matching W_ID is selected. 
     // W_NAME, W_STREET_1, W_STREET_2, W_CITY, W_STATE, and W_ZIP are retrieved 
