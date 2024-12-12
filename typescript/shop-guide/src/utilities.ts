@@ -1,9 +1,4 @@
-import {
-    Transaction, Step, StepContext, TransactionContext, HandlerContext, PostApi
-} from '@dbos-inc/dbos-sdk';
-import { Knex } from 'knex';
-
-type KnexTransactionContext = TransactionContext<Knex>;
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 export const OrderStatus = {
   PENDING: 0,
@@ -57,37 +52,37 @@ export const product: CartProduct = {
   display_price: '$1000.00',
 };
 
-export function generatePaymentUrls(ctxt: HandlerContext, workflowUUID: string, paymentSessionUUID: string): string {
-    const paymentUrl = ctxt.getConfig('payment_host', 'http://localhost:8086');
+export function generatePaymentUrls(workflowUUID: string, paymentSessionUUID: string): string {
+    const paymentUrl = DBOS.getConfig('payment_host', 'http://localhost:8086');
     return `Submit payment:\ncurl -X POST ${paymentUrl}/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}' \
     \nCancel payment:\ncurl -X POST ${paymentUrl}/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: ${workflowUUID}" -d '{"session_id":"${paymentSessionUUID}"}'\n`;
 }
 
 export class ShopUtilities {
-  @Transaction()
-  static async reserveInventory(ctxt: KnexTransactionContext): Promise<void> {
-      const numAffected = await ctxt.client<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
+  @DBOS.transaction()
+  static async reserveInventory(): Promise<void> {
+      const numAffected = await DBOS.knexClient<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
       .update({
-        inventory: ctxt.client.raw('inventory - ?', [product.inventory])
+        inventory: DBOS.knexClient.raw('inventory - ?', [product.inventory])
       });
       if (numAffected <= 0) {
         throw new Error("Insufficient Inventory");
       }
   }
 
-  @Transaction()
-  static async undoReserveInventory(ctxt: KnexTransactionContext): Promise<void> {
-    await ctxt.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: ctxt.client.raw('inventory + ?', [product.inventory]) });
+  @DBOS.transaction()
+  static async undoReserveInventory(): Promise<void> {
+    await DBOS.knexClient<Product>('products').where({ product_id: product.product_id }).update({ inventory: DBOS.knexClient.raw('inventory + ?', [product.inventory]) });
   }
 
-  @Step()
-  static async createPaymentSession(ctxt: StepContext): Promise<PaymentSession> {
-    return await ShopUtilities.placePaymentSessionRequest(ctxt, product);
+  @DBOS.step()
+  static async createPaymentSession(): Promise<PaymentSession> {
+    return await ShopUtilities.placePaymentSessionRequest(product);
   }
 
-  static async placePaymentSessionRequest(ctxt: StepContext, product: Product): Promise<PaymentSession> {
-    const paymentUrl = ctxt.getConfig('payment_host', 'http://localhost:8086');
-    const shopUrl = ctxt.getConfig('shop_host', 'http://localhost:8082');
+  static async placePaymentSessionRequest(product: Product): Promise<PaymentSession> {
+    const paymentUrl = DBOS.getConfig('payment_host', 'http://localhost:8086');
+    const shopUrl = DBOS.getConfig('shop_host', 'http://localhost:8082');
 
     const response = await fetch(`${paymentUrl}/api/create_payment_session`, {
       method: 'POST',
@@ -99,7 +94,7 @@ export class ShopUtilities {
         webhook: `${shopUrl}/payment_webhook`,
         success_url: `${shopUrl}/checkout/success`,
         cancel_url: `${shopUrl}/checkout/cancel`,
-        client_reference_id: ctxt.workflowUUID,
+        client_reference_id: DBOS.workflowID,
         items: [{
           description: product.product,
           quantity: product.inventory,
@@ -111,9 +106,9 @@ export class ShopUtilities {
     return session;
   }
 
-  @Step()
-  static async retrievePaymentSession(ctxt: StepContext, sessionID: string): Promise<PaymentSession> {
-    const paymentUrl = ctxt.getConfig('payment_host', 'http://localhost:8086');
+  @DBOS.step()
+  static async retrievePaymentSession(sessionID: string): Promise<PaymentSession> {
+    const paymentUrl = DBOS.getConfig('payment_host', 'http://localhost:8086');
     const response = await fetch(`${paymentUrl}/api/session/${sessionID}`, {
       method: 'GET',
       headers: {
@@ -125,18 +120,17 @@ export class ShopUtilities {
     return session;
   }
 
-  @PostApi('/payment_webhook')
-  static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
-    const req = ctxt.koaContext.request;
+  @DBOS.postApi('/payment_webhook')
+  static async paymentWebhook(): Promise<void> {
+    const req = DBOS.koaContext.request;
 
     type Session = { session_id: string; client_reference_id?: string; payment_status: string };
     const payload = req.body as Session;
 
     if (!payload.client_reference_id) {
-      ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
+      DBOS.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
     } else {
-      await ctxt.send(payload.client_reference_id, payload.payment_status, payment_complete_topic);
+      await DBOS.send(payload.client_reference_id, payload.payment_status, payment_complete_topic);
     }
   }
-
 }
