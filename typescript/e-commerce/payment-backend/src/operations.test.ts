@@ -2,13 +2,6 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 import { PaymentItem, PaymentSessionInformation, payment_complete_topic } from "./operations";
 import request from "supertest";
 
-// CB TODO REMOVE BEFORE MERGE
-function setAppConfig<T>(key: string, newValue: T): void {
-  const conf = DBOS.dbosConfig?.application as Record<string, any>;
-  if (!conf) throw new Error();
-  conf[key] = newValue;
-}
-
 describe("operations", () => {
 
   beforeAll(async () => {
@@ -17,7 +10,7 @@ describe("operations", () => {
     await DBOS.executor.queryUserDB(`delete from items;`);
     await DBOS.executor.queryUserDB(`delete from session;`);
 
-    setAppConfig('unittest', true);
+    DBOS.setAppConfig('unittest', true);
   });
 
   afterAll(async () => {
