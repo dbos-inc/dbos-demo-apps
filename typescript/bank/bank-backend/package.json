@@ -31,7 +31,7 @@
     "prisma": "^5.1.1"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.24.15",
+    "@dbos-inc/dbos-cloud": "^1.29.15",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/jest": "^29.5.3",
     "@types/koa__cors": "^4.0.1",

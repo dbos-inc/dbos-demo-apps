@@ -1,5 +1,4 @@
 import { ArgOptional, DBOS } from '@dbos-inc/dbos-sdk';
-import { Knex } from 'knex';
 
 export enum AlertStatus {
   ACTIVE   = 0,
