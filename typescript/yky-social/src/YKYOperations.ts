@@ -2,7 +2,6 @@ import bcryptjs from 'bcryptjs';
 
 import { EntityManager, In } from 'typeorm';
 
-//import { MediaItem } from "./entity/Media";
 import { GraphType, SocialGraph } from "./entity/Graph";
 import { Post, PostType } from './entity/Post';
 import { TimelineRecv, TimelineSend, SendType, RecvType } from "./entity/Timeline";
@@ -15,18 +14,7 @@ import { createPresignedPost, PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { getS3, getS3Client } from './app';
 
-import {
- DBOSContext,
- Step,
- StepContext,
- Transaction,
- TransactionContext,
- SkipLogging,
- RequiredRole,
- DefaultRequiredRole,
- Workflow,
- WorkflowContext,
-} from '@dbos-inc/dbos-sdk';
+import { DBOS, SkipLogging } from '@dbos-inc/dbos-sdk';
 import { MediaItem, MediaUsage } from './entity/Media';
 
 export interface ResponseError extends Error {
@@ -44,18 +32,16 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
   return isMatch;
 }
 
-type ORMTC = TransactionContext<EntityManager>;
-
-@DefaultRequiredRole(['user'])
+@DBOS.defaultRequiredRole(['user'])
 export class Operations
 {
 
-@Transaction()
-@RequiredRole([])
-static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @SkipLogging hashpass:string) :
+@DBOS.transaction()
+@DBOS.requiredRole([])
+static async createUser(first:string, last:string, uname:string, @SkipLogging hashpass:string) :
    Promise<UserLogin>
 {
-    const manager = ctx.client;
+    const manager = DBOS.typeORMClient as EntityManager;
 
     if (!first || !last || !uname || !hashpass) {
         throw errorWithStatus(`Invalid user name or password: ${first}, ${last}, ${uname}, ${hashpass}`, 400);
@@ -77,10 +63,12 @@ static async createUser(ctx: ORMTC, first:string, last:string, uname:string, @Sk
     return await manager.save(user);
 }
 
-static async logInUser(ctx: ORMTC, uname:string, pass:string) :
+static async logInUser(uname:string, pass:string) :
    Promise<UserLogin>
 {
-    const userRep = ctx.client.getRepository(UserLogin);
+    const manager = DBOS.typeORMClient as EntityManager;
+
+    const userRep = manager.getRepository(UserLogin);
     const existingUser = await userRep.findOneBy({
         user_name: uname,
     });
@@ -91,10 +79,11 @@ static async logInUser(ctx: ORMTC, uname:string, pass:string) :
     return existingUser;
 }
 
-static async logInUserId(ctx: ORMTC, uname:string, pass:string) :
+static async logInUserId(uname:string, pass:string) :
    Promise<string>
 {
-    const userRep = ctx.client.getRepository(UserLogin);
+    const manager = DBOS.typeORMClient as EntityManager;
+    const userRep = manager.getRepository(UserLogin);
     const existingUser = await userRep.findOneBy({
         user_name: uname,
     });
@@ -105,33 +94,36 @@ static async logInUserId(ctx: ORMTC, uname:string, pass:string) :
     return existingUser.id;
 }
 
-static async getMyProfile(ctx: ORMTC, curUid:string) :
+static async getMyProfile(curUid:string) :
    Promise<UserProfile | null>
 {
-    const upRep = ctx.client.getRepository(UserProfile);
+    const manager = DBOS.typeORMClient as EntityManager;
+    const upRep = manager.getRepository(UserProfile);
     return upRep.findOneBy({id: curUid});
 }
 
-@Transaction({readOnly: true})
-@RequiredRole([])
-static async getMyProfilePhotoKey(ctx: ORMTC, curUid:string) :
+@DBOS.transaction({readOnly: true})
+@DBOS.requiredRole([])
+static async getMyProfilePhotoKey(curUid:string) :
    Promise<string | null>
 {
-    const mRep = ctx.client.getRepository(MediaItem);
-    ctx.logger.debug(`Doing profile photo get for ${curUid}`);
+    const manager = DBOS.typeORMClient as EntityManager;
+    const mRep = manager.getRepository(MediaItem);
+    DBOS.logger.debug(`Doing profile photo get for ${curUid}`);
     const mi = await mRep.findOneBy({owner_id: curUid, media_usage: MediaUsage.PROFILE});
     if (!mi) {
-        ctx.logger.debug(`Photo get for ${curUid} got nothing`);
+        DBOS.logger.debug(`Photo get for ${curUid} got nothing`);
         return null;
     }
-    ctx.logger.debug(`Photo get for ${curUid} got ${mi.media_url}`);
+    DBOS.logger.debug(`Photo get for ${curUid} got ${mi.media_url}`);
     return mi.media_url;
 }
 
-static async getPost(ctx: ORMTC, _curUid: string, post:string) :
+static async getPost(_curUid: string, post:string) :
    Promise<Post | null>
 {
-    const pRep = ctx.client.getRepository(Post);
+    const manager = DBOS.typeORMClient as EntityManager;
+    const pRep = manager.getRepository(Post);
     const res = pRep.findOne({
         where: {id: post},
         relations: {
@@ -142,11 +134,11 @@ static async getPost(ctx: ORMTC, _curUid: string, post:string) :
 
 //
 // Returns other user's login, profile (if requested), our listing for his status, and his for us
-@Transaction({readOnly: true})
-static async findUser(ctx: ORMTC, curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
+@DBOS.transaction({readOnly: true})
+static async findUser(curUid:string, uname:string, getProfile:boolean, getStatus: boolean) :
    Promise<[UserLogin?, UserProfile?, GraphType?, GraphType?]>
 {
-    const manager = ctx.client;
+    const manager = DBOS.typeORMClient as EntityManager;
     const userRep = manager.getRepository(UserLogin);
     const otherUser = await userRep.findOneBy({
         user_name: uname,
@@ -194,10 +186,11 @@ static async findUser(ctx: ORMTC, curUid:string, uname:string, getProfile:boolea
     return [otherUser, profile, sgtype, tgtype];
 }
 
-static async getGraphStatus(ctx: ORMTC, curUid : string, otherUid : string)
+static async getGraphStatus(curUid : string, otherUid : string)
     : Promise<GraphType>
 {
-    const sgRep = ctx.client.getRepository(SocialGraph);
+    const manager = DBOS.typeORMClient as EntityManager;
+    const sgRep = manager.getRepository(SocialGraph);
     const rGraph = await sgRep.findOneBy({
         src_id: curUid, tgt_id: otherUid
     });
@@ -209,10 +202,11 @@ static async getGraphStatus(ctx: ORMTC, curUid : string, otherUid : string)
 }
 
 // Set graph status
-static async setGraphStatus(ctx: ORMTC, curUid : string, otherUid : string, status : GraphType)
+static async setGraphStatus(curUid : string, otherUid : string, status : GraphType)
     : Promise<void>
 {
-    const sgRep = ctx.client.getRepository(SocialGraph);
+    const manager = DBOS.typeORMClient as EntityManager;
+    const sgRep = manager.getRepository(SocialGraph);
     const ug = new SocialGraph();
     ug.link_type = status;
     ug.src_id = curUid;
@@ -223,16 +217,16 @@ static async setGraphStatus(ctx: ORMTC, curUid : string, otherUid : string, stat
 
 // Compose a post
 // Future: If this takes a long time, split it into a workflow
-@Transaction()
-static async makePost(ctx: ORMTC, txt : string, pdate : Date)
+@DBOS.transaction()
+static async makePost(txt : string, pdate : Date)
 {
-    const manager = ctx.client;
+    const manager = DBOS.typeORMClient as EntityManager;
 
     // Create post
     const p = new Post();
     p.text = txt;
-    p.author = ctx.authenticatedUser;
-    p.author_orignal = ctx.authenticatedUser;
+    p.author = DBOS.authenticatedUser;
+    p.author_orignal = DBOS.authenticatedUser;
     p.media = [];
     p.mentions = [];
     p.post_time = pdate; // This could be done in conjunction w/ the datbase
@@ -249,7 +243,7 @@ static async makePost(ctx: ORMTC, txt : string, pdate : Date)
     st.post_id = p.id;
     st.send_type = SendType.POST;
     st.send_date = p.post_time;
-    st.user_id = ctx.authenticatedUser;
+    st.user_id = DBOS.authenticatedUser;
 
     const sendRep = manager.getRepository(TimelineSend);
     await sendRep.insert(st);
@@ -257,14 +251,14 @@ static async makePost(ctx: ORMTC, txt : string, pdate : Date)
 }
 
 // Send a post
-@Transaction()
-static async distributePost(ctx: ORMTC, p: Post) {
-    const manager = ctx.client;
+@DBOS.transaction()
+static async distributePost(p: Post) {
+    const manager = DBOS.typeORMClient as EntityManager;
 
     // Deliver post to followers
     const sgRep = manager.getRepository(SocialGraph);
     const followers : SocialGraph[] = await sgRep.find({
-        where: {tgt_id: ctx.authenticatedUser, link_type: In([GraphType.FOLLOW, GraphType.FOLLOW_FRIEND])}
+        where: {tgt_id: DBOS.authenticatedUser, link_type: In([GraphType.FOLLOW, GraphType.FOLLOW_FRIEND])}
     });
     const recvRep = manager.getRepository(TimelineRecv);
 
@@ -276,7 +270,7 @@ static async distributePost(ctx: ORMTC, p: Post) {
         rt.send_date = p.post_time;
         rt.unread = true;
         rt.user_id = follower.src_id;
-        rt.from_user_id = ctx.authenticatedUser;
+        rt.from_user_id = DBOS.authenticatedUser;
 
         await recvRep.insert(rt);
     }
@@ -284,7 +278,7 @@ static async distributePost(ctx: ORMTC, p: Post) {
     return p;
 }
 
-static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string, mdate: Date) :
+static async makePM(curUid : string, toUid : string, txt : string, mdate: Date) :
     Promise<void>
 {
     // Create post
@@ -297,7 +291,8 @@ static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string, m
     p.post_time = mdate;
     p.post_type = PostType.PM;
 
-    const postRep = ctx.client.getRepository(Post);
+    const manager = DBOS.typeORMClient as EntityManager;
+    const postRep = manager.getRepository(Post);
     await postRep.insert(p);
 
     // Future: Allow media upload
@@ -310,11 +305,11 @@ static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string, m
     st.send_date = p.post_time;
     st.user_id = curUid;
 
-    const sendRep = ctx.client.getRepository(TimelineSend);
+    const sendRep = manager.getRepository(TimelineSend);
     await sendRep.insert(st);
 
     // Deliver post to recipient
-    const recvRep = ctx.client.getRepository(TimelineRecv);
+    const recvRep = manager.getRepository(TimelineRecv);
     const rt = new TimelineRecv();
     rt.post = p;
     rt.post_id = p.id;
@@ -328,11 +323,12 @@ static async makePM(ctx: ORMTC, curUid : string, toUid : string, txt : string, m
 }
 
 //  Read a send timeline
-static async readSendTimeline(ctx: ORMTC, _curUser : string, timelineUser : string, type : SendType[], getPosts : boolean)
+static async readSendTimeline(_curUser : string, timelineUser : string, type : SendType[], getPosts : boolean)
     : Promise<TimelineSend []>
 {
     // TODO: Permissions
-    const tsRep = ctx.client.getRepository(TimelineSend);
+    const manager = DBOS.typeORMClient as EntityManager;
+    const tsRep = manager.getRepository(TimelineSend);
     return tsRep.find({
         where: {
             user_id: timelineUser,
@@ -349,10 +345,11 @@ static async readSendTimeline(ctx: ORMTC, _curUser : string, timelineUser : stri
 
 // Read a received-messages timeline
 // Future: Support filters / pagination
-static async readRecvTimeline(ctx: ORMTC, curUser : string, type : RecvType[], getPosts : boolean)
+static async readRecvTimeline(curUser : string, type : RecvType[], getPosts : boolean)
     : Promise<TimelineRecv []>
 {
-    const trRep = ctx.client.getRepository(TimelineRecv);
+    const manager = DBOS.typeORMClient as EntityManager;
+    const trRep = manager.getRepository(TimelineRecv);
     return trRep.find({
         where: {
             user_id: curUser,
@@ -364,10 +361,10 @@ static async readRecvTimeline(ctx: ORMTC, curUser : string, type : RecvType[], g
     });
 }
 
-@Step()
-static async createS3UploadKey(ctx: StepContext, key: string, bucket: string) : Promise<PresignedPost> {
+@DBOS.step()
+static async createS3UploadKey(key: string, bucket: string) : Promise<PresignedPost> {
     const postPresigned = await createPresignedPost(
-      getS3(ctx),
+      getS3(),
       {
         Conditions: [
           ["content-length-range", 1, 10000000],
@@ -383,62 +380,62 @@ static async createS3UploadKey(ctx: StepContext, key: string, bucket: string) : 
     return postPresigned;
 }
 
-static async getS3DownloadKey(ctx: DBOSContext, key: string, bucket: string) {
+static async getS3DownloadKey(key: string, bucket: string) {
   const getObjectCommand = new GetObjectCommand({
     Bucket: bucket,
     Key: key,
   });
 
-  const presignedUrl = await getSignedUrl(getS3Client(ctx), getObjectCommand, { expiresIn: 3600, });
+  const presignedUrl = await getSignedUrl(getS3Client(), getObjectCommand, { expiresIn: 3600, });
 
   return presignedUrl;
 }
 
-static async ensureS3FileDropped(ctx: DBOSContext, key: string, bucket: string) {
+static async ensureS3FileDropped(key: string, bucket: string) {
     try {
         const params = {
             Bucket: bucket,
             Key: key,
         };
 
-        const s3 = getS3(ctx);
+        const s3 = getS3();
 
         await s3.deleteObject(params);
-        ctx.logger.debug(`S3 key ${key} was deleted successfully.`);
+        DBOS.logger.debug(`S3 key ${key} was deleted successfully.`);
     } catch (error) {
         // Generally expected to occur sometimes
-        ctx.logger.info(`S3 key ${key} couldn't be deleted, or was already deleted.`);
+        DBOS.logger.info(`S3 key ${key} couldn't be deleted, or was already deleted.`);
     }
 }
 
-@Transaction()
-static async writeMediaPost(ctx: ORMTC, mid: string, mkey: string) {
+@DBOS.transaction()
+static async writeMediaPost(mid: string, mkey: string) {
     const m = new MediaItem();
     m.media_url = mkey;
     m.media_id = mid;
-    m.owner_id = ctx.authenticatedUser;
+    m.owner_id = DBOS.authenticatedUser;
     //m.media_type = ? // This may not be important enough to deal with...
     m.media_usage = MediaUsage.POST;
-    const manager = ctx.client;
+    const manager = DBOS.typeORMClient as EntityManager;
     await manager.save(m);
 }
 
-@Transaction()
-static async writeMediaProfilePhoto(ctx: ORMTC, mid: string, mkey: string) {
+@DBOS.transaction()
+static async writeMediaProfilePhoto(mid: string, mkey: string) {
     const m = new MediaItem();
     m.media_url = mkey;
     m.media_id = mid;
-    m.owner_id = ctx.authenticatedUser;
+    m.owner_id = DBOS.authenticatedUser;
 
     m.media_usage = MediaUsage.PROFILE;
-    const manager = ctx.client;
+    const manager = DBOS.typeORMClient as EntityManager;
 
     // TODO: Should really delete the old keys from AWS...
     const deleted = await manager.delete(MediaItem, {
-        owner_id: ctx.authenticatedUser,
+        owner_id: DBOS.authenticatedUser,
         media_usage: MediaUsage.PROFILE
     });
-    ctx.logger.debug(`Deleted ${deleted.affected} old items`);
+    DBOS.logger.debug(`Deleted ${deleted.affected} old items`);
     await manager.save(m);
 }
 
@@ -450,19 +447,19 @@ static async writeMediaProfilePhoto(ctx: ORMTC, mid: string, mkey: string) {
  *   We then wait for notification that this was accomplished.
  *     If it fails for any reason, the workflow can just terminate.  Its database record is the record.
  */
-@Workflow()
-static async mediaUpload(ctx: WorkflowContext, mtype: string, mediaId: string, mediaFile: string, bucket: string)
+@DBOS.workflow()
+static async mediaUpload(mtype: string, mediaId: string, mediaFile: string, bucket: string)
 {
-    const mkey = await ctx.invoke(Operations).createS3UploadKey(mediaFile, bucket);
-    await ctx.setEvent<PresignedPost>("uploadkey", mkey);
+    const mkey = await Operations.createS3UploadKey(mediaFile, bucket);
+    await DBOS.setEvent<PresignedPost>("uploadkey", mkey);
 
     try {
-        await ctx.recv("uploadfinish", 1500); // No upload in 25 minutes, give up?
+        await DBOS.recv("uploadfinish", 1500); // No upload in 25 minutes, give up?
         if (mtype === 'profile') {
-            await ctx.invoke(Operations).writeMediaProfilePhoto(mediaId, mediaFile);
+            await Operations.writeMediaProfilePhoto(mediaId, mediaFile);
         }
         else {
-            await ctx.invoke(Operations).writeMediaPost(mediaId, mediaFile);
+            await Operations.writeMediaPost(mediaId, mediaFile);
         }
     }
     catch (e) {
@@ -470,7 +467,7 @@ static async mediaUpload(ctx: WorkflowContext, mtype: string, mediaId: string, m
         // It might be a good idea to clobber the s3 key in case it arrived but we weren't told.
         //   (The access key duration is less than the time we wait, so it can't be started.)
         // TODO: perhaps put this operation in a step later.
-        await Operations.ensureS3FileDropped(ctx, mediaFile, bucket);
+        await Operations.ensureS3FileDropped(mediaFile, bucket);
     }
     return {};
 }
