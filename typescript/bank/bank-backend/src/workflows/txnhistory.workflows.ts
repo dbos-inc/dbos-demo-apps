@@ -1,12 +1,5 @@
 import {
-  WorkflowContext,
-  TransactionContext,
-  StepContext,
-  Transaction,
-  Step,
-  Workflow,
-  GetApi,
-  DefaultRequiredRole,
+  DBOS,
   Authentication,
   KoaMiddleware,
   ArgOptional,
@@ -19,17 +12,16 @@ import axios from "axios";
 import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
-type PrismaContext = TransactionContext<PrismaClient>;
 
-@DefaultRequiredRole(["appUser"])
+@DBOS.defaultRequiredRole(["appUser"])
 @Authentication(bankAuthMiddleware)
 @KoaMiddleware(koaLogger, bankJwt)
 export class BankTransactionHistory {
-  @Transaction()
-  @GetApi("/api/transaction_history/:accountId")
-  static async listTxnForAccountFunc(txnCtxt: PrismaContext, @ArgSource(ArgSources.URL) accountId: number) {
+  @DBOS.transaction()
+  @DBOS.getApi("/api/transaction_history/:accountId")
+  static async listTxnForAccountFunc(@ArgSource(ArgSources.URL) accountId: number) {
     const acctId = BigInt(accountId);
-    return txnCtxt.client.transactionHistory.findMany({
+    return (DBOS.prismaClient as PrismaClient).transactionHistory.findMany({
       where: {
         OR: [
           {
@@ -48,9 +40,9 @@ export class BankTransactionHistory {
     });
   }
 
-  @Transaction()
-  static async insertTxnHistoryFunc(txnCtxt: PrismaContext, data: TransactionHistory) {
-    return txnCtxt.client.transactionHistory
+  @DBOS.transaction()
+  static async insertTxnHistoryFunc(data: TransactionHistory) {
+    return (DBOS.prismaClient as PrismaClient).transactionHistory
       .create({
         data: {
           // Escape txnId and timestamp fields.
@@ -67,9 +59,9 @@ export class BankTransactionHistory {
       });
   }
 
-  @Transaction()
-  static async deleteTxnHistoryFunc(txnCtxt: PrismaContext, txnId: bigint) {
-    return txnCtxt.client.transactionHistory
+  @DBOS.transaction()
+  static async deleteTxnHistoryFunc(txnId: bigint) {
+    return (DBOS.prismaClient as PrismaClient).transactionHistory
       .delete({
         where: {
           txnId: txnId,
@@ -81,9 +73,9 @@ export class BankTransactionHistory {
       });
   }
 
-  @Transaction()
-  static async updateAccountBalanceFunc(txnCtxt: PrismaContext, acctId: bigint, balance: bigint) {
-    return txnCtxt.client.accountInfo
+  @DBOS.transaction()
+  static async updateAccountBalanceFunc(acctId: bigint, balance: bigint) {
+    return (DBOS.prismaClient as PrismaClient).accountInfo
       .update({
         where: { accountId: acctId },
         data: {
@@ -96,10 +88,10 @@ export class BankTransactionHistory {
       });
   }
 
-  @Transaction()
-  static async updateAcctTransactionFunc(txnCtxt: PrismaContext, acctId: bigint, data: TransactionHistory, deposit: boolean, @ArgOptional undoTxn: bigint | null = null): Promise<bigint> {
+  @DBOS.transaction()
+  static async updateAcctTransactionFunc(acctId: bigint, data: TransactionHistory, deposit: boolean, @ArgOptional undoTxn: bigint | null = null): Promise<bigint> {
     // First, make sure the account exists, and read the latest balance.
-    const acct = await BankAccountInfo.findAccountFunc(txnCtxt, acctId);
+    const acct = await BankAccountInfo.findAccountFunc(acctId);
     if (acct === null) {
       throw new Error("Cannot find account!");
     }
@@ -115,7 +107,7 @@ export class BankTransactionHistory {
       }
     }
 
-    const resId = await BankTransactionHistory.updateAccountBalanceFunc(txnCtxt, acctId, newBalance);
+    const resId = await BankTransactionHistory.updateAccountBalanceFunc(acctId, newBalance);
     if (!resId || String(resId) !== String(acctId)) {
       throw new Error("Not enough balance!");
     }
@@ -124,19 +116,19 @@ export class BankTransactionHistory {
     // For some undo transactions, we need to remove that history from the table.
     let txnId;
     if (!undoTxn) {
-      txnId = await BankTransactionHistory.insertTxnHistoryFunc(txnCtxt, data);
+      txnId = await BankTransactionHistory.insertTxnHistoryFunc(data);
     } else {
-      txnId = await BankTransactionHistory.deleteTxnHistoryFunc(txnCtxt, undoTxn);
+      txnId = await BankTransactionHistory.deleteTxnHistoryFunc(undoTxn);
     }
 
     return txnId;
   }
 
-  @Step()
-  static async remoteTransferComm(commCtxt: StepContext, remoteUrl: string, data: TransactionHistory, workflowUUID: string): Promise<boolean> {
-    const token = commCtxt.request?.headers!["authorization"];
+  @DBOS.step()
+  static async remoteTransferComm(remoteUrl: string, data: TransactionHistory, workflowUUID: string): Promise<boolean> {
+    const token = DBOS.request?.headers!["authorization"];
     if (!token) {
-      commCtxt.logger.error("Failed to extract valid token!");
+      DBOS.logger.error("Failed to extract valid token!");
       return false;
     }
 
@@ -148,20 +140,20 @@ export class BankTransactionHistory {
         },
       });
       if (remoteRes.status !== 200) {
-        commCtxt.logger.error("Remote transfer failed, returned with status: " + remoteRes.statusText);
+        DBOS.logger.error("Remote transfer failed, returned with status: " + remoteRes.statusText);
         return false;
       }
     } catch (err) {
-      commCtxt.logger.error(err);
+      DBOS.logger.error(err);
       return false;
     }
     return true;
   }
 
-  @Transaction()
-  static async internalTransferFunc(txnCtxt: PrismaContext, data: TransactionHistory): Promise<string> {
+  @DBOS.transaction()
+  static async internalTransferFunc(data: TransactionHistory): Promise<string> {
     // Check if the fromAccount has enough balance.
-    const fromAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(txnCtxt, data.fromAccountId);
+    const fromAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(data.fromAccountId);
     if (fromAccount === null) {
       throw new Error("Cannot find account!");
     }
@@ -171,15 +163,15 @@ export class BankTransactionHistory {
     }
 
     // ToAccount must exist.
-    const toAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(txnCtxt, data.toAccountId);
+    const toAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(data.toAccountId);
     if (toAccount === null) {
       throw new Error("Cannot find account!");
     }
 
     // Update accounts and record the transaction.
-    const updateRes = await BankTransactionHistory.updateAccountBalanceFunc(txnCtxt, data.fromAccountId, fromAccount.balance - BigInt(data.amount));
-    const updateRes2 = await BankTransactionHistory.updateAccountBalanceFunc(txnCtxt, data.toAccountId, toAccount.balance + BigInt(data.amount));
-    const insertRes = await BankTransactionHistory.insertTxnHistoryFunc(txnCtxt, data);
+    const updateRes = await BankTransactionHistory.updateAccountBalanceFunc(data.fromAccountId, fromAccount.balance - BigInt(data.amount));
+    const updateRes2 = await BankTransactionHistory.updateAccountBalanceFunc(data.toAccountId, toAccount.balance + BigInt(data.amount));
+    const insertRes = await BankTransactionHistory.insertTxnHistoryFunc(data);
 
     // Check for errors.
     if (!updateRes || !updateRes2 || !insertRes) {
@@ -188,56 +180,56 @@ export class BankTransactionHistory {
     return "Internal transfer succeeded!";
   }
 
-  @Workflow()
-  static async depositWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
+  @DBOS.workflow()
+  static async depositWorkflow(data: TransactionHistory) {
     // Deposit locally first.
-    const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, true);
+    const result = await BankTransactionHistory.updateAcctTransactionFunc(data.toAccountId, data, true);
 
     // Then, Contact remote DB to withdraw.
     if (data.fromLocation && !(data.fromLocation === "cash") && !data.fromLocation.startsWith(REMOTEDB_PREFIX)) {
-      ctxt.logger.info("Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
+      DBOS.logger.info("Deposit from another DB: " + data.fromLocation + ", account: " + data.fromAccountId);
       const remoteUrl = data.fromLocation + "/api/withdraw";
       const thReq = {
         fromAccountId: data.fromAccountId,
         toAccountId: data.toAccountId,
         amount: data.amount,
         fromLocation: "local",
-        toLocation: REMOTEDB_PREFIX + ctxt.getConfig<string>("bankname") + ":" + ctxt.getConfig<string>("bankport"),
+        toLocation: REMOTEDB_PREFIX + DBOS.getConfig<string>("bankname") + ":" + DBOS.getConfig<string>("bankport"),
       };
 
-      const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory, ctxt.workflowUUID + '-withdraw');
+      const remoteRes: boolean = await BankTransactionHistory.remoteTransferComm(remoteUrl, thReq as TransactionHistory, DBOS.workflowID + '-withdraw');
       if (!remoteRes) {
         // Undo transaction is a withdrawal.
-        const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, false, result);
+        const undoRes = await BankTransactionHistory.updateAcctTransactionFunc(data.toAccountId, data, false, result);
         if (undoRes !== result) {
-          ctxt.logger.error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
+          DBOS.logger.error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
         }
         throw new Error("Failed to withdraw from remote bank.");
       }
     } else {
-      ctxt.logger.info("Deposit from: " + data.fromLocation);
+      DBOS.logger.info("Deposit from: " + data.fromLocation);
     }
 
     return "Deposit succeeded!";
   }
 
-  @Workflow()
-  static async withdrawWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
+  @DBOS.workflow()
+  static async withdrawWorkflow(data: TransactionHistory) {
     // Withdraw first.
-    const result = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, false);
+    const result = await BankTransactionHistory.updateAcctTransactionFunc(data.fromAccountId, data, false);
     // Then, contact remote DB to deposit.
     if (data.toLocation && !(data.toLocation === "cash") && !data.toLocation.startsWith(REMOTEDB_PREFIX)) {
-      ctxt.logger.info("Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
+      DBOS.logger.info("Deposit to another DB: " + data.toLocation + ", account: " + data.toAccountId);
       const remoteUrl = data.toLocation + "/api/deposit";
       const thReq = {
         fromAccountId: data.fromAccountId,
         toAccountId: data.toAccountId,
         amount: data.amount,
         toLocation: "local",
-        fromLocation: REMOTEDB_PREFIX + ctxt.getConfig<string>("bankname") + ":" + ctxt.getConfig<string>("bankport"),
+        fromLocation: REMOTEDB_PREFIX + DBOS.getConfig<string>("bankname") + ":" + DBOS.getConfig<string>("bankport"),
       };
-      const remoteRes: boolean = await ctxt.invoke(BankTransactionHistory).remoteTransferComm(remoteUrl, thReq as TransactionHistory, ctxt.workflowUUID + '-deposit');
+      const remoteRes: boolean = await BankTransactionHistory.remoteTransferComm(remoteUrl, thReq as TransactionHistory, DBOS.workflowID + '-deposit');
       if (!remoteRes) {
         
         ///////////////////////////////
@@ -254,14 +246,14 @@ export class BankTransactionHistory {
         ///////////////////////////////
         
         // Undo withdrawal with a deposit.
-        const undoRes = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.fromAccountId, data, true, result);
+        const undoRes = await BankTransactionHistory.updateAcctTransactionFunc(data.fromAccountId, data, true, result);
         if (undoRes !== result) {
           throw new Error(`Mismatch: Original txnId: ${result}, undo txnId: ${undoRes}`);
         }
         throw new Error("Failed to deposit to remote bank; transaction reversed");
       }
     } else {
-      ctxt.logger.info("Deposit to: " + data.fromLocation);
+      DBOS.logger.info("Deposit to: " + data.fromLocation);
     }
 
     return "Withdraw succeeded!";
