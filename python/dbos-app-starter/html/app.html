@@ -100,7 +100,6 @@
                 document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 10</b> steps`;
                 if (step == 10) {
                     currentId = null
-                    urlParams.set('id', currentId);
                 }
                 hideReconnecting();
             } catch (error) {
