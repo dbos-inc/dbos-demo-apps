@@ -84,6 +84,7 @@
            
             currentId = randomString;
             await fetch(`/background/${currentId}/10`, { method: 'GET' });
+            document.getElementById('status').innerHTML = `Starting task...`;
             enableCrashButton();
         }
        
@@ -97,6 +98,9 @@
                 }
                 const step = await response.text();
                 document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 10</b> steps`;
+                if (step == 10) {
+                    currentId = null
+                }
                 hideReconnecting();
             } catch (error) {
                 console.error('Error checking progress:', error);
