@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@dbos-inc/communicator-bcrypt": "^1.24.15",
-    "@dbos-inc/dbos-sdk": "^1.30.12-preview",
+    "@dbos-inc/dbos-sdk": "^1.30.13",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
