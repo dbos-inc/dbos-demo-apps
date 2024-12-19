@@ -3,16 +3,18 @@
 
 # yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact/main/dbos-config.schema.json
 
+language: node
 database:
-  hostname: 'localhost'
+  hostname: localhost
   port: 5432
-  username: 'postgres'
+  username: postgres
   password: ${PGPASSWORD}
-  app_db_name: 'hello_guestbook'
   connectionTimeoutMillis: 3000
-  app_db_client: 'knex'
-  migrate: ['npx knex migrate:latest']
-  rollback: ['npx knex migrate:rollback']
-env:
-  GUESTBOOK_KEY: 'your-key-here' #visit https://demo-guestbook.cloud.dbos.dev/key to create a key
-
+  app_db_client: knex
+  migrate:
+    - npx knex migrate:latest
+  rollback:
+    - npx knex migrate:rollback
+runtimeConfig:
+  start:
+    - dist/main.js
