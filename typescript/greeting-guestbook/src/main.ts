@@ -1,5 +1,7 @@
 import { DBOS } from '@dbos-inc/dbos-sdk';
 import express, { Request, Response } from 'express';
+import knex from 'knex';
+const knexConfig = require('../knexfile');
 
 export class Guestbook {
 
@@ -16,10 +18,13 @@ export class Guestbook {
     console.log(`>>> STEP 1: Signed the guestbook for ${name}`);
   }
 
+  // Create a database connection using Knex.js
+  static db = knex(knexConfig);
+
   // Record the greeting in the database using Knex.js
-  @DBOS.transaction()
+  @DBOS.step()
   static async insertGreeting(name: string): Promise<void> {
-    await DBOS.knexClient('dbos_greetings').insert({ greeting_name: name });
+    await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
     console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
   }
 
@@ -29,7 +34,7 @@ export class Guestbook {
     for (let i = 0; i < 5; i++) {
       console.log("Press Control + C to stop the app...");
       await DBOS.sleep(1000);
-    }
+  }
     await Guestbook.insertGreeting(name);
     return `Thank you for being awesome, ${name}!`;
   }
