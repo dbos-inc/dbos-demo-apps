@@ -24,12 +24,8 @@ export class Guestbook {
   // Record the greeting in the database using Knex.js
   @DBOS.step()
   static async insertGreeting(name: string): Promise<void> {
-    try {
-      await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
-      console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
-    } catch (error) {
-      throw error;
-    }
+    await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
+    console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
   }
 
   @DBOS.workflow()
@@ -38,7 +34,7 @@ export class Guestbook {
     for (let i = 0; i < 5; i++) {
       console.log("Press Control + C to stop the app...");
       await DBOS.sleep(1000);
-  }
+    }
     await Guestbook.insertGreeting(name);
     return `Thank you for being awesome, ${name}!`;
   }
