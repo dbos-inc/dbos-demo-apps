@@ -20,8 +20,8 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-datetime": "^1.31.13-preview.g4f38e6e769",
-    "@dbos-inc/dbos-kafkajs": "^1.31.13-preview.g4f38e6e769",
+    "@dbos-inc/dbos-datetime": "^1.31.6-preview",
+    "@dbos-inc/dbos-kafkajs": "^1.31.6-preview",
     "@dbos-inc/dbos-sdk": "^1.30.13",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
