@@ -1,5 +1,5 @@
 import { DBOS, DBOSResponseError, ArgSource, ArgSources } from '@dbos-inc/dbos-sdk';
-import { BcryptStep } from '@dbos-inc/communicator-bcrypt';
+import { BcryptStep } from '@dbos-inc/dbos-bcrypt';
 import { Request } from 'koa';
 
 export const OrderStatus = {
@@ -142,7 +142,7 @@ export class Shop {
   @DBOS.postApi('/api/register')
   @DBOS.workflow()
   static async register(username: string, password: string): Promise<void> {
-    const hashedPassword = await DBOS.invoke(BcryptStep).bcryptHash(password, 10);
+    const hashedPassword = await BcryptStep.bcryptHash(password, 10);
     await Shop.saveNewUser(username, hashedPassword);
   }
 
