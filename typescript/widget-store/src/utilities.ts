@@ -1,4 +1,4 @@
-import { SendEmailStep } from '@dbos-inc/communicator-email-ses';
+import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
 import { SchedulerMode, DBOS} from '@dbos-inc/dbos-sdk';
 
 export enum OrderStatus {
@@ -35,7 +35,7 @@ export interface OrderWithProduct {
 export const PRODUCT_ID = 1;
 
 const reportSes = (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])
-  ? DBOS.configureInstance(SendEmailStep, 'reportSES', {awscfgname: 'aws_config'})
+  ? DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'})
   : undefined;
 
 export class ShopUtilities {
@@ -176,7 +176,7 @@ export class ShopUtilities {
 
   static async sendStatusEmail(yd: Date, sales: SalesSummary) {
     if (!reportSes) return;
-    await DBOS.invoke(reportSes).sendEmail({
+    await reportSes.sendEmail({
       to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
       from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
       subject: `Daily report for ${yd.toDateString()}`,
