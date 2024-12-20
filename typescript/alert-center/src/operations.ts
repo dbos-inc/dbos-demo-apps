@@ -3,7 +3,7 @@ import { Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
 import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceStep, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
-import { CurrentTimeStep } from "@dbos-inc/communicator-datetime";
+import { DBOSDateTime } from "@dbos-inc/dbos-datetime";
 
 //The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
@@ -67,7 +67,7 @@ export class AlertCenter {
     
     // Get the current time from a checkpointed step;
     //   This ensures the same time is used for recovery or in the time-travel debugger
-    let ctime = await DBOS.invoke(CurrentTimeStep).getCurrentTime();
+    let ctime = await DBOSDateTime.getCurrentTime();
 
     //Assign, extend time or simply return current assignment
     const userRec = await RespondUtilities.getUserAssignment(name, ctime, more_time);
@@ -86,7 +86,7 @@ export class AlertCenter {
       while (expirationMS > ctime) {
         DBOS.logger.debug(`Sleeping ${expirationMS-ctime}`);
         await DBOS.sleepms(expirationMS - ctime);
-        const curDate = await DBOS.invoke(CurrentTimeStep).getCurrentDate();
+        const curDate = await DBOSDateTime.getCurrentDate();
         ctime = curDate.getTime();
         const nextTime = await RespondUtilities.checkForExpiredAssignment(name, curDate);
 
