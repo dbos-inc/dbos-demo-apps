@@ -1,4 +1,8 @@
-import { DBOS, DBOSResponseError } from "@dbos-inc/dbos-sdk";
+import {
+    TransactionContext, Transaction, StepContext, Step,
+    WorkflowContext, Workflow, GetApi, HandlerContext, DBOSResponseError
+} from "@dbos-inc/dbos-sdk";
+import { Knex } from "knex";
 
 interface GreetingRecord {
   name: string;
@@ -6,8 +10,8 @@ interface GreetingRecord {
 }
 
 export class Greetings {
-  @DBOS.getApi('/') // Serve a quick readme for the app
-  static async readme() {
+  @GetApi('/') // Serve a quick readme for the app
+  static async readme(_ctxt: HandlerContext) {
     const readme = '<html><body><p>' +
       'Welcome! Visit the route /greeting/:name to be greeted!<br>' +
       'For example, visit <a href="/greeting/dbos">/greeting/dbos</a>.<br>' +
@@ -15,14 +19,14 @@ export class Greetings {
     return Promise.resolve(readme);
   }
 
-  @DBOS.transaction({readOnly: true})
-  @DBOS.getApi('/greetings')
-  static async allGreetings() {
-    return await DBOS.knexClient('greetings').select('*') as GreetingRecord[];
+  @Transaction({readOnly: true})
+  @GetApi('/greetings')
+  static async allGreetings(ctxt: TransactionContext<Knex>) {
+    return await ctxt.client('greetings').select('*') as GreetingRecord[];
   }
 
-  @DBOS.step()
-  static async signGuestbook(name: string) {
+  @Step()
+  static async SignGuestbook(ctxt: StepContext, name: string) {
     const key = process.env.GUESTBOOK_KEY;  //set in dbos-config.yaml
     if (!key || key.length !== 36) {
       throw new DBOSResponseError("Please set the guestbook key in dbos-config.yaml", 401);
@@ -36,31 +40,31 @@ export class Greetings {
     if (!response.ok) {
       throw new DBOSResponseError(responseStr);
     }
-    DBOS.logger.info(`>>> STEP 1: Signed the Guestbook: ${responseStr}`);
+    ctxt.logger.info(`>>> STEP 1: Signed the Guestbook: ${responseStr}`);
   }
 
-  @DBOS.transaction()
-  static async insertGreeting(gr: GreetingRecord) {
-    await DBOS.knexClient('greetings').insert(gr);
-    DBOS.logger.info(`>>> STEP 2: Greeting to ${gr.name} recorded in the database!`);
+  @Transaction()
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
+    await ctxt.client('greetings').insert(gr);
+    ctxt.logger.info(`>>> STEP 2: Greeting to ${gr.name} recorded in the database!`);
   }
 
-  @DBOS.workflow()
-  static async greetingWorkflow(friend: string, noteContent: string) {
-      await Greetings.signGuestbook(friend);
+  @Workflow()
+  static async GreetingWorkflow(ctxt: WorkflowContext, friend: string, noteContent: string) {
+      await ctxt.invoke(Greetings).SignGuestbook(friend);
       for (let i = 0; i < 5; i++) {
-          DBOS.logger.info("Press Control + C to stop the app...");
-          await DBOS.sleepms(1000);
+          ctxt.logger.info("Press Control + C to stop the app...");
+          await ctxt.sleepms(1000);
       }
-      await Greetings.insertGreeting(
+      await ctxt.invoke(Greetings).InsertGreeting(
         { name: friend, note: noteContent }
       );
   }
 
-  @DBOS.getApi('/greeting/:friend')
-  static async greeting(friend: string) {
+  @GetApi('/greeting/:friend')
+  static async Greeting(ctxt: HandlerContext, friend: string) {
     const noteContent = `Thank you for being awesome, ${friend}!`;
-    await DBOS.startWorkflow(Greetings).greetingWorkflow(friend, noteContent);
+    await ctxt.startWorkflow(Greetings).GreetingWorkflow(friend, noteContent);
     return Promise.resolve(noteContent);
   }
 }
