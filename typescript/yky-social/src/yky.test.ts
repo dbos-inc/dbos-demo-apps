@@ -18,12 +18,23 @@ export { Operations } from './YKYOperations';
 beforeAll(async () => {
   await DBOS.launch();
   await DBOS.launchAppHTTPServer();
+
+  for (const table of [
+    "media_item",
+    "social_graph",
+    "timeline_recv",
+    "timeline_send",
+    "post",
+    "user_login",
+    "user_profile",
+  ]) {
+    await DBOS.executor.queryUserDB(`DELETE FROM ${table} CASCADE;`);
+  }
 });
 
 afterAll(async () => {
   await DBOS.shutdown();
 });
-
 
 describe('GET (request-like)', () => {
   it('should get', async () => {
