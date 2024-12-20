@@ -40,7 +40,6 @@ export class BankTransactionHistory {
     });
   }
 
-  @DBOS.transaction()
   static async insertTxnHistoryFunc(data: TransactionHistory) {
     return (DBOS.prismaClient as PrismaClient).transactionHistory
       .create({
@@ -59,7 +58,6 @@ export class BankTransactionHistory {
       });
   }
 
-  @DBOS.transaction()
   static async deleteTxnHistoryFunc(txnId: bigint) {
     return (DBOS.prismaClient as PrismaClient).transactionHistory
       .delete({
@@ -73,7 +71,6 @@ export class BankTransactionHistory {
       });
   }
 
-  @DBOS.transaction()
   static async updateAccountBalanceFunc(acctId: bigint, balance: bigint) {
     return (DBOS.prismaClient as PrismaClient).accountInfo
       .update({

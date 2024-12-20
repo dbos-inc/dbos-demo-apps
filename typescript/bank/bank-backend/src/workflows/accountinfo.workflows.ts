@@ -53,7 +53,6 @@ export class BankAccountInfo {
     });
   }
 
-  @DBOS.transaction()
   static async findAccountFunc(acctId: bigint) {
     return (DBOS.prismaClient as PrismaClient).accountInfo.findUnique({
       where: {
