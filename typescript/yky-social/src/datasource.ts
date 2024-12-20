@@ -12,7 +12,7 @@ const AppDataSource = new DataSource({
     password: dbosConfig.poolConfig.password as string,
     database: dbosConfig.poolConfig.database,
     ssl: dbosConfig.poolConfig.ssl as TlsOptions,
-    entities: ['dist/src/entity/*.js'],
+    entities: ['dist/entity/*.js'],
     migrations: ['dist/migrations/*.js'],
 });
 
