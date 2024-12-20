@@ -116,7 +116,7 @@ export class AlertCenter {
   @DBOS.workflow()
   static async sendAlert(message: string) {
     const max_id = await RespondUtilities.getMaxId();
-    await DBOS.invoke(producerConfig).sendMessage(
+    await producerConfig.send(
       {
         value: JSON.stringify({
           alerts: [

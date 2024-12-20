@@ -23,8 +23,8 @@ npm install
 npm run build
 npx dbos migrate
 
-# in order to restart on crash, we run the app in a loop. On Linux or Mac:
-while [ 1 ] ; do npx dbos start; done 
+# in order to restart on crash, we run the app in a loop via `nodemon`. On Linux or Mac:
+npm run dev
 # Alternatively you can use regular npx dbos start
 ```
 
