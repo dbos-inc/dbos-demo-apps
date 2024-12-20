@@ -1,7 +1,9 @@
+/* eslint-disable no-secrets/no-secrets */
+
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class Initialschema1734711921749 implements MigrationInterface {
-    name = 'Initialschema1734711921749'
+    name = 'Initialschema1734711921749';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "user_profile" ("id" uuid NOT NULL, "description" character varying NOT NULL, CONSTRAINT "PK_f44d0cd18cfd80b0fed7806c3b7" PRIMARY KEY ("id"))`);

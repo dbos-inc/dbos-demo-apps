@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { parseConfigFile } from '@dbos-inc/dbos-sdk';
 import { TlsOptions } from 'tls';
 import { DataSource } from "typeorm";
