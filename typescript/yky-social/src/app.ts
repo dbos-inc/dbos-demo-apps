@@ -24,13 +24,13 @@ import {
   DBOSDeploy,
   InitContext,
 } from "@dbos-inc/dbos-sdk";
-import { BcryptStep } from '@dbos-inc/communicator-bcrypt';
+import { BcryptStep } from '@dbos-inc/dbos-bcrypt';
 
 import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client, S3 } from '@aws-sdk/client-s3';
-import { CurrentTimeStep } from '@dbos-inc/communicator-datetime';
+import { DBOSDateTime } from '@dbos-inc/dbos-datetime';
 
 function getS3Config() {
   const s3r = DBOS.getConfig('aws_s3_region','us-east-2');
@@ -191,7 +191,7 @@ export class YKY
   static async doRegister(firstName: string, lastName: string,
      username: string, @LogMask(LogMasks.HASH) password: string)
   {
-    const hashpass: string = await DBOS.invoke(BcryptStep).bcryptHash(password, 10);
+    const hashpass: string = await BcryptStep.bcryptHash(password, 10);
     const user = await Operations.createUser(
        firstName, lastName, username, hashpass);
 
@@ -211,7 +211,7 @@ export class YKY
   @DBOS.workflow()
   @DBOS.postApi("/composepost")
   static async doCompose(@ArgRequired postText: string) {
-    const pdate = await DBOS.invoke(CurrentTimeStep).getCurrentDate();
+    const pdate = await DBOSDateTime.getCurrentDate();
     const post = await Operations.makePost(postText, pdate);
     // This could be an asynchronous job
     await Operations.distributePost(post);
@@ -221,7 +221,7 @@ export class YKY
   @DBOS.getApi("/getMediaUploadKey")
   @DBOS.workflow()
   static async doKeyUpload(filename: string) {
-    const currTime = await DBOS.invoke(CurrentTimeStep).getCurrentTime();
+    const currTime = await DBOS.invoke(DBOSDateTime).getCurrentTime();
     const key = `photos/${filename}-${currTime}`;
     const bucket = DBOS.getConfig('aws_s3_bucket', 'yky-social-photos');
     const postPresigned = await Operations.createS3UploadKey(key, bucket);
@@ -256,7 +256,7 @@ export class YKY
 
     // Future: Rate limit the user's requests as they start workflows...
     //   Or give the user the existing workflow, if any
-    const currTime = await DBOS.invoke(CurrentTimeStep).getCurrentTime();
+    const currTime = await DBOS.invoke(DBOSDateTime).getCurrentTime();
     const fn = `photos/${mediaKey}-${currTime}`;
     const wfh = await DBOS.startWorkflow(Operations).mediaUpload('profile', mediaKey, fn, bucket);
     const upkey = await DBOS.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
