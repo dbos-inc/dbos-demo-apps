@@ -1,8 +1,9 @@
-import { WorkflowContext, Workflow, PostApi, HandlerContext, ArgOptional, configureInstance } from '@dbos-inc/dbos-sdk';
+import { DBOS, ArgOptional } from '@dbos-inc/dbos-sdk';
+import { Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
 import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceStep, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
-import { CurrentTimeStep } from "@dbos-inc/communicator-datetime";
+import { DBOSDateTime } from "@dbos-inc/dbos-datetime";
 
 //The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
@@ -23,7 +24,7 @@ const kafkaConfig: KafkaConfig = {
   logLevel: logLevel.ERROR
 };
 
-const producerConfig: KafkaProduceStep =  configureInstance(KafkaProduceStep, 
+const producerConfig: KafkaProduceStep =  DBOS.configureInstance(KafkaProduceStep, 
   'wfKafka', kafkaConfig, respondTopic, {
     createPartitioner: Partitioners.DefaultPartitioner
   });
@@ -51,7 +52,7 @@ export class AlertCenter {
     ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`);
     //Add to the database
     for (const detail of payload.alerts) {
-      await ctxt.invoke(RespondUtilities).addAlert(detail);
+      await RespondUtilities.addAlert(detail);
     }
     return Promise.resolve();
   }
@@ -61,49 +62,49 @@ export class AlertCenter {
   // 1. An employee asks for a new assignment, or
   // 2. An employee asks for more time with the existing assignment, or
   // 3. There's a simple refresh of the page to let the employee know how much time is left
-  @Workflow()
-  static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
+  @DBOS.workflow()
+  static async userAssignmentWorkflow(name: string, @ArgOptional more_time: boolean | undefined) {
     
     // Get the current time from a checkpointed step;
     //   This ensures the same time is used for recovery or in the time-travel debugger
-    let ctime = await ctxt.invoke(CurrentTimeStep).getCurrentTime();
+    let ctime = await DBOSDateTime.getCurrentTime();
 
     //Assign, extend time or simply return current assignment
-    const userRec = await ctxt.invoke(RespondUtilities).getUserAssignment(name, ctime, more_time);
+    const userRec = await RespondUtilities.getUserAssignment(name, ctime, more_time);
     
     //Get the expiration time (if there is a current assignment); use setEvent to provide it to the caller
     const expirationSecs = userRec.employee.expiration ? (userRec.employee.expiration!.getTime()-ctime) / 1000 : null;
-    await ctxt.setEvent<AlertEmployeeInfo>('rec', {...userRec, expirationSecs});
+    await DBOS.setEvent<AlertEmployeeInfo>('rec', {...userRec, expirationSecs});
 
     if (userRec.newAssignment) {
 
       //First time we assigned this alert to this employee. 
       //Here we start a loop that sleeps, wakes up and checks if the assignment has expired
-      ctxt.logger.info(`Start watch workflow for ${name}`);
+      DBOS.logger.info(`Start watch workflow for ${name}`);
       let expirationMS = userRec.employee.expiration ? userRec.employee.expiration.getTime() : 0;
 
       while (expirationMS > ctime) {
-        ctxt.logger.debug(`Sleeping ${expirationMS-ctime}`);
-        await ctxt.sleepms(expirationMS - ctime);
-        const curDate = await ctxt.invoke(CurrentTimeStep).getCurrentDate();
+        DBOS.logger.debug(`Sleeping ${expirationMS-ctime}`);
+        await DBOS.sleepms(expirationMS - ctime);
+        const curDate = await DBOSDateTime.getCurrentDate();
         ctime = curDate.getTime();
-        const nextTime = await ctxt.invoke(RespondUtilities).checkForExpiredAssignment(name, curDate);
+        const nextTime = await RespondUtilities.checkForExpiredAssignment(name, curDate);
 
         if (!nextTime) {
           //The time on this assignment expired, and we can stop monitoring it
-          ctxt.logger.info(`Assignment for ${name} ended; no longer watching.`);
+          DBOS.logger.info(`Assignment for ${name} ended; no longer watching.`);
           break;
         }
 
         expirationMS = nextTime.getTime();
-        ctxt.logger.info(`Going around again: ${expirationMS} / ${ctime}`);
+        DBOS.logger.info(`Going around again: ${expirationMS} / ${ctime}`);
       }
     }
   }
 
 
-  @PostApi('/crash_application')
-  static async crashApplication(_ctxt: HandlerContext) {
+  @DBOS.postApi('/crash_application')
+  static async crashApplication() {
     // For testing and demo purposes :)
     process.exit(1);
     return Promise.resolve();
@@ -111,12 +112,11 @@ export class AlertCenter {
 
 
   //Produce a new alert message to our broker
-  @PostApi('/do_send')
-  @Workflow()
-  static async sendAlert(ctxt: WorkflowContext, message: string) {
-
-    const max_id = await ctxt.invoke(RespondUtilities).getMaxId();
-    await ctxt.invoke(producerConfig).sendMessage(
+  @DBOS.postApi('/do_send')
+  @DBOS.workflow()
+  static async sendAlert(message: string) {
+    const max_id = await RespondUtilities.getMaxId();
+    await producerConfig.send(
       {
         value: JSON.stringify({
           alerts: [

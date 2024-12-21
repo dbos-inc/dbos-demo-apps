@@ -14,33 +14,28 @@ import { UserProfile } from "./entity/UserProfile";
 
 import { Operations, errorWithStatus } from "./YKYOperations";
 import {
-  ArgRequired, GetApi, RequiredRole,
-  Transaction, TransactionContext,
-  ArgSource, ArgSources, LogMask, LogMasks, PostApi,
-  HandlerContext,
-  Workflow,
-  DBOSContext,
-  WorkflowContext,
+  DBOS,
+  ArgRequired,
+  ArgSource, ArgSources, LogMask, LogMasks,
   Authentication,
   MiddlewareContext,
-  DefaultRequiredRole,
   Error,
   OrmEntities,
   DBOSDeploy,
   InitContext,
 } from "@dbos-inc/dbos-sdk";
-import { BcryptStep } from '@dbos-inc/communicator-bcrypt';
+import { BcryptStep } from '@dbos-inc/dbos-bcrypt';
 
 import { v4 as uuidv4 } from 'uuid';
 import { PresignedPost } from '@aws-sdk/s3-presigned-post';
 
 import { S3Client, S3 } from '@aws-sdk/client-s3';
-import { CurrentTimeStep } from '@dbos-inc/communicator-datetime';
+import { DBOSDateTime } from '@dbos-inc/dbos-datetime';
 
-function getS3Config(ctx: DBOSContext) {
-  const s3r = ctx.getConfig('aws_s3_region','us-east-2');
-  const s3k = ctx.getConfig('aws_s3_access_key', 'x');
-  const s3s = ctx.getConfig('aws_s3_access_secret', 'x');
+function getS3Config() {
+  const s3r = DBOS.getConfig('aws_s3_region','us-east-2');
+  const s3k = DBOS.getConfig('aws_s3_access_key', 'x');
+  const s3s = DBOS.getConfig('aws_s3_access_secret', 'x');
   return {
     region: s3r,
     credentials: {
@@ -52,14 +47,14 @@ function getS3Config(ctx: DBOSContext) {
 
 let s3Client: S3Client | undefined = undefined;
 let awsS3: S3 | undefined = undefined;
-export function getS3Client(ctx: DBOSContext) {
+export function getS3Client() {
   if (s3Client) return s3Client;
-  s3Client = new S3Client(getS3Config(ctx));
+  s3Client = new S3Client(getS3Config());
   return s3Client;
 }
-export function getS3(ctx: DBOSContext) {
+export function getS3() {
   if (awsS3) return awsS3;
-  awsS3 = new S3(getS3Config(ctx));
+  awsS3 = new S3(getS3Config());
   return awsS3;
 }
 
@@ -101,7 +96,7 @@ async function authMiddleware (ctx: MiddlewareContext) {
 }
 
 @Authentication(authMiddleware)
-@DefaultRequiredRole(['user'])
+@DBOS.defaultRequiredRole(['user'])
 @OrmEntities([
   MediaItem,
   Post,
@@ -113,9 +108,9 @@ async function authMiddleware (ctx: MiddlewareContext) {
 ])
 export class YKY
 {
-  @GetApi('/')
-  @RequiredRole([])
-  static async hello(_ctx: HandlerContext) {
+  @DBOS.getApi('/')
+  @DBOS.requiredRole([])
+  static async hello() {
     return Promise.resolve({message: "Welcome to YKY (Yakky not Yucky)!"});
   }
   static async helloctx(ctx:Context, next: Next) {
@@ -123,11 +118,11 @@ export class YKY
     return next();
   }
 
-  @Transaction({readOnly: true})
-  @GetApi('/recvtimeline')
-  static async receiveTimeline(ctx: TransactionContext<EntityManager>)
+  @DBOS.transaction({readOnly: true})
+  @DBOS.getApi('/recvtimeline')
+  static async receiveTimeline()
   {
-    const rtl = await Operations.readRecvTimeline(ctx, ctx.authenticatedUser, [RecvType.POST], true);
+    const rtl = await Operations.readRecvTimeline(DBOS.authenticatedUser, [RecvType.POST], true);
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id, fromUserId:tle.from_user_id, unread:tle.unread, sendDate: tle.send_date, recvType:tle.recv_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
@@ -136,13 +131,13 @@ export class YKY
     return {message: "Read.", timeline:tl};
   }
 
-  @Transaction({readOnly: true})
-  @GetApi('/sendtimeline')
-  static async sendTimeline(ctx: TransactionContext<EntityManager>)
+  @DBOS.transaction({readOnly: true})
+  @DBOS.getApi('/sendtimeline')
+  static async sendTimeline()
   {
-    const userid = ctx.authenticatedUser;
+    const userid = DBOS.authenticatedUser;
 
-    const rtl = await Operations.readSendTimeline(ctx, userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
+    const rtl = await Operations.readSendTimeline(userid, userid, [SendType.PM, SendType.POST, SendType.REPOST], true);
     const tl = rtl.map((tle) => {
       return {postId: tle.post_id,  fromUserId:tle.user_id, sendDate: tle.send_date, sendType:tle.send_type,
           postText: tle.post?.text, postMentions: tle.post?.mentions};
@@ -151,10 +146,10 @@ export class YKY
     return {message: "Read.", timeline: tl};
   }
 
-  @GetApi('/finduser')
-  static async doFindUser(ctx: HandlerContext, findUserName: string) {
-    const [user, _prof, _gsrc, _gdst] = await ctx.invoke(Operations).findUser(
-      ctx.authenticatedUser, findUserName, false, false);
+  @DBOS.getApi('/finduser')
+  static async doFindUser(findUserName: string) {
+    const [user, _prof, _gsrc, _gdst] = await Operations.findUser(
+      DBOS.authenticatedUser, findUserName, false, false);
     if (!user) {
       return {message: "No user by that name."};
     }
@@ -163,12 +158,12 @@ export class YKY
     }
   }
 
-  @Transaction({readOnly: true})
-  @GetApi("/post/:id")
-  static async getPost(ctx: TransactionContext<EntityManager>, @ArgRequired @ArgSource(ArgSources.URL) id: string) {
+  @DBOS.transaction({readOnly: true})
+  @DBOS.getApi("/post/:id")
+  static async getPost(@ArgRequired @ArgSource(ArgSources.URL) id: string) {
     // Future: Validate user relationship to poster for non-public posts; not blocked from seeing the post
 
-    const post = await Operations.getPost(ctx, ctx.authenticatedUser, id);
+    const post = await Operations.getPost(DBOS.authenticatedUser, id);
     if (post) {
       return { message: 'Retrieved.', post:post };
     } else {
@@ -176,11 +171,11 @@ export class YKY
     }
   }
 
-  @Transaction({readOnly: true})
-  @PostApi("/login")
-  @RequiredRole([]) // Don't need any roles to log in
-  static async doLogin(ctx: TransactionContext<EntityManager>, @ArgRequired username: string, @ArgRequired @LogMask(LogMasks.HASH) password: string) {
-    const user = await Operations.logInUser(ctx, username, password);
+  @DBOS.transaction({readOnly: true})
+  @DBOS.postApi("/login")
+  @DBOS.requiredRole([]) // Don't need any roles to log in
+  static async doLogin(@ArgRequired username: string, @ArgRequired @LogMask(LogMasks.HASH) password: string) {
+    const user = await Operations.logInUser(username, password);
     return { message: 'Successful login.', id:user.id };
   }
 
@@ -190,111 +185,111 @@ export class YKY
   //  protect itself, but it will raise an error.  Should we just
   //  say hey, it's fine, if it all matches?
   // Can this be generalized?
-  @PostApi("/register")
-  @Workflow()
-  @RequiredRole([]) // No role needed to register
-  static async doRegister(ctx: WorkflowContext, firstName: string, lastName: string,
+  @DBOS.postApi("/register")
+  @DBOS.workflow()
+  @DBOS.requiredRole([]) // No role needed to register
+  static async doRegister(firstName: string, lastName: string,
      username: string, @LogMask(LogMasks.HASH) password: string)
   {
-    const hashpass: string = await ctx.invoke(BcryptStep).bcryptHash(password, 10);
-    const user = await ctx.invoke(Operations).createUser(
+    const hashpass: string = await BcryptStep.bcryptHash(password, 10);
+    const user = await Operations.createUser(
        firstName, lastName, username, hashpass);
 
     return { message: 'User created.', id:user.id };
   }
 
-  @Transaction()
-  @PostApi("/follow")
-  static async doFollow(ctx: TransactionContext<EntityManager>, followUid: string) {
-    const curStatus = await Operations.getGraphStatus(ctx, ctx.authenticatedUser, followUid);
-    await Operations.setGraphStatus(ctx, ctx.authenticatedUser, followUid, curStatus === GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
+  @DBOS.transaction()
+  @DBOS.postApi("/follow")
+  static async doFollow(followUid: string) {
+    const curStatus = await Operations.getGraphStatus(DBOS.authenticatedUser, followUid);
+    await Operations.setGraphStatus(DBOS.authenticatedUser, followUid, curStatus === GraphType.FRIEND ? GraphType.FOLLOW_FRIEND : GraphType.FOLLOW);
     // TODO: That UID wasn't validated - maybe the DB should validate it
 
     return {message: "Followed."};
   }
 
-  @Workflow()
-  @PostApi("/composepost")
-  static async doCompose(ctx: WorkflowContext, @ArgRequired postText: string) {
-    const pdate = await ctx.invoke(CurrentTimeStep).getCurrentDate();
-    const post = await ctx.invoke(Operations).makePost(postText, pdate);
+  @DBOS.workflow()
+  @DBOS.postApi("/composepost")
+  static async doCompose(@ArgRequired postText: string) {
+    const pdate = await DBOSDateTime.getCurrentDate();
+    const post = await Operations.makePost(postText, pdate);
     // This could be an asynchronous job
-    await ctx.invoke(Operations).distributePost(post);
+    await Operations.distributePost(post);
     return {message: "Posted."};
   }
 
-  @GetApi("/getMediaUploadKey")
-  @Workflow()
-  static async doKeyUpload(ctx: WorkflowContext, filename: string) {
-    const currTime = await ctx.invoke(CurrentTimeStep).getCurrentTime();
+  @DBOS.getApi("/getMediaUploadKey")
+  @DBOS.workflow()
+  static async doKeyUpload(filename: string) {
+    const currTime = await DBOS.invoke(DBOSDateTime).getCurrentTime();
     const key = `photos/${filename}-${currTime}`;
-    const bucket = ctx.getConfig('aws_s3_bucket', 'yky-social-photos');
-    const postPresigned = await ctx.invoke(Operations).createS3UploadKey(key, bucket);
+    const bucket = DBOS.getConfig('aws_s3_bucket', 'yky-social-photos');
+    const postPresigned = await Operations.createS3UploadKey(key, bucket);
 
     return {message: "Signed URL", url: postPresigned.url, key: key, fields: postPresigned.fields};
   }
 
-  @GetApi("/getMediaDownloadKey")
-  static async doKeyDownload(ctx: HandlerContext, filekey: string) {
+  @DBOS.getApi("/getMediaDownloadKey")
+  static async doKeyDownload(filekey: string) {
     const key = filekey;
-    const bucket = ctx.getConfig('aws_s3_bucket', 'yky-social-photos');
+    const bucket = DBOS.getConfig('aws_s3_bucket', 'yky-social-photos');
 
-    const presignedUrl = await Operations.getS3DownloadKey(ctx, key, bucket);
+    const presignedUrl = await Operations.getS3DownloadKey(key, bucket);
     return { message: "Signed URL", url: presignedUrl, key: key };
   }
 
-  @GetApi("/deleteMedia")
-  static async doMediaDelete(ctx: HandlerContext, filekey: string) {
+  @DBOS.getApi("/deleteMedia")
+  static async doMediaDelete(filekey: string) {
     const key = filekey;
-    const bucket = ctx.getConfig('aws_s3_bucket', 'yky-social-photos');
+    const bucket = DBOS.getConfig('aws_s3_bucket', 'yky-social-photos');
 
     // TODO: Validate user and drop from table
 
-    await Operations.ensureS3FileDropped(ctx, key, bucket);
+    await Operations.ensureS3FileDropped(key, bucket);
     return { message: "Dropped", key: key };
   }
 
-  @GetApi("/startMediaUpload")
-  static async doStartMediaUpload(ctx: HandlerContext) {
+  @DBOS.getApi("/startMediaUpload")
+  static async doStartMediaUpload() {
     const mediaKey = uuidv4();
-    const bucket = ctx.getConfig('aws_s3_bucket', 'yky-social-photos');
+    const bucket = DBOS.getConfig('aws_s3_bucket', 'yky-social-photos');
 
     // Future: Rate limit the user's requests as they start workflows...
     //   Or give the user the existing workflow, if any
-    const currTime = await ctx.invoke(CurrentTimeStep).getCurrentTime();
+    const currTime = await DBOS.invoke(DBOSDateTime).getCurrentTime();
     const fn = `photos/${mediaKey}-${currTime}`;
-    const wfh = await ctx.invoke(Operations).mediaUpload('profile', mediaKey, fn, bucket);
-    const upkey = await ctx.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
+    const wfh = await DBOS.startWorkflow(Operations).mediaUpload('profile', mediaKey, fn, bucket);
+    const upkey = await DBOS.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
     return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  @GetApi("/finishMediaUpload")
-  static async finishMediaUpload(ctx: HandlerContext, wfid: string) {
-    const wfhandle = ctx.retrieveWorkflow(wfid);
+  @DBOS.getApi("/finishMediaUpload")
+  static async finishMediaUpload(wfid: string) {
+    const wfhandle = DBOS.retrieveWorkflow(wfid);
     const stat = await wfhandle.getStatus();
 
     // Validate that the workflow belongs to the user
     if (!stat) {
       errorWithStatus("Upload not in progress", 400);
     }
-    if (stat!.authenticatedUser !== ctx.authenticatedUser) {
+    if (stat!.authenticatedUser !== DBOS.authenticatedUser) {
       errorWithStatus("Unable to access workflow", 403);
     }
     // Should we look at status?  What happens if this is a resubmit?
-    await ctx.send(wfid, "", "uploadfinish");
+    await DBOS.send(wfid, "", "uploadfinish");
     return await wfhandle.getResult();
   }
 
-  @GetApi("/getProfilePhoto")
-  static async getProfilePhoto(ctx: HandlerContext) {
-    const filekey = await ctx.invoke(Operations).getMyProfilePhotoKey(ctx.authenticatedUser);
+  @DBOS.getApi("/getProfilePhoto")
+  static async getProfilePhoto() {
+    const filekey = await Operations.getMyProfilePhotoKey(DBOS.authenticatedUser);
     if (filekey === null) return {};
 
-    const bucket = ctx.getConfig('aws_s3_bucket', 'yky-social-photos');
+    const bucket = DBOS.getConfig('aws_s3_bucket', 'yky-social-photos');
 
-    const presignedUrl = await Operations.getS3DownloadKey(ctx, filekey, bucket);
-    ctx.logger.debug("Giving URL "+presignedUrl);
+    const presignedUrl = await Operations.getS3DownloadKey(filekey, bucket);
+    DBOS.logger.debug("Giving URL "+presignedUrl);
     return { message: "Signed URL", url: presignedUrl, key: filekey };
   }
 

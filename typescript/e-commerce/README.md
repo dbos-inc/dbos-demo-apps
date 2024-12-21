@@ -147,7 +147,7 @@ A number of steps are required.  First, a workflow is selected for replay.  Then
 The following section is only a brief overview of the debugger extension.  For a tutorial, see [Time Travel Debugging](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging).
 
 Provenance data is automatically captured by DBOS Cloud during workflow execution.  Time travel currently only works for applications deployed to DBOS Cloud.
-* The debugger can be launched by clicking on the "Time Travel Debug" icon (which will be above the `@Workflow` and `@Transaction` decorators placed on DBOS methods).  This will pull down workflow IDs from the cloud.
+* The debugger can be launched by clicking on the "Time Travel Debug" icon (which will be above the `@DBOS.workflow` and `@DBOS.transaction` decorators placed on DBOS methods).  This will pull down workflow IDs from the cloud.
 * The debugger can also be launched by clicking on workflow IDs in the cloud dashboard.
 
 > Tips:
@@ -172,25 +172,25 @@ These functions are fairly straightforward, please see the source code for more 
 ### Shop paymentWorkflow
 
 ```ts
-@Workflow()
-static async paymentWorkflow(ctxt: WorkflowContext, username: string, origin: string): Promise<void> {
+@DBOS.workflow()
+static async paymentWorkflow(username: string, origin: string): Promise<void> {
 ```
 
 Like all DBOS functions, `paymentWorkflow` is a static method on a class, in this case named `Shop`.
-DBOS workflows must be decorated with `@Workflow()` and have a `WorkflowContext` as the first parameter.
+DBOS workflows must be decorated with `@DBOS.workflow()`.
 
 ```ts
-  const productDetails = await ctxt.invoke(Shop).getCart(username);
+  const productDetails = await Shop.getCart(username);
   if (productDetails.length === 0) {
-    await ctxt.setEvent(checkout_url_topic, null);
+    await DBOS.setEvent(checkout_url_topic, null);
     return;
   }
 
-  const orderID = await ctxt.invoke(Shop).createOrder(username, productDetails);
+  const orderID = await Shop.createOrder(username, productDetails);
 
-  const valid: boolean = await ctxt.invoke(Shop).subtractInventory(productDetails);
+  const valid: boolean = await Shop.subtractInventory(productDetails);
   if (!valid) {
-    await ctxt.setEvent(checkout_url_topic, null);
+    await DBOS.setEvent(checkout_url_topic, null);
     return;
   }
 ```
@@ -205,10 +205,10 @@ Once we have done the local database operations to create the order, we need to 
 a payment session and get a payment redirection URL.
 
 ```ts
-  const paymentSession = await ctxt.invoke(Shop).createPaymentSession(productDetails, origin);
+  const paymentSession = await Shop.createPaymentSession(productDetails, origin);
   if (!paymentSession?.url) {
-    await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
-    await ctxt.setEvent(checkout_url_topic, null);
+    await Shop.undoSubtractInventory(productDetails);
+    await DBOS.setEvent(checkout_url_topic, null);
     return;
   }
 ```
@@ -224,8 +224,8 @@ Once we have the payment session, we need to redirect the user to the provided U
 We do this by calling `setEvent` to communicate out to the host environment and `recv` to wait until we receive notification that the payment workflow has completed.
 
 ```ts
-  await ctxt.setEvent(checkout_url_topic, paymentSession.url);
-  const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
+  await DBOS.setEvent(checkout_url_topic, paymentSession.url);
+  const notification = await DBOS.recv<string>(checkout_complete_topic, 60);
 ```
 
 The `webCheckout` [Http handler](https://docs.dbos.dev/tutorials/http-serving-tutorial) function that called `paymentWorkflow`
@@ -233,16 +233,16 @@ uses `getEvent` to wait for the `paymentWorkflow` to provide the payment redirec
 
 ```ts
   // from webCheckout function
-  const handle = await ctxt.invoke(Shop).paymentWorkflow(username, origin);
-  const url = await ctxt.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+  const handle = await Shop.paymentWorkflow(username, origin);
+  const url = await DBOS.getEvent<string>(handle.getWorkflowID(), checkout_url_topic);
   if (url === null) {
-    ctxt.koaContext.redirect(`${origin}/checkout/cancel`);
+    DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
   } else {
-    ctxt.koaContext.redirect(url);
+    DBOS.koaContext.redirect(url);
   }
 ```
 
-This code in `webCheckout` also explains the `await ctxt.setEvent(checkout_url_topic, null);` calls in the failure paths of `paymentWorkflow`.
+This code in `webCheckout` also explains the `await DBOS.setEvent(checkout_url_topic, null);` calls in the failure paths of `paymentWorkflow`.
 The HTTP handler function that called `paymentWorkflow` is blocked waiting for payment session to be created.
 If the payment session doesn't get created, `paymentWorkflow` sends a null value for the `checkout_url_topic` event to unblock the HTTP handler function.
 
@@ -251,26 +251,26 @@ It is waiting on a `checkout_complete_topic` message before continuing.
 For more on events and messages, please see [Workflow Communications](https://docs.dbos.dev/tutorials/workflow-communication-tutorial)
 
 ```ts
-  const notification = await ctxt.recv<string>(checkout_complete_topic, 60);
+  const notification = await DBOS.recv<string>(checkout_complete_topic, 60);
 
   if (notification && notification === 'paid') {
     // if the checkout complete notification arrived, the payment is successful so fulfill the order
-    await ctxt.invoke(Shop).fulfillOrder(orderID);
-    await ctxt.invoke(Shop).clearCart(username);
+    await Shop.fulfillOrder(orderID);
+    await Shop.clearCart(username);
   } else {
     // if the checkout complete notification didn't arrive in time, retrieve the session information 
     // in order to check the payment status explicitly 
-    const updatedSession = await ctxt.invoke(Shop).retrievePaymentSession(paymentSession.session_id);
+    const updatedSession = await Shop.retrievePaymentSession(paymentSession.session_id);
     if (!updatedSession) {
-      ctxt.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
+      DBOS.logger.error(`Recovering order #${orderID} failed: payment service unreachable`);
     }
 
     if (updatedSession.payment_status == 'paid') {
-      await ctxt.invoke(Shop).fulfillOrder(orderID);
-      await ctxt.invoke(Shop).clearCart(username);
+      await Shop.fulfillOrder(orderID);
+      await Shop.clearCart(username);
     } else {
-      await ctxt.invoke(Shop).undoSubtractInventory(productDetails);
-      await ctxt.invoke(Shop).errorOrder(orderID);
+      await Shop.undoSubtractInventory(productDetails);
+      await Shop.errorOrder(orderID);
     }
   }
 }
@@ -292,18 +292,18 @@ When the payment system is done processing a payment, it calls back the HTTP han
 The HTTP handler forwards the payment details to the workflow instance via the `send` method. 
  
 ```ts
-@PostApi('/payment_webhook')
-static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
-  const req = ctxt.koaContext.request;
+@DBOS.postApi('/payment_webhook')
+static async paymentWebhook(): Promise<void> {
+  const req = DBOS.koaContext.request;
 
   type Session = { session_id: string; client_reference_id?: string; payment_status: string };
   const payload = req.body as Session;
 
   if (!payload.client_reference_id) {
-    ctxt.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
+    DBOS.logger.error(`Invalid payment webhook callback ${JSON.stringify(payload)}`);
   } else {
-    ctxt.logger.info(`Received for ${payload.client_reference_id}`);
-    await ctxt.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
+    DBOS.logger.info(`Received for ${payload.client_reference_id}`);
+    await DBOS.send(payload.client_reference_id, payload.payment_status, checkout_complete_topic);
   }
 }
 ```

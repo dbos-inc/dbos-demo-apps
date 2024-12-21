@@ -1,17 +1,17 @@
-import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import { TPCC } from "./operations";
 import { getRandomInt, getCustomerName } from "./utils";
 import request from "supertest";
 
 describe("operations-test", () => {
-  let testRuntime: TestingRuntime;
 
   beforeAll(async () => {
-    testRuntime = await createTestingRuntime([TPCC], 'dbos-config.yaml', false);
+    await DBOS.launch();
+    await DBOS.launchAppHTTPServer();
   });
 
   afterAll(async () => {
-    await testRuntime.destroy();
+    await DBOS.shutdown();
   });
 
   /**
@@ -31,7 +31,7 @@ describe("operations-test", () => {
       orderLines[i] = { itemID, supplierWarehouseID: 1, quantity };
     }
 
-    const res = await testRuntime.invoke(TPCC).newOrder(w_id, districtID, customerID, orderLines);
+    const res = await TPCC.newOrder(w_id, districtID, customerID, orderLines);
     expect(res).not.toBeUndefined();
   });
 
@@ -43,7 +43,7 @@ describe("operations-test", () => {
     const customer = getCustomerName();
     const h_amount = (getRandomInt(500000) + 100) / 100;
 
-    const res = await testRuntime.invoke(TPCC).payment(w_id, d_id, c_w_id, c_d_id, customer, h_amount);
+    const res = await TPCC.payment(w_id, d_id, c_w_id, c_d_id, customer, h_amount);
     expect(res).not.toBeUndefined();
   });
 
@@ -55,7 +55,7 @@ describe("operations-test", () => {
     const customer = getRandomInt(3000) + 1;
     const h_amount = (getRandomInt(500000) + 100) / 100;
 
-    const res = await testRuntime.invoke(TPCC).payment(w_id, d_id, c_w_id, c_d_id, customer, h_amount);
+    const res = await TPCC.payment(w_id, d_id, c_w_id, c_d_id, customer, h_amount);
     expect(res).not.toBeUndefined();
   });
 
@@ -63,14 +63,14 @@ describe("operations-test", () => {
    * Test the HTTP endpoint.
    */
   test("test-paymentEndpoint", async () => {
-    const res = await request(testRuntime.getHandlersCallback()).get(
+    const res = await request(DBOS.getHTTPHandlersCallback()).get(
       "/payment/1"
     );
     expect(res.statusCode).toBe(200);
   });
 
   test("test-neworderEndpoint", async () => {
-    const res = await request(testRuntime.getHandlersCallback()).get(
+    const res = await request(DBOS.getHTTPHandlersCallback()).get(
       "/neworder/1"
     );
     expect(res.statusCode).toBe(200);

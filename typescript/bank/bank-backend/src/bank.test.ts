@@ -1,34 +1,40 @@
-import { TestingRuntime, createTestingRuntime } from "@dbos-inc/dbos-sdk";
-import { BankEndpoints, BankAccountInfo, BankTransactionHistory } from "./operations";
+import { DBOS, parseConfigFile } from "@dbos-inc/dbos-sdk";
+import { BankEndpoints as _endpoints, BankAccountInfo, BankTransactionHistory } from "./operations";
 import request from "supertest";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { convertTransactionHistory } from "./router";
 
 describe("bank-tests", () => {
-  let testRuntime: TestingRuntime;
-
   beforeAll(async () => {
-    testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "dbos-test-config.yaml");
-    await testRuntime.queryUserDB<void>(`delete from "AccountInfo" where "ownerName"=$1;`, "alice");
+    //testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "dbos-test-config.yaml");
+    //export function parseConfigFile(cliOptions?: ParseOptions, useProxy: boolean = false): [DBOSConfig, DBOSRuntimeConfig] {
+    const [dbosConfig, rtConfig] = parseConfigFile({configfile: "dbos-test-config.yaml"});
+    DBOS.setConfig(dbosConfig, rtConfig);
+
+    await DBOS.launch();
+    await DBOS.launchAppHTTPServer();
+    await DBOS.executor.queryUserDB(`delete from "AccountInfo" where "ownerName"=$1;`, ["alice"]);
   });
 
   afterAll(async () => {
-    await testRuntime.destroy();
+    await DBOS.shutdown();
   });
 
   // eslint-disable-next-line @typescript-eslint/require-await
   test("test-greeting", async () => {
-    const response = await request(testRuntime.getHandlersCallback()).get("/api/greeting");
+    const response = await request(DBOS.getHTTPHandlersCallback()).get("/api/greeting");
     expect(response.statusCode).toBe(401); // This is because we don't have a valid JWT token.
   });
 
   test("test-create-account", async () => {
-    await expect(testRuntime.invoke(BankAccountInfo, undefined, { authenticatedRoles: ["appAdmin"] }).createAccountFunc("alice", "saving", 0)).resolves.toMatchObject({
-      ownerName: "alice",
-      type: "saving",
+    await DBOS.withAuthedContext('admin', ['appAdmin'], async () => {
+      await expect(BankAccountInfo.createAccountFunc("alice", "saving", 0)).resolves.toMatchObject({
+        ownerName: "alice",
+        type: "saving",
+      });
     });
 
-    const res = await testRuntime.queryUserDB<AccountInfo>(`select * from "AccountInfo" where "ownerName" = $1;`, "alice");
+    const res = await DBOS.executor.queryUserDB(`select * from "AccountInfo" where "ownerName" = $1;`, ["alice"]) as AccountInfo[];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(res[0].ownerName).toBe("alice");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -36,28 +42,27 @@ describe("bank-tests", () => {
   });
 
   test("test-workflow", async () => {
-    // Find the account we created for alice.
-    const resList: AccountInfo[] = await testRuntime.invoke(BankAccountInfo, undefined, { authenticatedRoles: ["appUser"] }).listAccountsFunc("alice");
-    expect(resList.length).toBe(1);
-    const acctId = resList[0].accountId;
+    await DBOS.withAuthedContext('user', ['appUser'], async () => {
+      // Find the account we created for alice.
+      const resList: AccountInfo[] = await BankAccountInfo.listAccountsFunc("alice");
+      expect(resList.length).toBe(1);
+      const acctId = resList[0].accountId;
 
-    // Run deposit.
-    let res = await testRuntime
-      .invokeWorkflow(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
-      .depositWorkflow(convertTransactionHistory({ fromLocation: "cash", toAccountId: acctId, toLocation: "local", amount: 100 } as TransactionHistory));
-    expect(res).toBe("Deposit succeeded!");
+      // Run deposit.
+      let res = await BankTransactionHistory
+        .depositWorkflow(convertTransactionHistory({ fromLocation: "cash", toAccountId: acctId, toLocation: "local", amount: 100 } as TransactionHistory));
+      expect(res).toBe("Deposit succeeded!");
 
-    // Run withdraw.
-    res = await testRuntime
-      .invokeWorkflow(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
-      .withdrawWorkflow(convertTransactionHistory({ toLocation: "cash", fromAccountId: acctId, fromLocation: "local", amount: 50 } as TransactionHistory));
-    expect(res).toBe("Withdraw succeeded!");
+      // Run withdraw.
+      res = await BankTransactionHistory
+        .withdrawWorkflow(convertTransactionHistory({ toLocation: "cash", fromAccountId: acctId, fromLocation: "local", amount: 50 } as TransactionHistory));
+      expect(res).toBe("Withdraw succeeded!");
 
-    // Try to overdraw.
-    await expect(
-      testRuntime
-        .invokeWorkflow(BankTransactionHistory, undefined, { authenticatedRoles: ["appUser"] })
-        .withdrawWorkflow(convertTransactionHistory({ toLocation: "cash", fromAccountId: acctId, fromLocation: "local", amount: 100 } as TransactionHistory))
-    ).rejects.toThrow("Not enough balance!");
+      // Try to overdraw.
+      await expect(
+        BankTransactionHistory
+          .withdrawWorkflow(convertTransactionHistory({ toLocation: "cash", fromAccountId: acctId, fromLocation: "local", amount: 100 } as TransactionHistory))
+      ).rejects.toThrow("Not enough balance!");
+    });
   });
 });
