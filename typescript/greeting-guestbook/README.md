@@ -1,42 +1,31 @@
-# DBOS Guestbook Hello App
+# Greeting Guestbook
 
-This is the app described in the [DBOS Programming Guide](https://docs.dbos.dev/getting-started/quickstart-programming)
+This is the completed app described in the [DBOS TypeScript Programming Guide](https://docs.dbos.dev/typescript/programming-guide).
 
-## Getting Started
+### Running Locally
 
-First, install all the app dependencies
-```bash
-npm install
-```
+To run this app locally, you need a Postgres database.
+If you have Docker, you can start one with:
 
-Start the database. You can use any Postgres DB. If you don't have one, we've provided a script that starts Postgres locally in a Docker container and creates a database:
-
-```bash
-export PGPASSWORD=dbos  #set PGPASSWORD=dbos on Windows
+```shell
+export PGPASSWORD=dbos
 node start_postgres_docker.js
 ```
 
-Then, create some database tables.
+Then run:
 
-```bash
-npx dbos migrate
-```
-
-Then, visit the guestbook key generator at [https://demo-guestbook.cloud.dbos.dev/key](https://demo-guestbook.cloud.dbos.dev/key) and save your key to `dbos-config.yaml`
-
-Next, build and run the app:
-
-```bash
+```shell
+npm install
 npm run build
-npx dbos start
+npx dbos migrate
+npm run start
 ```
 
-Finally, curl the server to see that it's working!
+or simply:
 
-```bash
- curl http://localhost:3000/greeting/dbos
+```shell
+npm install
+npm run dev
 ```
 
-## Learn More
-
-To learn more about DBOS, take a look at [our documentation](https://docs.dbos.dev/) or our [source code](https://github.com/dbos-inc/dbos-transact).
+Visit [`http://localhost:3000/greeting/dbos`](http://localhost:3000/greeting/dbos) to try out the app!
