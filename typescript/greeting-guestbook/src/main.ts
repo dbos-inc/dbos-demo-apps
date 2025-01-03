@@ -34,7 +34,7 @@ export class Guestbook {
     for (let i = 0; i < 5; i++) {
       console.log("Press Control + C to stop the app...");
       await DBOS.sleep(1000);
-  }
+    }
     await Guestbook.insertGreeting(name);
     return `Thank you for being awesome, ${name}!`;
   }
