@@ -1,6 +1,6 @@
 # Greeting Guestbook
 
-This is the app described in the [DBOS TypeScript Programming Guide](https://docs.dbos.dev/typescript/programming-guide).
+This is the completed app described in the [DBOS TypeScript Programming Guide](https://docs.dbos.dev/typescript/programming-guide).
 
 ### Running Locally
 
@@ -19,6 +19,13 @@ npm install
 npm run build
 npx dbos migrate
 npm run start
+```
+
+or simply:
+
+```shell
+npm install
+npm run dev
 ```
 
 Visit [`http://localhost:3000/greeting/dbos`](http://localhost:3000/greeting/dbos) to try out the app!
