@@ -6,6 +6,10 @@ database:
   app_db_name: ${POSTGRES_DATABASE}
   app_db_client: 'typeorm'
   connectionTimeoutMillis: 3000
+  migrate:
+    - npx typeorm migration:run -d dist/datasource.js
+  rollback:
+    - npx typeorm migration:revert -d dist/datasource.js
 runtimeConfig:
   port: 3000
 application:

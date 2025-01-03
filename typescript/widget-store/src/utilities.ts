@@ -1,8 +1,5 @@
-import { SendEmailStep } from '@dbos-inc/communicator-email-ses';
-import { Scheduled, SchedulerMode, Transaction, TransactionContext, Workflow, WorkflowContext, configureInstance} from '@dbos-inc/dbos-sdk';
-import { Knex } from 'knex';
-
-type KnexTransactionContext = TransactionContext<Knex>;
+import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
+import { SchedulerMode, DBOS} from '@dbos-inc/dbos-sdk';
 
 export enum OrderStatus {
   PENDING = 0,
@@ -38,15 +35,15 @@ export interface OrderWithProduct {
 export const PRODUCT_ID = 1;
 
 const reportSes = (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])
-  ? configureInstance(SendEmailStep, 'reportSES', {awscfgname: 'aws_config'})
+  ? DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'})
   : undefined;
 
 export class ShopUtilities {
-  @Transaction()
-  static async subtractInventory(ctxt: KnexTransactionContext): Promise<void> {
-    const numAffected = await ctxt.client<Product>('products').where('product_id', PRODUCT_ID).andWhere('inventory', '>=', 1)
+  @DBOS.transaction()
+  static async subtractInventory(): Promise<void> {
+    const numAffected = await DBOS.knexClient<Product>('products').where('product_id', PRODUCT_ID).andWhere('inventory', '>=', 1)
       .update({
-        inventory: ctxt.client.raw('inventory - ?', 1)
+        inventory: DBOS.knexClient.raw('inventory - ?', 1)
       });
     //A good block to uncomment in time-travel debugger to see an example of querying past state
     // const item = await ctxt.client<Product>('products').select('inventory').where({ product_id: PRODUCT_ID });
@@ -56,75 +53,75 @@ export class ShopUtilities {
     }
   }
 
-  @Transaction()
-  static async undoSubtractInventory(ctxt: KnexTransactionContext): Promise<void> {
-    await ctxt.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory: ctxt.client.raw('inventory + ?', 1) });
+  @DBOS.transaction()
+  static async undoSubtractInventory(): Promise<void> {
+    await DBOS.knexClient<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory: DBOS.knexClient.raw('inventory + ?', 1) });
   }
 
-  @Transaction()
-  static async setInventory(ctxt: KnexTransactionContext, inventory: number): Promise<void> {
-    await ctxt.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
+  @DBOS.transaction()
+  static async setInventory(inventory: number): Promise<void> {
+    await DBOS.knexClient<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
   }
 
-  @Transaction({ readOnly: true })
-  static async retrieveProduct(ctxt: KnexTransactionContext): Promise<Product> {
-    const item = await ctxt.client<Product>('products').select("*").where({ product_id: PRODUCT_ID });
+  @DBOS.transaction({ readOnly: true })
+  static async retrieveProduct(): Promise<Product> {
+    const item = await DBOS.knexClient<Product>('products').select("*").where({ product_id: PRODUCT_ID });
     if (!item.length) {
       throw new Error(`Product ${PRODUCT_ID} not found`);
     }
     return item[0];
   }
 
-  @Transaction()
-  static async createOrder(ctxt: KnexTransactionContext): Promise<number> {
-    const orders = await ctxt.client<Order>('orders').insert({
+  @DBOS.transaction()
+  static async createOrder(): Promise<number> {
+    const orders = await DBOS.knexClient<Order>('orders').insert({
       order_status: OrderStatus.PENDING,
       product_id: PRODUCT_ID,
-      last_update_time: ctxt.client.fn.now(),
+      last_update_time: DBOS.knexClient.fn.now(),
       progress_remaining: 10,
     }).returning('order_id');
     const orderID = orders[0].order_id;
     return orderID;
   }
 
-  @Transaction()
-  static async markOrderPaid(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
-    await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
+  @DBOS.transaction()
+  static async markOrderPaid(order_id: number): Promise<void> {
+    await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
       order_status: OrderStatus.PAID,
-      last_update_time: ctxt.client.fn.now()
+      last_update_time: DBOS.knexClient.fn.now()
     });
   }
 
-  @Transaction()
-  static async errorOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
-    await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
+  @DBOS.transaction()
+  static async errorOrder(order_id: number): Promise<void> {
+    await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
       order_status: OrderStatus.CANCELLED,
-      last_update_time: ctxt.client.fn.now()
+      last_update_time: DBOS.knexClient.fn.now()
     });
   }
 
-  @Transaction({ readOnly: true })
-  static async retrieveOrder(ctxt: KnexTransactionContext, order_id: number): Promise<Order> {
-    const item = await ctxt.client<Order>('orders').select("*").where({ order_id: order_id });
+  @DBOS.transaction({ readOnly: true })
+  static async retrieveOrder(order_id: number): Promise<Order> {
+    const item = await DBOS.knexClient<Order>('orders').select("*").where({ order_id: order_id });
     if (!item.length) {
       throw new Error(`Order ${order_id} not found`);
     }
     return item[0];
   }
 
-  @Transaction({ readOnly: true })
-  static async retrieveOrders(ctxt: KnexTransactionContext) {
-    return ctxt.client<Order>('orders').select("*");
+  @DBOS.transaction({ readOnly: true })
+  static async retrieveOrders() {
+    return DBOS.knexClient<Order>('orders').select("*");
   }
 
-  @Transaction({ readOnly: true })
-  static async retrievePaidOrders(ctxt: KnexTransactionContext) {
-    return ctxt.client<Order>('orders').select("*").where({ order_status: OrderStatus.PAID });
+  @DBOS.transaction({ readOnly: true })
+  static async retrievePaidOrders() {
+    return DBOS.knexClient<Order>('orders').select("*").where({ order_status: OrderStatus.PAID });
   }
 
-  @Transaction()
-  static async makeProgressOnPaidOrder(ctxt: KnexTransactionContext, order_id: number): Promise<void> {
-    const orders = await ctxt.client<Order>('orders').where({
+  @DBOS.transaction()
+  static async makeProgressOnPaidOrder(order_id: number): Promise<void> {
+    const orders = await DBOS.knexClient<Order>('orders').where({
       order_id: order_id,
       order_status: OrderStatus.PAID,
     });
@@ -134,52 +131,52 @@ export class ShopUtilities {
 
     const order = orders[0];
     if (order.progress_remaining > 1) {
-      await ctxt.client<Order>('orders').where({ order_id: order_id }).update({ progress_remaining: order.progress_remaining - 1 });
+      await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({ progress_remaining: order.progress_remaining - 1 });
     } else {
-      await ctxt.client<Order>('orders').where({ order_id: order_id }).update({
+      await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
         order_status: OrderStatus.DISPATCHED,
         progress_remaining: 0
       });
     }
   }
 
-  @Scheduled({crontab: '0 0 * * *'}) // Every midnight
-  @Workflow()
-  static async nightlyReport(ctx: WorkflowContext, schedDate: Date, _curdate: Date) {
+  @DBOS.scheduled({crontab: '0 0 * * *'}) // Every midnight
+  @DBOS.workflow()
+  static async nightlyReport(schedDate: Date, _curdate: Date) {
     const yesterday = schedDate;
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const sales = await ctx.invoke(ShopUtilities).getDailySales(yesterday);
-    await ShopUtilities.sendStatusEmail(ctx, yesterday, sales);
+    const sales = await ShopUtilities.getDailySales(yesterday);
+    await ShopUtilities.sendStatusEmail(yesterday, sales);
   }
 
-  @Scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '*/20 * * * * *'}) // Every second
-  @Workflow()
-  static async makeProgressOnAllPaidOrders(ctx: WorkflowContext, _schedDate: Date, _curdate: Date) {
-    const orders = await ctx.invoke(ShopUtilities).retrievePaidOrders();
+  @DBOS.scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '*/20 * * * * *'}) // Every second
+  @DBOS.workflow()
+  static async makeProgressOnAllPaidOrders(_schedDate: Date, _curdate: Date) {
+    const orders = await ShopUtilities.retrievePaidOrders();
     for (const order of orders) {
-      await ctx.invoke(ShopUtilities).makeProgressOnPaidOrder(order.order_id);
+      await ShopUtilities.makeProgressOnPaidOrder(order.order_id);
     }
   }
 
-  @Transaction({readOnly: true})
-  static async getDailySales(ctx: KnexTransactionContext, day: Date) {
+  @DBOS.transaction({readOnly: true})
+  static async getDailySales(day: Date) {
     const startOfDay = new Date(day.setHours(0, 0, 0, 0));
     const endOfDay = new Date(day.setHours(23, 59, 59, 999));
 
-    const result = await ctx.client('orders')
+    const result = await DBOS.knexClient('orders')
       .join('products', 'orders.product_id', 'products.product_id')
       .whereBetween('orders.last_update_time', [startOfDay, endOfDay])
-      .select(ctx.client.raw('COUNT(DISTINCT orders.order_id) as order_count'))
-      .select(ctx.client.raw('COUNT(orders.product_id) as product_count'))
-      .select(ctx.client.raw('SUM(products.price) as total_price'));
+      .select(DBOS.knexClient.raw('COUNT(DISTINCT orders.order_id) as order_count'))
+      .select(DBOS.knexClient.raw('COUNT(orders.product_id) as product_count'))
+      .select(DBOS.knexClient.raw('SUM(products.price) as total_price'));
 
     return result[0] as SalesSummary;
   }
 
-  static async sendStatusEmail(ctx: WorkflowContext, yd: Date, sales: SalesSummary) {
+  static async sendStatusEmail(yd: Date, sales: SalesSummary) {
     if (!reportSes) return;
-    await ctx.invoke(reportSes).sendEmail({
+    await reportSes.sendEmail({
       to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
       from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
       subject: `Daily report for ${yd.toDateString()}`,
