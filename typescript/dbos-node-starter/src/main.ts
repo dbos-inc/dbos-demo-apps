@@ -18,7 +18,7 @@ export class MyApp {
   // interrupted, or restarted while running this workflow, the workflow automatically
   // resumes from the last completed step.
   @DBOS.workflow()
-  static async launchTaskWithSteps(n: number): Promise<void> {
+  static async backgroundTask(n: number): Promise<void> {
     for (let i = 1; i <= n; i++) {
       await MyApp.backgroundTaskStep(i);
       await DBOS.setEvent(stepsEvent, i);
@@ -35,7 +35,7 @@ export class MyApp {
 // This endpoint uses DBOS to idempotently launch a crashproof background task with N steps.
 app.get("/background/:taskid/:steps", async (req, res) => {
     const { taskid, steps } = req.params;
-    await DBOS.startWorkflow(MyApp, { workflowID: taskid }).launchTaskWithSteps(Number(steps));
+    await DBOS.startWorkflow(MyApp, { workflowID: taskid }).backgroundTask(Number(steps));
     res.send("Task launched!");
   }
 );
