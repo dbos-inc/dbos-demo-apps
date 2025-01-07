@@ -16,4 +16,4 @@ database:
     - echo 'No migrations specified'
 telemetry:
   logs:
-    logLevel: INFO
+    logLevel: 'info'
