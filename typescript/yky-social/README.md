@@ -1,6 +1,6 @@
 # DBOS Social Demo App (YKY)
 
-This demo shows a [DBOS](https://github.com/dbos-inc/dbos-transact) backend system coupled with a next.js frontend.
+This demo shows a [DBOS](https://github.com/dbos-inc/dbos-transact-ts) backend system coupled with a next.js frontend.
 
 It simulates a simple social network, and demonstrates:
 * Use of DBOS workflows, transactions, and steps

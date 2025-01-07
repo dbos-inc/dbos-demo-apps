@@ -368,7 +368,7 @@ We can quickly review our assignment of roles to endpoints by reviewing the info
 2024-06-27 14:15:23 [info]:         Required Roles: ["appUser"] 
 ```
 
-If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
+If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/typescript/tutorials/crosscutting/authentication-authorization) tutorial.
 
 ## Deploying to DBOS Cloud
 We can make some quick changes to deploy the DBOS Bank backend in the cloud, using the free "DBOS Starter" hosting tier.
@@ -444,12 +444,14 @@ This demo is time sensitive as you'll have a 10-second sleep window to crash Ban
 5. In the log for the app, you should see the failed transfer. The 10 `Sleeping` statements, interrupted by a crash, then restart, workflow recovery and finally the "transaction reversed" error message.
 
 ## Further Reading
-To get started with DBOS Transact, check out the [quickstart](https://docs.dbos.dev/getting-started/quickstart) and [docs](https://docs.dbos.dev/).
+- To start a DBOS app from a template, visit our [quickstart](https://docs.dbos.dev/quickstart).
+- For DBOS Transact programming tutorials, check out our [programming guide](https://docs.dbos.dev/typescript/programming-guide).
+- To learn more about DBOS, take a look at [our documentation](https://docs.dbos.dev/) or our [source code](https://github.com/dbos-inc/dbos-transact).
 
-DBOS [concepts](https://docs.dbos.dev/explanations/core-concepts) and their execution guarantees covered in depth in the [workflow tutorial](https://docs.dbos.dev/tutorials/workflow-tutorial).
+DBOS [concepts](https://docs.dbos.dev/explanations/how-workflows-work) and their execution guarantees are covered in depth in the [workflow tutorial](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial).
 
-For a quick introduction to [DBOS Cloud](https://www.dbos.dev/dbos-cloud), see [the tutorials](https://docs.dbos.dev/category/dbos-cloud-tutorials).  Of particular interest is the [DBOS Cloud Monitoring Dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
+For a quick introduction to [DBOS Cloud](https://www.dbos.dev/dbos-cloud), see [the tutorials](https://docs.dbos.dev/quickstart).  Of particular interest is the [DBOS Cloud Monitoring Dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard).
 
-For more information on [Prisma](https://www.prisma.io) as an ORM in DBOS, see [Using Prisma](https://docs.dbos.dev/tutorials/using-prisma).
+For more information on [Prisma](https://www.prisma.io) as an ORM in DBOS, see [Using Prisma](https://docs.dbos.dev/typescript/tutorials/orms/using-prisma).
 
-If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/tutorials/authentication-authorization) tutorial.
+If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/typescript/tutorials/crosscutting/authentication-authorization) tutorial.
