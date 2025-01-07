@@ -33,7 +33,7 @@ You can use a DBOS Cloud database, a Docker container, or a local Postgres insta
 <details>
 <summary><strong>Connecting to a DBOS Cloud Postgres database</strong></summary>
 
-> [!NOTE]
+> [!NOTE]  
 > You must have already deployed an app to DBOS Cloud before using the DBOS Cloud Postgres database.
 
 First install the DBOS Cloud CLI globally:
