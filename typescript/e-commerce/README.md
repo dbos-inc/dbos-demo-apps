@@ -1,6 +1,6 @@
 # DBOS E-Commerce Demo Apps
 
-This demo is a pair of [DBOS](https://github.com/dbos-inc/dbos-transact) based systems demonstrating an 
+This demo is a pair of [DBOS](https://github.com/dbos-inc/dbos-transact-ts) based systems demonstrating an 
 e-commerce scenario with separate apps for the online shop and the payment provider.
 
 ## Demo Setup (local)
@@ -79,8 +79,7 @@ Pressing Submit Payment simulates entering your payment information, redirecting
 When a payment is submitted, your shopping cart is cleared automatically.
 
 ## Deploying the Demo to the Cloud
-> **💡 Tip:** If you have not yet read the [DBOS Cloud Quickstart](https://docs.dbos.dev/getting-started/quickstart-cloud) or the
-> [DBOS Cloud Tutorials](https://docs.dbos.dev/category/dbos-cloud-tutorials) it may be a good idea to do so.
+> **💡 Tip:** If you have not yet read the [DBOS Cloud Quickstart](https://docs.dbos.dev/quickstart) it may be a good idea to do so.
 
 ### Deploying the Payment Backend
 The following steps are necessary to deploy the payment backend to the DBOS Cloud:
@@ -121,7 +120,7 @@ The Shop frontend can also be deployed to a Next.js hosting environment, such as
 
 ### Retrieving Status and Logs
 Once you have deployed the shop to the cloud and placed a few orders, try out some of the cloud administration and monitoring commands.
-(See the [tutorial](https://docs.dbos.dev/category/dbos-cloud-tutorials) or the [CLI reference](https://docs.dbos.dev/api-reference/cloud-cli) for more information.)
+(See the [tutorial](https://docs.dbos.dev/quickstart) or the [CLI reference](https://docs.dbos.dev/cloud-tutorials/cloud-cli) for more information.)
 
 Check the application status and logs from either the `e-commerce/payment-backend` or `e-commerce/shop-backend` directories by excuting DBOS Cloud CLI commands, such as:
 * `npx dbos-cloud app status` - Provide a summary of the app, its database server, whether it is available, and if so, the app's URL
@@ -152,7 +151,7 @@ Provenance data is automatically captured by DBOS Cloud during workflow executio
 
 > Tips:
 > * The "DBOS Time Travel Debugger" extension must be installed.  Sometimes restarting Visual Studio Code is necessary.
-> * Detailed information and instructions can be found in the [Time Travel Debugger](https://docs.dbos.dev/api-reference/time-travel-debugger) reference.
+> * Detailed information and instructions can be found in the [Time Travel Debugger](https://docs.dbos.dev/typescript/reference/tools/time-travel-debugger) reference.
 > * Visual Studio Code should be open to the folder of the application you want to debug, not a child or parent folder.  This allows the extension to find the application configuration and use the saved app credentials to access DBOS Cloud.
 > * If the extension reports an error, review the logs that can be seen under "View"->"Output"->"DBOS" and "DBOS Debug Proxy".
 > * The Debugger extension needs the database password to retrieve a snapshot of data for debugging.  If the password needs to be changed, select "View"->"Command Palette..." and click "DBOS: Delete Stored Application Datbase Passwords" and try debugging again.
@@ -160,13 +159,13 @@ Provenance data is automatically captured by DBOS Cloud during workflow executio
 
 ## Under the Covers
 
-> Note, this section assumes you have read at least the [DBOS Getting Started docs](https://docs.dbos.dev/category/getting-started).
+> Note, this section assumes you have read at least the [DBOS Getting Started docs](https://docs.dbos.dev/quickstart).
 
-Each backend package in this demo has a single [reliable workflow](https://docs.dbos.dev/tutorials/workflow-tutorial) at its core.
+Each backend package in this demo has a single [reliable workflow](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial) at its core.
 The following sections show the code for that workflow, along with detailed notes regarding how it works.
-Each package also has [transaction](https://docs.dbos.dev/tutorials/transaction-tutorial),
-[step](https://docs.dbos.dev/tutorials/step-tutorial) 
-and [handler](https://docs.dbos.dev/tutorials/http-serving-tutorial) functions.
+Each package also has [transaction](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial),
+[step](https://docs.dbos.dev/typescript/tutorials/step-tutorial) 
+and [handler](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial) functions.
 These functions are fairly straightforward, please see the source code for more details.
 
 ### Shop paymentWorkflow
@@ -196,7 +195,7 @@ DBOS workflows must be decorated with `@DBOS.workflow()`.
 ```
 
 The workflow starts off with some basic database operations.
-Each of these database operations is implemented via a [transaction function](https://docs.dbos.dev/tutorials/transaction-tutorial).
+Each of these database operations is implemented via a [transaction function](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial).
 The workflow retrieves the user's shopping cart, creates an order from cart items and subtracts the items from inventory. 
 If there are no items in the cart or there isn't sufficient inventory to fulfill the order, the workflow fails.
 The `setEvent` call in the failure paths will be described shortly.
@@ -213,7 +212,7 @@ a payment session and get a payment redirection URL.
   }
 ```
 
-Assuming the order can be fulfilled, `paymentWorkflow` calls out to the payment provider via a [step](https://docs.dbos.dev/tutorials/communicator-tutorial).
+Assuming the order can be fulfilled, `paymentWorkflow` calls out to the payment provider via a [step](https://docs.dbos.dev/typescript/tutorials/step-tutorial).
 In a real-world shop using a real-world payment provider such as Stripe, `createPaymentSession` would likely use a client SDK from the payment provider.
 Since this is a demo, raw `fetch` calls are used instead.
 
@@ -228,7 +227,7 @@ We do this by calling `setEvent` to communicate out to the host environment and 
   const notification = await DBOS.recv<string>(checkout_complete_topic, 60);
 ```
 
-The `webCheckout` [Http handler](https://docs.dbos.dev/tutorials/http-serving-tutorial) function that called `paymentWorkflow`
+The `webCheckout` [Http handler](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial) function that called `paymentWorkflow`
 uses `getEvent` to wait for the `paymentWorkflow` to provide the payment redirection URL.
 
 ```ts
@@ -248,7 +247,7 @@ If the payment session doesn't get created, `paymentWorkflow` sends a null value
 
 Note that even though the `webCheckout` function will complete and return after receiving the event, the `paymentWorkflow` is still running. 
 It is waiting on a `checkout_complete_topic` message before continuing. 
-For more on events and messages, please see [Workflow Communications](https://docs.dbos.dev/tutorials/workflow-communication-tutorial)
+For more on events and messages, please see [Workflow Communications](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial#workflow-events)
 
 ```ts
   const notification = await DBOS.recv<string>(checkout_complete_topic, 60);
@@ -350,16 +349,15 @@ They also provide a [Docker image](https://openapi-generator.tech/docs/installat
 ## Unit Testing in DBOS
 
 The e-commerce example application demonstrates a number of techniques for testing DBOS application logic before deployment.
-For more information on testing in DBOS, see the [Testing and Debugging](https://docs.dbos.dev/tutorials/testing-tutorial) tutorial and [DBOS Testing Runtime](https://docs.dbos.dev/api-reference/testing-runtime) reference.
+For more information on testing in DBOS, see the [Testing and Debugging](https://docs.dbos.dev/typescript/tutorials/development/testing-tutorial) tutorial.
 
 ### Testing Techniques
 
 The `payment-backend` project uses:
 * The [`jest`](https://jestjs.io/) testing framework for defining test suites (setup, teardown, and tests) and reporting test results.
-* The [DBOS Testing Runtime](https://docs.dbos.dev/api-reference/testing-runtime), which permits "clear-box" testing of the application logic.
-* [`supertest`](https://github.com/ladjs/supertest) executed against [`testRuntime.getHandlersCallback()`](https://docs.dbos.dev/api-reference/testing-runtime#runtimegethandlerscallback) to test HTTP handling logic in combination with the DBOS-based application code.
-* `testRuntime.send` and `testRuntime.retrieveWorkflow` to examine and interact with the workflow under test.
-* `testRuntime.setConfig` to set [application configuration](https://docs.dbos.dev/api-reference/configuration/#application) items, allowing the resulting behavior to be unit-tested.
+* [`supertest`](https://github.com/ladjs/supertest) executed against [`DBOS.getHTTPHandlersCallback()`](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#http-testing) to test HTTP handling logic in combination with the DBOS-based application code.
+* `DBOS.send` and `DBOS.retrieveWorkflow` to examine and interact with the workflow under test.
+* `DBOS.setConfig` to set [application configuration](https://docs.dbos.dev/typescript/reference/configuration#application) items, allowing the resulting behavior to be unit-tested.
 
 The `shop-backend` project uses a few additional testing techniques:
 * Using `testRuntime.invoke` to call application functions without creating HTTP-style requests (via `supertest`).

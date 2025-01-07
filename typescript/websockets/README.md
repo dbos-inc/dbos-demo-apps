@@ -1,6 +1,6 @@
 # Websockets samples
 
-The sample takes the application generated in the [DBOS quick start](https://docs.dbos.dev/getting-started/quickstart) and adds a websocket endpoint to it.
+The sample takes the application generated in the [DBOS quick start](https://docs.dbos.dev/quickstart) and adds a websocket endpoint to it.
 
 ## Code
 
@@ -18,7 +18,7 @@ to receive data from the server.
 
 ## Deploying the service
 
-Follow the instructions in the [quickstart](https://docs.dbos.dev/getting-started/quickstart) to deploy the app either to the cloud or run locally.
+Follow the instructions in the [quickstart](https://docs.dbos.dev/quickstart) to deploy the app either to the cloud or run locally.
 
 On successful deployment, you will see a message
 

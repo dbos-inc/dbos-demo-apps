@@ -27,7 +27,7 @@ The Server Tools section give you an opportunity to crash the app. After crashin
 
 ## Nightly Sales Reports (Optional)
 
-As per [this blog post](https://www.dbos.dev/blog/how-to-build-cloud-cron-jobs), the DBOS Widget Store can send out nightly email sales reports, illustrating [scheduled workflows](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows) and an [email library](https://www.npmjs.com/package/@dbos-inc/dbos-email-ses).
+As per [this blog post](https://www.dbos.dev/blog/how-to-build-cloud-cron-jobs), the DBOS Widget Store can send out nightly email sales reports, illustrating [scheduled workflows](https://docs.dbos.dev/typescript/tutorials/requestsandevents/scheduled-workflows) and an [email library](https://www.npmjs.com/package/@dbos-inc/dbos-email-ses).
 
 To enable the features, set up your email accounts in [SES](https://us-east-2.console.aws.amazon.com/ses/home) and then set the following environment variables before launching the widget store:
 
