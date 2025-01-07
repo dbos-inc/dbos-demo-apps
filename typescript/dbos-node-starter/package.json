@@ -7,7 +7,6 @@
     "start": "npx dbos start"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.30.13",
     "nodemon": "^3.1.0",
     "typescript": "^5.4.5"
   },
