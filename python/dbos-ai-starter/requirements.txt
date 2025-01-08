@@ -1,2 +1,2 @@
-dbos==0.15.0
+dbos==0.16.0
 llama-index==0.11.23
