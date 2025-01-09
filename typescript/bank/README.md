@@ -368,7 +368,7 @@ We can quickly review our assignment of roles to endpoints by reviewing the info
 2024-06-27 14:15:23 [info]:         Required Roles: ["appUser"] 
 ```
 
-If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/typescript/tutorials/crosscutting/authentication-authorization) tutorial.
+If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/typescript/tutorials/authentication-authorization) tutorial.
 
 ## Deploying to DBOS Cloud
 We can make some quick changes to deploy the DBOS Bank backend in the cloud, using the free "DBOS Starter" hosting tier.
@@ -454,4 +454,4 @@ For a quick introduction to [DBOS Cloud](https://www.dbos.dev/dbos-cloud), see [
 
 For more information on [Prisma](https://www.prisma.io) as an ORM in DBOS, see [Using Prisma](https://docs.dbos.dev/typescript/tutorials/orms/using-prisma).
 
-If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/typescript/tutorials/crosscutting/authentication-authorization) tutorial.
+If you are interested in learning more about declarative security in DBOS, please read our [Authentication and Authorization](https://docs.dbos.dev/typescript/tutorials/authentication-authorization) tutorial.
