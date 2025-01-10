@@ -1,5 +1,4 @@
 import { DBOS, ArgOptional } from '@dbos-inc/dbos-sdk';
-import { Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
 import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceStep, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
@@ -43,13 +42,13 @@ export interface AlertEmployeeInfo
 export class AlertCenter {
 
   //This is invoked when a new alert message arrives using the @KafkaConsume decorator
-  @Workflow()
+  @DBOS.workflow()
   @KafkaConsume(respondTopic)
-  static async inboundAlertWorkflow(ctxt: WorkflowContext, topic: string, _partition: number, message: KafkaMessage) {
+  static async inboundAlertWorkflow(topic: string, _partition: number, message: KafkaMessage) {
     const payload = JSON.parse(message.value!.toString()) as {
       alerts: AlertWithMessage[],
     };
-    ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`);
+    DBOS.logger.info(`Received alert: ${JSON.stringify(payload)}`);
     //Add to the database
     for (const detail of payload.alerts) {
       await RespondUtilities.addAlert(detail);
