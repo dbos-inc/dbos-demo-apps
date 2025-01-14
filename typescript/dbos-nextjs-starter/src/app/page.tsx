@@ -1,13 +1,20 @@
 "use client";
 
 import Head from 'next/head';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { lastStep } from '@/actions/last_step';
+import { startBackgroundTask } from '@/actions/background';
+import { crash } from '@/actions/crash';
 
 export default function Page() {
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [status, setStatus] = useState('');
   const [reconnecting, setReconnecting] = useState(false);
+  const currentIdRef = useRef<string | null>(currentId);
+
+  useEffect(() => {
+    currentIdRef.current = currentId; // Keep the ref updated with the current value
+  }, [currentId]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -17,13 +24,14 @@ export default function Page() {
     }
 
     const checkProgress = async () => {
-      if (!currentId) return;
+      if (!currentIdRef.current) return;
   
       try {
-        const step = await lastStep(currentId);
+        const step = await lastStep(currentIdRef.current);
         setStatus(`Your background task has completed <b>${step} of 10</b> steps`);
         if (step === '10') {
           setCurrentId(null);
+          clearInterval(interval); // Stop the interval
         }
         setReconnecting(false);
       } catch (error) {
@@ -34,7 +42,7 @@ export default function Page() {
 
     const interval = setInterval(checkProgress, 2000);
     return () => clearInterval(interval);
-  }, [currentId]);
+  }, []);
 
   const generateRandomString = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -50,15 +58,12 @@ export default function Page() {
     window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
 
     setCurrentId(randomString);
-    await fetch(`/background/${randomString}/10`, { method: 'GET' });
+    await startBackgroundTask(randomString, 10);
     setStatus('Starting task...');
   };
 
   const crashApp = async () => {
-    await fetch('/crash', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
+    await crash();
     setReconnecting(true);
   };
 
