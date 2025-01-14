@@ -1,8 +1,3 @@
-
-export async function GET() {
-
-    console.log("Received request Crashing the app");
-
+export async function POST() {
     process.exit(1);
-
 }
