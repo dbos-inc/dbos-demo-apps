@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ['*.dbos.dev'], // Allow DBOS Cloud to call server actions
+      allowedOrigins: ['*.cloud.dbos.dev'], // Allow DBOS Cloud to call server actions
     },
   },
 };
