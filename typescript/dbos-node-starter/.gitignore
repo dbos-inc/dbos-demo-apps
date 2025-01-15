@@ -1,28 +1,5 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # DBOS-specific
 .dbos
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# next.js
-**/.next/**
-/out/
-
-# production
-/build
-
-# misc
-**/.DS_Store
-*.pem
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
 
 # Logs
 **/.DS_Store
@@ -161,12 +138,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-/.pnp
 
 # Editor temp/recovery files
 *.swp
