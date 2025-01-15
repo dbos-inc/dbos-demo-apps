@@ -25,7 +25,7 @@ export class MyWorkflow {
   }
 }
 
-// Launch DBOS in production serve environment only
+// Only launch DBOS when the app starts running
 if (process.env.NEXT_PHASE !== "phase-production-build") {
   await DBOS.launch();
 }
