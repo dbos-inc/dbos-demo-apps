@@ -6,7 +6,7 @@
 language: node
 runtimeConfig:
   start:
-    - npm run dev
+    - npm run start
 database:
   hostname: localhost
   port: 5432
@@ -16,4 +16,4 @@ database:
     - echo 'No migrations specified'
 telemetry:
   logs:
-    logLevel: 'info'
+    logLevel: 'debug'

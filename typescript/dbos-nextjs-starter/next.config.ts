@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
 
     return config;
   },
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['*.dbos.dev'], // Allow DBOS Cloud to call server actions
+    },
+  },
 };
 
 export default nextConfig;
