@@ -1,10 +1,10 @@
 # Welcome to DBOS!
 
-This is a template app built with DBOS and Express.
+This is a template app built with DBOS and Next.
 
 ### Getting Started
 
-To get started building, edit `src/main.ts`.
+To get started building, edit `src/dbos/operations.ts`.
 Then, commit your changes and visit the [cloud console](https://console.dbos.dev/applications) to redeploy it from GitHub!
 
 

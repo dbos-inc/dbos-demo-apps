@@ -56,7 +56,11 @@ export default function Page() {
     window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
 
     setCurrentId(randomString);
-    await startBackgroundTask(randomString, 10);
+    try {
+      await startBackgroundTask(randomString, 10);
+    } catch (error) {
+      console.error('Error starting background task:', error);
+    }
     setStatus('Starting task...');
   };
 

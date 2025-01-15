@@ -6,7 +6,7 @@
 language: node
 runtimeConfig:
   start:
-    - npm run start
+    - npm run dev
 database:
   hostname: localhost
   port: 5432
