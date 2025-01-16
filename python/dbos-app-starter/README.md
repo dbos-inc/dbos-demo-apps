@@ -28,44 +28,7 @@ dbos-cloud app deploy
 
 ### Developing Locally
 
-To run this app locally, you need to connect it to a Postgres database.
-You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
-
-<details>
-<summary><strong>Connecting to a DBOS Cloud Postgres database</strong></summary>
-
-First install the DBOS Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then set a password for your DBOS Cloud database:
-
-```shell
-dbos-cloud db reset-password
-```
-
-Then connect your local app to your cloud database. When prompted, enter the password you just set.
-
-```shell
-dbos-cloud db local
-```
-</details>
-
-<details>
-<summary><strong>Starting Postgres with Docker</strong></summary>
-
-If you have Docker, you can start a Postgres database locally with:
-
-```shell
-export PGPASSWORD=dbos
-python3 start_postgres_docker.py
-```
-</details>
-
-
-After connecting to Postgres, create a virtual environment and install dependencies:
+To run this app locally, create a virtual environment and install dependencies:
 
 ```shell
 python3 -m venv .venv
