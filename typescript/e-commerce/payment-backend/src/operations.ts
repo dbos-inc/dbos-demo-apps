@@ -102,7 +102,7 @@ export class PlaidPayments {
     }
 
     const handle = await DBOS.startWorkflow(PlaidPayments).paymentSession(webhook, success_url, cancel_url, items, client_reference_id);
-    const session_id = handle.getWorkflowUUID();
+    const session_id = handle.workflowID;
     await DBOS.getEvent(session_id, payment_session_started_topic, 1000);
 
     return {

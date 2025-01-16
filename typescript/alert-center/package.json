@@ -11,7 +11,7 @@
     "dev": "nodemon"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.30.13",
+    "@dbos-inc/dbos-cloud": "^2.0.2",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/koa": "^2.15.0",
     "@types/uuid": "^9.0.8",
@@ -20,9 +20,9 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-datetime": "^1.31.6-preview",
-    "@dbos-inc/dbos-kafkajs": "^1.31.17-preview",
-    "@dbos-inc/dbos-sdk": "^1.31.17-preview",
+    "@dbos-inc/dbos-datetime": "^2.0.2",
+    "@dbos-inc/dbos-kafkajs": "^2.0.2",
+    "@dbos-inc/dbos-sdk": "^2.0.2",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
     "uuid": "^9.0.1"

@@ -9,7 +9,7 @@
     "lint-fix": "eslint --fix src"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.29.15",
+    "@dbos-inc/dbos-cloud": "^2.0.2",
     "@dbos-inc/dbos-openapi": "^1.24.15",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/jest": "^29.5.5",
@@ -23,7 +23,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^1.30.13",
+    "@dbos-inc/dbos-sdk": "^2.0.2",
     "@ladjs/koa-views": "^9.0.0",
     "ejs": "^3.1.10",
     "ts-node": "^10.9.2"

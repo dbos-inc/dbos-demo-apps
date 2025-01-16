@@ -20,7 +20,7 @@ export class Shop {
 
     // Wait for the workflow to create the payment ID; return that to the user
     const paymentID = await DBOS.getEvent<string | null>(
-      handle.getWorkflowUUID(),
+      handle.workflowID,
       PAYMENT_ID_EVENT
     );
     if (paymentID === null) {

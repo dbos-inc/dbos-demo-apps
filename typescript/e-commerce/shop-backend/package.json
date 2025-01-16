@@ -11,12 +11,12 @@
     "start": "npx dbos start"
   },
   "dependencies": {
-    "@dbos-inc/dbos-bcrypt": "^1.31.6-preview",
-    "@dbos-inc/dbos-sdk": "^1.30.13",
+    "@dbos-inc/dbos-bcrypt": "^2.0.2",
+    "@dbos-inc/dbos-sdk": "^2.0.2",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.29.15",
+    "@dbos-inc/dbos-cloud": "^2.0.2",
     "@dbos-inc/dbos-openapi": "^1.24.15",
     "@dbos-inc/eslint-plugin": "^3.3.4",
     "@types/bcryptjs": "^2.4.6",

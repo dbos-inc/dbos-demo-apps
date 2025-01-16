@@ -226,10 +226,10 @@ export class Shop {
     }
 
     const handle = await DBOS.startWorkflow(Shop).paymentWorkflow(username, origin);
-    const url = await DBOS.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    const url = await DBOS.getEvent<string>(handle.workflowID, checkout_url_topic);
 
     if (url === null) {
-      DBOS.logger.warn(`Canceling checkout for ${username}. Checkout Workflow UUID: ${handle.getWorkflowUUID()}`);
+      DBOS.logger.warn(`Canceling checkout for ${username}. Checkout Workflow UUID: ${handle.workflowID}`);
       DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
     } else {
       DBOS.koaContext.redirect(url);

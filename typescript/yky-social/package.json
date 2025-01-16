@@ -18,9 +18,9 @@
     "@aws-sdk/client-s3": "^3.408.0",
     "@aws-sdk/s3-presigned-post": "^3.408.0",
     "@aws-sdk/s3-request-presigner": "^3.408.0",
-    "@dbos-inc/dbos-bcrypt": "^1.31.6-preview",
-    "@dbos-inc/dbos-datetime": "^1.31.6-preview",
-    "@dbos-inc/dbos-sdk": "^1.31.6-preview",
+    "@dbos-inc/dbos-bcrypt": "^2.0.2",
+    "@dbos-inc/dbos-datetime": "^2.0.2",
+    "@dbos-inc/dbos-sdk": "^2.0.2",
     "@koa/bodyparser": "^5.0.0",
     "@koa/cors": "^5.0.0",
     "@koa/router": "^12.0.0",
@@ -38,7 +38,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^1.29.15",
+    "@dbos-inc/dbos-cloud": "^2.0.2",
     "@dbos-inc/dbos-openapi": "^1.24.15",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@jest/globals": "^29.5.0",
