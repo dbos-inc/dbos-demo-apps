@@ -96,12 +96,12 @@ describe("operations", () => {
 
     // Initiate checkout
     const handle = await DBOS.startWorkflow(Shop).paymentWorkflow('shopper', 'xxx');
-    const url = await DBOS.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    const url = await DBOS.getEvent<string>(handle.workflowID, checkout_url_topic);
     if (!url) throw new Error("URL not returned");
 
     // Fake a payment reply 
     const payresp = await request(DBOS.getHTTPHandlersCallback())
-    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.getWorkflowUUID(), payment_status: "paid"});
+    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.workflowID, payment_status: "paid"});
     expect(payresp.status).toBe(204);
 
     // After the payment has succeeded, your cart should be emptied
@@ -141,7 +141,7 @@ describe("operations", () => {
 
     // Initiate checkout
     const handle = await DBOS.startWorkflow(Shop).paymentWorkflow('shopper', 'xxx');
-    const url = await DBOS.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    const url = await DBOS.getEvent<string>(handle.workflowID, checkout_url_topic);
     if (!url) throw new Error("URL not returned");
 
     // Check inventory temporary deduction
@@ -150,7 +150,7 @@ describe("operations", () => {
 
     // Fake a payment cancel reply
     const payresp = await request(DBOS.getHTTPHandlersCallback())
-    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.getWorkflowUUID(), payment_status: "canceled"});
+    .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.workflowID, payment_status: "canceled"});
     expect(payresp.status).toBe(204);
     try {await handle.getResult();} catch (e) {}
 
@@ -187,7 +187,7 @@ describe("operations", () => {
 
     // Initiate checkout
     const handle = await DBOS.startWorkflow(Shop).paymentWorkflow('shopper', 'xxx');
-    const url = await DBOS.getEvent<string>(handle.getWorkflowUUID(), checkout_url_topic);
+    const url = await DBOS.getEvent<string>(handle.workflowID, checkout_url_topic);
     expect(url).toBeNull();
     try {await handle.getResult();} catch (e) {}
 

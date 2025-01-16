@@ -30,7 +30,7 @@ export class Frontend {
     const userRecWF = await DBOS.startWorkflow(AlertCenter).userAssignmentWorkflow(name, more_time);
 
     //This Workflow Event lets us know if we have an assignment and, if so, how much time is left
-    const userRec = await DBOS.getEvent<AlertEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
+    const userRec = await DBOS.getEvent<AlertEmployeeInfo>(userRecWF.workflowID, 'rec');
     return userRec;
   }
 

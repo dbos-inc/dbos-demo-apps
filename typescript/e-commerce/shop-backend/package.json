@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-bcrypt": "^1.31.6-preview",
-    "@dbos-inc/dbos-sdk": "^1.30.13",
+    "@dbos-inc/dbos-sdk": "^1.31.32-preview",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {

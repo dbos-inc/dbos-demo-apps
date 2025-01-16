@@ -259,8 +259,8 @@ export class YKY
     const currTime = await DBOS.invoke(DBOSDateTime).getCurrentTime();
     const fn = `photos/${mediaKey}-${currTime}`;
     const wfh = await DBOS.startWorkflow(Operations).mediaUpload('profile', mediaKey, fn, bucket);
-    const upkey = await DBOS.getEvent<PresignedPost>(wfh.getWorkflowUUID(), "uploadkey");
-    return {wfHandle: wfh.getWorkflowUUID(), key: upkey, file: fn};
+    const upkey = await DBOS.getEvent<PresignedPost>(wfh.workflowID, "uploadkey");
+    return {wfHandle: wfh.workflowID, key: upkey, file: fn};
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await

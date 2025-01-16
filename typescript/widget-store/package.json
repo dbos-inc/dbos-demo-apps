@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-email-ses": "^1.31.13-preview.g4f38e6e769",
-    "@dbos-inc/dbos-sdk": "^1.30.13",
+    "@dbos-inc/dbos-sdk": "^1.31.32-preview",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
