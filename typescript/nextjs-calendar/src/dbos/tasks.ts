@@ -6,19 +6,27 @@ export interface CalendarTask {
   name: string;
   url: string;
   dataPath?: string;
+  type?: 'json' | 'text' | 'html';
 }
 
 export const schedulableTasks: CalendarTask[] = [
   {
-    id: 'fetch_nist_time',
+    id: 'fetch_time',
     name: 'Fetch Current Time',
     url: 'http://worldtimeapi.org/api/timezone/Etc/UTC',
+    dataPath: 'datetime',
   },
   {
     id: 'fetch_weather',
     name: 'Fetch Weather Data (New York)',
     url: 'https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&current_weather=true',
     dataPath: 'current_weather',
+  },
+  {
+    id: 'check_cloud_status',
+    name: 'Make Sure Cloud Is Up',
+    url: 'https://demo-guestbook.cloud.dbos.dev/',
+    type: 'text',
   },
   {
     id: 'fetch_joke',
@@ -29,6 +37,7 @@ export const schedulableTasks: CalendarTask[] = [
     id: 'fetch_activity',
     name: 'Stave Off Boredom',
     url: 'https://www.boredapi.com/api/activity',
+    type: 'html',
   }
 ];
 
@@ -41,6 +50,10 @@ export async function doTaskFetch(id: string): Promise<string> {
 
   try {
     const response = await fetch(task.url);
+    if (task.type === 'text' || task.type === 'html') {
+      return await response.text();
+    }
+
     let data = await response.json();
 
     // Subset it, if required.  (Simple implementation...)
