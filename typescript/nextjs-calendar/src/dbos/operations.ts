@@ -1,5 +1,8 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
+import { ScheduleDBOps } from "./dbtransactions";
+export { ScheduleDBOps };
+
 // Welcome to DBOS!
 // This is a template application built with DBOS and Next.
 // It shows you how to use DBOS to build background tasks that are resilient to any failure.
@@ -27,5 +30,5 @@ export class MyWorkflow {
 
 // Only launch DBOS when the app starts running
 if (process.env.NEXT_PHASE !== "phase-production-build") {
-  DBOS.launch().catch((e)=>console.log(e));
+  await DBOS.launch();
 }
