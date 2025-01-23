@@ -45,9 +45,10 @@ export default function ScheduleForm() {
         ))}
       </select>
 
-      <label>End Time:</label>
+      <label>Start Time:</label>
       <input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} required />
 
+      <label>End Time:</label>
       <input type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
 
       <label>Repeat:</label>
