@@ -1,6 +1,6 @@
 'use server';
 
-import { ScheduleDBOps } from '@/dbos/operations';
+import { ScheduleDBOps, SchedulerOps } from '@/dbos/operations';
 import { ScheduleRecord, ResultsRecord } from '@/types/models';
 
 // Fetch all schedule items
@@ -21,4 +21,9 @@ export async function addSchedule(task: string, start: Date, end: Date, repeat: 
 // Delete a schedule item
 export async function deleteSchedule(id: string) {
   return await ScheduleDBOps.deleteScheduleItem(id);
+}
+
+// Get possible tasks
+export async function getAllTasks() {
+  return Promise.resolve(SchedulerOps.getAllTasks());
 }

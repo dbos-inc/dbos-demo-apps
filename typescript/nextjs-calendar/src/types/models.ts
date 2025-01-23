@@ -14,3 +14,8 @@ export type ResultsRecord = {
   run_time: string; // ISO datetime string
   result: string; // JSON, HTML, or text stored as a string
 };
+
+export type TaskOption = {
+  id: string;
+  name: string;
+};
