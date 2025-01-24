@@ -23,7 +23,7 @@ export default function ThemeWrapper({ children }: { children: React.ReactNode }
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Container maxWidth={false} sx={{ mt: 4 }}>
         {children}
       </Container>
     </ThemeProvider>

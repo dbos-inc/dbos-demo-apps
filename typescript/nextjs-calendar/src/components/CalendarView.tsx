@@ -104,16 +104,16 @@ export default function CalendarView() {
 
   return (
     <>
-      <Paper elevation={3} sx={{ p: 3, maxWidth: '1000px', mx: 'auto', mt: 4 }}>
+      <Paper elevation={3} sx={{ p: 3, maxWidth: '99%', mx: 'auto', mt: 4 }}>
         <Typography variant="h5" align="center" gutterBottom>
-          Task Scheduler
+          <a href={'https://dbos.dev'}> DBOS Task Scheduler </a> - <i>Execution guaranteed or double your workflows back!</i>
         </Typography>
         <Calendar
           localizer={localizer}
           events={events}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: 600 }}
+          style={{ height: '800px' }}
           views={['month', 'week', 'day']}
           defaultView={Views.MONTH}
           popup

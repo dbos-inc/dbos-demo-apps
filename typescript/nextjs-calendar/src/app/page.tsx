@@ -2,7 +2,7 @@
 
 import CalendarView from '@/components/CalendarView';
 import { useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 
 export default function HomePage() {
@@ -10,10 +10,6 @@ export default function HomePage() {
 
   return (
     <Box>
-      <Typography variant="h4" align="center" gutterBottom>
-        Welcome to Task Scheduler
-      </Typography>
-
       <CalendarView key={refresh.toString()} />
     </Box>
   );
