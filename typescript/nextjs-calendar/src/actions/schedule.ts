@@ -1,11 +1,16 @@
 'use server';
 
 import { ScheduleDBOps, SchedulerOps } from '@/dbos/operations';
-import { ScheduleRecord, ResultsRecord } from '@/types/models';
+import { schedulableTasks } from '@/dbos/tasks';
+import { ScheduleUIRecord, ResultsRecord } from '@/types/models';
 
 // Fetch all schedule items
-export async function fetchSchedules(): Promise<ScheduleRecord[]> {
-  return await ScheduleDBOps.getSchedule();
+export async function fetchSchedules(): Promise<ScheduleUIRecord[]> {
+  const sched = await ScheduleDBOps.getSchedule() as ScheduleUIRecord[];
+  for (const s of sched) {
+    s.name = schedulableTasks.find(t => t.id === s.task)?.name ?? '<UNKNOWN>';
+  }
+  return sched as ScheduleUIRecord[];
 }
 
 // Fetch results within a date range
