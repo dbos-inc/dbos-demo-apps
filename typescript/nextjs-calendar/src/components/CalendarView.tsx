@@ -90,6 +90,7 @@ export default function CalendarView() {
           defaultView={Views.MONTH}
           popup
           selectable
+          eventPropGetter={eventStyleGetter}
           onSelectEvent={(event) => alert(`Event selected: ${event.title}`)}
           onSelectSlot={(slotInfo) => { if (slotInfo.action === 'doubleClick') handleDoubleClick(slotInfo.start, slotInfo.end)} }
         />
