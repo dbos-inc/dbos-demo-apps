@@ -108,7 +108,7 @@ export default function CalendarView() {
 
       const formattedResults = resultData.map((item: ResultsUIRecord) => ({
         title: item.error ? `ERROR: ${item.name}` : `${item.name} Results`,
-        start: new Date(item.run_time),
+        start: new Date(new Date(item.run_time).getTime()+1),
         end: new Date(new Date(item.run_time).getTime() + 1 * 60 * 1000), // 1-min duration
         type: 'result',
         res: item,
