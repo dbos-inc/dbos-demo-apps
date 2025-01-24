@@ -1,7 +1,7 @@
 'use client';
 
 import { fetchSchedules, fetchResults } from '@/actions/schedule';
-import { ScheduleUIRecord, ResultsRecord } from '@/types/models';
+import { ScheduleUIRecord, ResultsUIRecord } from '@/types/models';
 import { useState, useEffect } from 'react';
 import { Paper, Typography, useTheme } from '@mui/material';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
@@ -40,8 +40,8 @@ export default function CalendarView() {
         type: 'task',
       }));
 
-      const formattedResults = resultData.map((item: ResultsRecord) => ({
-        title: `Result: `,
+      const formattedResults = resultData.map((item: ResultsUIRecord) => ({
+        title: `${item.name} Results`,
         start: new Date(item.run_time),
         end: new Date(new Date(item.run_time).getTime() + 1 * 60 * 1000), // 1-min duration
         type: 'result',
@@ -51,6 +51,14 @@ export default function CalendarView() {
     }
 
     loadData();
+
+    // Set interval to refresh every 60 seconds
+    const intervalId = setInterval(() => {
+      setRefreshKey((prevKey) => prevKey + 1);
+    }, 60000);
+
+    // Cleanup interval on unmount to stop refreshing
+    return () => clearInterval(intervalId);
   }, [refreshKey]);
 
   const handleDoubleClick = (start: Date, end: Date) => {
