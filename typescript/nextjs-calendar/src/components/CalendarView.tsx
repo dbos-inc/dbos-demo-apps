@@ -11,8 +11,32 @@ import ScheduleForm from './ScheduleForm';
 import ResultsModal from './ResultsModal';
 import moment from 'moment';
 import { subDays, addDays } from 'date-fns';
+import { getOccurrences } from '@/types/taskschedule';
 
 const localizer = momentLocalizer(moment);
+
+// Function to calculate initial range based on the current view
+const getInitialRange = (view: string, date: Date) => {
+  switch (view) {
+    case 'month':
+      return {
+        start: moment(date).startOf('month').toDate(),
+        end: moment(date).endOf('month').toDate(),
+      };
+    case 'week':
+      return {
+        start: moment(date).startOf('week').toDate(),
+        end: moment(date).endOf('week').toDate(),
+      };
+    case 'day':
+      return {
+        start: moment(date).startOf('day').toDate(),
+        end: moment(date).endOf('day').toDate(),
+      };
+    default:
+      return { start: date, end: date };
+  }
+};
 
 interface CalEvent {
   title: string;
@@ -25,6 +49,8 @@ interface CalEvent {
 
 export default function CalendarView() {
   const theme = useTheme();
+
+  const [calRange, setCalRange] = useState<{ start: Date; end: Date } | null>(null);
 
   const [addScheduleOpen, setAddScheduleOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
@@ -56,19 +82,29 @@ export default function CalendarView() {
   useEffect(() => {
     async function loadData() {
       const scheduleData = await fetchSchedules();
+
+      if (!calRange) return;
+
       const resultData = await fetchResults(
-        // This could be optimized by looking at the calendar view range
-        subDays(new Date(), 1000),
-        addDays(new Date(), 1000)
+        subDays(calRange.start, 1),
+        addDays(calRange.end, 1)
       );
 
-      const formattedSchedules = scheduleData.map((item: ScheduleUIRecord) => ({
-        title: `${item.name}`,
-        start: new Date(item.start_time),
-        end: new Date(Math.max(new Date(item.end_time).getTime(), new Date(new Date(item.start_time).getTime() + 10 * 60 * 1000).getTime())),
-        type: 'task',
-        sched: item,
-      }));
+      const formattedSchedules: CalEvent[] = [];
+
+      for (const item of scheduleData) {
+        if (!calRange) break;
+        const occasions = getOccurrences(item, calRange.start, calRange.end);
+        for (const occasion of occasions) {
+          formattedSchedules.push({
+            title: `${item.name}`,
+            start: occasion,
+            end: new Date(occasion.getTime() + 10 * 60 * 1000),
+            type: 'task',
+            sched: item,
+          });
+        }
+      }
 
       const formattedResults = resultData.map((item: ResultsUIRecord) => ({
         title: item.error ? `ERROR: ${item.name}` : `${item.name} Results`,
@@ -90,12 +126,31 @@ export default function CalendarView() {
 
     // Cleanup interval on unmount to stop refreshing
     return () => clearInterval(intervalId);
-  }, [refreshKey]);
+  }, [refreshKey, calRange]);
+
+  useEffect(() => {
+    // Set initial range when the component mounts
+    const initialDate = new Date();
+    setCalRange(getInitialRange('month', initialDate));
+  }, []);
 
   const handleDoubleClick = (start: Date, end: Date) => {
     setSelectedStart(start);
-    setSelectedStart(end);
+    setSelectedEnd(end);
     setAddScheduleOpen(true);
+  };
+
+  const handleRangeChange = (range: { start: Date; end: Date } | Date [] | null) => {
+    if (Array.isArray(range)) {
+      // Month view: range is an array [startDate, endDate]
+      setCalRange({ start: range[0], end: range[range.length - 1] });
+    } else if (range?.start && range?.end) {
+      // Week/day view: range is an object { start: Date, end: Date }
+      setCalRange(range);
+    }
+    else {
+      setCalRange(null);
+    }
   };
 
   const handleAddScheduleClose = () => {
@@ -146,6 +201,7 @@ export default function CalendarView() {
           defaultView={Views.MONTH}
           popup
           selectable
+          onRangeChange={handleRangeChange}
           eventPropGetter={eventStyleGetter}
           onSelectEvent={handleEventClick}
           onSelectSlot={(slotInfo) => { if (slotInfo.action === 'doubleClick') handleDoubleClick(slotInfo.start, slotInfo.end)} }

@@ -38,8 +38,8 @@ const ResultsModal: React.FC<ResultDialogProps> = ({ open, onClose, result }) =>
               </Table>
             );
           }
-        } catch (_e) {
-          return <Typography color="error">Invalid JSON</Typography>;
+        } catch (e) {
+          return <Typography color="error">Invalid JSON: {(e as Error).message}</Typography>;
         }
         break;
 
