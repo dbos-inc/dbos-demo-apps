@@ -1,62 +1,61 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Calendar from 'react-calendar';
 import { fetchSchedules, fetchResults } from '@/actions/schedule';
 import { ScheduleRecord, ResultsRecord } from '@/types/models';
-import { Value } from 'react-calendar/dist/esm/shared/types.js';
+import { useState, useEffect } from 'react';
+import { Paper, Typography } from '@mui/material';
+import { Calendar, Views, momentLocalizer } from 'react-big-calendar';
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import moment from 'moment';
+
+const localizer = momentLocalizer(moment);
 
 export default function CalendarView() {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [schedules, setSchedules] = useState<ScheduleRecord[]>([]);
-  const [results, setResults] = useState<ResultsRecord[]>([]);
+  const [events, setEvents] = useState<{ title: string; start: Date; end: Date }[]>([]);
 
   useEffect(() => {
     async function loadData() {
       const scheduleData = await fetchSchedules();
-      const resultData = selectedDate ? await fetchResults(
-        selectedDate.toISOString().split('T')[0] + 'T00:00:00Z',
-        selectedDate.toISOString().split('T')[0] + 'T23:59:59Z'
-      ) : [];
-      setSchedules(scheduleData);
-      setResults(resultData);
-    }
-    loadData();
-  }, [selectedDate]);
+      const resultData = await fetchResults(
+        new Date().toISOString().split('T')[0] + 'T00:00:00Z',
+        new Date().toISOString().split('T')[0] + 'T23:59:59Z'
+      );
 
-  const handleDateChange = (value: Value) => {
-    if (value instanceof Date) {
-      setSelectedDate(value);
-    } else if (Array.isArray(value) && value.length > 0) {
-      setSelectedDate(value[0] as Date);  // Handle range selection, take first date
-    } else {
-      setSelectedDate(null);
+      const formattedSchedules = scheduleData.map((item: ScheduleRecord) => ({
+        title: `Task: ${item.task}`,
+        start: new Date(item.start_time),
+        end: new Date(new Date(item.start_time).getTime() + 60 * 60 * 1000), // 1-hour duration
+      }));
+
+      const formattedResults = resultData.map((item: ResultsRecord) => ({
+        title: `Result: ${JSON.parse(item.result).status}`,
+        start: new Date(item.run_time),
+        end: new Date(new Date(item.run_time).getTime() + 30 * 60 * 1000), // 30-min duration
+      }));
+
+      setEvents([...formattedSchedules, ...formattedResults]);
     }
-  };
+
+    loadData();
+  }, []);
 
   return (
-    <div>
-      <h2>Schedule Overview</h2>
+    <Paper elevation={3} sx={{ p: 3, maxWidth: '1000px', mx: 'auto', mt: 4 }}>
+      <Typography variant="h5" align="center" gutterBottom>
+        Task Scheduler
+      </Typography>
       <Calendar
-        onChange={handleDateChange}
-        value={selectedDate}
-        view="month"
-        tileContent={({ date }) => {
-          const daySchedules = schedules.filter(
-            (s) => new Date(s.start_time).toDateString() === date.toDateString()
-          );
-          const dayResults = results.filter(
-            (r) => new Date(r.run_time).toDateString() === date.toDateString()
-          );
-
-          return (
-            <>
-              {daySchedules.length > 0 && <div style={{ color: 'blue' }}>📅</div>}
-              {dayResults.length > 0 && <div style={{ color: 'green' }}>✅</div>}
-            </>
-          );
-        }}
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: 600 }}
+        views={['month', 'week', 'day']}
+        defaultView={Views.MONTH}
+        popup
+        selectable
+        onSelectEvent={(event) => alert(`Event selected: ${event.title}`)}
       />
-    </div>
+    </Paper>
   );
 }
