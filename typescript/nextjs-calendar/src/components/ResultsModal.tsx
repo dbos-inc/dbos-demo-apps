@@ -21,6 +21,9 @@ const ResultsModal: React.FC<ResultDialogProps> = ({ open, onClose, result }) =>
       case 'json':
         try {
           const parsedJson = JSON.parse(result.result);
+          if (typeof parsedJson === 'string' || typeof parsedJson === 'number') {
+            return <Typography style={{ whiteSpace: 'pre-wrap' }}>{`${parsedJson}`}</Typography>
+          }
           if (typeof parsedJson === 'object' && parsedJson !== null) {
             return (
               <Table>
