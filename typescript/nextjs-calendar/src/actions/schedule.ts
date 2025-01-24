@@ -2,7 +2,7 @@
 
 import { ScheduleDBOps, SchedulerOps } from '@/dbos/operations';
 import { schedulableTasks } from '@/dbos/tasks';
-import { ScheduleUIRecord, ResultsRecord } from '@/types/models';
+import { ScheduleUIRecord, ResultsUIRecord } from '@/types/models';
 
 // Fetch all schedule items
 export async function fetchSchedules(): Promise<ScheduleUIRecord[]> {
@@ -14,8 +14,12 @@ export async function fetchSchedules(): Promise<ScheduleUIRecord[]> {
 }
 
 // Fetch results within a date range
-export async function fetchResults(startDate: Date, endDate: Date): Promise<ResultsRecord[]> {
-  return await ScheduleDBOps.getResultsOverTime(startDate, endDate);
+export async function fetchResults(startDate: Date, endDate: Date): Promise<ResultsUIRecord[]> {
+  const res = await ScheduleDBOps.getResultsOverTime(startDate, endDate) as ResultsUIRecord[];
+  for (const r of res) {
+    r.name = schedulableTasks.find(t => t.id === r.task)?.name ?? '<UNKNOWN>';
+  }
+  return res;
 }
 
 // Add a new schedule item

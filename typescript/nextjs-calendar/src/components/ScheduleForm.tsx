@@ -19,10 +19,10 @@ type ScheduleFormProps = {
 export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: ScheduleFormProps) {
   if (!initialEnd) initialEnd = initialDate;
   const [startTime, setStartTime] = useState<Dayjs | null>(
-    dayjs()
+    dayjs(initialDate)
   );
   const [endTime, setEndTime] = useState<Dayjs | null>(
-    dayjs()
+    dayjs(initialEnd)
   );
 
   const [tasks, setTasks] = useState<TaskOption[]>([]);
@@ -117,6 +117,7 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
           value={repeat}
           onChange={(e) => setRepeat(e.target.value)}
         >
+          <MenuItem value="none">None</MenuItem>
           <MenuItem value="daily">Daily</MenuItem>
           <MenuItem value="weekly">Weekly</MenuItem>
           <MenuItem value="monthly">Monthly</MenuItem>

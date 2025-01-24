@@ -12,6 +12,7 @@ exports.up = function(knex) {
     })
     .createTable('results', (table) => {
       table.uuid('schedule_id').notNullable();
+      table.string('task').notNullable();
       table.datetime('run_time').notNullable();
       table.text('result');  // Store the task result
 

@@ -1,7 +1,7 @@
 
 export interface ScheduleRecord {
   id: string; // UUID as primary key
-  task: string; // Task identifier
+  task: string; // Task identifier (see tasks.ts)
   start_time: string; // ISO datetime string
   end_time: string; // ISO datetime string
   repeat: string; // Repetition rule
@@ -13,11 +13,16 @@ export interface ScheduleUIRecord extends ScheduleRecord {
   name: string;
 }
 
-export type ResultsRecord = {
+export interface ResultsRecord {
   schedule_id: string; // UUID referencing ScheduleRecord
+  task: string; // Task identifier (see tasks.ts)
   run_time: string; // ISO datetime string
   result: string; // JSON, HTML, or text stored as a string
 };
+
+export interface ResultsUIRecord extends ResultsRecord {
+  name: string;
+}
 
 export type TaskOption = {
   id: string;
