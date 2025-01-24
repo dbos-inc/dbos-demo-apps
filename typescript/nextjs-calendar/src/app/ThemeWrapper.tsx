@@ -15,8 +15,8 @@ export default function ThemeWrapper({ children }: { children: React.ReactNode }
       <CssBaseline />
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Task Scheduler
+          <Typography variant="h5" sx={{ flexGrow: 1 }}>
+            DBOS Task Scheduler
           </Typography>
           <IconButton onClick={() => setDarkMode(!darkMode)} color="inherit">
             {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}

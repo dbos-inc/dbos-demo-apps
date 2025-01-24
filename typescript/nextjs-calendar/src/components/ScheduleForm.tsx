@@ -5,15 +5,23 @@ import { addSchedule, getAllTasks } from '@/actions/schedule';
 import { TaskOption } from '@/types/models';
 import { TextField, Button, MenuItem, Select, FormControl, InputLabel, Box, Typography } from '@mui/material';
 
-type Props = {
+type ScheduleFormProps = {
+  initialDate?: Date | null;
+  initialEnd?: Date | null;
   onSuccess: () => void;
 };
 
-export default function ScheduleForm({ onSuccess }: Props) {
+export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: ScheduleFormProps) {
+  if (!initialEnd) initialEnd = initialDate;
+  const [startTime, setStartTime] = useState<string>(
+    initialDate ? new Date(initialDate).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)
+  );
+  const [endTime, setEndTime] = useState<string>(
+    initialEnd ? new Date(initialEnd).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)
+  );
+
   const [tasks, setTasks] = useState<TaskOption[]>([]);
   const [selectedTask, setSelectedTask] = useState('');
-  const [startTime, setStartTime] = useState<string>(new Date().toISOString().slice(0, 16));
-  const [endTime, setEndTime] = useState<string>(new Date().toISOString().slice(0, 16));
   const [repeat, setRepeat] = useState('daily');
 
   useEffect(() => {

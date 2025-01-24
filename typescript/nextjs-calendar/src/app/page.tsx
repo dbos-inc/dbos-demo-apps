@@ -15,10 +15,11 @@ export default function HomePage() {
         Welcome to Task Scheduler
       </Typography>
 
+{/*
       <Paper elevation={3} sx={{ p: 3, mb: 4, maxWidth: '600px', mx: 'auto' }}>
         <ScheduleForm onSuccess={() => setRefresh(!refresh)} />
       </Paper>
-
+*/}
       <CalendarView key={refresh.toString()} />
     </Box>
   );

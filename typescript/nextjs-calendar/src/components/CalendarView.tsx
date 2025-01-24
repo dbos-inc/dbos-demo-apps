@@ -4,15 +4,21 @@ import { fetchSchedules, fetchResults } from '@/actions/schedule';
 import { ScheduleRecord, ResultsRecord } from '@/types/models';
 import { useState, useEffect } from 'react';
 import { Paper, Typography } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { Calendar, Views, momentLocalizer } from 'react-big-calendar';
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import ScheduleForm from './ScheduleForm';
 import moment from 'moment';
 
 const localizer = momentLocalizer(moment);
 
 export default function CalendarView() {
+  const [open, setOpen] = useState(false);
+  const [selectedStart, setSelectedStart] = useState<Date | null>(null);
+  const [selectedEnd, setSelectedEnd] = useState<Date | null>(null);
   const [events, setEvents] = useState<{ title: string; start: Date; end: Date }[]>([]);
 
+  const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
     async function loadData() {
       const scheduleData = await fetchSchedules();
@@ -37,25 +43,53 @@ export default function CalendarView() {
     }
 
     loadData();
-  }, []);
+  }, [refreshKey]);
+
+  const handleDoubleClick = (start: Date, end: Date) => {
+    setSelectedStart(start);
+    setSelectedStart(end);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedStart(null);
+    setSelectedEnd(null);
+    setRefreshKey(refreshKey+1);
+  };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, maxWidth: '1000px', mx: 'auto', mt: 4 }}>
-      <Typography variant="h5" align="center" gutterBottom>
-        Task Scheduler
-      </Typography>
-      <Calendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: 600 }}
-        views={['month', 'week', 'day']}
-        defaultView={Views.MONTH}
-        popup
-        selectable
-        onSelectEvent={(event) => alert(`Event selected: ${event.title}`)}
-      />
-    </Paper>
+    <>
+      <Paper elevation={3} sx={{ p: 3, maxWidth: '1000px', mx: 'auto', mt: 4 }}>
+        <Typography variant="h5" align="center" gutterBottom>
+          Task Scheduler
+        </Typography>
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: 600 }}
+          views={['month', 'week', 'day']}
+          defaultView={Views.MONTH}
+          popup
+          selectable
+          onSelectEvent={(event) => alert(`Event selected: ${event.title}`)}
+          onSelectSlot={(slotInfo) => { if (slotInfo.action === 'doubleClick') handleDoubleClick(slotInfo.start, slotInfo.end)} }
+        />
+      </Paper>
+
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+        <DialogTitle>Schedule a New Task</DialogTitle>
+        <DialogContent>
+          {selectedStart && <ScheduleForm initialDate={selectedStart} initialEnd={selectedEnd} onSuccess={handleClose} />}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
