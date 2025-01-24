@@ -9,6 +9,7 @@ import { Calendar, Views, momentLocalizer } from 'react-big-calendar';
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import ScheduleForm from './ScheduleForm';
 import moment from 'moment';
+import { subDays, addDays } from 'date-fns';
 
 const localizer = momentLocalizer(moment);
 
@@ -23,20 +24,21 @@ export default function CalendarView() {
     async function loadData() {
       const scheduleData = await fetchSchedules();
       const resultData = await fetchResults(
-        new Date().toISOString().split('T')[0] + 'T00:00:00Z',
-        new Date().toISOString().split('T')[0] + 'T23:59:59Z'
+        // This could be optimized by looking at the calendar view range
+        subDays(new Date(), 1000),
+        addDays(new Date(), 1000)
       );
 
       const formattedSchedules = scheduleData.map((item: ScheduleRecord) => ({
         title: `Task: ${item.task}`,
         start: new Date(item.start_time),
-        end: new Date(new Date(item.start_time).getTime() + 60 * 60 * 1000), // 1-hour duration
+        end: new Date(new Date(item.start_time).getTime() + 30 * 60 * 1000), // 30-min duration
       }));
 
       const formattedResults = resultData.map((item: ResultsRecord) => ({
         title: `Result: ${JSON.parse(item.result).status}`,
         start: new Date(item.run_time),
-        end: new Date(new Date(item.run_time).getTime() + 30 * 60 * 1000), // 30-min duration
+        end: new Date(new Date(item.run_time).getTime() + 1 * 60 * 1000), // 1-min duration
       }));
 
       setEvents([...formattedSchedules, ...formattedResults]);

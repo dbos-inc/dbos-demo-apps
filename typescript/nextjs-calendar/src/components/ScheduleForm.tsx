@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react';
 import { addSchedule, getAllTasks } from '@/actions/schedule';
 import { TaskOption } from '@/types/models';
-import { TextField, Button, MenuItem, Select, FormControl, InputLabel, Box, Typography } from '@mui/material';
+import { Button, MenuItem, Select, FormControl, InputLabel, Box, Typography } from '@mui/material';
+
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, {Dayjs} from 'dayjs';
 
 type ScheduleFormProps = {
   initialDate?: Date | null;
@@ -13,11 +18,11 @@ type ScheduleFormProps = {
 
 export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: ScheduleFormProps) {
   if (!initialEnd) initialEnd = initialDate;
-  const [startTime, setStartTime] = useState<string>(
-    initialDate ? new Date(initialDate).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)
+  const [startTime, setStartTime] = useState<Dayjs | null>(
+    dayjs()
   );
-  const [endTime, setEndTime] = useState<string>(
-    initialEnd ? new Date(initialEnd).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)
+  const [endTime, setEndTime] = useState<Dayjs | null>(
+    dayjs()
   );
 
   const [tasks, setTasks] = useState<TaskOption[]>([]);
@@ -41,7 +46,11 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
       alert("Please select a task.");
       return;
     }
-    await addSchedule(selectedTask, new Date(startTime), new Date(endTime), repeat);
+    if (!startTime) {
+      alert("Please set a start time.");
+      return;
+    }
+    await addSchedule(selectedTask, startTime.toDate(), (endTime ?? startTime).toDate(), repeat);
     //window.location.reload();  // Refresh data after adding
     onSuccess();
   };
@@ -64,9 +73,10 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
       </Typography>
 
       <FormControl fullWidth margin="normal">
-        <InputLabel id="task-select-label">Task</InputLabel>
+        <InputLabel id="task-select-label" shrink>Task</InputLabel>
         <Select
           labelId="task-select-label"
+          label="Task"
           value={selectedTask}
           onChange={(e) => setSelectedTask(e.target.value)}
           required
@@ -79,32 +89,31 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
         </Select>
       </FormControl>
 
-      <TextField
-        label="Start Time"
-        type="datetime-local"
-        fullWidth
-        margin="normal"
-        value={startTime}
-        onChange={(e) => setStartTime(e.target.value)}
-        slotProps={{ inputLabel: { shrink: true } }}
-        required
-      />
-
-      <TextField
-        label="End Time"
-        type="datetime-local"
-        fullWidth
-        margin="normal"
-        value={endTime}
-        onChange={(e) => setEndTime(e.target.value)}
-        slotProps={{ inputLabel: { shrink: true } }}
-        required
-      />
+      <FormControl fullWidth margin="normal">
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DateTimePicker
+            label="Start Time"
+            value={startTime}
+            onChange={(newValue) => setStartTime(newValue)}
+          />
+        </LocalizationProvider>
+      </FormControl>
 
       <FormControl fullWidth margin="normal">
-        <InputLabel id="repeat-select-label">Repetition</InputLabel>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DateTimePicker
+            label="End Time"
+            value={endTime}
+            onChange={(newValue) => setEndTime(newValue)}
+          />
+        </LocalizationProvider>
+      </FormControl>
+
+      <FormControl fullWidth margin="normal">
+        <InputLabel id="repeat-select-label" shrink>Repetition</InputLabel>
         <Select
           labelId="repeat-select-label"
+          label="Repetition"
           value={repeat}
           onChange={(e) => setRepeat(e.target.value)}
         >

@@ -9,8 +9,8 @@ export async function fetchSchedules(): Promise<ScheduleRecord[]> {
 }
 
 // Fetch results within a date range
-export async function fetchResults(startDate: string, endDate: string): Promise<ResultsRecord[]> {
-  return await ScheduleDBOps.getResultsOverTime(new Date(startDate), new Date(endDate));
+export async function fetchResults(startDate: Date, endDate: Date): Promise<ResultsRecord[]> {
+  return await ScheduleDBOps.getResultsOverTime(startDate, endDate);
 }
 
 // Add a new schedule item
