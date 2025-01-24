@@ -27,7 +27,7 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
 
   const [tasks, setTasks] = useState<TaskOption[]>([]);
   const [selectedTask, setSelectedTask] = useState('');
-  const [repeat, setRepeat] = useState('daily');
+  const [repeat, setRepeat] = useState('none');
 
   useEffect(() => {
     async function loadTasks() {

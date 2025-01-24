@@ -1,38 +1,60 @@
 'use client';
 
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
-import { ResultsRecord } from '../types/models';
+import DOMPurify from 'dompurify';
 
-type Props = {
-  result: ResultsRecord | null;
+import { Dialog, DialogTitle, DialogContent, Typography } from '@mui/material';
+import { Table, TableBody, TableCell, TableRow } from '@mui/material';
+import { ResultsUIRecord } from '../types/models';
+import React from 'react';
+
+interface ResultDialogProps {
+  open: boolean;
   onClose: () => void;
-};
+  result: ResultsUIRecord | null;
+}
 
-export default function ResultsModal({ result, onClose }: Props) {
+const ResultsModal: React.FC<ResultDialogProps> = ({ open, onClose, result }) => {
   if (!result) return null;
 
+  const renderContent = () => {
+    switch (result.result_type) {
+      case 'json':
+        try {
+          const parsedJson = JSON.parse(result.result);
+          if (typeof parsedJson === 'object' && parsedJson !== null) {
+            return (
+              <Table>
+                <TableBody>
+                  {Object.entries(parsedJson).map(([key, value]) => (
+                    <TableRow key={key}>
+                      <TableCell><strong>{key}</strong></TableCell>
+                      <TableCell>{JSON.stringify(value, null, 2)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            );
+          }
+        } catch (e) {
+          return <Typography color="error">Invalid JSON</Typography>;
+        }
+        break;
+
+      case 'html':
+        return <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result.result) }} />;
+      
+      case 'text':
+      default:
+        return <Typography style={{ whiteSpace: 'pre-wrap' }}>{result.result}</Typography>;
+    }
+  };
+
   return (
-    <Dialog open={!!result} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Task Execution Result</DialogTitle>
-      <DialogContent>
-        <Typography variant="body1">
-          <strong>Run Time:</strong> {new Date(result.run_time).toLocaleString()}
-        </Typography>
-        <Typography variant="body1" sx={{ mt: 2 }}>
-          <strong>Result:</strong>
-        </Typography>
-        <Typography 
-          variant="body2" 
-          sx={{ bgcolor: 'grey.100', p: 2, borderRadius: 1, fontFamily: 'monospace' }}
-        >
-          {JSON.stringify(JSON.parse(result.result), null, 2)}
-        </Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} variant="contained" color="primary">
-          Close
-        </Button>
-      </DialogActions>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>Result: {result.name}</DialogTitle>
+      <DialogContent>{renderContent()}</DialogContent>
     </Dialog>
   );
-}
+};
+
+export default ResultsModal;

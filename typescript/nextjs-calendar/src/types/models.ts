@@ -22,6 +22,7 @@ export interface ResultsRecord {
 
 export interface ResultsUIRecord extends ResultsRecord {
   name: string;
+  result_type: string;
 }
 
 export type TaskOption = {

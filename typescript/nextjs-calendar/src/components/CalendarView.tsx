@@ -8,12 +8,20 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/
 import { Calendar, Views, momentLocalizer } from 'react-big-calendar';
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import ScheduleForm from './ScheduleForm';
+import ResultsModal from './ResultsModal';
 import moment from 'moment';
 import { subDays, addDays } from 'date-fns';
 
 const localizer = momentLocalizer(moment);
 
-interface CalEvent { title: string; start: Date; end: Date, type: string };
+interface CalEvent {
+  title: string;
+  start: Date;
+  end: Date,
+  type: string,
+  sched?: ScheduleUIRecord,
+  res?: ResultsUIRecord,
+};
 
 export default function CalendarView() {
   const theme = useTheme();
@@ -22,6 +30,16 @@ export default function CalendarView() {
   const [selectedStart, setSelectedStart] = useState<Date | null>(null);
   const [selectedEnd, setSelectedEnd] = useState<Date | null>(null);
   const [events, setEvents] = useState<CalEvent[]>([]);
+
+  const [selectedResult, setSelectedResult] = useState<ResultsUIRecord | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleEventClick = (event: CalEvent) => {
+    if (event.type === 'result') {
+      setSelectedResult(event.res ?? null);
+      setDialogOpen(true);
+    }
+  };
 
   const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
@@ -38,6 +56,7 @@ export default function CalendarView() {
         start: new Date(item.start_time),
         end: new Date(new Date(item.start_time).getTime() + 30 * 60 * 1000), // 30-min duration
         type: 'task',
+        sched: item,
       }));
 
       const formattedResults = resultData.map((item: ResultsUIRecord) => ({
@@ -45,6 +64,7 @@ export default function CalendarView() {
         start: new Date(item.run_time),
         end: new Date(new Date(item.run_time).getTime() + 1 * 60 * 1000), // 1-min duration
         type: 'result',
+        res: item,
       }));
 
       setEvents([...formattedSchedules, ...formattedResults]);
@@ -99,7 +119,7 @@ export default function CalendarView() {
           popup
           selectable
           eventPropGetter={eventStyleGetter}
-          onSelectEvent={(event) => alert(`Event selected: ${event.title}`)}
+          onSelectEvent={handleEventClick}
           onSelectSlot={(slotInfo) => { if (slotInfo.action === 'doubleClick') handleDoubleClick(slotInfo.start, slotInfo.end)} }
         />
       </Paper>
@@ -115,6 +135,12 @@ export default function CalendarView() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ResultsModal
+        open={dialogOpen} 
+        onClose={() => setDialogOpen(false)} 
+        result={selectedResult} 
+      />
     </>
   );
 }

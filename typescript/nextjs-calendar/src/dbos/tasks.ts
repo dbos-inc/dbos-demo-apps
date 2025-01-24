@@ -6,7 +6,7 @@ export interface CalendarTask {
   name: string;
   url: string;
   dataPath?: string;
-  type?: 'json' | 'text' | 'html';
+  type: 'json' | 'text' | 'html';
 }
 
 export const schedulableTasks: CalendarTask[] = [
@@ -15,12 +15,14 @@ export const schedulableTasks: CalendarTask[] = [
     name: 'Fetch Current Time',
     url: 'http://worldtimeapi.org/api/timezone/Etc/UTC',
     dataPath: 'datetime',
+    type: 'json',
   },
   {
     id: 'fetch_weather',
     name: 'Fetch Weather Data (New York)',
     url: 'https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&current_weather=true',
     dataPath: 'current_weather',
+    type: 'json',
   },
   {
     id: 'check_cloud_status',
@@ -32,6 +34,7 @@ export const schedulableTasks: CalendarTask[] = [
     id: 'fetch_joke',
     name: 'Fetch Random Joke',
     url: 'https://official-joke-api.appspot.com/random_joke',
+    type: 'json',
   },
   {
     id: 'fetch_activity',

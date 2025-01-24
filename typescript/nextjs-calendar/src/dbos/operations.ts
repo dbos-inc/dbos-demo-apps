@@ -35,9 +35,10 @@ export class SchedulerOps
   @DBOS.scheduled({crontab: '* * * * *', mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
   @DBOS.workflow()
   static async runSchedule(schedTime: Date, _atTime: Date) {
-    DBOS.logger.info(`Checking schedule at ${schedTime.toString()}`);
+    DBOS.logger.debug(`Checking schedule at ${schedTime.toString()}`);
     const schedule = await ScheduleDBOps.getSchedule();
     for (const sched of schedule) {
+      DBOS.logger.debug(`  For task ${sched.task} / ${sched.start_time.toString()} / ${sched.repeat}`);
       const occurrences = getOccurrencesAt(sched, schedTime);
       if (!occurrences.length) {
         DBOS.logger.info("   ...no occurrences");

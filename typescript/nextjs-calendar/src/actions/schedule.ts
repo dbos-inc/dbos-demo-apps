@@ -17,7 +17,9 @@ export async function fetchSchedules(): Promise<ScheduleUIRecord[]> {
 export async function fetchResults(startDate: Date, endDate: Date): Promise<ResultsUIRecord[]> {
   const res = await ScheduleDBOps.getResultsOverTime(startDate, endDate) as ResultsUIRecord[];
   for (const r of res) {
-    r.name = schedulableTasks.find(t => t.id === r.task)?.name ?? '<UNKNOWN>';
+    const t = schedulableTasks.find(t => t.id === r.task);
+    r.name = t?.name ?? '<UNKNOWN>'; 
+    r.result_type = t?.type ?? 'string';
   }
   return res;
 }
