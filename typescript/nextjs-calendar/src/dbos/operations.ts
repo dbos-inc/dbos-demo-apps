@@ -23,11 +23,18 @@ export class SchedulerOps
   static async runJob(sched: string, task: string, time: Date) {
     DBOS.logger.info(`Running ${task} at ${time.toString()}`);
 
+    try {
     // Fetch the result
     const res = await doTaskFetch(task);
 
-    // Store in database
-    await ScheduleDBOps.setResult(sched, task, time, res);
+      // Store in database
+      await ScheduleDBOps.setResult(sched, task, time, res, '');
+    }
+    catch (e) {
+      const err = e as Error;
+      // Store in database
+      await ScheduleDBOps.setResult(sched, task, time, '', err.message);
+    }
 
     // Send notification (future)
   }

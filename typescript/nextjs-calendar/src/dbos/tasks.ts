@@ -41,7 +41,13 @@ export const schedulableTasks: CalendarTask[] = [
     name: 'Stave Off Boredom',
     url: 'https://www.boredapi.com/api/activity',
     type: 'html',
-  }
+  },
+  {
+    id: 'throw_error',
+    name: 'Impossible Task',
+    url: 'http://example.invalid',
+    type: 'html',
+  },
 ];
 
 export async function doTaskFetch(id: string): Promise<string> {

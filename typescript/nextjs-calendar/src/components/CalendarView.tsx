@@ -38,8 +38,13 @@ export default function CalendarView() {
 
   const handleEventClick = (event: CalEvent) => {
     if (event.type === 'result') {
-      setSelectedResult(event.res ?? null);
-      setResultDialogOpen(true);
+      if (event.res?.error) {
+        alert(`${event.title} - ${event.res.error}`);
+      }
+      else {
+        setSelectedResult(event.res ?? null);
+        setResultDialogOpen(true);
+      }
     }
     if (event.type === 'task') {
       setSelectedSchedule(event.sched ?? null);
@@ -66,7 +71,7 @@ export default function CalendarView() {
       }));
 
       const formattedResults = resultData.map((item: ResultsUIRecord) => ({
-        title: `${item.name} Results`,
+        title: item.error ? `ERROR: ${item.name}` : `${item.name} Results`,
         start: new Date(item.run_time),
         end: new Date(new Date(item.run_time).getTime() + 1 * 60 * 1000), // 1-min duration
         type: 'result',
@@ -117,8 +122,10 @@ export default function CalendarView() {
 
   const eventStyleGetter = (event: CalEvent) => ({
     style: {
-      backgroundColor: event.type === 'task' ? theme.palette.primary.main : theme.palette.secondary.main,
-      color: event.type === 'task' ? theme.palette.primary.contrastText : theme.palette.secondary.contrastText,
+      backgroundColor: event.type === 'task' ? theme.palette.primary.main
+        : event.res?.error ? theme.palette.error.main : theme.palette.secondary.main,
+      color: event.type === 'task' ? theme.palette.primary.contrastText
+        : event.res?.error ? theme.palette.error.contrastText : theme.palette.secondary.contrastText,
     },
     title: `${event.title} (${event.type})`,  // Tooltip info
   });

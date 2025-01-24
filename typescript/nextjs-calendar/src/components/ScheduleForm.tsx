@@ -37,7 +37,7 @@ export default function ScheduleForm({
   );
 
   const [tasks, setTasks] = useState<TaskOption[]>([]);
-  const [selectedTask, setSelectedTask] = useState('');
+  const [selectedTask, setSelectedTask] = useState(selectedSched?.repeat ?? '');
   const [repeat, setRepeat] = useState('none');
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function ScheduleForm({
       }
     }
     loadTasks();
-  }, []);
+  }, [selectedSched]);
 
   useEffect(() => {
     if (selectedSched) {

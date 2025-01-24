@@ -18,6 +18,7 @@ export interface ResultsRecord {
   task: string; // Task identifier (see tasks.ts)
   run_time: string; // ISO datetime string
   result: string; // JSON, HTML, or text stored as a string
+  error: string;
 };
 
 export interface ResultsUIRecord extends ResultsRecord {

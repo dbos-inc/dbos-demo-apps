@@ -14,7 +14,8 @@ exports.up = function(knex) {
       table.uuid('schedule_id').notNullable();
       table.string('task').notNullable();
       table.datetime('run_time').notNullable();
-      table.text('result');  // Store the task result
+      table.text('result');  // Store the error result
+      table.text('error');
 
       table.foreign('schedule_id').references('id').inTable('schedule').onDelete('CASCADE');
       table.primary(['schedule_id', 'run_time']);  // Composite primary key

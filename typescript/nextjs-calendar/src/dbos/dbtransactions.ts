@@ -41,12 +41,13 @@ export class ScheduleDBOps
   }
 
   @DBOS.transaction()
-  static async setResult(schedule_id: string, task: string, time: Date, result: string) {
+  static async setResult(schedule_id: string, task: string, time: Date, result: string, error: string) {
     const taskResult: ResultsRecord = {
       schedule_id,
       task,
       run_time: time.toISOString(),
       result,
+      error,
     };
     
     await DBOS.knexClient<ResultsRecord>('results').insert(taskResult);
