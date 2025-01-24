@@ -21,14 +21,14 @@ export class ScheduleDBOps
   }
 
   @DBOS.transaction()
-  static async updateScheduleItem(id: string, task: string, start_time: Date, end_time: Date, repeat: string) {
+  static async updateScheduleItem(id: string, start_time: Date, end_time: Date, repeat: string) {
     await DBOS.knexClient<ScheduleRecord>('schedule')
       .where({ id })
       .update({
-        task,
+        // Task should not be updated.  Make a new one.
         start_time: start_time.toISOString(),
         end_time: end_time.toISOString(),
-        repeat,  // New repetition rule
+        repeat,
         updated_at: DBOS.knexClient.fn.now(),
       });
   }

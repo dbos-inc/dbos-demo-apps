@@ -29,6 +29,11 @@ export async function addSchedule(task: string, start: Date, end: Date, repeat: 
   return await ScheduleDBOps.addScheduleItem(task, start, end, repeat);
 }
 
+// Update a schedule item
+export async function updateSchedule(id: string, start: Date, end: Date, repeat: string) {
+  return await ScheduleDBOps.updateScheduleItem(id, start, end, repeat);
+}
+
 // Delete a schedule item
 export async function deleteSchedule(id: string) {
   return await ScheduleDBOps.deleteScheduleItem(id);

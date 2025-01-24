@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchSchedules, fetchResults } from '@/actions/schedule';
+import { fetchSchedules, fetchResults, deleteSchedule } from '@/actions/schedule';
 import { ScheduleUIRecord, ResultsUIRecord } from '@/types/models';
 import { useState, useEffect } from 'react';
 import { Paper, Typography, useTheme } from '@mui/material';
@@ -26,18 +26,24 @@ interface CalEvent {
 export default function CalendarView() {
   const theme = useTheme();
 
-  const [open, setOpen] = useState(false);
+  const [addScheduleOpen, setAddScheduleOpen] = useState(false);
+  const [editScheduleOpen, setEditScheduleOpen] = useState(false);
   const [selectedStart, setSelectedStart] = useState<Date | null>(null);
   const [selectedEnd, setSelectedEnd] = useState<Date | null>(null);
   const [events, setEvents] = useState<CalEvent[]>([]);
 
   const [selectedResult, setSelectedResult] = useState<ResultsUIRecord | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleUIRecord | null>(null);
+  const [resultDialogOpen, setResultDialogOpen] = useState(false);
 
   const handleEventClick = (event: CalEvent) => {
     if (event.type === 'result') {
       setSelectedResult(event.res ?? null);
-      setDialogOpen(true);
+      setResultDialogOpen(true);
+    }
+    if (event.type === 'task') {
+      setSelectedSchedule(event.sched ?? null);
+      setEditScheduleOpen(true);
     }
   };
 
@@ -54,7 +60,7 @@ export default function CalendarView() {
       const formattedSchedules = scheduleData.map((item: ScheduleUIRecord) => ({
         title: `${item.name}`,
         start: new Date(item.start_time),
-        end: new Date(new Date(item.start_time).getTime() + 30 * 60 * 1000), // 30-min duration
+        end: new Date(Math.max(new Date(item.end_time).getTime(), new Date(new Date(item.start_time).getTime() + 10 * 60 * 1000).getTime())),
         type: 'task',
         sched: item,
       }));
@@ -84,13 +90,28 @@ export default function CalendarView() {
   const handleDoubleClick = (start: Date, end: Date) => {
     setSelectedStart(start);
     setSelectedStart(end);
-    setOpen(true);
+    setAddScheduleOpen(true);
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const handleAddScheduleClose = () => {
+    setAddScheduleOpen(false);
     setSelectedStart(null);
     setSelectedEnd(null);
+    setRefreshKey(refreshKey+1);
+  };
+
+  const handleEditScheduleClose = () => {
+    setEditScheduleOpen(false);
+    setSelectedSchedule(null);
+    setRefreshKey(refreshKey+1);
+  };
+
+  const handleDeleteSchedule = async () => {
+    setEditScheduleOpen(false);
+    if (selectedSchedule) {
+      await deleteSchedule(selectedSchedule.id);
+    }
+    setSelectedSchedule(null);
     setRefreshKey(refreshKey+1);
   };
 
@@ -124,21 +145,42 @@ export default function CalendarView() {
         />
       </Paper>
 
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+      <Dialog open={addScheduleOpen} onClose={handleAddScheduleClose} fullWidth maxWidth="sm">
         <DialogTitle>Schedule a New Task</DialogTitle>
         <DialogContent>
-          {selectedStart && <ScheduleForm initialDate={selectedStart} initialEnd={selectedEnd} onSuccess={handleClose} />}
+          {selectedStart && <ScheduleForm allowTaskSelection={true} initialDate={selectedStart} initialEnd={selectedEnd} onSuccess={handleAddScheduleClose} />}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="primary">
+          <Button onClick={handleAddScheduleClose} color="primary">
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog key={selectedSchedule?.id} open={editScheduleOpen} onClose={handleEditScheduleClose} fullWidth maxWidth="sm">
+        <DialogTitle>Edit / Delete Task</DialogTitle>
+        <DialogContent>
+          {selectedSchedule && <ScheduleForm
+            allowTaskSelection={false}
+            initialDate={new Date(selectedSchedule.start_time)}
+            initialEnd={new Date(selectedSchedule.end_time)}
+            selectedSched={selectedSchedule}
+            onSuccess={handleEditScheduleClose}
+          />}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteSchedule} color="primary">
+            Delete
+          </Button>
+          <Button onClick={handleEditScheduleClose} color="primary">
             Cancel
           </Button>
         </DialogActions>
       </Dialog>
 
       <ResultsModal
-        open={dialogOpen} 
-        onClose={() => setDialogOpen(false)} 
+        open={resultDialogOpen} 
+        onClose={() => setResultDialogOpen(false)} 
         result={selectedResult} 
       />
     </>

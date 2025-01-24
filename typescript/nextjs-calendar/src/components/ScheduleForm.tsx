@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { addSchedule, getAllTasks } from '@/actions/schedule';
-import { TaskOption } from '@/types/models';
+import { addSchedule, getAllTasks, updateSchedule } from '@/actions/schedule';
+import { ScheduleUIRecord, TaskOption } from '@/types/models';
 import { Button, MenuItem, Select, FormControl, InputLabel, Box, Typography } from '@mui/material';
 
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -13,10 +13,21 @@ import dayjs, {Dayjs} from 'dayjs';
 type ScheduleFormProps = {
   initialDate?: Date | null;
   initialEnd?: Date | null;
-  onSuccess: () => void;
+  selectedSched?: ScheduleUIRecord;
+
+  existingId?: string;
+
+  allowTaskSelection: boolean;
+
+  onSuccess: () => void; // Insert or save
+  onDelete?: () => void;
 };
 
-export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: ScheduleFormProps) {
+export default function ScheduleForm({
+  initialDate, initialEnd, selectedSched,
+  onSuccess, allowTaskSelection,
+}: ScheduleFormProps)
+{
   if (!initialEnd) initialEnd = initialDate;
   const [startTime, setStartTime] = useState<Dayjs | null>(
     dayjs(initialDate)
@@ -34,11 +45,23 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
       const availableTasks = await getAllTasks();
       setTasks(availableTasks);
       if (availableTasks.length > 0) {
-        setSelectedTask(availableTasks[0].id); // Default to first task
+        if (selectedSched) {
+          setSelectedTask(selectedSched.task);
+        }
+        else {
+          setSelectedTask(availableTasks[0].id); // Default to first task
+        }
       }
     }
     loadTasks();
   }, []);
+
+  useEffect(() => {
+    if (selectedSched) {
+      setSelectedTask(selectedSched?.task ?? '');
+      setRepeat(selectedSched?.repeat ?? '');
+    }
+  }, [selectedSched]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +73,12 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
       alert("Please set a start time.");
       return;
     }
-    await addSchedule(selectedTask, startTime.toDate(), (endTime ?? startTime).toDate(), repeat);
-    //window.location.reload();  // Refresh data after adding
+    if (selectedSched?.id) {
+      await updateSchedule(selectedSched.id, startTime.toDate(), (endTime ?? startTime).toDate(), repeat);
+    }
+    else {
+      await addSchedule(selectedTask, startTime.toDate(), (endTime ?? startTime).toDate(), repeat);
+    }
     onSuccess();
   };
 
@@ -77,9 +104,10 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
         <Select
           labelId="task-select-label"
           label="Task"
-          value={selectedTask}
+          value={selectedTask || ''}
           onChange={(e) => setSelectedTask(e.target.value)}
           required
+          readOnly={!allowTaskSelection}
         >
           {tasks.map((task) => (
             <MenuItem key={task.id} value={task.id}>
@@ -94,7 +122,14 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
           <DateTimePicker
             label="Start Time"
             value={startTime}
-            onChange={(newValue) => setStartTime(newValue)}
+            onChange={
+              (newValue) => {
+                setStartTime(newValue);
+                if (newValue && endTime && newValue > endTime) {
+                  setEndTime(newValue);
+                }
+              }
+            }
           />
         </LocalizationProvider>
       </FormControl>
@@ -125,7 +160,7 @@ export default function ScheduleForm({ initialDate, initialEnd, onSuccess }: Sch
       </FormControl>
 
       <Button type="submit" variant="contained" color="primary" fullWidth>
-        Add Schedule
+        {selectedSched ? "Update Schedule" : "Add Schedule"}
       </Button>
     </Box>
   );
