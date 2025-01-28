@@ -8,10 +8,6 @@ runtimeConfig:
   start:
     - npm run start
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
   migrate:
     - echo 'No migrations specified'
 telemetry:
