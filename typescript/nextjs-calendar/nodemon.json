@@ -1,0 +1,7 @@
+{
+  "watch": ["src/dbos/","migrations/"],
+  "ext": "ts,js,tsx,jsx",
+  "ignore": ["src/**/*.test.ts"],
+  "exec": "next dev"
+}
+
