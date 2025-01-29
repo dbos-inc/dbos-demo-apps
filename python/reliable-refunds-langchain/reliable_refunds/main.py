@@ -3,38 +3,31 @@ import os
 import time
 from pathlib import Path
 from string import Template
-from typing import Optional
+from typing import Annotated, Optional
 
 from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.graph import START, StateGraph
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode, tools_condition
+from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-
-from typing import Annotated
-
 from sqlalchemy import text
 from typing_extensions import TypedDict
-
-from langgraph.graph import StateGraph, START
-from langgraph.graph.message import add_messages
-from langchain_openai import ChatOpenAI
-from langchain_core.tools import tool
-from langgraph.prebuilt import ToolNode, tools_condition
-from psycopg_pool import ConnectionPool
-from langgraph.checkpoint.postgres import PostgresSaver
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 from .schema import OrderStatus, Purchase, chat_history, purchases
 
 # Get the directory containing the script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 html_dir = os.path.join(os.path.dirname(script_dir), "html")
-
-# TODO: support multiple users via different thread_id
-chat_config = {"configurable": {"thread_id": "1"}}
 
 app = FastAPI()
 DBOS(fastapi=app)
@@ -57,8 +50,8 @@ callback_domain = os.environ.get("DBOS_APP_HOSTNAME")
 if not callback_domain:
     callback_domain = "http://localhost:8000"
 
-# This tool lets the agent look up the details of an order given its ID.
 
+# This tool lets the agent look up the details of an order given its ID.
 @DBOS.transaction()
 def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
     print(f"Looking up purchase {order_id}")
@@ -67,11 +60,13 @@ def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
     row = result.first()
     return Purchase.from_row(row) if row is not None else None
 
-# We need to define a wrapper to serialize the output of the tool.
+
+# Define a wrapper to serialize the output of the tool.
 @tool
 def tool_get_purchase_by_id(order_id: int) -> str:
     """Look up a purchase by its order id."""
     return str(get_purchase_by_id(order_id))
+
 
 # This tool processes a refund for an order. If the order exceeds a cost threshold,
 # it escalates to manual review.
@@ -96,7 +91,6 @@ def process_refund(order_id: int):
 
 # This workflow manages manual review. It sends an email to a reviewer, then waits up to a week
 # for the reviewer to approve or deny the refund request.
-
 @DBOS.workflow()
 def approval_workflow(purchase: Purchase):
     send_email(purchase)
@@ -113,8 +107,6 @@ def approval_workflow(purchase: Purchase):
 
 # This function sends an email to a manual reviewer. The email contains links that send notifications
 # to the approval workflow to approve or deny a refund.
-
-
 @DBOS.step()
 def send_email(purchase: Purchase):
     content = f"{callback_domain}/approval/{DBOS.workflow_id}"
@@ -139,8 +131,6 @@ def send_email(purchase: Purchase):
 
 
 # This function updates the status of a purchase.
-
-
 @DBOS.transaction()
 def update_purchase_status(order_id: int, status: OrderStatus):
     query = (
@@ -151,16 +141,114 @@ def update_purchase_status(order_id: int, status: OrderStatus):
     DBOS.sql_session.execute(query)
 
 
-
-class ChatSchema(BaseModel):
-    message: str
-
-
 @DBOS.transaction()
 def insert_chat(message: dict):
     DBOS.sql_session.execute(
         chat_history.insert().values(message_json=json.dumps(message))
     )
+
+
+@DBOS.transaction()
+def get_chats():
+    stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
+    result = DBOS.sql_session.execute(stmt)
+    return [json.loads(row.message_json) for row in result]
+
+
+# Define the state for the LangChain graph
+class State(TypedDict):
+    messages: Annotated[list, add_messages]
+
+
+# Set up LangGraph to answer refund requests. The agent uses two tools: one to look up order status, the other to process refunds.
+# We'll configure LangChain to store checkpoints in Postgres so it persists across app restarts.
+def create_agent():
+    llm = ChatOpenAI(model="gpt-3.5-turbo")
+    tools = [tool_get_purchase_by_id, process_refund]
+    llm_with_tools = llm.bind_tools(tools)
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "You are a helpful refund agent. You always speak in fluent, natural, conversational language. You can look up order status and process refunds.",
+            ),
+            MessagesPlaceholder(variable_name="messages"),
+        ]
+    )
+
+    # This is our refund agent. It follows these instructions to process refunds.
+    # It uses two tools: one to look up order status, one to actually process refunds.
+    agent = prompt | llm_with_tools
+
+    # Create a state machine using the graph builder
+    graph_builder = StateGraph(State)
+
+    def chatbot(state: State):
+        return {"messages": [agent.invoke(state["messages"])]}
+
+    graph_builder.add_node("chatbot", chatbot)
+    tool_node = ToolNode(tools=tools)
+    graph_builder.add_node("tools", tool_node)
+    graph_builder.add_conditional_edges(
+        "chatbot",
+        tools_condition,
+    )
+    # Any time a tool is called, we return to the chatbot to decide the next step
+    graph_builder.add_edge("tools", "chatbot")
+    graph_builder.add_edge(START, "chatbot")
+
+    # Create a checkpointer LangChain can use to store message history in Postgres.
+    db = DBOS.config["database"]
+    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
+    pool = ConnectionPool(connection_string)
+    checkpointer = PostgresSaver(pool)
+
+    graph = graph_builder.compile(checkpointer=checkpointer)
+
+    return graph
+
+
+compiled_agent = create_agent()
+
+
+class ChatSchema(BaseModel):
+    message: str
+
+
+# The main entry for the chat workflow
+
+# TODO: support multiple users via different thread_id
+chat_config = {"configurable": {"thread_id": "1"}}
+
+
+@app.post("/chat")
+def chat_workflow(chat: ChatSchema):
+    # Invoke the agent DAG with the user's message
+    events = compiled_agent.stream(
+        {"messages": [{"role": "user", "content": chat.message}]},
+        config=chat_config,
+        stream_mode="values",
+    )
+
+    # Persist the chat history and return the filtered messages for the frontend
+    response_messages = []
+    for event in events:
+        if "messages" in event:
+            latest_msg = event["messages"][-1]
+            if isinstance(latest_msg, HumanMessage):
+                message = {"role": "user", "content": latest_msg.content}
+            elif isinstance(latest_msg, ToolMessage):
+                message = {"role": "tool", "content": latest_msg.content}
+            else:
+                message = {"role": "assistant", "content": latest_msg.content}
+                response_messages.append(message)
+            insert_chat(message)
+    return [
+        {"content": m["content"], "isUser": False}
+        for m in response_messages
+        if m["content"]
+    ]
 
 
 @app.get("/history")
@@ -171,13 +259,6 @@ def history_endpoint():
         for m in messages
         if m["content"] and m["role"] != "tool"
     ]
-
-
-@DBOS.transaction()
-def get_chats():
-    stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
-    result = DBOS.sql_session.execute(stmt)
-    return [json.loads(row.message_json) for row in result]
 
 
 @app.get("/")
@@ -218,78 +299,3 @@ def reset():
 @app.post("/crash")
 def crash():
     os._exit(1)
-
-# Define the state for the LangChain graph
-class State(TypedDict):
-    messages: Annotated[list, add_messages]
-
-def create_agent():
-    llm = ChatOpenAI(model="gpt-3.5-turbo")
-    tools = [tool_get_purchase_by_id, process_refund]
-    llm_with_tools = llm.bind_tools(tools)
-
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                "You are a helpful refund agent. You always speak in fluent, natural, conversational language.",
-            ),
-            MessagesPlaceholder(variable_name="messages"),
-        ]
-    )
-
-    # This is our refund agent. It follows these instructions to process refunds.
-    # It uses two tools: one to look up order status, one to actually process refunds.
-    agent = prompt | llm_with_tools
-
-    # Create a state machine using the graph builder
-    graph_builder = StateGraph(State)
-
-    def chatbot(state: State):
-        return {"messages": [agent.invoke(state["messages"])]}
-
-    graph_builder.add_node("chatbot", chatbot)
-    tool_node = ToolNode(tools=tools)
-    graph_builder.add_node("tools", tool_node)
-    graph_builder.add_conditional_edges(
-        "chatbot",
-        tools_condition,
-    )
-    # Any time a tool is called, we return to the chatbot to decide the next step
-    graph_builder.add_edge("tools", "chatbot")
-    graph_builder.add_edge(START, "chatbot")
-
-    # Create a checkpointer LangChain can use to store message history in Postgres.
-    db = DBOS.config["database"]
-    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
-    pool = ConnectionPool(connection_string)
-    checkpointer = PostgresSaver(pool)
-
-    graph = graph_builder.compile(checkpointer=checkpointer)
-
-    return graph
-
-compiled_agent = create_agent()
-
-@app.post("/chat")
-def chat_workflow(chat: ChatSchema):
-    message = {"role": "user", "content": chat.message}
-    events = compiled_agent.stream({"messages": [{"role": "user", "content": chat.message}]}, config=chat_config, stream_mode="values")
-    response_messages = []
-    for event in events:
-        if "messages" in event:
-            msg = event["messages"][-1]
-            print(type(event["messages"][-1]))
-            if isinstance(event["messages"][-1], AIMessage):
-                message = {"role": "assistant", "content": msg.content}
-                response_messages.append(message)
-            elif isinstance(event["messages"][-1], HumanMessage):
-                message = {"role": "user", "content": msg.content}
-            elif isinstance(event["messages"][-1], ToolMessage):
-                message = {"role": "tool", "content": msg.content}
-            insert_chat(message)
-    return [
-        {"content": m["content"], "isUser": m["role"] == "user"}
-        for m in response_messages
-        if m["content"] and m["role"] != "tool"
-    ]
