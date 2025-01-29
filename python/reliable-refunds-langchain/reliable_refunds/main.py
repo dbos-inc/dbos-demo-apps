@@ -14,6 +14,7 @@ from sendgrid.helpers.mail import Mail
 
 from typing import Annotated
 
+from sqlalchemy import text
 from typing_extensions import TypedDict
 
 from langgraph.graph import StateGraph, START
@@ -32,7 +33,7 @@ from .schema import OrderStatus, Purchase, chat_history, purchases
 script_dir = os.path.dirname(os.path.abspath(__file__))
 html_dir = os.path.join(os.path.dirname(script_dir), "html")
 
-# TODO: different user can have different thread_id
+# TODO: support multiple users via different thread_id
 chat_config = {"configurable": {"thread_id": "1"}}
 
 app = FastAPI()
@@ -40,11 +41,11 @@ DBOS(fastapi=app)
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week
 
-sg_api_key = os.environ.get("SENDGRID_API_KEY", None)
+sg_api_key = os.environ.get("SENDGRID_API_KEY")
 if sg_api_key is None:
     raise Exception("Error: SENDGRID_API_KEY is not set")
 
-from_email = os.environ.get("SENDGRID_FROM_EMAIL", None)
+from_email = os.environ.get("SENDGRID_FROM_EMAIL")
 if from_email is None:
     raise Exception("Error: SENDGRID_FROM_EMAIL is not set")
 
@@ -52,10 +53,9 @@ admin_email = os.environ.get("ADMIN_EMAIL", None)
 if admin_email is None:
     raise Exception("Error: ADMIN_EMAIL is not set")
 
-callback_domain = os.environ.get("CALLBACK_DOMAIN", None)
-if callback_domain is None:
-    raise Exception("Error: CALLBACK_DOMAIN is not set")
-
+callback_domain = os.environ.get("DBOS_APP_HOSTNAME")
+if not callback_domain:
+    callback_domain = "http://localhost:8000"
 
 # This tool lets the agent look up the details of an order given its ID.
 
@@ -210,6 +210,9 @@ def reset():
     }
     insert_stmt = chat_history.insert().values(message_json=json.dumps(initial_chat))
     DBOS.sql_session.execute(insert_stmt)
+    DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoints"))
+    DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoint_blobs"))
+    DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoint_writes"))
 
 
 @app.post("/crash")

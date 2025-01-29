@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from dbos import get_dbos_database_url
-from sqlalchemy import create_engine, delete
+from sqlalchemy import create_engine, delete, text
 
 from reliable_refunds import schema
 
@@ -72,6 +72,11 @@ with engine.connect() as connection:
         message_json=json.dumps(initial_chat)
     )
     connection.execute(insert_stmt)
+
+    # Clean up LangChain checkpoint tables
+    connection.execute(text("TRUNCATE TABLE checkpoints"))
+    connection.execute(text("TRUNCATE TABLE checkpoint_blobs"))
+    connection.execute(text("TRUNCATE TABLE checkpoint_writes"))
 
     # Commit the transaction
     connection.commit()
