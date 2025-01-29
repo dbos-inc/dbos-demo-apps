@@ -11,9 +11,10 @@ from typing import TypedDict
 
 import requests
 from dbos import DBOS
-from schema import earthquake_tracker
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
+
+from .schema import earthquake_tracker
 
 DBOS()
 
