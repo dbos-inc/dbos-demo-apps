@@ -8,10 +8,6 @@ runtimeConfig:
   start:
     - node dist/main.js
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
   migrate:
     - echo 'No migrations specified'
 telemetry:

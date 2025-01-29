@@ -9,10 +9,6 @@ runtimeConfig:
   start:
     - "fastapi run app/main.py"
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
   migrate:
     - echo 'No migrations specified'
 telemetry:
