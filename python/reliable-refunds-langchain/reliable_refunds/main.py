@@ -5,14 +5,26 @@ from pathlib import Path
 from string import Template
 from typing import Optional
 
-from dbos import DBOS, DBOSConfiguredInstance
+from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from swarm import Agent, Swarm
-from swarm.repl.repl import pretty_print_messages
+
+from typing import Annotated
+
+from typing_extensions import TypedDict
+
+from langgraph.graph import StateGraph, START
+from langgraph.graph.message import add_messages
+from langchain_openai import ChatOpenAI
+from langchain_core.tools import tool
+from langgraph.prebuilt import ToolNode, tools_condition
+from psycopg_pool import ConnectionPool
+from langgraph.checkpoint.postgres import PostgresSaver
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 from .schema import OrderStatus, Purchase, chat_history, purchases
 
@@ -20,26 +32,11 @@ from .schema import OrderStatus, Purchase, chat_history, purchases
 script_dir = os.path.dirname(os.path.abspath(__file__))
 html_dir = os.path.join(os.path.dirname(script_dir), "html")
 
+# TODO: different user can have different thread_id
+chat_config = {"configurable": {"thread_id": "1"}}
+
 app = FastAPI()
 DBOS(fastapi=app)
-
-
-@DBOS.dbos_class()
-class DurableSwarm(Swarm, DBOSConfiguredInstance):
-    def __init__(self, client=None):
-        Swarm.__init__(self, client)
-        DBOSConfiguredInstance.__init__(self, "openai_client")
-
-    @DBOS.step()
-    def get_chat_completion(self, *args, **kwargs):
-        return super().get_chat_completion(*args, **kwargs)
-
-    @DBOS.workflow()
-    def run(self, *args, **kwargs):
-        response = super().run(*args, **kwargs)
-        pretty_print_messages(response.messages)
-        return response
-
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week
 
@@ -60,43 +57,29 @@ if callback_domain is None:
     raise Exception("Error: CALLBACK_DOMAIN is not set")
 
 
-# This is our refund agent. It follows these instructions to process refunds.
-# It uses two tools: one to look up order status, one to actually process refunds.
-
-
-def refund_agent():
-    return Agent(
-        name="Refund Agent",
-        instructions="""
-    You are a helpful refund agent. You always speak in fluent, natural, conversational language.
-    Take these steps when someone asks for a refund:
-    1. Ask for their order_id if they haven't provided it.
-    2. Look up their order_id using get_purchase_by_id and retrieve the item, order date, and price.
-    3. Ask them to confirm they want to refund this item.
-    4. If they confirm, process the refund for their order_id using process_refund.
-    If the customer asks for the status of an order or refund, look up their order_id using get_purchase_by_id and retrieve its latest status.
-    """,
-        functions=[get_purchase_by_id, process_refund],
-    )
-
-
 # This tool lets the agent look up the details of an order given its ID.
-
 
 @DBOS.transaction()
 def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
+    print(f"Looking up purchase {order_id}")
     query = purchases.select().where(purchases.c.order_id == order_id)
     result = DBOS.sql_session.execute(query)
     row = result.first()
     return Purchase.from_row(row) if row is not None else None
 
+# We need to define a wrapper to serialize the output of the tool.
+@tool
+def tool_get_purchase_by_id(order_id: int) -> str:
+    """Look up a purchase by its order id."""
+    return str(get_purchase_by_id(order_id))
 
 # This tool processes a refund for an order. If the order exceeds a cost threshold,
 # it escalates to manual review.
-
-
+@tool
 @DBOS.workflow()
 def process_refund(order_id: int):
+    """Process a refund for an order given an order ID."""
+    print(f"Processing refund for order {order_id}")
     purchase = get_purchase_by_id(order_id)
     if purchase is None:
         DBOS.logger.error(f"Refunding invalid order {order_id}")
@@ -113,7 +96,6 @@ def process_refund(order_id: int):
 
 # This workflow manages manual review. It sends an email to a reviewer, then waits up to a week
 # for the reviewer to approve or deny the refund request.
-
 
 @DBOS.workflow()
 def approval_workflow(purchase: Purchase):
@@ -169,27 +151,9 @@ def update_purchase_status(order_id: int, status: OrderStatus):
     DBOS.sql_session.execute(query)
 
 
-client = DurableSwarm()
-
 
 class ChatSchema(BaseModel):
     message: str
-
-
-@app.post("/chat")
-@DBOS.workflow()
-def chat_workflow(chat: ChatSchema):
-    message = {"role": "user", "content": chat.message}
-    insert_chat(message)
-    messages = get_chats()
-    response = client.run(agent=refund_agent(), messages=messages)
-    for m in response.messages:
-        insert_chat(m)
-    return [
-        {"content": m["content"], "isUser": m["role"] == "user"}
-        for m in response.messages
-        if m["content"] and m["role"] != "tool"
-    ]
 
 
 @DBOS.transaction()
@@ -251,3 +215,78 @@ def reset():
 @app.post("/crash")
 def crash():
     os._exit(1)
+
+# Define the state for the LangChain graph
+class State(TypedDict):
+    messages: Annotated[list, add_messages]
+
+def create_agent():
+    llm = ChatOpenAI(model="gpt-3.5-turbo")
+    tools = [tool_get_purchase_by_id, process_refund]
+    llm_with_tools = llm.bind_tools(tools)
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "You are a helpful refund agent. You always speak in fluent, natural, conversational language.",
+            ),
+            MessagesPlaceholder(variable_name="messages"),
+        ]
+    )
+
+    # This is our refund agent. It follows these instructions to process refunds.
+    # It uses two tools: one to look up order status, one to actually process refunds.
+    agent = prompt | llm_with_tools
+
+    # Create a state machine using the graph builder
+    graph_builder = StateGraph(State)
+
+    def chatbot(state: State):
+        return {"messages": [agent.invoke(state["messages"])]}
+
+    graph_builder.add_node("chatbot", chatbot)
+    tool_node = ToolNode(tools=tools)
+    graph_builder.add_node("tools", tool_node)
+    graph_builder.add_conditional_edges(
+        "chatbot",
+        tools_condition,
+    )
+    # Any time a tool is called, we return to the chatbot to decide the next step
+    graph_builder.add_edge("tools", "chatbot")
+    graph_builder.add_edge(START, "chatbot")
+
+    # Create a checkpointer LangChain can use to store message history in Postgres.
+    db = DBOS.config["database"]
+    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
+    pool = ConnectionPool(connection_string)
+    checkpointer = PostgresSaver(pool)
+
+    graph = graph_builder.compile(checkpointer=checkpointer)
+
+    return graph
+
+compiled_agent = create_agent()
+
+@app.post("/chat")
+def chat_workflow(chat: ChatSchema):
+    message = {"role": "user", "content": chat.message}
+    events = compiled_agent.stream({"messages": [{"role": "user", "content": chat.message}]}, config=chat_config, stream_mode="values")
+    response_messages = []
+    for event in events:
+        if "messages" in event:
+            msg = event["messages"][-1]
+            print(type(event["messages"][-1]))
+            if isinstance(event["messages"][-1], AIMessage):
+                message = {"role": "assistant", "content": msg.content}
+                response_messages.append(message)
+            elif isinstance(event["messages"][-1], HumanMessage):
+                message = {"role": "user", "content": msg.content}
+            elif isinstance(event["messages"][-1], ToolMessage):
+                message = {"role": "tool", "content": msg.content}
+            insert_chat(message)
+    return [
+        {"content": m["content"], "isUser": m["role"] == "user"}
+        for m in response_messages
+        if m["content"] and m["role"] != "tool"
+    ]
