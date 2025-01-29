@@ -28,7 +28,7 @@ class EarthquakeData(TypedDict):
     id: str
     place: str
     magnitude: float
-    timestamp: str
+    timestamp: int
 
 
 @DBOS.step()
