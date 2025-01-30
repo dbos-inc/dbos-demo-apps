@@ -1,4 +1,4 @@
-name: CI for Bank demo
+name: CI for Earthquake Tracker
 
 on:
   push:
