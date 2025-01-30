@@ -1,5 +1,3 @@
-import os
-
 import pytest
 import sqlalchemy as sa
 from alembic import script
@@ -26,7 +24,9 @@ def reset_database(config: ConfigFile):
                 f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{config["database"]["app_db_name"]}'"
             )
         )
-        conn.execute(sa.text(f"DROP DATABASE IF EXISTS {config["database"]["app_db_name"]}"))
+        conn.execute(
+            sa.text(f"DROP DATABASE IF EXISTS {config["database"]["app_db_name"]}")
+        )
         conn.execute(sa.text(f"CREATE DATABASE {config["database"]["app_db_name"]}"))
 
 
@@ -42,12 +42,14 @@ def run_migrations(config: ConfigFile):
     alembic_cfg = Config()
     alembic_cfg.set_main_option("script_location", "./migrations")
     script_dir = script.ScriptDirectory.from_config(alembic_cfg)
-    
+
     def do_run_migrations(connection):
         context = MigrationContext.configure(connection)
         with Operations.context(context):
             for revision in script_dir.walk_revisions("base", "head"):
-                if script_dir._upgrade_revs(revision.revision, context.get_current_revision()):
+                if script_dir._upgrade_revs(
+                    revision.revision, context.get_current_revision()
+                ):
                     revision.module.upgrade()
 
     with sa.create_engine(app_db_url).connect() as conn:
