@@ -1,0 +1,60 @@
+name: CI for Bank demo
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+        - 'python/earthquake-tracker/**'
+        - '.github/workflows/earthquake_tracker.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'python/earthquake-tracker/**'
+      - '.github/workflows/earthquake_tracker.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Service container for Postgres
+    services:
+      # Label used to access the service container.
+      pgtest:
+        image: postgres:16
+        env:
+          # Specify the password for Postgres superuser.
+          POSTGRES_PASSWORD: dbos
+        # Set health checks to wait until postgres has started
+        options: >-
+          --name pgtest
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+    steps:
+      - name: Checkout demo app
+        uses: actions/checkout@v4
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.13'
+          architecture: 'x64'
+  
+      - name: Install Dependencies
+        run: pdm install
+        working-directory: python/earthquake-tracker
+  
+      - name: Run Unit Tests
+        run: pdm run pytest
+        working-directory: python/earthquake-tracker
+        env:
+          PGPASSWORD: dbos
