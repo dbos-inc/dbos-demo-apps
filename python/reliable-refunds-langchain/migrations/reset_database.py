@@ -1,6 +1,5 @@
 # Each time the app is re-deployed, reset the database.
 
-import json
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -50,27 +49,14 @@ sample_purchases = [
     },
 ]
 
-# Initial chat message
-initial_chat = {
-    "role": "assistant",
-    "content": "Hi there! Do you need help refunding an order?",
-}
-
 engine = create_engine(get_dbos_database_url())
 
 with engine.connect() as connection:
     # Delete chat history
-    connection.execute(delete(schema.chat_history))
     connection.execute(delete(schema.purchases))
 
     # Create the insert statement
     insert_stmt = schema.purchases.insert().values(sample_purchases)
-    connection.execute(insert_stmt)
-
-    # Insert the initial chat message
-    insert_stmt = schema.chat_history.insert().values(
-        message_json=json.dumps(initial_chat)
-    )
     connection.execute(insert_stmt)
 
     # Clean up LangChain checkpoint tables

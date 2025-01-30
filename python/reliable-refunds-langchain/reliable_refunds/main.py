@@ -1,4 +1,3 @@
-import json
 import os
 import time
 from pathlib import Path
@@ -8,7 +7,7 @@ from typing import Annotated, Optional
 from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
@@ -23,7 +22,7 @@ from sendgrid.helpers.mail import Mail
 from sqlalchemy import text
 from typing_extensions import TypedDict
 
-from .schema import OrderStatus, Purchase, chat_history, purchases
+from .schema import OrderStatus, Purchase, purchases
 
 # Get the directory containing the script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -50,6 +49,10 @@ callback_domain = os.environ.get("DBOS_APP_HOSTNAME")
 if not callback_domain:
     callback_domain = "http://localhost:8000"
 
+# TODO: remove this workaround
+if callback_domain.endswith("."):
+    callback_domain = f"{callback_domain}cloud.dbos.dev"
+
 
 # This tool lets the agent look up the details of an order given its ID.
 @DBOS.transaction()
@@ -61,7 +64,7 @@ def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
     return Purchase.from_row(row) if row is not None else None
 
 
-# Define a wrapper to serialize the output of the tool.
+# Define a wrapper function to serialize the output of the tool.
 @tool
 def tool_get_purchase_by_id(order_id: int) -> str:
     """Look up a purchase by its order id."""
@@ -141,21 +144,7 @@ def update_purchase_status(order_id: int, status: OrderStatus):
     DBOS.sql_session.execute(query)
 
 
-@DBOS.transaction()
-def insert_chat(message: dict):
-    DBOS.sql_session.execute(
-        chat_history.insert().values(message_json=json.dumps(message))
-    )
-
-
-@DBOS.transaction()
-def get_chats():
-    stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
-    result = DBOS.sql_session.execute(stmt)
-    return [json.loads(row.message_json) for row in result]
-
-
-# Define the state for the LangChain graph
+# Define the state for the LangGraph
 class State(TypedDict):
     messages: Annotated[list, add_messages]
 
@@ -216,49 +205,48 @@ class ChatSchema(BaseModel):
     message: str
 
 
-# The main entry for the chat workflow
-
 # TODO: support multiple users via different thread_id
 chat_config = {"configurable": {"thread_id": "1"}}
 
-
+# The main entry for the chat workflow
 @app.post("/chat")
 def chat_workflow(chat: ChatSchema):
     # Invoke the agent DAG with the user's message
     events = compiled_agent.stream(
-        {"messages": [{"role": "user", "content": chat.message}]},
+        {"messages": [HumanMessage(chat.message)]},
         config=chat_config,
         stream_mode="values",
     )
-
-    # Persist the chat history and return the filtered messages for the frontend
+    # Filter the response messages for the frontend
     response_messages = []
     for event in events:
         if "messages" in event:
             latest_msg = event["messages"][-1]
-            if isinstance(latest_msg, HumanMessage):
-                message = {"role": "user", "content": latest_msg.content}
-            elif isinstance(latest_msg, ToolMessage):
-                message = {"role": "tool", "content": latest_msg.content}
-            else:
-                message = {"role": "assistant", "content": latest_msg.content}
-                response_messages.append(message)
-            insert_chat(message)
-    return [
-        {"content": m["content"], "isUser": False}
-        for m in response_messages
-        if m["content"]
-    ]
+            if isinstance(latest_msg, AIMessage) and latest_msg.content:
+                response_messages.append({"isUser": False, "content": latest_msg.content})
+    return response_messages
 
 
 @app.get("/history")
 def history_endpoint():
-    messages = get_chats()
-    return [
-        {"content": m["content"], "isUser": m["role"] == "user"}
-        for m in messages
-        if m["content"] and m["role"] != "tool"
-    ]
+    # Retrieve the messages from the chat history and parse them for the frontend
+    chats = compiled_agent.checkpointer.list(config=chat_config, limit=1000)
+    message_list = []
+    for chat in chats:
+        writes = chat.metadata.get("writes")
+        if writes is not None:
+            record = writes.get("chatbot") or writes.get(START)
+            if record is not None:
+                messages = record.get("messages")
+                if messages is not None:
+                    for message in messages:
+                        if isinstance(message, HumanMessage) and message.content:
+                            message_list.append({"isUser": True, "content": message.content})
+                        elif isinstance(message, AIMessage) and message.content:
+                            message_list.append({"isUser": False, "content": message.content})
+    # The list is reversed so the most recent messages appear at the bottom
+    message_list.reverse()
+    return message_list
 
 
 @app.get("/")
@@ -281,16 +269,9 @@ def approval_endpoint(workflow_id: str, status: str):
 @app.post("/reset")
 @DBOS.transaction()
 def reset():
-    DBOS.sql_session.execute(chat_history.delete())
     DBOS.sql_session.execute(
         purchases.update().values(order_status=OrderStatus.PURCHASED.value)
     )
-    initial_chat = {
-        "role": "assistant",
-        "content": "Hi there! Do you need help refunding an order?",
-    }
-    insert_stmt = chat_history.insert().values(message_json=json.dumps(initial_chat))
-    DBOS.sql_session.execute(insert_stmt)
     DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoints"))
     DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoint_blobs"))
     DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoint_writes"))
