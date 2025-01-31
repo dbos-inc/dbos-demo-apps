@@ -1,5 +1,6 @@
 import os
 import time
+from dataclasses import asdict
 from pathlib import Path
 from string import Template
 from typing import Annotated, Optional
@@ -7,7 +8,7 @@ from typing import Annotated, Optional
 from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
@@ -31,44 +32,35 @@ html_dir = os.path.join(os.path.dirname(script_dir), "html")
 app = FastAPI()
 DBOS(fastapi=app)
 
-APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week
+APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week timeout for manual review
 
 sg_api_key = os.environ.get("SENDGRID_API_KEY")
-if sg_api_key is None:
-    raise Exception("Error: SENDGRID_API_KEY is not set")
+assert sg_api_key, "Error: SENDGRID_API_KEY is not set"
 
 from_email = os.environ.get("SENDGRID_FROM_EMAIL")
-if from_email is None:
-    raise Exception("Error: SENDGRID_FROM_EMAIL is not set")
+assert from_email, "Error: SENDGRID_FROM_EMAIL is not set"
 
 admin_email = os.environ.get("ADMIN_EMAIL", None)
-if admin_email is None:
-    raise Exception("Error: ADMIN_EMAIL is not set")
+assert admin_email, "Error: ADMIN_EMAIL is not set"
 
-callback_domain = os.environ.get("DBOS_APP_HOSTNAME")
-if not callback_domain:
-    callback_domain = "http://localhost:8000"
-
-# TODO: remove this workaround
-if callback_domain.endswith("."):
-    callback_domain = f"{callback_domain}cloud.dbos.dev"
+callback_domain = os.environ.get("DBOS_APP_HOSTNAME", "http://localhost:8000")
 
 
 # This tool lets the agent look up the details of an order given its ID.
 @DBOS.transaction()
 def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
-    print(f"Looking up purchase {order_id}")
+    DBOS.logger.info(f"Looking up purchase by order_id {order_id}")
     query = purchases.select().where(purchases.c.order_id == order_id)
     result = DBOS.sql_session.execute(query)
     row = result.first()
     return Purchase.from_row(row) if row is not None else None
 
 
-# Define a wrapper function to serialize the output of the tool.
+# Define a wrapper function to make the output JSON serializable.
 @tool
 def tool_get_purchase_by_id(order_id: int) -> str:
     """Look up a purchase by its order id."""
-    return str(get_purchase_by_id(order_id))
+    return asdict(get_purchase_by_id(order_id))
 
 
 # This tool processes a refund for an order. If the order exceeds a cost threshold,
@@ -77,7 +69,6 @@ def tool_get_purchase_by_id(order_id: int) -> str:
 @DBOS.workflow()
 def process_refund(order_id: int):
     """Process a refund for an order given an order ID."""
-    print(f"Processing refund for order {order_id}")
     purchase = get_purchase_by_id(order_id)
     if purchase is None:
         DBOS.logger.error(f"Refunding invalid order {order_id}")
@@ -144,7 +135,7 @@ def update_purchase_status(order_id: int, status: OrderStatus):
     DBOS.sql_session.execute(query)
 
 
-# Define the state for the LangGraph
+# Define the state for LangGraph
 class State(TypedDict):
     messages: Annotated[list, add_messages]
 
@@ -198,15 +189,14 @@ def create_agent():
     return graph
 
 
-compiled_agent = create_agent()
-
-
 class ChatSchema(BaseModel):
     message: str
 
 
-# TODO: support multiple users via different thread_id
+# Currently supports only one chat thread
 chat_config = {"configurable": {"thread_id": "1"}}
+compiled_agent = create_agent()
+
 
 # The main entry for the chat workflow
 @app.post("/chat")
@@ -223,7 +213,9 @@ def chat_workflow(chat: ChatSchema):
         if "messages" in event:
             latest_msg = event["messages"][-1]
             if isinstance(latest_msg, AIMessage) and latest_msg.content:
-                response_messages.append({"isUser": False, "content": latest_msg.content})
+                response_messages.append(
+                    {"isUser": False, "content": latest_msg.content}
+                )
     return response_messages
 
 
@@ -241,19 +233,16 @@ def history_endpoint():
                 if messages is not None:
                     for message in messages:
                         if isinstance(message, HumanMessage) and message.content:
-                            message_list.append({"isUser": True, "content": message.content})
+                            message_list.append(
+                                {"isUser": True, "content": message.content}
+                            )
                         elif isinstance(message, AIMessage) and message.content:
-                            message_list.append({"isUser": False, "content": message.content})
+                            message_list.append(
+                                {"isUser": False, "content": message.content}
+                            )
     # The list is reversed so the most recent messages appear at the bottom
     message_list.reverse()
     return message_list
-
-
-@app.get("/")
-def frontend():
-    with open(os.path.join("html", "app.html")) as file:
-        html = file.read()
-    return HTMLResponse(html)
 
 
 @app.get("/approval/{workflow_id}/{status}")
@@ -275,6 +264,13 @@ def reset():
     DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoints"))
     DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoint_blobs"))
     DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoint_writes"))
+
+
+@app.get("/")
+def frontend():
+    with open(os.path.join("html", "app.html")) as file:
+        html = file.read()
+    return HTMLResponse(html)
 
 
 @app.post("/crash")
