@@ -36,6 +36,13 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Then initialize local `postgres` running in a container:
+
+```shell
+export PGPASSWORD='my-secure-db'
+python3 start_postgres_docker.py
+```
+
 Then start your app:
 
 ```shell
@@ -43,3 +50,8 @@ dbos start
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your app!
+
+The `PGPASSWORD` environment variable will be needed each time you start your
+app. Or, you can add the password to [database configuration YAML][1].
+
+[1]: https://docs.dbos.dev/typescript/reference/configuration#database
