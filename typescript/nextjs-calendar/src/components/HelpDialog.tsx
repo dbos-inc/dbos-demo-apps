@@ -3,9 +3,9 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/
 export default function HelpDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Welcome to the DBOS Scheduler</DialogTitle>
+      <DialogTitle>Welcome to the DBOS Task Scheduler</DialogTitle>
       <DialogContent>
-        <p>This app is a UI that allows you to schedule DBOS workflows and see the results</p>
+        <p>This app is a UI that allows you to schedule DBOS workflows and see the results.  The DBOS server will make sure the scheduled tasks get executed.</p>
         <p>Here’s how to use this app:</p>
         <ul>
           <li><strong>Add New Tasks:</strong> Double-click on a free spot on the calendar to schedule a task.</li>
