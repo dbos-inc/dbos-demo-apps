@@ -2,9 +2,11 @@ import { DBOS, SchedulerMode } from "@dbos-inc/dbos-sdk";
 
 import { TaskOption } from "@/types/models";
 import { doTaskFetch, schedulableTasks } from "./tasks";
+import { DBOSBored } from "./dbos_bored";
+export { DBOSBored };
 import { ScheduleDBOps } from "./dbtransactions";
-import { getOccurrencesAt } from "../types/taskschedule";
 export { ScheduleDBOps };
+import { getOccurrencesAt } from "../types/taskschedule";
 
 // Welcome to DBOS!
 // This is a template application built with DBOS and Next.
@@ -37,6 +39,7 @@ export class SchedulerOps
     }
 
     // Send notification (future)
+
   }
 
   @DBOS.scheduled({crontab: '* * * * *', mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })

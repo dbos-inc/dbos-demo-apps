@@ -1,9 +1,7 @@
-import { DBOS, WorkflowQueue } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 import { v4 as uuidv4 } from 'uuid';
 import { ScheduleRecord, ResultsRecord } from '../types/models';
-
-const _queue: WorkflowQueue = new WorkflowQueue('problemqx');
 
 export class ScheduleDBOps
 {

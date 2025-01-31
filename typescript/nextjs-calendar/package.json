@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "nodemon",
+    "dev": "npx dbos migrate && nodemon",
     "build": "next build",
     "start": "next start",
-    "testdb": "npx dbos rollback && npx dbos migrate && jest --detectOpenHandles",
-    "test": "jest --detectOpenHandles",
-    "lint": "next lint"
+    "test": "npx dbos migrate && jest --detectOpenHandles",
+    "lint": "next lint --fix"
   },
   "dependencies": {
+    "@dbos-inc/dbos-random": "^2.1.17",
     "@dbos-inc/dbos-sdk": "^2.0.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",

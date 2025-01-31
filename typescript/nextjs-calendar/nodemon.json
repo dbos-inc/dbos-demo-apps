@@ -1,7 +1,10 @@
+
 {
-  "watch": ["src/dbos/","migrations/"],
+  "watch": ["src/dbos/", "migrations/"],
   "ext": "ts,js,tsx,jsx",
   "ignore": ["src/**/*.test.ts"],
+  "events": {
+    "restart": "bash -c \"if [[ $FILENAME =~ migrations ]]; then npx dbos migrate; fi\"  # TODO Change me if you do not have 'bash'..."
+  },
   "exec": "next dev"
 }
-

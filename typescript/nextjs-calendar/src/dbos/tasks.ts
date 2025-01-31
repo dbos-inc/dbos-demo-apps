@@ -37,10 +37,16 @@ export const schedulableTasks: CalendarTask[] = [
     type: 'json',
   },
   {
-    id: 'fetch_activity',
+    id: 'fetch_activity_boredapi',
     name: 'Stave Off Boredom',
     url: 'https://www.boredapi.com/api/activity',
     type: 'html',
+  },
+  {
+    id: 'fetch_activity_dbos',
+    name: 'Stave Off Boredom (DBOS)',
+    url: 'http://localhost:3000/api/boredactivity',
+    type: 'json',
   },
   {
     id: 'throw_error',
