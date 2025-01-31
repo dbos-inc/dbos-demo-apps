@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { addSchedule, getAllTasks, updateSchedule } from '@/actions/schedule';
+import { addSchedule, getAllTasks, runScheduleTest, runTaskTest, updateSchedule } from '@/actions/schedule';
 import { ScheduleUIRecord, TaskOption } from '@/types/models';
 import { Button, MenuItem, Select, FormControl, InputLabel, Box, Typography } from '@mui/material';
 
@@ -82,6 +82,22 @@ export default function ScheduleForm({
     onSuccess();
   };
 
+  const handleTest = async () => {
+    try {
+      if (selectedSched) {
+        await runScheduleTest(selectedSched.id, selectedSched.task);
+      }
+      else {
+        const res = await runTaskTest(selectedTask);
+        alert(`Result: ${res}`);
+      }
+    }
+    catch (e) {
+      const error = e as Error;
+      alert(`Error: ${error.message}`);
+    }
+  };
+
   return (
     <Box 
       component="form"
@@ -158,6 +174,16 @@ export default function ScheduleForm({
           <MenuItem value="monthly">Monthly</MenuItem>
         </Select>
       </FormControl>
+
+      <Button
+        type="button"
+        variant="outlined"
+        color="secondary"
+        fullWidth
+        onClick={handleTest}
+      >
+        Test
+      </Button>
 
       <Button type="submit" variant="contained" color="primary" fullWidth>
         {selectedSched ? "Update Schedule" : "Add Schedule"}

@@ -43,3 +43,11 @@ export async function deleteSchedule(id: string) {
 export async function getAllTasks() {
   return Promise.resolve(SchedulerOps.getAllTasks());
 }
+
+export async function runTaskTest(task: string) {
+  return await SchedulerOps.runTask(task);
+}
+
+export async function runScheduleTest(sched: string, task: string) {
+  return await SchedulerOps.runJob(sched, task, new Date());
+}

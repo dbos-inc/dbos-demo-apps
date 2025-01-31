@@ -24,8 +24,8 @@ export class SchedulerOps
     DBOS.logger.info(`Running ${task} at ${time.toString()}`);
 
     try {
-    // Fetch the result
-    const res = await doTaskFetch(task);
+      // Fetch the result
+      const res = await SchedulerOps.runTask(task);
 
       // Store in database
       await ScheduleDBOps.setResult(sched, task, time, res, '');
