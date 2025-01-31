@@ -12,6 +12,7 @@ import ResultsModal from './ResultsModal';
 import moment from 'moment';
 import { subDays, addDays } from 'date-fns';
 import { getOccurrences } from '@/types/taskschedule';
+import HelpDialog from './HelpDialog';
 
 const localizer = momentLocalizer(moment);
 
@@ -61,6 +62,8 @@ export default function CalendarView() {
   const [selectedResult, setSelectedResult] = useState<ResultsUIRecord | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleUIRecord | null>(null);
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
+
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const handleEventClick = (event: CalEvent) => {
     if (event.type === 'result') {
@@ -140,6 +143,16 @@ export default function CalendarView() {
     setAddScheduleOpen(true);
   };
 
+
+  useEffect(() => {
+    // Check local storage for first-time visit
+    const hasSeenHelp = localStorage.getItem('hasSeenHelp');
+    if (!hasSeenHelp) {
+      setHelpOpen(true);
+      localStorage.setItem('hasSeenHelp', 'true');  // Store the visit
+    }
+  }, []);
+
   const handleRangeChange = (range: { start: Date; end: Date } | Date [] | null) => {
     if (Array.isArray(range)) {
       // Month view: range is an array [startDate, endDate]
@@ -190,6 +203,11 @@ export default function CalendarView() {
       <Paper elevation={3} sx={{ p: 3, maxWidth: '99%', mx: 'auto', mt: 4 }}>
         <Typography variant="h5" align="center" gutterBottom>
           <a href={'https://dbos.dev'}> DBOS Task Scheduler </a> - <i>Execution guaranteed or double your workflows back!</i>
+          <div>
+            <Button variant="outlined" onClick={() => setHelpOpen(true)}>Help</Button>
+      
+            <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+          </div>
         </Typography>
         <Calendar
           localizer={localizer}

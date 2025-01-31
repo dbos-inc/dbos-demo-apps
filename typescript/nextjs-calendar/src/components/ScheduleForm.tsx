@@ -86,6 +86,7 @@ export default function ScheduleForm({
     try {
       if (selectedSched) {
         await runScheduleTest(selectedSched.id, selectedSched.task);
+        alert (`Check calendar for results...`);
       }
       else {
         const res = await runTaskTest(selectedTask);

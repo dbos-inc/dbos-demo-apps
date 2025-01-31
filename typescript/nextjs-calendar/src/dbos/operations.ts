@@ -39,7 +39,7 @@ export class SchedulerOps
     }
 
     // Send notification (future)
-
+  
   }
 
   @DBOS.scheduled({crontab: '* * * * *', mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
