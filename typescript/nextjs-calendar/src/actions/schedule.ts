@@ -26,17 +26,26 @@ export async function fetchResults(startDate: Date, endDate: Date): Promise<Resu
 
 // Add a new schedule item
 export async function addSchedule(task: string, start: Date, end: Date, repeat: string) {
-  return await ScheduleDBOps.addScheduleItem(task, start, end, repeat);
+  const res = await ScheduleDBOps.addScheduleItem(task, start, end, repeat);
+  // Tell attached clients
+  SchedulerOps.notifyListeners('schedule');
+  return res;
 }
 
 // Update a schedule item
 export async function updateSchedule(id: string, start: Date, end: Date, repeat: string) {
-  return await ScheduleDBOps.updateScheduleItem(id, start, end, repeat);
+  const res = await ScheduleDBOps.updateScheduleItem(id, start, end, repeat);
+  // Tell attached clients
+  SchedulerOps.notifyListeners('schedule');
+  return res;
 }
 
 // Delete a schedule item
 export async function deleteSchedule(id: string) {
-  return await ScheduleDBOps.deleteScheduleItem(id);
+  const res = await ScheduleDBOps.deleteScheduleItem(id);
+  // Tell attached clients
+  SchedulerOps.notifyListeners('schedule');
+  return res;
 }
 
 // Get possible tasks

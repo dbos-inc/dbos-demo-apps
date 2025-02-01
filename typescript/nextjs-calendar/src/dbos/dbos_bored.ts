@@ -1,6 +1,6 @@
 import { DBOS } from '@dbos-inc/dbos-sdk';
 import { DBOSRandom } from "@dbos-inc/dbos-random";
-import { activities, Activity } from '@/bored/db/activities';
+import { activities, Activity } from '../bored/db/activities';
 
 export class DBOSBored {
   @DBOS.workflow()

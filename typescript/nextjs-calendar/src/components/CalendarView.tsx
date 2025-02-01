@@ -65,6 +65,8 @@ export default function CalendarView() {
 
   const [helpOpen, setHelpOpen] = useState(false);
 
+  const [_socket, setSocket] = useState<WebSocket | null>(null);
+
   const handleEventClick = (event: CalEvent) => {
     if (event.type === 'result') {
       if (event.res?.error) {
@@ -130,6 +132,34 @@ export default function CalendarView() {
     // Cleanup interval on unmount to stop refreshing
     return () => clearInterval(intervalId);
   }, [refreshKey, calRange]);
+
+
+  useEffect(() => {
+    const connectWebSocket = () => {
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = window.location.host;
+      const wsUrl = `${wsProtocol}//${wsHost}/ws`;
+  
+      const ws = new WebSocket(wsUrl);
+  
+      ws.onopen = () => console.log(`Connected to WebSocket: ${wsUrl}`);
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data) as {type?: string};
+        if (data.type === 'schedule' || data.type === 'result') {
+          setRefreshKey(r => r + 1);
+        }
+      };
+  
+      ws.onclose = () => {
+        console.log('WebSocket Disconnected. Reconnecting in 5 seconds...');
+        setTimeout(connectWebSocket, 5000); // Retry after 5 seconds
+      };
+  
+      setSocket(ws);
+    };
+  
+    connectWebSocket();
+  }, []);
 
   useEffect(() => {
     // Set initial range when the component mounts

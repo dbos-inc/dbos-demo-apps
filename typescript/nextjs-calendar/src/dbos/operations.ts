@@ -7,6 +7,12 @@ export { DBOSBored };
 import { ScheduleDBOps } from "./dbtransactions";
 export { ScheduleDBOps };
 import { getOccurrencesAt } from "../types/taskschedule";
+import { WebSocket } from "ws";
+
+export interface GlobalWebSocketSet {
+  webSocketClients?: Set<WebSocket>;
+};
+
 
 // Welcome to DBOS!
 // This is a template application built with DBOS and Next.
@@ -38,8 +44,10 @@ export class SchedulerOps
       await ScheduleDBOps.setResult(sched, task, time, '', err.message);
     }
 
+    // Tell attached clients
+    SchedulerOps.notifyListeners('result');
+
     // Send notification (future)
-  
   }
 
   @DBOS.scheduled({crontab: '* * * * *', mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
@@ -59,10 +67,16 @@ export class SchedulerOps
       }
     }
   }
-}
 
-
-// Only launch DBOS when the app starts running
-if (process.env.NEXT_PHASE !== "phase-production-build") {
-  await DBOS.launch();
+  // Function to broadcast calendar or result updates
+  // Notify WebSockets
+  static notifyListeners(type: string) {
+    const gss = (globalThis as GlobalWebSocketSet).webSocketClients;
+    DBOS.logger.debug(`WebSockets: Sending update '${type}' to ${gss?.size} clients`);
+    gss?.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({type}));
+      }
+    });
+  }
 }

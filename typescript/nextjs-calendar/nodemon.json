@@ -6,5 +6,5 @@
   "events": {
     "restart": "bash -c \"if [[ $FILENAME =~ migrations ]]; then npx dbos migrate; fi\"  # TODO Change me if you do not have 'bash'..."
   },
-  "exec": "next dev"
+  "exec": "tsc && node dist/src/server.js"
 }

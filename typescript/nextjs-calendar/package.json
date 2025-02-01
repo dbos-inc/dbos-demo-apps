@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "npx dbos migrate && nodemon",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build && tsc",
+    "start": "NODE_ENV=production node dist/src/server.js",
     "test": "npx dbos migrate && jest --detectOpenHandles",
     "lint": "next lint --fix"
   },
@@ -25,22 +25,25 @@
     "react": "^19.0.0",
     "react-big-calendar": "^1.17.1",
     "react-dom": "^19.0.0",
-    "uuid": "^11.0.5"
+    "uuid": "^11.0.5",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@dbos-inc/dbos-cloud": "^2.0.2",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^29.5.14",
-    "@types/node": "^20",
+    "@types/node": "^20.17.16",
     "@types/react": "^19",
     "@types/react-big-calendar": "^1.16.1",
     "@types/react-dom": "^19",
     "@types/supertest": "^6.0.2",
+    "@types/ws": "^8.5.14",
     "eslint": "^9",
     "eslint-config-next": "15.1.4",
     "jest": "^29.7.0",
     "nodemon": "^3.1.9",
     "supertest": "^7.0.0",
-    "typescript": "^5"
+    "terser-webpack-plugin": "^5.3.11",
+    "typescript": "^5.7.3"
   }
 }
