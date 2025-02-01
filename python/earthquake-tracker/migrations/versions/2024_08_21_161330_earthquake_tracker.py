@@ -1,7 +1,7 @@
 """earthquake_tracker
 
 Revision ID: 98e5b401d504
-Revises: 
+Revises:
 Create Date: 2024-08-21 16:13:30.083089
 
 """
