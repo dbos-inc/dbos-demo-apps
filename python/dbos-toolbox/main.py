@@ -16,21 +16,18 @@ DBOS(fastapi=app)
 
 @DBOS.step()
 def step_one():
-    print("Step one completed!")
+    DBOS.logger.info("Step one completed!")
 
 
 @DBOS.step()
 def step_two():
-    print("Step two completed!")
+    DBOS.logger.info("Step two completed!")
 
 
 @app.get("/workflow")
 @DBOS.workflow()
 def dbos_workflow():
     step_one()
-    for _ in range(5):
-        print("Press Control + C to stop the app...")
-        DBOS.sleep(1)
     step_two()
 
 
@@ -44,19 +41,19 @@ queue = Queue("example-queue")
 @DBOS.step()
 def dbos_step(n: int):
     time.sleep(5)
-    print(f"Step {n} completed!")
+    DBOS.logger.info(f"Step {n} completed!")
 
 
 @app.get("/queue")
 @DBOS.workflow()
 def dbos_workflow():
-    print("Enqueueing steps")
+    DBOS.logger.info("Enqueueing steps")
     handles = []
     for i in range(10):
         handle = queue.enqueue(dbos_step, i)
         handles.append(handle)
     results = [handle.get_result() for handle in handles]
-    print(f"Successfully completed {len(results)} steps")
+    DBOS.logger.info(f"Successfully completed {len(results)} steps")
 
 
 ##################################
@@ -67,7 +64,7 @@ def dbos_workflow():
 @DBOS.scheduled("* * * * *")
 @DBOS.workflow()
 def run_every_minute(scheduled_time, actual_time):
-    print(f"I am a scheduled workflow. It is currently {scheduled_time}.")
+    DBOS.logger.info(f"I am a scheduled workflow. It is currently {scheduled_time}.")
 
 
 ##################################
@@ -83,7 +80,7 @@ def insert_row():
 @DBOS.transaction()
 def count_rows():
     count = DBOS.sql_session.execute(example_table.select()).rowcount
-    print(f"Row count: {count}")
+    DBOS.logger.info(f"Row count: {count}")
 
 
 @app.get("/transaction")
