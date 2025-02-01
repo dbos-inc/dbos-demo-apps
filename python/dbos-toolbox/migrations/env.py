@@ -1,9 +1,9 @@
-import re
 from logging.config import fileConfig
 
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
+
 from alembic import context
-from dbos import get_dbos_database_url
-from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,26 +14,31 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Load the database URL from the DBOS config
-# Alembic requires the % in URL-escaped parameters to itself be escaped to %%.
-escaped_conn_string = re.sub(
-    r"%(?=[0-9A-Fa-f]{2})",
-    "%%",
-    get_dbos_database_url(),
-)
-config.set_main_option("sqlalchemy.url", escaped_conn_string)
-
 # add your model's MetaData object here
 # for 'autogenerate' support
-from greeting_guestbook.schema import metadata
-
-target_metadata = metadata
+# from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
+target_metadata = None
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+from dbos import get_dbos_database_url
+import re
+from schema import metadata
+
+target_metadata = metadata
+
+# Programmatically set the sqlalchemy.url field from the DBOS config
+# Alembic requires the % in URL-escaped parameters be escaped to %%.
+escaped_conn_string = re.sub(
+    r"%(?=[0-9A-Fa-f]{2})",
+    "%%",
+    get_dbos_database_url(),
+)
+config.set_main_option("sqlalchemy.url", escaped_conn_string)
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -73,7 +78,9 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
 
         with context.begin_transaction():
             context.run_migrations()
