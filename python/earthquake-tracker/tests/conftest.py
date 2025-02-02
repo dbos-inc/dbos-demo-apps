@@ -21,13 +21,13 @@ def reset_database(config: ConfigFile):
     with engine.connect() as conn:
         conn.execute(
             sa.text(
-                f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{config["database"]["app_db_name"]}'"
+                f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{config['database']['app_db_name']}'"
             )
         )
         conn.execute(
-            sa.text(f"DROP DATABASE IF EXISTS {config["database"]["app_db_name"]}")
+            sa.text(f"DROP DATABASE IF EXISTS {config['database']['app_db_name']}")
         )
-        conn.execute(sa.text(f"CREATE DATABASE {config["database"]["app_db_name"]}"))
+        conn.execute(sa.text(f"CREATE DATABASE {config['database']['app_db_name']}"))
 
 
 def run_migrations(config: ConfigFile):
@@ -60,9 +60,9 @@ def run_migrations(config: ConfigFile):
 
 @pytest.fixture()
 def dbos():
-    DBOS.destroy(destroy_registry=False)
+    DBOS.destroy()
     config = load_config()
-    config["database"]["app_db_name"] = f"{config["database"]["app_db_name"]}_test"
+    config["database"]["app_db_name"] = f"{config['database']['app_db_name']}_test"
     reset_database(config)
     run_migrations(config)
     DBOS(config=config)

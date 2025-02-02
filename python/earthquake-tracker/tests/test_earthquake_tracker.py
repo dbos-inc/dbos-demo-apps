@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 
 from earthquake_tracker.main import (
     EarthquakeData,
@@ -8,7 +8,7 @@ from earthquake_tracker.main import (
 
 
 def test_get_data(dbos):
-    end_time = datetime.now(UTC)
+    end_time = datetime.now(timezone.utc)
     start_time = end_time - timedelta(hours=24)
     earthquakes = get_earthquake_data(start_time, end_time)
     assert len(earthquakes) > 0
