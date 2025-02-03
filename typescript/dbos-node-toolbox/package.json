@@ -1,0 +1,17 @@
+{
+  "name": "dbos-node-starter",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc",
+    "dev": "nodemon",
+    "start": "npx dbos start"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@dbos-inc/dbos-sdk": "^2.1.17",
+    "express": "^4.21.2"
+  }
+}
