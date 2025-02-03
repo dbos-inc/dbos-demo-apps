@@ -9,10 +9,17 @@ export { ScheduleDBOps };
 import { getOccurrencesAt } from "../types/taskschedule";
 import { WebSocket } from "ws";
 
-export interface GlobalWebSocketSet {
+import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
+
+export interface SchedulerAppGlobals {
   webSocketClients?: Set<WebSocket>;
+  reportSes ?: DBOS_SES;
 };
 
+const gThis = globalThis as SchedulerAppGlobals;
+if (!gThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
+  gThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
+}
 
 // Welcome to DBOS!
 // This is a template application built with DBOS and Next.
@@ -27,13 +34,28 @@ export class SchedulerOps
     return doTaskFetch(task);
   }
 
+  // Note, while this is not a @DBOS.step, DBOS_SES.sendEmail is.
+  static async sendStatusEmail(subject: string, body: string) {
+    if (!gThis.reportSes) return;
+    await gThis.reportSes.sendEmail({
+      to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
+      from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
+      subject: subject,
+      bodyText: body,
+    });
+  }
+
   @DBOS.workflow()
   static async runJob(sched: string, task: string, time: Date) {
     DBOS.logger.info(`Running ${task} at ${time.toString()}`);
 
+    let resstr = "";
+    let errstr = "";
+
     try {
       // Fetch the result
       const res = await SchedulerOps.runTask(task);
+      resstr = res;
 
       // Store in database
       await ScheduleDBOps.setResult(sched, task, time, res, '');
@@ -42,12 +64,17 @@ export class SchedulerOps
       const err = e as Error;
       // Store in database
       await ScheduleDBOps.setResult(sched, task, time, '', err.message);
+      errstr = err.message;
     }
 
     // Tell attached clients
     SchedulerOps.notifyListeners('result');
 
-    // Send notification (future)
+    // Send notification
+    await SchedulerOps.sendStatusEmail(
+      errstr ? `Task ${task} failed` : `Task ${task} result`,
+      errstr || resstr
+    );
   }
 
   @DBOS.scheduled({crontab: '* * * * *', mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
@@ -71,7 +98,7 @@ export class SchedulerOps
   // Function to broadcast calendar or result updates
   // Notify WebSockets
   static notifyListeners(type: string) {
-    const gss = (globalThis as GlobalWebSocketSet).webSocketClients;
+    const gss = (globalThis as SchedulerAppGlobals).webSocketClients;
     DBOS.logger.debug(`WebSockets: Sending update '${type}' to ${gss?.size} clients`);
     gss?.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {

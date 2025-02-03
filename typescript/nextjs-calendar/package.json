@@ -10,6 +10,7 @@
     "lint": "next lint --fix"
   },
   "dependencies": {
+    "@dbos-inc/dbos-email-ses": "^2.1.17",
     "@dbos-inc/dbos-random": "^2.1.17",
     "@dbos-inc/dbos-sdk": "^2.1.17",
     "@emotion/react": "^11.14.0",

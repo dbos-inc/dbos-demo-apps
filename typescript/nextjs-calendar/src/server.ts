@@ -11,7 +11,7 @@ import { pathToFileURL } from 'url';
 
 import { DBOS, parseConfigFile } from '@dbos-inc/dbos-sdk';
 
-import { GlobalWebSocketSet  } from './dbos/operations';
+import { SchedulerAppGlobals  } from './dbos/operations';
 
 // This is to handle files, in case entrypoints is not manually specified
 export async function loadAllServerFiles() {
@@ -93,7 +93,7 @@ async function main() {
   // Create WebSocket server
   const wss = new WebSocketServer({ noServer: true });
   const gss: Set<WebSocket> = new Set();
-  (globalThis as GlobalWebSocketSet).webSocketClients = gss;
+  (globalThis as SchedulerAppGlobals).webSocketClients = gss;
   wss.on('connection', (ws: WebSocket) => {
     DBOS.logger.debug('Client connected to WebSocket');
     gss.add(ws);
