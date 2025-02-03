@@ -112,6 +112,16 @@
         After finishing a background task, visit <a href="https://console.dbos.dev/traces" target="_blank" class="text-blue-600 hover:underline">https://console.dbos.dev/traces</a> to see its traces.
     </p>
     <p class="mb-4">
+        Visit your <a href="https://console.dbos.dev/dashboard" target="_blank" class="text-blue-600 hover:underline">dashboard</a>
+        to view logs and metrics for your app.
+        Each time you crash your app, you should see a log entry indicating your
+        <code class="bg-gray-100 px-1 rounded">application became unresponsive</code>,
+        followed by a log entry for a new executor starting up
+        (<code class="bg-gray-100 px-1 rounded">DBOS launched</code>).
+        Then, any background tasks executing before the crash should resume from
+        their last completed step.
+    </p>
+    <p class="mb-4">
         To start building your own crashproof application, access your source code from the <a href="https://console.dbos.dev/applications/dbos-app-starter" target="_blank" class="text-blue-600 hover:underline">cloud console</a>, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, then redeploy your app.
     </p>
     <p class="mb-4">
