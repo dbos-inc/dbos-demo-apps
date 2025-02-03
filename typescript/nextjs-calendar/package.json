@@ -46,5 +46,11 @@
     "supertest": "^7.0.0",
     "terser-webpack-plugin": "^5.3.11",
     "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "react-big-calendar": {
+      "react": "19.0.0",
+      "react-dom": "19.0.0"
+    }
   }
 }
