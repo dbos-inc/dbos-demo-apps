@@ -1,11 +1,16 @@
-import { DBOS } from "@dbos-inc/dbos-sdk";
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 import express from "express";
 
 export const app = express();
 app.use(express.json());
 
+const queue = new WorkflowQueue("example_queue");
 
 export class Toolbox {
+
+  //////////////////////////////////
+  //// Workflows and steps
+  //////////////////////////////////
 
   @DBOS.step()
   static async stepOne() {
@@ -18,11 +23,57 @@ export class Toolbox {
   }
 
   @DBOS.workflow()
-  static async dbosWorkflow() {
-    await this.stepOne();
-    await this.stepTwo();
+  static async exampleWorkflow() {
+    await Toolbox.stepOne();
+    await Toolbox.stepTwo();
   }
+
+  //////////////////////////////////
+  //// Queues
+  //////////////////////////////////
+
+  @DBOS.workflow()
+  static async taskWorkflow(n: number) {
+    await DBOS.sleep(5000);
+    DBOS.logger.info(`Task ${n} completed!`)
+  }
+
+  @DBOS.workflow()
+  static async queueWorkflow() {
+    DBOS.logger.info("Enqueueing tasks!")
+    const handles = []
+    for (let i = 0; i < 10; i++) {
+      handles.push(await DBOS.startWorkflow(Toolbox, {queueName: queue.name}).taskWorkflow(i))
+    }
+    const results = []
+    for (const h of handles) {
+      results.push(await h.getResult())
+    }
+    DBOS.logger.info(`Successfully completed ${results.length} tasks`)
+  }
+
+  //////////////////////////////////
+  //// Scheduled workflows
+  //////////////////////////////////
+
+  //////////////////////////////////
+  //// Transactions
+  //////////////////////////////////
 }
+
+//////////////////////////////////
+//// Express.js HTTP endpoints
+//////////////////////////////////
+
+app.get("/workflow", async (req, res) => {
+  await Toolbox.exampleWorkflow();
+  res.send();
+});
+
+app.get("/queue", async (req, res) => {
+  await Toolbox.queueWorkflow();
+  res.send();
+});
 
 //////////////////////////////////
 //// README
