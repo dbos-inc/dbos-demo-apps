@@ -66,4 +66,5 @@ def dbos():
     reset_database(config)
     run_migrations(config)
     DBOS(config=config)
+    DBOS.reset_system_database()
     DBOS.launch()
