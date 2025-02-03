@@ -43,7 +43,7 @@ export class Toolbox {
     DBOS.logger.info("Enqueueing tasks!")
     const handles = []
     for (let i = 0; i < 10; i++) {
-      handles.push(await DBOS.startWorkflow(Toolbox, {queueName: queue.name}).taskWorkflow(i))
+      handles.push(await DBOS.startWorkflow(Toolbox, { queueName: queue.name }).taskWorkflow(i))
     }
     const results = []
     for (const h of handles) {
@@ -56,7 +56,7 @@ export class Toolbox {
   //// Scheduled workflows
   //////////////////////////////////
 
-  @DBOS.scheduled({crontab: "* * * * *"})
+  @DBOS.scheduled({ crontab: "* * * * *" })
   @DBOS.workflow()
   static async runEveryMinute(scheduledTime: Date, startTime: Date) {
     DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
@@ -65,6 +65,24 @@ export class Toolbox {
   //////////////////////////////////
   //// Transactions
   //////////////////////////////////
+
+  @DBOS.transaction()
+  static async insertRow() {
+    await DBOS.knexClient.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+  }
+
+  @DBOS.transaction({ readOnly: true })
+  static async countRows() {
+    const result = await DBOS.knexClient.raw('SELECT COUNT(*) as count FROM example_table');
+    const count = result.rows[0].count;
+    DBOS.logger.info(`Row count: ${count}`);
+  }
+
+  @DBOS.workflow()
+  static async transactionWorkflow() {
+    await Toolbox.insertRow()
+    await Toolbox.countRows()
+  }
 }
 
 /////////////////////////////////////
@@ -78,6 +96,11 @@ app.get("/workflow", async (req, res) => {
 
 app.get("/queue", async (req, res) => {
   await Toolbox.queueWorkflow();
+  res.send();
+});
+
+app.get("/transaction", async (req, res) => {
+  await Toolbox.transactionWorkflow();
   res.send();
 });
 
@@ -123,7 +146,7 @@ app.get("/", (_, res) => {
         </div>
     </body>
     </html>`
-    res.send(readme)
+  res.send(readme)
 });
 
 /////////////////////////////////////
