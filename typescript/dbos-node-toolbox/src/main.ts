@@ -56,14 +56,20 @@ export class Toolbox {
   //// Scheduled workflows
   //////////////////////////////////
 
+  @DBOS.scheduled({crontab: "* * * * *"})
+  @DBOS.workflow()
+  static async runEveryMinute(scheduledTime: Date, startTime: Date) {
+    DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
+  }
+
   //////////////////////////////////
   //// Transactions
   //////////////////////////////////
 }
 
-//////////////////////////////////
+/////////////////////////////////////
 //// Express.js HTTP endpoints
-//////////////////////////////////
+/////////////////////////////////////
 
 app.get("/workflow", async (req, res) => {
   await Toolbox.exampleWorkflow();
@@ -75,9 +81,9 @@ app.get("/queue", async (req, res) => {
   res.send();
 });
 
-//////////////////////////////////
-//// README
-//////////////////////////////////
+/////////////////////////////////////
+//// Readme
+/////////////////////////////////////
 
 app.get("/", (_, res) => {
   const readme = `
@@ -119,6 +125,10 @@ app.get("/", (_, res) => {
     </html>`
     res.send(readme)
 });
+
+/////////////////////////////////////
+//// Starting Express.js and DBOS
+/////////////////////////////////////
 
 async function main() {
   await DBOS.launch({ expressApp: app });
