@@ -34,7 +34,7 @@ export class Toolbox {
 
   @DBOS.workflow()
   static async taskWorkflow(n: number) {
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Sleep 5 seconds
+    await DBOS.sleep(5000);
     DBOS.logger.info(`Task ${n} completed!`)
   }
 
