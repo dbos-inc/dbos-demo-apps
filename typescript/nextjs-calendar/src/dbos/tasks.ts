@@ -45,7 +45,13 @@ export const schedulableTasks: CalendarTask[] = [
   {
     id: 'fetch_activity_dbos',
     name: 'Stave Off Boredom (DBOS)',
-    url: 'http://localhost:3000/api/boredactivity',
+    // Several ways to invoke this:
+    //  Existing DBOS Cloud:
+    url: 'https://demo-guestbook.cloud.dbos.dev/dbos/boredapi/activity',
+    // Local, via next api router
+    // url: 'http://localhost:3000/api/boredactivity',
+    // Local, via DBOS router
+    // url: 'http://localhost:3000/dbos/boredapi/activity',
     type: 'json',
   },
   {
