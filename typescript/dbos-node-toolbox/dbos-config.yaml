@@ -9,7 +9,7 @@ runtimeConfig:
     - node dist/main.js
 database:
   migrate:
-    - echo 'No migrations specified'
+    - npx knex migrate:latest
 telemetry:
   logs:
     logLevel: 'info'
