@@ -1,70 +1,74 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import express from "express";
-import path from "path";
-
-// Welcome to DBOS!
-// This is a template application built with DBOS and Express.
-// It shows you how to use DBOS to build background tasks that are resilient to any failure.
 
 export const app = express();
 app.use(express.json());
 
-const stepsEvent = "steps_event";
 
-export class MyApp {
-  // This workflow simulates a background task with N steps.
+export class Toolbox {
 
-  // DBOS workflows are resilient to any failure--if your program is crashed,
-  // interrupted, or restarted while running this workflow, the workflow automatically
-  // resumes from the last completed step.
-  @DBOS.workflow()
-  static async backgroundTask(n: number): Promise<void> {
-    for (let i = 1; i <= n; i++) {
-      await MyApp.backgroundTaskStep(i);
-      await DBOS.setEvent(stepsEvent, i);
-    }
+  @DBOS.step()
+  static async stepOne() {
+    DBOS.logger.info("Step one completed!");
   }
 
   @DBOS.step()
-  static async backgroundTaskStep(step: number): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    DBOS.logger.info(`Completed step ${step}!`);
+  static async stepTwo() {
+    DBOS.logger.info("Step one completed!");
+  }
+
+  @DBOS.workflow()
+  static async dbosWorkflow() {
+    await this.stepOne();
+    await this.stepTwo();
   }
 }
 
-// This endpoint uses DBOS to idempotently launch a crashproof background task with N steps.
-app.get("/background/:taskid/:steps", async (req, res) => {
-    const { taskid, steps } = req.params;
-    await DBOS.startWorkflow(MyApp, { workflowID: taskid }).backgroundTask(Number(steps));
-    res.send("Task launched!");
-  }
-);
+//////////////////////////////////
+//// README
+//////////////////////////////////
 
-// This endpoint retrieves the status of a specific background task.
-app.get("/last_step/:taskid", async (req, res) => {
-    const { taskid } = req.params;
-    const step = await DBOS.getEvent(taskid, stepsEvent);
-    res.send(String(step !== null ? step : 0));
-  }
-);
-
-// This endpoint crashes the application. For demonstration purposes only :)
-app.post("/crash", (_, _res): void => {
-  process.exit(1);
-});
-
-// This code serves the HTML readme from the root path.
 app.get("/", (_, res) => {
-  const filePath = path.resolve(__dirname, "..", "html", "app.html");
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send("Internal Server Error");
-    }
-  });
+  const readme = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>DBOS Toolbox</title>
+    </head>
+    <body class="bg-gray-100 min-h-screen">
+        <div class="max-w-2xl mx-auto py-16 px-4">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Welcome to the DBOS Toolbox!</h1>
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">This app contains example code for:</h2>
+                <div class="space-y-3 mb-8">
+                    <div class="block text-gray-600">
+                        Workflows: <button onclick="fetch('/workflow')" class="text-blue-600 hover:text-blue-800 font-medium">/workflow</button>
+                    </div>
+                    <div class="block text-gray-600">
+                        Queues: <button onclick="fetch('/queue')" class="text-blue-600 hover:text-blue-800 font-medium">/queue</button>
+                    </div>
+                    <div class="block text-gray-600">
+                        Transactions: <button onclick="fetch('/transaction')" class="text-blue-600 hover:text-blue-800 font-medium">/transaction</button>
+                    </a>
+                </div>
+                <p class="text-gray-600">
+                    To learn more, check out the
+                    <a href="https://docs.dbos.dev/typescript/programming-guide"
+                       class="text-blue-600 hover:text-blue-800 hover:underline">
+                        DBOS programming guide.
+                    </a>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>`
+    res.send(readme)
 });
 
-// Launch DBOS and start the Express.js server
 async function main() {
   await DBOS.launch({ expressApp: app });
   const PORT = DBOS.runtimeConfig?.port || 3000;
