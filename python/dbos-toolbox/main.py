@@ -124,18 +124,18 @@ async def read_root():
         </p>
 
         <p class="text-gray-600 mb-8">
-            Each endpoint launches a different workflow—view the app logs to see them run.
+            Each endpoint launches a new workflow—<strong>view the app logs to see them run.</strong>
         </p>
 
         <div class="space-y-4">
             <div class="text-gray-600">
-                <strong>Workflows:</strong> <button onclick="fetch('/workflow')" class="text-blue-600 hover:text-blue-800 font-medium">/workflow</button>
+                Workflows: <button onclick="fetch('/workflow')" class="text-blue-600 hover:text-blue-800 font-medium">/workflow</button>
             </div>
             <div class="text-gray-600">
-                <strong>Queues:</strong> <button onclick="fetch('/queue')" class="text-blue-600 hover:text-blue-800 font-medium">/queue</button>
+                Queues: <button onclick="fetch('/queue')" class="text-blue-600 hover:text-blue-800 font-medium">/queue</button>
             </div>
             <div class="text-gray-600">
-                <strong>Transactions:</strong> <button onclick="fetch('/transaction')" class="text-blue-600 hover:text-blue-800 font-medium">/transaction</button>
+                Transactions: <button onclick="fetch('/transaction')" class="text-blue-600 hover:text-blue-800 font-medium">/transaction</button>
             </div>
         </div>
     </div>
