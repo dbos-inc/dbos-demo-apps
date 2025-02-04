@@ -63,8 +63,6 @@ export default function CalendarView() {
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleUIRecord | null>(null);
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
 
-  const [helpOpen, setHelpOpen] = useState(false);
-
   const [_socket, setSocket] = useState<WebSocket | null>(null);
 
   const handleEventClick = (event: CalEvent) => {
@@ -173,17 +171,7 @@ export default function CalendarView() {
     setAddScheduleOpen(true);
   };
 
-
-  useEffect(() => {
-    // Check local storage for first-time visit
-    const hasSeenHelp = localStorage.getItem('hasSeenHelp');
-    if (!hasSeenHelp) {
-      setHelpOpen(true);
-      localStorage.setItem('hasSeenHelp', 'true');  // Store the visit
-    }
-  }, []);
-
-  const handleRangeChange = (range: { start: Date; end: Date } | Date [] | null) => {
+    const handleRangeChange = (range: { start: Date; end: Date } | Date [] | null) => {
     if (Array.isArray(range)) {
       // Month view: range is an array [startDate, endDate]
       setCalRange({ start: range[0], end: range[range.length - 1] });
@@ -233,11 +221,6 @@ export default function CalendarView() {
       <Paper elevation={3} sx={{ p: 3, maxWidth: '99%', mx: 'auto', mt: 4 }}>
         <Typography variant="h5" align="center" gutterBottom>
           <a href={'https://dbos.dev'}> DBOS Task Scheduler </a> - <i>Execution guaranteed or double your workflows back!</i>
-          <div>
-            <Button variant="outlined" onClick={() => setHelpOpen(true)}>Help</Button>
-      
-            <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
-          </div>
         </Typography>
         <Calendar
           localizer={localizer}
