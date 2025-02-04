@@ -1,6 +1,6 @@
 import { DBOS, SchedulerMode } from "@dbos-inc/dbos-sdk";
 
-import { ScheduleRecord, TaskOption } from "@/types/models";
+import { TaskOption } from "@/types/models";
 import { doTaskFetch, schedulableTasks } from "./tasks";
 import { DBOSBored } from "./dbos_bored";
 export { DBOSBored };

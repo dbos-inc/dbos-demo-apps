@@ -3,7 +3,7 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { addSchedule, getAllTasks, runScheduleTest, runTaskTest, updateSchedule } from '@/actions/schedule';
 import { ScheduleUIRecord, TaskOption } from '@/types/models';
-import { Button, MenuItem, Select, FormControl, InputLabel, Box, Typography } from '@mui/material';
+import { MenuItem, Select, FormControl, InputLabel, Box, Typography } from '@mui/material';
 
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -191,3 +191,5 @@ export const ScheduleForm = forwardRef(({
     </Box>
   );
 });
+
+ScheduleForm.displayName = "ScheduleForm"; // Set the display name
