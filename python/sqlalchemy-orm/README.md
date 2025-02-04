@@ -1,6 +1,6 @@
 # Welcome to DBOS!
 
-This is a sample app built with DBOS and FastAPI.
+This is a sample app built with DBOS, FastAPI, and SQLAlchemy ORM.
 It displays greetings to visitors and keeps track of how many times each visitor has been greeted.
 Check out the source code in `<app-name>/main.py`!
 
