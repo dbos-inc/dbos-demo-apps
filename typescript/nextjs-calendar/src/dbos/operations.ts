@@ -87,10 +87,10 @@ export class SchedulerOps
       DBOS.logger.debug(`  For task ${sched.task} / ${sched.start_time.toString()} / ${sched.repeat}`);
       const occurrences = getOccurrencesAt(sched, schedTime);
       if (!occurrences.length) {
-        DBOS.logger.info("   ...no occurrences");
+        DBOS.logger.debug("   ...no occurrences");
       }
       for (const occurrence of occurrences) {
-        DBOS.logger.info("   ...triggering");
+        DBOS.logger.debug("   ...triggering");
         await DBOS.startWorkflow(SchedulerOps).runJob(sched.id, sched.task, occurrence);
       }
     }
