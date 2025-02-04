@@ -58,12 +58,12 @@ export class SchedulerOps
       const res = await SchedulerOps.runTask(task);
       resstr = res;
 
-      // Store in database
+      // Store result in database
       await ScheduleDBOps.setResult(sched, task, time, res, '');
     }
     catch (e) {
       const err = e as Error;
-      // Store in database
+      // Store error in database
       await ScheduleDBOps.setResult(sched, task, time, '', err.message);
       errstr = err.message;
     }
