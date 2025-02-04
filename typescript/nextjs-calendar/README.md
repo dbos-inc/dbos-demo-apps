@@ -32,14 +32,45 @@ This app uses the following:
 # Running DBOS Task Scheduler
 
 ## Running Locally
+Once you have a copy of the DBOS Task Scheduler locally, run the following:
+
+```
+npm install
+npm run dev
+```
+
+Note that this requires a Postgres database.  If your local environment is set up with database connection settings, these will be used.  Otherwise, the database wizard will try to start a Postgres docker image, or provision a cloud instance of Postgres for you.
+
+When running under `npm run dev`, any changes to source files will cause the application to reload (if UI components were changed) or restart (if DBOS server components were changed).
+
+### Production Builds
+
+Instead of `npm run dev` it is also possible to run the following sequence of commands to run an optimized "production" build
+```
+npm install
+npm run build
+npx dbos migrate
+npm run start
+```
+
+## Using The App
+
+## Setting Up Email Notifications
+The DBOS Task Scheduler app will send notifications using Amazon Simple Email Service (SES).  To use this, set the following environment variables:
+- AWS_REGION: The AWS region for SES service
+- AWS_ACCESS_KEY_ID: The AWS access key provisioned for SES access
+- AWS_SECRET_ACCESS_KEY: The access secret corresponding to AWS_ACCESS_KEY_ID
+- REPORT_EMAIL_FROM_ADDRESS: The email address to use as the "from" address for results reports
+- REPORT_EMAIL_TO_ADDRESS: The email address to use as the "to" address for results reports
 
 # Code Tour
 
 ## DBOS and Database Logic
 
 ### Main Workflows
-### Database Transactions
-### Schema
+### Scheduling
+### Database Schema and Transactions
+### Sending Email with Amazon SES
 
 ## UI
 ### UI Components
@@ -52,7 +83,7 @@ This app uses the following:
 ## Configuration Files
 ### `package.json`
 #### npm run dev
-#### nodemon setup
+### `nodemon.json`
 #### npm run build / start
 ### `eslint.config.mjs`
 ### `tsconfig.json`
@@ -62,7 +93,4 @@ This app uses the following:
 ### `tsconfig.json`
 ### `jest.config.js`
 ### `.gitignore`
-
-
-
 
