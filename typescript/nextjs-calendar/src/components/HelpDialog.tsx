@@ -8,7 +8,7 @@ export default function HelpDialog({ open, onClose }: { open: boolean; onClose: 
         <p>This app is a UI that allows you to schedule DBOS workflows and see the results.  The DBOS server will make sure the scheduled tasks get executed.</p>
         <p>Here&rsquo;s how to use this app:</p>
         <ul>
-          <li><strong>Add New Tasks:</strong> Double-click on a free spot on the calendar to schedule a task.</li>
+          <li><strong>Add New Tasks:</strong> Click on a free spot on the calendar to schedule a task.</li>
             <ul>
               <li><strong>Task:</strong> Pick a task from the avaiable choices.</li>
               <li><strong>Start Time:</strong> Pick a time for the task to be performed.  If this will be a recurring task, this is the time for the first occurrence.</li>

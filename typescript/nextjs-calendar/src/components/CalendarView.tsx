@@ -253,7 +253,6 @@ export default function CalendarView() {
           onRangeChange={handleRangeChange}
           eventPropGetter={eventStyleGetter}
           onSelectEvent={handleEventClick}
-          //onSelectSlot={(slotInfo) => { if (slotInfo.action === 'doubleClick') handleSlotClick(slotInfo.start, slotInfo.end)} }
           onSelectSlot={(slotInfo) => { handleSlotClick(slotInfo.start, slotInfo.end)} }
         />
       </Paper>

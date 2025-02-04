@@ -48,7 +48,7 @@ Upon opening the web browser (and perhaps dismissing the help popup), the main s
 ![Screen shot of DBOS Task Scheduler](./img/DBOSTaskScheduler.png)
 
 ### Adding Tasks
-To schedule a task, or repeating series, double click on open space on the calendar.  (The date and time clicked will be used for the initial population of the "Start Time" field.)
+To schedule a task, or repeating series, click on open space on the calendar.  (The date and time clicked will be used for the initial population of the "Start Time" field.)
 
 ![Screen shot of the popup for adding a new task](./img/NewTaskScreen.png)
 
