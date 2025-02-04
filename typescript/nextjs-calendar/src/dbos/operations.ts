@@ -1,6 +1,6 @@
 import { DBOS, SchedulerMode } from "@dbos-inc/dbos-sdk";
 
-import { TaskOption } from "@/types/models";
+import { ScheduleRecord, TaskOption } from "@/types/models";
 import { doTaskFetch, schedulableTasks } from "./tasks";
 import { DBOSBored } from "./dbos_bored";
 export { DBOSBored };
@@ -10,6 +10,7 @@ import { getOccurrencesAt } from "../types/taskschedule";
 import { WebSocket } from "ws";
 
 import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
+import { DBTrigger, TriggerOperation } from '@dbos-inc/dbos-dbtriggers';
 
 export interface SchedulerAppGlobals {
   webSocketClients?: Set<WebSocket>;
@@ -105,5 +106,17 @@ export class SchedulerOps
         client.send(JSON.stringify({type}));
       }
     });
+  }
+
+  @DBTrigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: true})
+  static async scheduleListener(_operation: TriggerOperation, _key: string[], _record: unknown) {
+    SchedulerOps.notifyListeners('schedule');
+    return Promise.resolve();
+  }
+
+  @DBTrigger({tableName: 'results', useDBNotifications: true, installDBTrigger: true})
+  static async resultListener(_operation: TriggerOperation, _key: string[], _record: unknown) {
+    SchedulerOps.notifyListeners('result');
+    return Promise.resolve();
   }
 }
