@@ -108,33 +108,38 @@ async def read_root():
         <title>DBOS Toolbox</title>
     </head>
     <body class="bg-gray-100 min-h-screen">
-        <div class="max-w-2xl mx-auto py-16 px-4">
-            <div class="bg-white rounded-lg shadow-lg p-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-6">Welcome to the DBOS Toolbox!</h1>
-                
-                <h2 class="text-xl font-semibold text-gray-700 mb-4">This app contains example code for:</h2>
-                
-                <div class="space-y-3 mb-8">
-                    <div class="block text-gray-600">
-                        Workflows: <button onclick="fetch('/workflow')" class="text-blue-600 hover:text-blue-800 font-medium">/workflow</button>
-                    </div>
-                    <div class="block text-gray-600">
-                        Queues: <button onclick="fetch('/queue')" class="text-blue-600 hover:text-blue-800 font-medium">/queue</button>
-                    </div>
-                    <div class="block text-gray-600">
-                        Transactions: <button onclick="fetch('/transaction')" class="text-blue-600 hover:text-blue-800 font-medium">/transaction</button>
-                    </a>
-                </div>
-                
-                <p class="text-gray-600">
-                    To learn more, check out the 
-                    <a href="https://docs.dbos.dev/python/programming-guide" 
-                       class="text-blue-600 hover:text-blue-800 hover:underline">
-                        DBOS programming guide.
-                    </a>
-                </p>
+    <div class="max-w-2xl mx-auto py-8 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Welcome to the DBOS Toolbox!</h1>
+        
+        <p class="text-gray-600 mb-6">
+            This app contains example code for many DBOS features. You can use it as a template when starting a new DBOS app—start by editing <code class="bg-gray-100 px-1 rounded">main.py</code>.
+        </p>
+        
+        <p class="text-gray-600 mb-6">
+            To learn more, check out the
+            <a href="https://docs.dbos.dev/python/programming-guide" class="text-blue-600 hover:text-blue-800 hover:underline">
+                DBOS programming guide
+            </a>
+        </p>
+
+        <p class="text-gray-600 mb-8">
+            Each endpoint launches a different workflow—check the logs to see them run.
+        </p>
+
+        <div class="space-y-4">
+            <div class="text-gray-600">
+                Workflows: <button onclick="fetch('/workflow')" class="text-blue-600 hover:text-blue-800 font-medium">/workflow</button>
+            </div>
+            <div class="text-gray-600">
+                Queues: <button onclick="fetch('/queue')" class="text-blue-600 hover:text-blue-800 font-medium">/queue</button>
+            </div>
+            <div class="text-gray-600">
+                Transactions: <button onclick="fetch('/transaction')" class="text-blue-600 hover:text-blue-800 font-medium">/transaction</button>
             </div>
         </div>
+    </div>
+    </div>
     </body>
     </html>
     """
