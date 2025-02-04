@@ -2,17 +2,16 @@
 
 import { fetchSchedules, fetchResults, deleteSchedule } from '@/actions/schedule';
 import { ScheduleUIRecord, ResultsUIRecord } from '@/types/models';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Paper, Typography, useTheme } from '@mui/material';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { Calendar, Views, momentLocalizer } from 'react-big-calendar';
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import ScheduleForm from './ScheduleForm';
+import { ScheduleForm, ScheduleFormHandle } from './ScheduleForm';
 import ResultsModal from './ResultsModal';
 import moment from 'moment';
 import { subDays, addDays } from 'date-fns';
 import { getOccurrences } from '@/types/taskschedule';
-import HelpDialog from './HelpDialog';
 
 const localizer = momentLocalizer(moment);
 
@@ -216,6 +215,8 @@ export default function CalendarView() {
     title: `${event.title} (${event.type})`,  // Tooltip info
   });
 
+  const scheduleFormRef = useRef<ScheduleFormHandle>(null);
+
   return (
     <>
       <Paper elevation={3} sx={{ p: 3, maxWidth: '99%', mx: 'auto', mt: 4 }}>
@@ -242,11 +243,23 @@ export default function CalendarView() {
       <Dialog open={addScheduleOpen} onClose={handleAddScheduleClose} fullWidth maxWidth="sm">
         <DialogTitle>Schedule a New Task</DialogTitle>
         <DialogContent>
-          {selectedStart && <ScheduleForm allowTaskSelection={true} initialDate={selectedStart} initialEnd={selectedEnd} onSuccess={handleAddScheduleClose} />}
+          {selectedStart && <ScheduleForm
+            allowTaskSelection={true}
+            initialDate={selectedStart}
+            initialEnd={selectedEnd}
+            onSuccess={handleAddScheduleClose}
+            ref={scheduleFormRef}
+          />}
         </DialogContent>
         <DialogActions>
+          <Button type="button" variant="outlined" color="secondary" onClick={() => scheduleFormRef.current?.handleTest()}>
+            Test
+          </Button>
           <Button onClick={handleAddScheduleClose} color="primary">
             Cancel
+          </Button>
+          <Button onClick={() => scheduleFormRef.current?.handleSubmit()} variant="contained" color="primary">
+            Add Schedule
           </Button>
         </DialogActions>
       </Dialog>
@@ -260,14 +273,21 @@ export default function CalendarView() {
             initialEnd={new Date(selectedSchedule.end_time)}
             selectedSched={selectedSchedule}
             onSuccess={handleEditScheduleClose}
+            ref={scheduleFormRef}
           />}
         </DialogContent>
         <DialogActions>
+          <Button type="button" variant="outlined" color="secondary" onClick={() => scheduleFormRef.current?.handleTest()}>
+            Test
+          </Button>
           <Button onClick={handleDeleteSchedule} color="primary">
             Delete
           </Button>
           <Button onClick={handleEditScheduleClose} color="primary">
             Cancel
+          </Button>
+          <Button onClick={() => scheduleFormRef.current?.handleSubmit()} variant="contained" color="primary">
+            Update Schedule
           </Button>
         </DialogActions>
       </Dialog>

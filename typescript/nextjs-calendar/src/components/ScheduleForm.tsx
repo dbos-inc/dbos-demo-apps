@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { addSchedule, getAllTasks, runScheduleTest, runTaskTest, updateSchedule } from '@/actions/schedule';
 import { ScheduleUIRecord, TaskOption } from '@/types/models';
 import { Button, MenuItem, Select, FormControl, InputLabel, Box, Typography } from '@mui/material';
@@ -23,10 +23,15 @@ type ScheduleFormProps = {
   onDelete?: () => void;
 };
 
-export default function ScheduleForm({
+export interface ScheduleFormHandle {
+  handleSubmit: () => void;
+  handleTest: () => void;
+}
+
+export const ScheduleForm = forwardRef(({
   initialDate, initialEnd, selectedSched,
   onSuccess, allowTaskSelection,
-}: ScheduleFormProps)
+}: ScheduleFormProps, ref) =>
 {
   if (!initialEnd) initialEnd = initialDate;
   const [startTime, setStartTime] = useState<Dayjs | null>(
@@ -63,8 +68,8 @@ export default function ScheduleForm({
     }
   }, [selectedSched]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!selectedTask) {
       alert("Please select a task.");
       return;
@@ -98,6 +103,12 @@ export default function ScheduleForm({
       alert(`Error: ${error.message}`);
     }
   };
+
+  // **Expose functions to parent via ref**
+  useImperativeHandle(ref, () => ({
+    handleSubmit,
+    handleTest,
+  }));
 
   return (
     <Box 
@@ -175,20 +186,6 @@ export default function ScheduleForm({
           <MenuItem value="monthly">Monthly</MenuItem>
         </Select>
       </FormControl>
-
-      <Button
-        type="button"
-        variant="outlined"
-        color="secondary"
-        fullWidth
-        onClick={handleTest}
-      >
-        Test
-      </Button>
-
-      <Button type="submit" variant="contained" color="primary" fullWidth>
-        {selectedSched ? "Update Schedule" : "Add Schedule"}
-      </Button>
     </Box>
   );
-}
+});
