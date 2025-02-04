@@ -8,29 +8,14 @@
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from sqlalchemy import select
 
 from dbos import DBOS
 
-from sqlalchemy import select
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from .schema import Hello
 
 app = FastAPI()
 DBOS(fastapi=app)
-
-# Then, let's declare a class for accessing the database table.
-class Base(DeclarativeBase):
-    pass
-
-class Hello(Base):
-    __tablename__ = "dbos_hello"
-    greet_count: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(nullable=False)
-
-    def __repr__(self):
-        return f"Hello(greet_count={self.greet_count!r}, name={self.name!r})"
-
 
 # Next, let's write a function that greets visitors.
 # To make it more interesting, we'll keep track of how
@@ -51,6 +36,7 @@ def example_transaction(name: str) -> str:
     stmt = select(Hello).where(Hello.name == name).order_by(Hello.greet_count.desc()).limit(1)
     row = DBOS.sql_session.scalar(stmt)
     greet_count = row.greet_count
+    # Below is the deprecated way to query the database.
     # row = DBOS.sql_session.query(Hello).filter(Hello.name == name).order_by(Hello.greet_count.desc()).first()
     # greet_count = row.greet_count
     greeting = f"Greetings, {name}! You have been greeted {greet_count} times."
