@@ -12,6 +12,7 @@ import ResultsModal from './ResultsModal';
 import moment from 'moment';
 import { subDays, addDays } from 'date-fns';
 import { getOccurrences } from '@/types/taskschedule';
+import dayjs from "dayjs";
 
 const localizer = momentLocalizer(moment);
 
@@ -45,6 +46,22 @@ interface CalEvent {
   type: string,
   sched?: ScheduleUIRecord,
   res?: ResultsUIRecord,
+};
+
+
+const getIntuitiveStartTime = (selectedStartDate: Date): Date => {
+  const selectedStart = dayjs(selectedStartDate);
+  const now = dayjs();
+  const today = now.startOf("day");
+
+  // If selectedStart is today and in the past, round up to the next 5 minute interval
+  if (selectedStart.isSame(today, "day") && selectedStart.isBefore(now)) {
+    console.log('Triggered');
+    const minutes = now.minute();
+    const remainder = minutes % 5;
+    return now.add(5 - remainder, "minute").second(0).millisecond(0).toDate();
+  }
+  return selectedStart.toDate();
 };
 
 export default function CalendarView() {
@@ -164,7 +181,7 @@ export default function CalendarView() {
     setCalRange(getInitialRange('month', initialDate));
   }, []);
 
-  const handleDoubleClick = (start: Date, end: Date) => {
+  const handleSlotClick = (start: Date, end: Date) => {
     setSelectedStart(start);
     setSelectedEnd(end);
     setAddScheduleOpen(true);
@@ -236,7 +253,8 @@ export default function CalendarView() {
           onRangeChange={handleRangeChange}
           eventPropGetter={eventStyleGetter}
           onSelectEvent={handleEventClick}
-          onSelectSlot={(slotInfo) => { if (slotInfo.action === 'doubleClick') handleDoubleClick(slotInfo.start, slotInfo.end)} }
+          //onSelectSlot={(slotInfo) => { if (slotInfo.action === 'doubleClick') handleSlotClick(slotInfo.start, slotInfo.end)} }
+          onSelectSlot={(slotInfo) => { handleSlotClick(slotInfo.start, slotInfo.end)} }
         />
       </Paper>
 
@@ -245,7 +263,7 @@ export default function CalendarView() {
         <DialogContent>
           {selectedStart && <ScheduleForm
             allowTaskSelection={true}
-            initialDate={selectedStart}
+            initialDate={getIntuitiveStartTime(selectedStart)}
             initialEnd={selectedEnd}
             onSuccess={handleAddScheduleClose}
             ref={scheduleFormRef}

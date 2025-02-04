@@ -163,16 +163,6 @@ export const ScheduleForm = forwardRef(({
       </FormControl>
 
       <FormControl fullWidth margin="normal">
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DateTimePicker
-            label="End Time"
-            value={endTime}
-            onChange={(newValue) => setEndTime(newValue)}
-          />
-        </LocalizationProvider>
-      </FormControl>
-
-      <FormControl fullWidth margin="normal">
         <InputLabel id="repeat-select-label" shrink>Repetition</InputLabel>
         <Select
           labelId="repeat-select-label"
@@ -186,6 +176,18 @@ export const ScheduleForm = forwardRef(({
           <MenuItem value="monthly">Monthly</MenuItem>
         </Select>
       </FormControl>
+
+      <FormControl fullWidth margin="normal">
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DateTimePicker
+            label="End Time"
+            value={endTime}
+            onChange={(newValue) => setEndTime(newValue)}
+            disabled={repeat === "none"}
+          />
+        </LocalizationProvider>
+      </FormControl>
+
     </Box>
   );
 });
