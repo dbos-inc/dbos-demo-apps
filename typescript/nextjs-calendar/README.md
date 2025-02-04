@@ -54,6 +54,42 @@ npm run start
 ```
 
 ## Using The App
+Once the app is running, open it in a web browser.  (By default, this will be at [http://localhost:3000/](http://localhost:3000/))
+
+Upon opening the web browser (and perhaps dismissing the help popup), the main screen should open:
+
+![Screen shot of DBOS Task Scheduler](./img/DBOSTaskScheduler.png)
+
+### Adding Tasks
+To schedule a task, or repeating series, double click on open space on the calendar.  (The date and time clicked will be used for the initial population of the "Start Time" field.)
+
+![Screen shot of the popup for adding a new task](./img/NewTaskScreen.png)
+
+First, select a task from the "Task" dropdown.  All tasks involve fetching a URL and saving the contents.  To see what one does, select it, and press "Test".  The choices are:
+- Fetch Current Time: Gets the GMT time from `http://worldtimeapi.org`
+- Fetch Weather Data (New York): Gets weather data for New York from `https://api.open-meteo.com`
+- Make Sure Cloud Is Up: Pulls data from a demo app on DBOS Cloud: `https://demo-guestbook.cloud.dbos.dev/`
+- Fetch Random Joke: Gets a joke from `https://official-joke-api.appspot.com/random_joke`
+- Stave Off Boredom: Attempts to get a random activity from `https://www.boredapi.com/api/activity`; this service may be down; more on this below
+- Impossible Task: Tests errors by fetching `http://example.invalid`
+
+Then, ensure that the "Start Time" is correct.  If not, change it.
+
+If the task is to be a repeating task, select an "End Time", and set "Repetition" to "Daily", "Weekly", or "Monthly" as appropriate.
+
+Selecting "Add Schedule" will put the task on the calendar, and save it to the application database, where the DBOS scheduler will pick it up and run it at the appropriate times.
+
+### Editing/Removing Tasks
+To edit or remove a task, click on the task's calendar item to reveal the "Edit/Delete Task" dialog.
+
+![Screen shot of the popup for editing tasks](./img/EditTaskScreen.png)
+
+Changes can be made to all fields except "Task".  Clicking "Test" will execute the task and add the result to the calendar.  Clicking "Update Schedule" will save any changes.  Clicking "Delete" will delete the task, along with all results for the task.
+
+### Viewing Results
+To view results and errors, click on the result calendar items.
+
+![Screen shot of popup for viewing results](./img/ResultBox.png)
 
 ## Setting Up Email Notifications
 The DBOS Task Scheduler app will send notifications using Amazon Simple Email Service (SES).  To use this, set the following environment variables:
