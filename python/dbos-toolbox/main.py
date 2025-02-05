@@ -26,7 +26,7 @@ def step_two():
 
 @app.get("/workflow")
 @DBOS.workflow()
-def dbos_workflow():
+def example_workflow():
     step_one()
     step_two()
 
@@ -39,18 +39,18 @@ queue = Queue("example-queue")
 
 
 @DBOS.step()
-def dbos_step(n: int):
+def queued_step(n: int):
     time.sleep(5)
     DBOS.logger.info(f"Step {n} completed!")
 
 
 @app.get("/queue")
 @DBOS.workflow()
-def dbos_workflow():
+def queue_workflow():
     DBOS.logger.info("Enqueueing steps")
     handles = []
     for i in range(10):
-        handle = queue.enqueue(dbos_step, i)
+        handle = queue.enqueue(queued_step, i)
         handles.append(handle)
     results = [handle.get_result() for handle in handles]
     DBOS.logger.info(f"Successfully completed {len(results)} steps")
@@ -85,7 +85,7 @@ def count_rows():
 
 @app.get("/transaction")
 @DBOS.workflow()
-def dbos_workflow():
+def transaction_workflow():
     insert_row()
     count_rows()
 
