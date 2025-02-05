@@ -86,18 +86,6 @@ export const lightTheme = createTheme({
   typography,
   components: {
     ...componentOverrides,
-    /*
-    MuiButton: {
-      styleOverrides: {
-        containedPrimary: {
-          backgroundColor: lightPalette.primary,
-          '&:hover': {
-            backgroundColor: lightPalette.primary,
-          },
-        },
-      },
-    },
-    */
   },
 });
 
@@ -106,17 +94,5 @@ export const darkTheme = createTheme({
   typography,
   components: {
     ...componentOverrides,
-    /*
-    MuiButton: {
-      styleOverrides: {
-        containedPrimary: ({ theme }) => ({
-          backgroundColor: theme.palette.primary.main,  // Using theme function
-          '&:hover': {
-            backgroundColor: theme.palette.primary.dark,
-          },
-        }),
-      },
-    },
-    */
   },
 });
