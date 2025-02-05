@@ -14,11 +14,12 @@ import { DBOS, parseConfigFile } from '@dbos-inc/dbos-sdk';
 import { SchedulerAppGlobals  } from './dbos/operations';
 
 // This is to handle files, in case entrypoints is not manually specified
-export async function loadAllServerFiles() {
+// We are looking for .js server code, in the 'dbos/' subdirectory.
+export async function loadAllDBOSServerFiles() {
   const loaded: string[] = [];
   const serverDir = path.resolve(__dirname, "dbos");
 
-  const files = await fg(['**/*.ts', '**/*.js', '**/*.jsx', '**/*.tsx'], {
+  const files = await fg(['**/*.ts', '**/*.js'], {
     cwd: serverDir,
     absolute: true,
   });
@@ -27,18 +28,7 @@ export async function loadAllServerFiles() {
 
   for (const file of files) {
     if (file.endsWith('.d.ts')) continue;
-    if (file.endsWith('.jsx')) continue;
-    if (file.endsWith('.tsx')) continue;
     try {
-      // Read the first few lines of the file
-      const content = await fs.readFile(file, 'utf-8');
-      const firstLine = content.split('\n')[0].trim();
-
-      // Skip files with "use client"
-      if (firstLine.startsWith('"use client"')) {
-        continue;
-      }
-
       // Dynamically load the file
       await import(pathToFileURL(file).href);
       console.log(`Loaded: ${file}`);
@@ -60,7 +50,7 @@ async function main() {
   const [cfg, rtcfg] = parseConfigFile();
 
   DBOS.logger.info('Loading server files...');
-  const files = await loadAllServerFiles();
+  const files = await loadAllDBOSServerFiles();
   DBOS.logger.info('  ...loaded.')
 
   DBOS.setConfig(cfg, rtcfg);
