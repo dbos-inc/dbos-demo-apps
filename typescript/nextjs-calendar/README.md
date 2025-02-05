@@ -1,7 +1,7 @@
 # Welcome to DBOS Task Scheduler!
 DBOS Task Scheduler is a full-stack app built with [Next.js](https://nextjs.org/) and [DBOS](https://dbos.dev).  It serves as both a demo for learning DBOS concepts and a template for building your own DBOS-powered Next.js applications.
 
-If you like the idea of a cloud-based task scheduler with a calendar UI, you can easily [customize it with your own tasks](#task-code) and deploy it to DBOS Cloud [DBOS Cloud](https://www.dbos.dev/dbos-cloud) for free.
+If you like the idea of a cloud-based task scheduler with a calendar UI, you can easily [customize it with your own tasks](#task-code) and deploy it to [DBOS Cloud](https://www.dbos.dev/dbos-cloud) for free.
 
 ## Why Use Next.js With DBOS?
 Combining DBOS Transact with Next.js offers a powerful backend and frontend pairing that is easily deployed to DBOS Cloud.
@@ -13,17 +13,17 @@ Existing Next.js hosting options focus on serverless, CDN-heavy applications.  R
 - Background tasks and WebSockets – Keep execution and state across UI calls, with the ability to send results back to the client.
 - External systems integration – [Place calls to external services](https://docs.dbos.dev/typescript/tutorials/step-tutorial) with much simpler error recovery.
 - Simple, powerful database integration – [Manage database data](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial) with DBOS.
-- Cron-style task scheduling – Automate recurring jobs with [built-in scheduling](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows).
+- Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows).
 - Built-in tracing and replay debugging – [Find workflows in the dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard) and [re-run them locally](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging).
 
 # Running DBOS Task Scheduler
 
 ## Running in DBOS Cloud
 Provisioning an instance of DBOS Task Scheduler in DBOS Cloud is easy:
-* Go to [DBOS Cloud Console](https://console.dbos.dev/launch)
-* Sign Up or Sign In, if you haven't already
-* Select the "TYPESCRIPT" tab
-* Choose the "DBOS Task Scheduler" template
+- Go to [DBOS Cloud Console](https://console.dbos.dev/launch)
+- Sign Up or Sign In, if you haven't already
+- Select the "TYPESCRIPT" tab
+- Choose the "DBOS Task Scheduler" template
 
 After a bit of launch activity, you will be presented with:
 - A URL for accessing the app
@@ -47,7 +47,7 @@ When running under `npm run dev`, any changes to source files will cause the app
 
 ### Production Builds
 
-Instead of `npm run dev` it is also possible to run the following sequence of commands to run an optimized "production" build
+Instead of `npm run dev` it is also possible to run the following sequence of commands to launch an optimized "production" build
 ```
 npm install
 npm run build
@@ -72,12 +72,12 @@ First, select a task from the "Task" dropdown.  All tasks involve fetching a URL
 - Fetch Weather Data (New York): Gets weather data for New York from `https://api.open-meteo.com`
 - Make Sure Cloud Is Up: Pulls data from a demo app on DBOS Cloud: `https://demo-guestbook.cloud.dbos.dev/`
 - Fetch Random Joke: Gets a joke from `https://official-joke-api.appspot.com/random_joke`
-- Stave Off Boredom: Attempts to get a random activity from `https://www.boredapi.com/api/activity`; this service may be down; more on this below
+- Stave Off Boredom: Attempts to get a random activity from `https://www.boredapi.com/api/activity` (Or DBOS equivalent; more on this below)
 - Impossible Task: Tests errors by fetching `http://example.invalid`
 
 Then, ensure that the "Start Time" is correct.  If not, change it.
 
-If the task is to be a repeating task, select an "End Time", and set "Repetition" to "Daily", "Weekly", or "Monthly" as appropriate.
+If the task is to be a repeating task, set "Repetition" to "Daily", "Weekly", or "Monthly" and select an "End Time" as appropriate.
 
 Selecting "Add Schedule" will put the task on the calendar, and save it to the application database, where the DBOS scheduler will pick it up and run it at the appropriate times.
 
@@ -104,7 +104,7 @@ The DBOS Task Scheduler app will send notifications using Amazon Simple Email Se
 # Code Tour
 
 ## Technologies and Concepts Demonstrated
-> 💡 **Tip:** The DBOS Task Scheduler app is somewhat complex, showcasing many features.  For a simpler starting point, see [dbos-nextjs-starter](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/dbos-nextjs-starter).
+> 💡 **Tip:** The DBOS Task Scheduler app is somewhat complex, showcasing many features.  For a simpler starting point, see [dbos-nextjs-starter](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/dbos-nextjs-starter#readme).
 
 This app uses the following:
 - DBOS Workflows, Transactions, and Steps – Complete actions exactly once, record the results, and send notifications, without worrying about server disruptions
@@ -446,6 +446,6 @@ While this is mostly a template for Next.js, the following entries are specific 
 # Resources and Help
 If you need help with this app, please join our [Discord server](https://discord.com/invite/jsmC6pXGgX).
 
-- To learn how to create an application to DBOS Cloud, visit our [cloud quickstart](https://docs.dbos.dev/quickstart)
+- To learn how to create an application on DBOS Cloud, visit our [cloud quickstart](https://docs.dbos.dev/quickstart)
 - For a detailed DBOS Transact tutorial, check out our [programming quickstart](https://docs.dbos.dev/typescript/programming-guide).
 - To learn more about DBOS, take a look at [our documentation](https://docs.dbos.dev/) or our [source code](https://github.com/dbos-inc/dbos-transact-ts).
