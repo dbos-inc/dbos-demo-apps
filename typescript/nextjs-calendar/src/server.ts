@@ -2,7 +2,6 @@ import 'reflect-metadata';  // ✅ This must be the first import
 import next from 'next';
 import http, { IncomingMessage, ServerResponse } from 'http';
 import path from 'path';
-import fs from 'fs/promises';
 import fg from 'fast-glob';
 
 import { WebSocketServer, WebSocket } from 'ws';
