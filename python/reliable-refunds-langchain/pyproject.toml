@@ -1,0 +1,34 @@
+[project]
+name = "reliable-refunds"
+version = "0.1.0"
+
+dependencies = [
+    "sendgrid>=6.11.0",
+    "langgraph>=0.2.68",
+    "langsmith>=0.3.2",
+    "langchain-openai>=0.3.2",
+    "psycopg-pool>=3.2.4",
+    "langgraph-checkpoint-postgres>=2.0.13",
+    "dbos>=0.20.0a2",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "black>=24.10.0",
+    "isort>=5.13.2",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+filter_files = true
+atomic = true

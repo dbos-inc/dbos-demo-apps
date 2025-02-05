@@ -35,8 +35,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
-
-Then start your app:
+Then start your app. DBOS will automatically guide you through connecting to your app to a Postgres database.
 
 ```shell
 dbos start

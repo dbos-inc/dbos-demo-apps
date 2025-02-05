@@ -15,7 +15,13 @@
         <span class="text-yellow-700">Reconnecting...</span>
     </div>
     <p class="mb-4">
-        DBOS helps you build applications that are <strong>resilient to any failure</strong>&mdash;no matter how many times you crash this app, your background task will always recover from its last completed step in about ten seconds.
+        DBOS helps you build applications that are <strong>resilient to any failure</strong>.
+    </p>
+    <p class="mb-4">
+       Try it: Start a background task, crash the application, then watch it restart. Your task will automatically continue from the step where it left off!
+    </p>
+    <p class="mb-4">
+       If you check your app's logs (viewable <a href="https://console.dbos.dev/applications/dbos-app-starter" target="_blank" class="text-blue-600 hover:underline">here</a> in DBOS Cloud), you can see your app become unresponsive, then restart, then recover any active background tasks.
     </p>
     <div class="flex gap-4 mb-4">
         <button
@@ -109,13 +115,31 @@
         }
     </script>
     <p class="mb-4">
-        After finishing a background task, visit <a href="https://console.dbos.dev/traces" target="_blank" class="text-blue-600 hover:underline">https://console.dbos.dev/traces</a> to see its traces.
+        To build your own crashproof application:
     </p>
+    <ul class="space-y-3 mb-4">
+        <li class="flex items-start">
+            <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                <span class="text-blue-600 text-sm">1</span>
+            </span>
+            <code class="bg-gray-100 px-2 py-0.5 rounded">pip install dbos</code>
+        </li>
+        <li class="flex items-start">
+            <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                <span class="text-blue-600 text-sm">2</span>
+            </span>
+            <code class="bg-gray-100 px-2 py-0.5 rounded">dbos init --template dbos-app-starter</code>
+        </li>
+        <li class="flex items-start">
+            <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                <span class="text-blue-600 text-sm">3</span>
+            </span>
+            Edit <code class="bg-gray-100 px-2 py-0.5 rounded">app/main.py</code> to start building!
+        </li>
+     </ul>
     <p class="mb-4">
-        To start building your own crashproof application, access your source code from the <a href="https://console.dbos.dev/applications/dbos-app-starter" target="_blank" class="text-blue-600 hover:underline">cloud console</a>, edit <code class="bg-gray-100 px-1 rounded">app/main.py</code>, then redeploy your app.
+        Check out the <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline">programming guide</a> to learn how to build with DBOS!
     </p>
-    <p class="mb-4">
-        To learn how to build crashproof apps with DBOS, check out the <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline">programming guide</a>!
-    </p>
+</div>
 </body>
 </html>

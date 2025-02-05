@@ -1,5 +1,5 @@
 {
-  "name": "dbos-node-starter",
+  "name": "dbos-node-toolbox",
   "version": "0.0.1",
   "scripts": {
     "build": "tsc",
