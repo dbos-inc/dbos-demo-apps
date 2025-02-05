@@ -1,12 +1,13 @@
 'use client';
 
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "../themes/calendarToolbarButtonStyles.css";
 import { fetchSchedules, fetchResults, deleteSchedule } from '@/actions/schedule';
 import { ScheduleUIRecord, ResultsUIRecord } from '@/types/models';
 import { useState, useEffect, useRef } from 'react';
 import { Paper, Typography, useTheme } from '@mui/material';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { Calendar, Views, momentLocalizer } from 'react-big-calendar';
-import "react-big-calendar/lib/css/react-big-calendar.css";
 import { ScheduleForm, ScheduleFormHandle } from './ScheduleForm';
 import ResultsModal from './ResultsModal';
 import moment from 'moment';
