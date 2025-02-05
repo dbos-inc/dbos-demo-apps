@@ -18,7 +18,22 @@ Existing Next.js hosting options focus on serverless, CDN-heavy applications.  R
 
 # Running DBOS Task Scheduler
 
+## Running in DBOS Cloud
+Provisioning an instance of DBOS Task Scheduler in DBOS Cloud is easy:
+* Go to [DBOS Cloud Console](https://console.dbos.dev/launch)
+* Sign Up or Sign In, if you haven't already
+* Select the "TYPESCRIPT" tab
+* Choose the "DBOS Task Scheduler" template
+
+After a bit of launch activity, you will be presented with:
+- A URL for accessing the app
+- Monitoring dashboards
+- Management options
+- Code download
+
 ## Running Locally
+If you [started out in DBOS Cloud](#running-in-dbos-cloud), you can download your code to continue local development.  Or, you can [clone the code from the git repository]().
+
 Once you have a copy of the DBOS Task Scheduler locally, run the following:
 
 ```
