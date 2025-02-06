@@ -41,4 +41,5 @@ exports.up = async function(knex) {
 };
 
 exports.down = function(_knex) {
+  return Promise.resolve();
 };
