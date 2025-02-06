@@ -108,13 +108,13 @@ export class SchedulerOps
     });
   }
 
-  @DBTrigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: true})
+  @DBTrigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: false})
   static async scheduleListener(_operation: TriggerOperation, _key: string[], _record: unknown) {
     SchedulerOps.notifyListeners('schedule');
     return Promise.resolve();
   }
 
-  @DBTrigger({tableName: 'results', useDBNotifications: true, installDBTrigger: true})
+  @DBTrigger({tableName: 'results', useDBNotifications: true, installDBTrigger: false})
   static async resultListener(_operation: TriggerOperation, _key: string[], _record: unknown) {
     SchedulerOps.notifyListeners('result');
     return Promise.resolve();
