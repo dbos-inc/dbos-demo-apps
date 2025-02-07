@@ -20,9 +20,6 @@
     <p class="mb-4">
        Try it: Start a background task, crash the application, then watch it restart. Your task will automatically continue from the step where it left off!
     </p>
-    <p class="mb-4">
-       If you check your app's logs (viewable <a href="https://console.dbos.dev/applications/dbos-app-starter" target="_blank" class="text-blue-600 hover:underline">here</a> in DBOS Cloud), you can see your app become unresponsive, then restart, then recover any active background tasks.
-    </p>
     <div class="flex gap-4 mb-4">
         <button
             onclick="startBackgroundJob()"
@@ -114,6 +111,9 @@
             }
         }
     </script>
+    <p class="mb-4">
+        If you check your app's logs (viewable <a href="https://console.dbos.dev/applications/dbos-app-starter" target="_blank" class="text-blue-600 hover:underline">here</a> in DBOS Cloud), you will see your app become unresponsive <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">(Log buffer retrieved after application became unresponsive)</code>, then restart <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">(DBOS launched)</code>, then recover any active background tasks from their last completed step<code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">(Completed step...)</code>.
+    </p>
     <p class="mb-4">
         To build your own crashproof application:
     </p>
