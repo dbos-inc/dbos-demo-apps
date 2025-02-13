@@ -10,7 +10,7 @@ npm install
 npx dbos start
 ```
 
-Send a request to [`http://localhost:8000`](http://localhost:8000) to get a greeting message.
+Send a request to [`http://localhost:8000`](http://localhost:3000) to get a greeting message.
 
 ```shell
 > curl localhost:8000 -s | jq
@@ -85,7 +85,7 @@ export class AppService extends ConfiguredInstance {
   }
 
   async initialize(ctx: InitContext): Promise<void> {
-    DBOS.logger.info(`Initializing DBOS provider {this.name}`);
+    DBOS.logger.info(`Initializing DBOS provider ${this.name}`);
   }
 
   @DBOS.workflow()
