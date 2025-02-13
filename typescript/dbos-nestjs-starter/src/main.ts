@@ -6,14 +6,14 @@ import {
 import { AppModule } from "./app.module";
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
+
 async function bootstrap() {
-  //const app = await NestFactory.create(AppModule);
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter()
+    new FastifyAdapter(),
   );
   await DBOS.launch({ nestApp: app });
-  await app.listen(8000);
-}
+  await app.listen(3000);
+
 
 bootstrap();
