@@ -1,6 +1,6 @@
 # Nest x DBOS
 
-This Sample app shows how to use DBOS workflows with a nest.js app, specifically allowing you to transform existing `Injectable` services into reliable DBOS workflows.
+This Sample app shows how to use DBOS workflows with a nest.js app, specifically allowing you to transform your existing Nest `Injectable` services into reliable DBOS workflows.
 
 ## Getting started
 To run this app locally, install dependencies and start your app:
