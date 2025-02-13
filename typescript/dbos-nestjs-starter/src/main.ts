@@ -14,6 +14,6 @@ async function bootstrap() {
   );
   await DBOS.launch({ nestApp: app });
   await app.listen(3000);
-
+}
 
 bootstrap();
