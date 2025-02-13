@@ -14,7 +14,7 @@ export class AppService extends ConfiguredInstance {
   }
 
   async initialize(ctx: InitContext): Promise<void> {
-    DBOS.logger.info(`Initializing DBOS provider {this.name}`);
+    DBOS.logger.info(`Initializing DBOS provider ${this.name}`);
   }
 
   @DBOS.workflow()
