@@ -2,6 +2,44 @@
 
 This Sample app shows how to use DBOS workflows with a nest.js app, specifically allowing you to transform existing `Injectable` services into reliable DBOS workflows.
 
+## Getting started
+To run this app locally, install dependencies and start your app:
+
+```shell
+npm install
+npx dbos start
+```
+
+Send a request to [`http://localhost:8000`](http://localhost:8000) to get a greeting message.
+
+```shell
+> curl localhost:8000 -s | jq
+[
+  {
+    "greeting_name": "Complete-Chocolate",
+    "greeting_note_content": "Hello World!"
+  }
+]
+```
+
+<details>
+<summary><strong>Deploying via the DBOS Cloud CLI</strong></summary>
+
+You can also deploy this app via the DBOS Cloud CLI.
+Install it globally with this command:
+
+```shell
+npm i -g @dbos-inc/dbos-cloud
+```
+
+Then, run this command to deploy your app:
+
+```shell
+dbos-cloud app deploy
+```
+</details>
+
+## How does it work?
 First, configure main.ts to start DBOS (optionally register the nest application to attach the DBOS tracing middlewares):
 
 ```typescript
