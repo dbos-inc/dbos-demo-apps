@@ -58,7 +58,7 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
   await DBOS.launch({ nestApp: app });
-  await app.listen(3000); // Nest must be set to listen on 3000 to run on DBOS Cloud
+  await app.listen(3000, '0.0.0.0'); // Nest must be set to listen on 3000 and external networks to run on DBOS Cloud
 }
 
 bootstrap();
