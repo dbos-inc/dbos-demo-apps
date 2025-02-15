@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import AWS from 'aws-sdk';
 import dotenv from 'dotenv';
 import cors from 'cors';
 
@@ -11,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+/*
 // AWS S3 Configuration
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION as string,
@@ -19,6 +19,7 @@ const s3 = new AWS.S3({
     process.env.AWS_SECRET_KEY as string
   ),
 });
+*/
 
 const BUCKET_NAME = process.env.S3_BUCKET as string;
 
@@ -32,6 +33,7 @@ interface S3File {
 /** Get list of files in S3 */
 app.get('/api/files', async (req: Request, res: Response<S3File[] | { error: string }>) => {
   try {
+    /*
     const { Contents } = await s3.listObjectsV2({ Bucket: BUCKET_NAME }).promise();
     
     if (!Contents) return res.status(404).json({ error: 'No files found' });
@@ -42,6 +44,8 @@ app.get('/api/files', async (req: Request, res: Response<S3File[] | { error: str
       size: file.Size || 0,
       lastModified: file.LastModified || new Date(),
     }));
+    */
+    const files: S3File[] = [];
 
     res.json(files);
   } catch (error) {
@@ -57,6 +61,7 @@ app.get('/api/upload', async (req: Request, res: Response<{ uploadUrl?: string; 
       return res.status(400).json({ error: 'Filename is required' });
     }
 
+    /*
     const params: AWS.S3.PutObjectRequest = {
       Bucket: BUCKET_NAME,
       Key: filename,
@@ -65,6 +70,9 @@ app.get('/api/upload', async (req: Request, res: Response<{ uploadUrl?: string; 
     };
     
     const uploadUrl = await s3.getSignedUrlPromise('putObject', params);
+    res.json({ uploadUrl });
+    */
+    const uploadUrl = '';
     res.json({ uploadUrl });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -79,6 +87,7 @@ app.get('/api/download', async (req: Request, res: Response<{ downloadUrl?: stri
       return res.status(400).json({ error: 'File key is required' });
     }
 
+    /*
     const params: AWS.S3.GetObjectRequest = {
       Bucket: BUCKET_NAME,
       Key: key,
@@ -87,6 +96,8 @@ app.get('/api/download', async (req: Request, res: Response<{ downloadUrl?: stri
 
     const downloadUrl = await s3.getSignedUrlPromise('getObject', params);
     res.json({ downloadUrl });
+    */
+    res.json({ downloadUrl: '' });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -100,7 +111,9 @@ app.delete('/api/delete', async (req: Request, res: Response<{ message?: string;
       return res.status(400).json({ error: 'File key is required' });
     }
 
+    /*
     await s3.deleteObject({ Bucket: BUCKET_NAME, Key: key }).promise();
+    */
     res.json({ message: 'File deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
