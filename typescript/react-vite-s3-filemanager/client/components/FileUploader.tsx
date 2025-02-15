@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { uploadFile } from "../api/s3";
+import { uploadFile } from "../services/s3";
 import { useState } from "react";
 
 const FileUploader = () => {

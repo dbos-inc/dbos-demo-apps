@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:5000/api"; // Adjust if backend URL changes
+const API_BASE = "http://localhost:3000/api"; // Adjust if backend URL changes
 
 export interface S3File {
   key: string;

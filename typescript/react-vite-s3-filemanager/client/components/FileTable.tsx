@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef, useReactTable, getCoreRowModel } from "@tanstack/react-table";
-import { fetchFiles, getDownloadUrl, deleteFile, S3File } from "../api/s3";
+import { fetchFiles, getDownloadUrl, deleteFile, S3File } from "../services/s3";
 
 const FileTable = () => {
   const queryClient = useQueryClient();
