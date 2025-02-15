@@ -1,0 +1,35 @@
+{
+  "name": "reactr-vite-s3-filemanager",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
+    "dev:client": "vite",
+    "dev:server": "nodemon --ext ts --exec ts-node server/server.ts",
+    "build": "vite build && tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@dbos-inc/component-aws-s3": "^2.3.10",
+    "@dbos-inc/dbos-sdk": "^2.3.10",
+    "@tanstack/react-query": "^5.66.0",
+    "@tanstack/react-table": "^8.21.2",
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.5.7",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^7.6.0",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0"
+  }
+}
