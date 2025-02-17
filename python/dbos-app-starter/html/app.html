@@ -14,11 +14,19 @@
             font-size: 14px;
             line-height: 1.5;
         }
+        .step-highlight {
+            background-color: #fff3b4;
+            display: block;
+        }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             document.querySelectorAll('pre code').forEach((el) => {
                 hljs.highlightElement(el);
+                // Wrap each line in a span for highlighting
+                el.innerHTML = el.innerHTML.split('\n').map(line => 
+                    `<span class="hljs-line">${line}</span>`
+                ).join('\n');
             });
         });
     </script>
@@ -55,20 +63,19 @@ def workflow():
     step_three()
 
 @DBOS.step()
-def step_one():
+def step_one():    # step1
     time.sleep(2)
     DBOS.logger.info("Completed step 1!")
 
 @DBOS.step()
-def step_two():
+def step_two():    # step2
     time.sleep(2)
     DBOS.logger.info("Completed step 2!")
 
 @DBOS.step()
-def step_three():
+def step_three():    # step3
     time.sleep(2)
-    DBOS.logger.info("Completed step 3!")
-</code></pre>
+    DBOS.logger.info("Completed step 3!")</code></pre>
                 </div>
             </div>
 
@@ -193,8 +200,24 @@ def step_three():
                 }
                 const step = await response.text();
                 document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 3</b> steps`;
+                
+                // Remove all existing highlights
+                document.querySelectorAll('.step-highlight').forEach(el => {
+                    el.classList.remove('step-highlight');
+                });
+                
+                // Add highlight to current step
+                if (step >= 1 && step <= 3) {
+                    const codeLines = document.querySelectorAll('pre code')[0].innerHTML.split('\n');
+                    const stepLine = codeLines.findIndex(line => line.includes(`step${step}`));
+                    if (stepLine !== -1) {
+                        const lines = document.querySelectorAll('pre code .hljs-line');
+                        lines[stepLine].classList.add('step-highlight');
+                    }
+                }
+                
                 if (step == 10) {
-                    currentId = null
+                    currentId = null;
                 }
                 hideReconnecting();
             } catch (error) {
