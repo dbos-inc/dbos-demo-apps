@@ -163,10 +163,10 @@
           </div>
           <div
             id="status"
-            class="text-gray-600 bg-white rounded-lg shadow-sm border border-gray-100 p-2 mt-4 w-full status-text"
+            class="hidden text-gray-600 bg-white rounded-lg shadow-sm border border-gray-100 p-2 mt-4 w-full status-text"
           >
-            <div class="step" id="step-1">▶ Initializing step one</div>
-            <div class="step" id="step-2">▶ Preparing step two</div>
+            <div class="step" id="step-1">▶ Awaiting step one</div>
+            <div class="step" id="step-2">▶ Awaiting step two</div>
             <div class="step" id="step-3">▶ Awaiting step three</div>
           </div>
         </div>
@@ -274,6 +274,7 @@
 
         currentId = randomString;
         await fetch(`/background/${currentId}/10`, { method: "GET" });
+        document.getElementById("status").classList.remove("hidden"); // Show the status box
         await checkProgress();
         enableCrashButton();
       }
