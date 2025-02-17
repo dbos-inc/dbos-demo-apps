@@ -4,32 +4,32 @@
     <title>Welcome to DBOS!</title>
     <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
     <style>
-        .hljs {
+        .code-block {
             background: #f6f8fa;
             padding: 0.75em 0.25em 0.75em 0.75em;
             font-size: 14px;
             line-height: 1.5;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         }
         .step-highlight {
             background-color: #fff3b4;
-            display: block;
         }
+        .function-block {
+            display: block;
+            padding-left: 1em;
+        }
+        .code-line {
+            display: block;
+            white-space: pre;
+        }
+        .keyword { color: #cf222e; }
+        .decorator { color: #953800; }
+        .function { color: #6639ba; }
+        .string { color: #0a3069; }
+        .comment { color: #6e7781; }
+        .punctuation { color: #24292f; }
     </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            document.querySelectorAll('pre code').forEach((el) => {
-                hljs.highlightElement(el);
-                // Wrap each line in a span for highlighting
-                el.innerHTML = el.innerHTML.split('\n').map(line => 
-                    `<span class="hljs-line">${line}</span>`
-                ).join('\n');
-            });
-        });
-    </script>
 </head>
 <body class="font-sans text-gray-800 p-6">
     <!-- Regular width container for header content -->
@@ -56,26 +56,10 @@
             <!-- Code section -->
             <div class="w-[400px]">
                 <div class="rounded-lg shadow-lg overflow-hidden">
-                    <pre><code class="python">@DBOS.workflow()
-def workflow():
-    step_one()
-    step_two()
-    step_three()
-
-@DBOS.step()
-def step_one():    # step1
-    time.sleep(2)
-    DBOS.logger.info("Completed step 1!")
-
-@DBOS.step()
-def step_two():    # step2
-    time.sleep(2)
-    DBOS.logger.info("Completed step 2!")
-
-@DBOS.step()
-def step_three():    # step3
-    time.sleep(2)
-    DBOS.logger.info("Completed step 3!")</code></pre>
+                    <pre class="code-block"><span class="code-line"><span class="decorator">@DBOS.workflow</span><span class="punctuation">()</span></span><span class="code-line"><span class="keyword">def</span> <span class="function">workflow</span><span class="punctuation">():</span></span><span class="code-line function-block workflow-step-1">    <span class="function">step_one</span><span class="punctuation">()</span></span><span class="code-line function-block workflow-step-2">    <span class="function">step_two</span><span class="punctuation">()</span></span><span class="code-line function-block workflow-step-3">    <span class="function">step_three</span><span class="punctuation">()</span></span>
+<span class="code-line"></span><div class="step-1"><span class="code-line"><span class="decorator">@DBOS.step</span><span class="punctuation">()</span></span><span class="code-line"><span class="keyword">def</span> <span class="function">step_one</span><span class="punctuation">():</span></span><span class="code-line function-block">    <span class="function">time.sleep</span><span class="punctuation">(</span>2<span class="punctuation">)</span></span><span class="code-line function-block">    <span class="function">DBOS.logger.info</span><span class="punctuation">(</span><span class="string">"Completed step 1!"</span><span class="punctuation">)</span></span></div>
+<span class="code-line"></span><div class="step-2"><span class="code-line"><span class="decorator">@DBOS.step</span><span class="punctuation">()</span></span><span class="code-line"><span class="keyword">def</span> <span class="function">step_two</span><span class="punctuation">():</span></span><span class="code-line function-block">    <span class="function">time.sleep</span><span class="punctuation">(</span>2<span class="punctuation">)</span></span><span class="code-line function-block">    <span class="function">DBOS.logger.info</span><span class="punctuation">(</span><span class="string">"Completed step 2!"</span><span class="punctuation">)</span></span></div>
+<span class="code-line"></span><div class="step-3"><span class="code-line"><span class="decorator">@DBOS.step</span><span class="punctuation">()</span></span><span class="code-line"><span class="keyword">def</span> <span class="function">step_three</span><span class="punctuation">():</span></span><span class="code-line function-block">    <span class="function">time.sleep</span><span class="punctuation">(</span>2<span class="punctuation">)</span></span><span class="code-line function-block">    <span class="function">DBOS.logger.info</span><span class="punctuation">(</span><span class="string">"Completed step 3!"</span><span class="punctuation">)</span></span></div></pre>
                 </div>
             </div>
 
@@ -187,6 +171,7 @@ def step_three():    # step3
             currentId = randomString;
             await fetch(`/background/${currentId}/10`, { method: 'GET' });
             document.getElementById('status').innerHTML = `Starting task...`;
+            await checkProgress();
             enableCrashButton();
         }
        
@@ -198,25 +183,27 @@ def step_three():    # step3
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const step = await response.text();
-                document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 3</b> steps`;
+                const step = Number(await response.text()) + 1;
                 
-                // Remove all existing highlights
+                // Remove all highlights
                 document.querySelectorAll('.step-highlight').forEach(el => {
                     el.classList.remove('step-highlight');
                 });
-                
-                // Add highlight to current step
-                if (step >= 1 && step <= 3) {
-                    const codeLines = document.querySelectorAll('pre code')[0].innerHTML.split('\n');
-                    const stepLine = codeLines.findIndex(line => line.includes(`step${step}`));
-                    if (stepLine !== -1) {
-                        const lines = document.querySelectorAll('pre code .hljs-line');
-                        lines[stepLine].classList.add('step-highlight');
+                    
+                if (step <= 3) {
+                    document.getElementById('status').innerHTML = `Executing <b>step ${step}</b>...`;
+                    // Highlight function
+                    const stepBlock = document.querySelector(`.step-${step}`);
+                    if (stepBlock) {
+                        stepBlock.classList.add('step-highlight');
                     }
-                }
-                
-                if (step == 10) {
+                    // Highlight workflow line
+                    const workflowLine = document.querySelector(`.workflow-step-${step}`);
+                    if (workflowLine) {
+                        workflowLine.classList.add('step-highlight');
+                    }
+                } else {
+                    document.getElementById('status').innerHTML = `Workflow complete!`;
                     currentId = null;
                 }
                 hideReconnecting();

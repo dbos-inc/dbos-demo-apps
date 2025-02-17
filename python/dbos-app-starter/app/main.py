@@ -60,7 +60,7 @@ def workflow():
 @app.get("/last_step/{task_id}")
 def get_last_completed_step(task_id: str):
     try:
-        step = DBOS.get_event(task_id, steps_event)
+        step = DBOS.get_event(task_id, steps_event, timeout_seconds=0)
     except KeyError: # If the task hasn't started yet
         return 0
     return step if step is not None else 0
