@@ -1,6 +1,6 @@
 # Nest x DBOS
 
-This Sample app shows how to use DBOS workflows with a nest.js app, specifically allowing you to transform your existing Nest `Injectable` services into reliable DBOS workflows.
+This Sample app shows how to use DBOS workflows with a nest.js app, specifically allowing you to make DBOS workflows `Injectable` Nest services.
 
 ## Getting started
 To run this app locally, install dependencies and start your app:
@@ -64,7 +64,8 @@ async function bootstrap() {
 bootstrap();
 ```
 
-Now, let's declare an `Injectable` Nest service implementing DBOS operations. *The class must `extends ConfiguredInstances`*.
+Now, let's declare an `Injectable` Nest service implementing DBOS operations.
+DBOS operations are declared as static classes (because they use decorators). To create a Nest provider, we must work with an instance of the class and will use [DBOS configured instances](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#decorating-instance-methods). The snippet bellows shows how to do so.
 The DBOS workflow has two steps: fetch an external API and insert a record in the database.
 
 ```typescript
@@ -150,6 +151,8 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 import { Provider } from "@nestjs/common/interfaces";
 
 // Make a Nest provider out of a DBOS ConfiguredInstance class
+// Here we use custom name as provider token, but you can also use a class name, JavaScript symbols or TypeScript enums
+// See https://docs.nestjs.com/fundamentals/custom-providers#non-class-based-provider-tokens
 export function createDBOSProvider(token: string, name: string): Provider {
     return {
       provide: token,
