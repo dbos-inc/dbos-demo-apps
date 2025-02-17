@@ -122,9 +122,17 @@
         <span class="text-yellow-700">Reconnecting...</span>
       </div>
       <p class="mb-4">DBOS helps you build applications that are <strong>resilient to any failure</strong>.</p>
+
       <p class="mb-4">
-        Try it: Start a background task, crash the application, then watch it restart. Your task will automatically
-        continue from the step where it left off!
+        Simply add
+        <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">@DBOS.workflow()</code> and
+        <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">@DBOS.step()</code> decorators to
+        your code. These <b>durably execute</b> your program, persisting its state to a Postgres database. If your
+        program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
+      </p>
+      <p class="mb-4">
+        Try it: Start a durable workflow, crash the application, then watch it restart. Your workflow will always resume
+        from the last completed step!
       </p>
     </div>
 
