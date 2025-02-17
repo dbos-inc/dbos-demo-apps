@@ -20,7 +20,7 @@ steps_event = "steps_event"
 @app.get("/background/{task_id}/{n}")
 def launch_background_task(task_id: str, n: int) -> None:
     with SetWorkflowID(task_id):
-        DBOS.start_workflow(background_task, n)
+        DBOS.start_workflow(workflow)
 
 
 # This workflow simulates a background task with N steps.
@@ -29,18 +29,29 @@ def launch_background_task(task_id: str, n: int) -> None:
 # interrupted, or restarted while running this workflow, the workflow automatically
 # resumes from the last completed step.
 
-
-@DBOS.workflow()
-def background_task(n: int) -> None:
-    for i in range(1, n + 1):
-        background_task_step(i)
-        DBOS.set_event(steps_event, i)
-
+@DBOS.step()
+def step_one():
+    time.sleep(2)
+    DBOS.logger.info("Completed step 1!")
 
 @DBOS.step()
-def background_task_step(i: int):
+def step_two():
     time.sleep(2)
-    DBOS.logger.info(f"Completed step {i}!")
+    DBOS.logger.info("Completed step 2!")
+
+@DBOS.step()
+def step_three():
+    time.sleep(2)
+    DBOS.logger.info("Completed step 3!")
+
+@DBOS.workflow()
+def workflow():
+    step_one()
+    DBOS.set_event(steps_event, 1)
+    step_two()
+    DBOS.set_event(steps_event, 2)
+    step_three()
+    DBOS.set_event(steps_event, 3)
 
 
 # This endpoint retrieves the status of a specific background task.

@@ -4,6 +4,24 @@
     <title>Welcome to DBOS!</title>
     <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <style>
+        .hljs {
+            background: #f6f8fa;
+            padding: 1em;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('pre code').forEach((el) => {
+                hljs.highlightElement(el);
+            });
+        });
+    </script>
 </head>
 <body class="font-sans text-gray-800 p-6 max-w-2xl mx-auto">
     <h1 class="text-xl font-semibold mb-4">Welcome to DBOS!</h1>
@@ -20,6 +38,32 @@
     <p class="mb-4">
        Try it: Start a background task, crash the application, then watch it restart. Your task will automatically continue from the step where it left off!
     </p>
+    
+    <div class="mt-8 mb-4">
+        <div class="rounded-lg shadow-lg overflow-hidden">
+            <pre><code class="python">@DBOS.workflow()
+def workflow():
+    step_one()
+    step_two()
+    step_three()
+
+@DBOS.step()
+def step_one():
+    time.sleep(2)
+    DBOS.logger.info("Completed step 1!")
+
+@DBOS.step()
+def step_two():
+    time.sleep(2)
+    DBOS.logger.info("Completed step 2!")
+
+@DBOS.step()
+def step_three():
+    time.sleep(2)
+    DBOS.logger.info("Completed step 3!")
+</code></pre>
+        </div>
+    </div>
     <div class="flex gap-4 mb-4">
         <button
             onclick="startBackgroundJob()"
@@ -100,7 +144,7 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const step = await response.text();
-                document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 10</b> steps`;
+                document.getElementById('status').innerHTML = `Your background task has completed <b>${step} of 3</b> steps`;
                 if (step == 10) {
                     currentId = null
                 }
@@ -140,6 +184,5 @@
     <p class="mb-4">
         Check out the <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline">programming guide</a> to learn how to build with DBOS!
     </p>
-</div>
 </body>
 </html>
