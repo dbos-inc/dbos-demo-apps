@@ -18,6 +18,7 @@ database:
 runtimeConfig:
   start:
     - npx nest start
+  port: 3000
 telemetry:
   logs:
     logLevel: info
