@@ -35,19 +35,19 @@ def launch_durable_workflow(task_id: str) -> None:
 
 @DBOS.step()
 def step_one():
-    time.sleep(2)
+    time.sleep(5)
     DBOS.logger.info("Completed step 1!")
 
 
 @DBOS.step()
 def step_two():
-    time.sleep(2)
+    time.sleep(5)
     DBOS.logger.info("Completed step 2!")
 
 
 @DBOS.step()
 def step_three():
-    time.sleep(2)
+    time.sleep(5)
     DBOS.logger.info("Completed step 3!")
 
 
