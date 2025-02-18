@@ -331,9 +331,6 @@
 
       async function checkProgress() {
         if (!currentId) {
-          document.querySelectorAll(".status-text .step").forEach((step) => {
-            step.className = "step pending";
-          });
           return;
         }
 
@@ -367,6 +364,7 @@
             document.querySelectorAll(".status-text .step").forEach((step) => {
               step.className = "step complete";
             });
+            currentId = null;
           }
           hideReconnecting();
         } catch (error) {
