@@ -5,14 +5,13 @@ This is a template app built with DBOS and FastAPI.
 ### Getting Started
 
 To get started building, edit `app/main.py`.
-Then, commit your changes and visit the [cloud console](https://console.dbos.dev/applications) to redeploy it from GitHub!
 
 To include new packages or dependencies, add them to `requirements.txt`.
 
 <details>
 <summary><strong>Deploying via the DBOS Cloud CLI</strong></summary>
 
-You can also deploy this app via the DBOS Cloud CLI.
+You can deploy this app to DBOS Cloud via the DBOS Cloud CLI.
 Install it with this command (requires Node):
 
 ```shell
