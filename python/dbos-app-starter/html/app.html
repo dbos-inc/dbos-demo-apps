@@ -69,6 +69,12 @@
         background-color: #eff6ff;
       }
 
+      .status-text .step.recover {
+        color: #dc2626;
+        border-left-color: #ef4444;
+        background-color: #fef2f2;
+      }
+
       .status-text .step.complete {
         color: #059669;
         border-left-color: #10b981;
@@ -93,6 +99,11 @@
       }
 
       .status-text .step.active::after {
+        content: "";
+        animation: typing 2s infinite;
+      }
+
+      .status-text .step.recover::after {
         content: "";
         animation: typing 2s infinite;
       }
@@ -261,13 +272,23 @@
       }
 
       async function crashApp() {
-        await fetch("/crash", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        showReconnecting();
+        // Make the HTTP request with a 100ms timeout and ignore errors
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 100);
+
+          await fetch("/crash", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+        } catch (error) {}
+
+        await checkProgress();
       }
 
       function enableCrashButton() {
@@ -285,6 +306,28 @@
         await checkProgress();
         enableCrashButton();
       }
+
+      function updateStatusBox(step, error = false) {
+        document.querySelectorAll(".status-text .step").forEach((stepEl, index) => {
+          const stepNum = index + 1;
+
+          if (stepNum < step) {
+            stepEl.className = "step complete";
+            stepEl.textContent = `✓ Completed step ${stepNum}`;
+          } else if (stepNum === step && error) {
+            stepEl.className = "step recover";
+            stepEl.textContent = `▶ Recovering step ${stepNum}`;
+          } else if (stepNum === step) {
+            stepEl.className = "step active";
+            stepEl.textContent = `▶ Executing step ${stepNum}`;
+          } else {
+            stepEl.className = "step pending";
+            stepEl.textContent = `▶`;
+          }
+        });
+      }
+
+      let lastStep = 0;
 
       async function checkProgress() {
         if (!currentId) {
@@ -307,20 +350,8 @@
           });
 
           // Update status text
-          document.querySelectorAll(".status-text .step").forEach((stepEl, index) => {
-            const stepNum = index + 1;
-
-            if (stepNum < step) {
-              stepEl.className = "step complete";
-              stepEl.textContent = `✓ Completed step ${stepNum}`;
-            } else if (stepNum === step) {
-              stepEl.className = "step active";
-              stepEl.textContent = `▶ Executing step ${stepNum}`;
-            } else {
-              stepEl.className = "step pending";
-              stepEl.textContent = `▶`;
-            }
-          });
+          updateStatusBox(step);
+          lastStep = step;
 
           if (step <= 3) {
             // Keep original code highlighting
@@ -341,6 +372,7 @@
         } catch (error) {
           console.error("Error checking progress:", error);
           showReconnecting();
+          updateStatusBox(lastStep, true);
         }
       }
     </script>
