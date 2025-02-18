@@ -171,11 +171,11 @@
           </div>
           <div
             id="status"
-            class="hidden text-gray-600 bg-white rounded-lg shadow-sm border border-gray-100 p-2 mt-4 w-full status-text"
+            class="text-gray-600 bg-white rounded-lg shadow-sm border border-gray-100 p-2 mt-4 w-full status-text"
           >
-            <div class="step" id="step-1">▶ Awaiting step one</div>
-            <div class="step" id="step-2">▶ Awaiting step two</div>
-            <div class="step" id="step-3">▶ Awaiting step three</div>
+            <div class="step" id="step-1">▶</div>
+            <div class="step" id="step-2">▶</div>
+            <div class="step" id="step-3">▶</div>
           </div>
         </div>
       </div>
@@ -282,7 +282,6 @@
 
         currentId = randomString;
         await fetch(`/workflow/${currentId}`, { method: "GET" });
-        document.getElementById("status").classList.remove("hidden"); // Show the status box
         await checkProgress();
         enableCrashButton();
       }
@@ -319,7 +318,7 @@
               stepEl.textContent = `▶ Executing step ${stepNum}`;
             } else {
               stepEl.className = "step pending";
-              stepEl.textContent = `▶ Awaiting step ${stepNum}`;
+              stepEl.textContent = `▶`;
             }
           });
 
