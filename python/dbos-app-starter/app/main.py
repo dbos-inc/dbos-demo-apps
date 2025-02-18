@@ -17,8 +17,8 @@ steps_event = "steps_event"
 # This endpoint uses DBOS to idempotently launch a durable workflow.
 
 
-@app.get("/background/{task_id}/{n}")
-def launch_durable_workflow(task_id: str, n: int) -> None:
+@app.get("/workflow/{task_id}")
+def launch_durable_workflow(task_id: str) -> None:
     with SetWorkflowID(task_id):
         DBOS.start_workflow(workflow)
 
@@ -32,20 +32,24 @@ def launch_durable_workflow(task_id: str, n: int) -> None:
 # status to the frontend after each step completes, so you can observe what your workflow
 # is doing in real time.
 
+
 @DBOS.step()
 def step_one():
     time.sleep(2)
     DBOS.logger.info("Completed step 1!")
+
 
 @DBOS.step()
 def step_two():
     time.sleep(2)
     DBOS.logger.info("Completed step 2!")
 
+
 @DBOS.step()
 def step_three():
     time.sleep(2)
     DBOS.logger.info("Completed step 3!")
+
 
 @DBOS.workflow()
 def workflow():
@@ -64,7 +68,7 @@ def workflow():
 def get_last_completed_step(task_id: str):
     try:
         step = DBOS.get_event(task_id, steps_event, timeout_seconds=0)
-    except KeyError: # If the task hasn't started yet
+    except KeyError:  # If the task hasn't started yet
         return 0
     return step if step is not None else 0
 

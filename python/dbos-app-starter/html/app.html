@@ -191,8 +191,7 @@
           class="text-blue-600 hover:underline"
           >here</a
         >
-        in DBOS Cloud).
-        When you crash your app, you will see it become unresponsive
+        in DBOS Cloud). When you crash your app, you will see it become unresponsive
         <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700"
           >(Log buffer retrieved after application became unresponsive)</code
         >, then restart
@@ -282,7 +281,7 @@
         window.history.replaceState({}, "", `${window.location.pathname}?${urlParams.toString()}`);
 
         currentId = randomString;
-        await fetch(`/background/${currentId}/10`, { method: "GET" });
+        await fetch(`/workflow/${currentId}`, { method: "GET" });
         document.getElementById("status").classList.remove("hidden"); // Show the status box
         await checkProgress();
         enableCrashButton();
