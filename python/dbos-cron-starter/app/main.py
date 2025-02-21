@@ -23,6 +23,12 @@ def scheduled_function(scheduled_time, actual_time):
 # This FastAPI endpoint lets you check how many times the scheduled function has run
 # since the app started.
 
+@app.get("/counter")
+def get_counter():
+    return {"counter": counter}
+
+# This endpoint serves the HTML Readme.
+
 @app.get("/")
 def readme():
     with open(os.path.join("html", "app.html")) as file:
