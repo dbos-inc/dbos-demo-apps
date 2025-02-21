@@ -49,7 +49,7 @@
         <h1 class="text-3xl font-bold text-gray-900">Welcome to the DBOS Cron Starter!</h1>
         <p class="text-gray-800">
           DBOS lets you easily run code on a schedule in the cloud. For example, this app runs the following function
-          every minute:
+          every minute, updating an in-memory counter:
         </p>
 
         <div class="bg-gray-100 rounded-lg overflow-hidden">
@@ -62,7 +62,7 @@ def scheduled_function(scheduled_time, actual_time):
         </div>
 
         <p class="text-gray-800" id="counter-display">
-          The current value of the counter is <span id="counter-value">0</span>
+            The current value of the counter is <span id="counter-value" class="font-medium">0</span>.
         </p>
 
         <p class="text-gray-800">
