@@ -1,6 +1,7 @@
 # Welcome to DBOS!
 
 This is a template application using DBOS to run code on a (cron) schedule.
+To learn how to get started building cron applications with DBOS, check out [this quickstart](https://docs.dbos.dev/python/examples/cron-starter).
 
 ### Getting Started
 
