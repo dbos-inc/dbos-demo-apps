@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.3.10",
+    "@dbos-inc/dbos-sdk": "^2.4.20",
     "next": "15.1.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
