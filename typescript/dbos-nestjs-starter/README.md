@@ -1,6 +1,6 @@
 # Nest x DBOS
 
-This Sample app shows how to use DBOS workflows with a nest.js app, specifically allowing you to make DBOS workflows `Injectable` Nest services.
+This Sample app shows how to use DBOS workflows with a [nest.js](https://nestjs.com/) app, specifically allowing you to make DBOS workflows `Injectable` Nest services.
 
 ## Getting started
 To run this app locally, install dependencies and start your app:
@@ -10,10 +10,10 @@ npm install
 npx dbos start
 ```
 
-Send a request to [`http://localhost:8000`](http://localhost:3000) to get a greeting message.
+Send a request to [`http://localhost:3000`](http://localhost:3000) to get a greeting message.
 
 ```shell
-> curl localhost:8000 -s | jq
+> curl localhost:3000 -s | jq
 [
   {
     "greeting_name": "Complete-Chocolate",
