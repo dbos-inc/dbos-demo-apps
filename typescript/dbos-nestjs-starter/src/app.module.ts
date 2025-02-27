@@ -14,6 +14,7 @@ export function createDBOSProvider(token: string, name: string): Provider {
     inject: [],
   };
 }
+// You can create as many provider as you wish, identified by a unique token ("dbosProvider" in this case)
 const dbosProvider = createDBOSProvider("dbosProvider", "appservice");
 
 @Module({
