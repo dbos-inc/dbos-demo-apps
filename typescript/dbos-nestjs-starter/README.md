@@ -1,6 +1,9 @@
 # Nest x DBOS
 
-This Sample app shows how to use DBOS workflows with a [nest.js](https://nestjs.com/) app, specifically allowing you to make DBOS workflows `Injectable` Nest services.
+This Sample app shows how to use DBOS workflows with a [nest.js](https://nestjs.com/) app, specifically allowing you to make DBOS workflows `Injectable` Nest services. In summary, you will need:
+- To start DBOS when bootstraping Nest
+- To annotate your service methods with DBOS decorators to make them durable
+- To create a Nest provider with your service instantiated as a [DBOS configured class](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#decorating-instance-methods)
 
 ## Getting started
 
