@@ -7,7 +7,7 @@ const js = require("@eslint/js");
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended
+  recommendedConfig: js.configs.recommended,
 });
 
 module.exports = typescriptEslint.config({
@@ -17,10 +17,10 @@ module.exports = typescriptEslint.config({
   languageOptions: {
     parser: typescriptEslintParser,
     parserOptions: { project: "./tsconfig.json" },
-    globals: { ...globals.node, ...globals.es6 }
+    globals: { ...globals.node, ...globals.es6 },
   },
 
   rules: {},
 
-  ignores: ["**/*.test.ts"]
+  ignores: ["**/*.test.ts"],
 });

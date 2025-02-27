@@ -1,6 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { ConfiguredInstance, DBOS, InitContext } from "@dbos-inc/dbos-sdk";
-import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
+import {
+  uniqueNamesGenerator,
+  adjectives,
+  colors,
+  animals,
+} from "unique-names-generator";
 
 interface GreetingRecord {
   greeting_name: string;
@@ -34,15 +39,15 @@ export class AppService extends ConfiguredInstance {
 
   @DBOS.transaction()
   async insert(): Promise<string> {
-      const randomName: string = uniqueNamesGenerator({
-        dictionaries: [adjectives, colors, animals],
-        separator: '-',
-        length: 2,
-        style: 'capital',
-      });
-      return await DBOS.knexClient<GreetingRecord>("dbos_greetings").insert(
-          { greeting_name: randomName, greeting_note_content: "Hello World!" },
-          ["greeting_name", "greeting_note_content"],
-      )
+    const randomName: string = uniqueNamesGenerator({
+      dictionaries: [adjectives, colors, animals],
+      separator: "-",
+      length: 2,
+      style: "capital",
+    });
+    return await DBOS.knexClient<GreetingRecord>("dbos_greetings").insert(
+      { greeting_name: randomName, greeting_note_content: "Hello World!" },
+      ["greeting_name", "greeting_note_content"],
+    );
   }
 }

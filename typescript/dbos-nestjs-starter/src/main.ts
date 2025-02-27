@@ -6,7 +6,6 @@ import {
 import { AppModule } from "./app.module";
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
-
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -16,7 +15,7 @@ async function bootstrap() {
   await DBOS.launch({ nestApp: app });
   // Nest must be set to listen on 3000 and external networks to run on DBOS Cloud
   // You can also use an environment variables in dbos-config.yaml to set the port
-  await app.listen(DBOS.runtimeConfig?.port || 3000, '0.0.0.0');
+  await app.listen(DBOS.runtimeConfig?.port || 3000, "0.0.0.0");
 }
 
 bootstrap();

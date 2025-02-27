@@ -4,8 +4,8 @@ import { AppService } from "./app.service";
 @Controller()
 export class AppController {
   constructor(
-    @Inject('dbosProvider') private readonly appService: AppService,
-) {}
+    @Inject("dbosProvider") private readonly appService: AppService,
+  ) {}
 
   @Get()
   async getHello(): Promise<string> {

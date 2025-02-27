@@ -3,6 +3,7 @@
 This Sample app shows how to use DBOS workflows with a [nest.js](https://nestjs.com/) app, specifically allowing you to make DBOS workflows `Injectable` Nest services.
 
 ## Getting started
+
 To run this app locally, install dependencies and start your app:
 
 ```shell
@@ -37,9 +38,11 @@ Then, run this command to deploy your app:
 ```shell
 dbos-cloud app deploy
 ```
+
 </details>
 
 ## How does it work?
+
 First, configure main.ts to start DBOS (optionally register the Nest application web framework to attach the DBOS tracing middlewares):
 
 ```typescript
@@ -61,21 +64,26 @@ async function bootstrap() {
   await DBOS.launch({ nestApp: app });
   // Nest must be set to listen on 3000 and external networks to run on DBOS Cloud
   // You can also use an environment variables in dbos-config.yaml to set the port
-  await app.listen(DBOS.runtimeConfig?.port || 3000, '0.0.0.0');
+  await app.listen(DBOS.runtimeConfig?.port || 3000, "0.0.0.0");
 }
 
 bootstrap();
 ```
 
 Now, let's declare an `Injectable` Nest service implementing DBOS operations.
-DBOS operations are declared as static classes (because they use decorators). To create a Nest provider, we must work with an instance of the class and will use [DBOS configured instances](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#decorating-instance-methods). The snippet bellows shows how to do so.
+DBOS operations are declared within classes because they use decorators. To create a Nest provider, we must work with an instance of the class and will use [DBOS configured instances](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#decorating-instance-methods). The snippet bellows shows how to do so.
 The DBOS workflow has two steps: fetch an external API and insert a record in the database.
 
 ```typescript
 //app.service.ts
 import { Injectable } from "@nestjs/common";
 import { ConfiguredInstance, DBOS, InitContext } from "@dbos-inc/dbos-sdk";
-import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
+import {
+  uniqueNamesGenerator,
+  adjectives,
+  colors,
+  animals,
+} from "unique-names-generator";
 
 interface GreetingRecord {
   greeting_name: string;
@@ -109,16 +117,16 @@ export class AppService extends ConfiguredInstance {
 
   @DBOS.transaction()
   async insert(): Promise<string> {
-      const randomName: string = uniqueNamesGenerator({
-        dictionaries: [adjectives, colors, animals],
-        separator: '-',
-        length: 2,
-        style: 'capital',
-      });
-      return await DBOS.knexClient<GreetingRecord>("dbos_greetings").insert(
-          { greeting_name: randomName, greeting_note_content: "Hello World!" },
-          ["greeting_name", "greeting_note_content"],
-      )
+    const randomName: string = uniqueNamesGenerator({
+      dictionaries: [adjectives, colors, animals],
+      separator: "-",
+      length: 2,
+      style: "capital",
+    });
+    return await DBOS.knexClient<GreetingRecord>("dbos_greetings").insert(
+      { greeting_name: randomName, greeting_note_content: "Hello World!" },
+      ["greeting_name", "greeting_note_content"],
+    );
   }
 }
 ```
@@ -133,8 +141,8 @@ import { AppService } from "./app.service";
 @Controller()
 export class AppController {
   constructor(
-    @Inject('dbosProvider') private readonly appService: AppService,
-) {}
+    @Inject("dbosProvider") private readonly appService: AppService,
+  ) {}
 
   @Get()
   async getHello(): Promise<string> {
@@ -157,14 +165,14 @@ import { Provider } from "@nestjs/common/interfaces";
 // Here we use custom name as provider token, but you can also use a class name, JavaScript symbols or TypeScript enums
 // See https://docs.nestjs.com/fundamentals/custom-providers#non-class-based-provider-tokens
 export function createDBOSProvider(token: string, name: string): Provider {
-    return {
-      provide: token,
-      useFactory: () => {
-        return DBOS.configureInstance(AppService, name);
-      },
-      inject: [],
-    };
-  }
+  return {
+    provide: token,
+    useFactory: () => {
+      return DBOS.configureInstance(AppService, name);
+    },
+    inject: [],
+  };
+}
 const dbosProvider = createDBOSProvider("dbosProvider", "appservice");
 
 @Module({
@@ -172,6 +180,5 @@ const dbosProvider = createDBOSProvider("dbosProvider", "appservice");
   providers: [dbosProvider],
   controllers: [AppController],
 })
-
 export class AppModule {}
 ```
