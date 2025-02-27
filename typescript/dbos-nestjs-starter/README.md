@@ -40,7 +40,7 @@ dbos-cloud app deploy
 </details>
 
 ## How does it work?
-First, configure main.ts to start DBOS (optionally register the nest application to attach the DBOS tracing middlewares):
+First, configure main.ts to start DBOS (optionally register the Nest application web framework to attach the DBOS tracing middlewares):
 
 ```typescript
 // main.ts
