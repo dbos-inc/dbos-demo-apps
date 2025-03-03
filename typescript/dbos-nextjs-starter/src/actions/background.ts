@@ -1,7 +1,7 @@
 "use server";
 
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import { MyWorkflow } from "@/dbos/operations";
+import { MyWorkflow } from "@dbos/operations";
 
 // This action uses DBOS to idempotently launch a crashproof background task with N steps.
 export async function startBackgroundTask(taskID: string, steps: number) {
