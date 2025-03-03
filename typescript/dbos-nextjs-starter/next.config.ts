@@ -1,27 +1,16 @@
 import type { NextConfig } from "next";
 
-import path from "path";
-
 const nextConfig: NextConfig = {
   /* config options here */
   webpack: (config, { isServer, dev }) => {
     // Treat @dbos-inc/dbos-sdk as an external package for client builds
     if (isServer) {
-      config.output.pathinfo = true; // ✅ Shows which files are bundled
       config.externals = [
         ...config.externals,
         {
           "@dbos-inc/dbos-sdk": "commonjs @dbos-inc/dbos-sdk",
-          //"@dbos/operations": "commonjs @dbos/operations",
         },
-
-        ({context: _contextany, request}: {context: any, request: any}, callback: any) => {
-          if (request.includes("operations")) {
-            console.log(`🚀 Marking as external: ${request}`);
-            return callback(null, `commonjs ${request}`);
-          }
-          callback();
-        },
+        /^@dbos\/.+$/, // ✅ Treat ALL `@dbos/*` imports as external
       ];
     }
 
