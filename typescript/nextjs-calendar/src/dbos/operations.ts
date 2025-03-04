@@ -10,13 +10,17 @@ import { WebSocket } from "ws";
 
 import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
 import { DBTrigger, TriggerOperation } from '@dbos-inc/dbos-dbtriggers';
+import { DBOSBored } from "./dbos_bored";
 
 export interface SchedulerAppGlobals {
   webSocketClients?: Set<WebSocket>;
   reportSes ?: DBOS_SES;
+  DBOSBored ?: typeof DBOSBored;
 };
 
 const gThis = globalThis as SchedulerAppGlobals;
+gThis.DBOSBored = DBOSBored;
+
 if (!gThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
   gThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
 }
