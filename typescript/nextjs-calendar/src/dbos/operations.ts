@@ -12,16 +12,9 @@ import { WebSocket } from "ws";
 import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
 import { DBTrigger, TriggerOperation } from '@dbos-inc/dbos-dbtriggers';
 
-export interface SchedulerAppGlobals {
-  webSocketClients?: Set<WebSocket>;
-  reportSes ?: DBOS_SES;
-  DBOSBored ?: typeof DBOSBored;
-};
+globalThis.DBOSBored = DBOSBored;
 
-const gThis = globalThis as SchedulerAppGlobals;
-gThis.DBOSBored = DBOSBored;
-
-if (!gThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
+if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
   let ok = true;
   if (!process.env['AWS_REGION']) {
     ok = false;
@@ -36,7 +29,7 @@ if (!gThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['
     DBOS.logger.warn('`REPORT_EMAIL_TO_ADDRESS` and `REPORT_EMAIL_FROM_ADDRESS` are set, but `AWS_SECRET_ACCESS_KEY` is not.');
   }
   if (ok) {
-    gThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
+    globalThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
   }
 }
 
@@ -55,8 +48,8 @@ export class SchedulerOps
 
   // Note, while this is not a @DBOS.step, DBOS_SES.sendEmail is.
   static async sendStatusEmail(subject: string, body: string) {
-    if (!gThis.reportSes) return;
-    await gThis.reportSes.sendEmail({
+    if (!globalThis.reportSes) return;
+    await globalThis.reportSes.sendEmail({
       to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
       from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
       subject: subject,
@@ -117,7 +110,7 @@ export class SchedulerOps
   // Function to broadcast calendar or result updates
   // Notify WebSockets
   static notifyListeners(type: string) {
-    const gss = (globalThis as SchedulerAppGlobals).webSocketClients;
+    const gss = globalThis.webSocketClients;
     DBOS.logger.debug(`WebSockets: Sending update '${type}' to ${gss?.size} clients`);
     gss?.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {

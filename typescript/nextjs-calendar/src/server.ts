@@ -10,8 +10,6 @@ import { WebSocketServer, WebSocket } from 'ws';
 import "./module-aliases";
 import { DBOS, parseConfigFile } from '@dbos-inc/dbos-sdk';
 
-import { SchedulerAppGlobals  } from './dbos/operations';
-
 // This is to handle files, in case entrypoints is not manually specified
 // We are looking for .js server code, in the 'dbos/' subdirectory.
 export async function loadAllDBOSServerFiles() {
@@ -83,7 +81,7 @@ async function main() {
   // Create WebSocket server
   const wss = new WebSocketServer({ noServer: true });
   const gss: Set<WebSocket> = new Set();
-  (globalThis as SchedulerAppGlobals).webSocketClients = gss;
+  globalThis.webSocketClients = gss;
   wss.on('connection', (ws: WebSocket) => {
     DBOS.logger.debug('Client connected to WebSocket');
     gss.add(ws);
