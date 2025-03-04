@@ -1,0 +1,11 @@
+{
+  "name": "monorepo",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc",
+    "dev": "nodemon"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}
