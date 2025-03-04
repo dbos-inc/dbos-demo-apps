@@ -3,6 +3,7 @@ import next from 'next';
 import http, { IncomingMessage, ServerResponse } from 'http';
 import path from 'path';
 import fg from 'fast-glob';
+import { pathToFileURL } from 'url';
 
 import { WebSocketServer, WebSocket } from 'ws';
 
@@ -28,9 +29,8 @@ export async function loadAllDBOSServerFiles() {
     if (file.endsWith('.d.ts')) continue;
     try {
       // Dynamically load the file
-      //  This is for commonjs - for modules use "await import(pathToFileURL(file).href);"
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      await require(file);
+      //  (For CommonJS, do `await require(file);` instead.)
+      await await import(pathToFileURL(file).href);
       console.log(`Loaded: ${file}`);
       loaded.push(file);
     } catch (error) {

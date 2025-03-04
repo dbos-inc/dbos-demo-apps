@@ -13,7 +13,6 @@ const nextConfig: NextConfig = {
         ...config.externals,
         {
           "@dbos-inc/dbos-sdk": "commonjs @dbos-inc/dbos-sdk",
-          "@dbos-inc/dbos-random": "commonjs @dbos-inc/dbos-random",
         },
         /^@dbos\/.+$/, // Treat ALL `@dbos/*` imports (from src/dbos) as external
       ];
