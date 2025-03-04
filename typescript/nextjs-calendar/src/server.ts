@@ -3,11 +3,11 @@ import next from 'next';
 import http, { IncomingMessage, ServerResponse } from 'http';
 import path from 'path';
 import fg from 'fast-glob';
+import { pathToFileURL } from 'url';
 
 import { WebSocketServer, WebSocket } from 'ws';
 
-import { pathToFileURL } from 'url';
-
+import "./module-aliases";
 import { DBOS, parseConfigFile } from '@dbos-inc/dbos-sdk';
 
 import { SchedulerAppGlobals  } from './dbos/operations';
@@ -29,7 +29,8 @@ export async function loadAllDBOSServerFiles() {
     if (file.endsWith('.d.ts')) continue;
     try {
       // Dynamically load the file
-      await import(pathToFileURL(file).href);
+      //  (For CommonJS, do `await require(file);` instead.)
+      await await import(pathToFileURL(file).href);
       console.log(`Loaded: ${file}`);
       loaded.push(file);
     } catch (error) {
@@ -123,5 +124,9 @@ async function main() {
 
 // Only start the server when this file is run directly from Node
 if (require.main === module) {
-  main().catch(console.log);
+  main().catch((error) => {
+    console.error('❌ Server failed to start:', error);
+    DBOS.logger.error('❌ Server failed to start:', error);
+    process.exit(1);  // Ensure the process exits on failure
+  });
 }

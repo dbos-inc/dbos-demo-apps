@@ -4,18 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "npx dbos migrate && nodemon",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "next build && tsc",
+    "start": "NODE_ENV=production node dist/src/server.js",
+    "lint": "next lint --fix"
   },
   "dependencies": {
     "@dbos-inc/dbos-sdk": "^2.4.20",
+    "module-alias": "^2.2.3",
     "next": "15.1.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/module-alias": "^2.0.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

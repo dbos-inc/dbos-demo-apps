@@ -15,11 +15,29 @@ import { DBTrigger, TriggerOperation } from '@dbos-inc/dbos-dbtriggers';
 export interface SchedulerAppGlobals {
   webSocketClients?: Set<WebSocket>;
   reportSes ?: DBOS_SES;
+  DBOSBored ?: typeof DBOSBored;
 };
 
 const gThis = globalThis as SchedulerAppGlobals;
+gThis.DBOSBored = DBOSBored;
+
 if (!gThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
-  gThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
+  let ok = true;
+  if (!process.env['AWS_REGION']) {
+    ok = false;
+    DBOS.logger.warn('`REPORT_EMAIL_TO_ADDRESS` and `REPORT_EMAIL_FROM_ADDRESS` are set, but `AWS_REGION` is not.');
+  }
+  if (!process.env['AWS_ACCESS_KEY_ID']) {
+    ok = false;
+    DBOS.logger.warn('`REPORT_EMAIL_TO_ADDRESS` and `REPORT_EMAIL_FROM_ADDRESS` are set, but `AWS_ACCESS_KEY_ID` is not.');
+  }
+  if (!process.env['AWS_SECRET_ACCESS_KEY']) {
+    ok = false;
+    DBOS.logger.warn('`REPORT_EMAIL_TO_ADDRESS` and `REPORT_EMAIL_FROM_ADDRESS` are set, but `AWS_SECRET_ACCESS_KEY` is not.');
+  }
+  if (ok) {
+    gThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
+  }
 }
 
 // Welcome to DBOS!

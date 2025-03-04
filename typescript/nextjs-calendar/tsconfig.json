@@ -14,7 +14,7 @@
     "noEmit": false,
     "outDir": "./dist",
     "esModuleInterop": true,
-    "module": "Node16",
+    "module": "node16",
     "moduleResolution": "node16",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -28,6 +28,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@dbos/*": [
+        "./src/dbos/*"
       ]
     }
   },
@@ -38,7 +41,7 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules", 
+    "node_modules",
     "dist"
   ]
 }
