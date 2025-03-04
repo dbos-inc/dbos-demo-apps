@@ -1,11 +1,31 @@
 {
-  "name": "monorepo",
-  "version": "0.0.1",
-  "scripts": {
-    "build": "tsc",
-    "dev": "nodemon"
-  },
-  "workspaces": [
-    "packages/*"
-  ]
-}
+    "name": "dbos-monorepo-example",
+    "version": "0.0.1",
+    "private": true,
+    "workspaces": [
+      "packages/*"
+    ],
+    "scripts": {
+      "build": "npm run build --workspaces",
+      "build:program1": "npm run build --workspace=program1",
+      "build:program2": "npm run build --workspace=program2",
+
+      "start:program1": "npm run start --workspace=program1",
+      "start:program2": "npm run start --workspace=program2",
+
+      "dev:program1": "npm run dev --workspace=program1",
+      "dev:program2": "npm run dev --workspace=program2",
+
+      "prepare-deploy:program1": "npm install --package-lock-only --prefix packages/program1",
+      "prepare-deploy:program2": "npm install --package-lock-only --prefix packages/program2",
+
+      "deploy:program1": "cd packages/program1 && npx dbos-cloud app deploy",
+      "deploy:program2": "cd packages/program2 && npx dbos-cloud app deploy",
+
+      "clean": "rimraf \"{packages/*/dist,packages/*/node_modules,node_modules}\""
+    },
+    "devDependencies": {
+      "rimraf": "^5.0.5",
+      "typescript": "^5.3.3"
+    }
+  }

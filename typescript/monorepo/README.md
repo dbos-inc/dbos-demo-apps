@@ -2,6 +2,10 @@
 
 This is a template monorepo showcasing how to independently deploy multiple apps to DBOS Cloud. The mono repo contains two packages, both API servers.
 
+This guide focuses on using `npm` as the package manager.
+
+- npm workspaces https://docs.npmjs.com/cli/v8/using-npm/workspaces
+
 ### Repo structure
 
 ```shell
@@ -14,7 +18,21 @@ This is a template monorepo showcasing how to independently deploy multiple apps
         └── src
 ```
 
-### Development mode
+### Local development
+
+First, make sure you have a postgres database running and exported the correct PGPASSWORD environment variable.
+Then, you can run:
+
+```shell
+npm install
+npm run build
+npm run start:program1
+npm run start:program2
+```
+
+To start both programs.
+
+Note when you do this, `npm install` will hoist dependencies from each package and install them in a global `node_modules` folder at the root of the monorepo.
 
 ### Getting Started
 
