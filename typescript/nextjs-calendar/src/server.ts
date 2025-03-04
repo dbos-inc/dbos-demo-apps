@@ -6,8 +6,6 @@ import fg from 'fast-glob';
 
 import { WebSocketServer, WebSocket } from 'ws';
 
-import { pathToFileURL } from 'url';
-
 import "./module-aliases";
 import { DBOS, parseConfigFile } from '@dbos-inc/dbos-sdk';
 
@@ -30,7 +28,9 @@ export async function loadAllDBOSServerFiles() {
     if (file.endsWith('.d.ts')) continue;
     try {
       // Dynamically load the file
-      await import(pathToFileURL(file).href);
+      //  This is for commonjs - for modules use "await import(pathToFileURL(file).href);"
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      await require(file);
       console.log(`Loaded: ${file}`);
       loaded.push(file);
     } catch (error) {

@@ -14,9 +14,8 @@
     "noEmit": false,
     "outDir": "./dist",
     "esModuleInterop": true,
-    "module": "Node16",
-    "moduleResolution": "node16",
-    "resolveJsonModule": true,
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
@@ -26,9 +25,14 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@dbos/*": ["./src/dbos/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ],
+      "@dbos/*": [
+        "./src/dbos/*"
+      ]
+    },
+    "resolveJsonModule": true
   },
   "include": [
     "next-env.d.ts",
@@ -37,7 +41,7 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules", 
+    "node_modules",
     "dist"
   ]
 }

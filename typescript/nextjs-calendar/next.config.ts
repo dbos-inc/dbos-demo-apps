@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
+import "module-alias/register";
+
 const nextConfig: NextConfig = {
-  output: "standalone", // ✅ Forces Next.js to treat API routes as runtime-only
+  output: "standalone",
 
   /* config options here */
   webpack: (config, { isServer, dev: _dev }) => {
