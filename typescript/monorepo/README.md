@@ -1,21 +1,37 @@
 # Welcome to DBOS!
 
-This is a template monorepo showcasing how to independently deploy multiple apps to DBOS Cloud. The mono repo contains two packages, both API servers.
-
-This guide focuses on using `npm` as the package manager.
-
-- npm workspaces https://docs.npmjs.com/cli/v8/using-npm/workspaces
+This is a template monorepo showcasing how to independently deploy multiple apps to DBOS Cloud. The mono repo contains two packages, both API servers. The guide focuses on using `npm` as the package manager and helps you both develop locally and deploy to DBOS Cloud.
 
 ### Repo structure
 
+We setup the mono repo using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces)
+
 ```shell
-└── packages
-    ├── program1
-    │   ├── html
-    │   └── src
-    └── program2
-        ├── html
-        └── src
+├── package.json
+├── packages
+│   ├── program1
+│   │   ├── README.md
+│   │   ├── dbos-config.yaml
+│   │   ├── html
+│   │   │   └── app.html
+│   │   ├── nodemon.json
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   └── main.ts
+│   │   └── tsconfig.json
+│   └── program2
+│       ├── README.md
+│       ├── dbos-config.yaml
+│       ├── html
+│       │   └── app.html
+│       ├── nodemon.json
+│       ├── package-lock.json
+│       ├── package.json
+│       ├── src
+│       │   └── main.ts
+│       └── tsconfig.json
+└── start_postgres_docker.js
 ```
 
 ### Local development

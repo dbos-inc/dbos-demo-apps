@@ -20,12 +20,6 @@
       "prepare-deploy:program2": "npm install --package-lock-only --prefix packages/program2",
 
       "deploy:program1": "cd packages/program1 && npx dbos-cloud app deploy",
-      "deploy:program2": "cd packages/program2 && npx dbos-cloud app deploy",
-
-      "clean": "rimraf \"{packages/*/dist,packages/*/node_modules,node_modules}\""
-    },
-    "devDependencies": {
-      "rimraf": "^5.0.5",
-      "typescript": "^5.3.3"
+      "deploy:program2": "cd packages/program2 && npx dbos-cloud app deploy"
     }
   }
