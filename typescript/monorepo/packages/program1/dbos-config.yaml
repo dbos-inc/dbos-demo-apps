@@ -5,6 +5,7 @@
 
 language: node
 runtimeConfig:
+  port: 4000
   start:
     - node dist/main.js
 database:
