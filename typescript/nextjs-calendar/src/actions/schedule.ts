@@ -1,7 +1,7 @@
 'use server';
 
-import { ScheduleDBOps, SchedulerOps } from '@/dbos/operations';
-import { schedulableTasks } from '@/dbos/tasks';
+import { ScheduleDBOps, SchedulerOps } from '@dbos/operations';
+import { schedulableTasks } from '@dbos/tasks';
 import { ScheduleUIRecord, ResultsUIRecord } from '@/types/models';
 
 // Fetch all schedule items

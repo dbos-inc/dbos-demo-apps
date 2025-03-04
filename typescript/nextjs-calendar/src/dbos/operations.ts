@@ -2,8 +2,7 @@ import { DBOS, SchedulerMode } from "@dbos-inc/dbos-sdk";
 
 import { TaskOption } from "@/types/models";
 import { doTaskFetch, schedulableTasks } from "./tasks";
-import { DBOSBored } from "./dbos_bored";
-export { DBOSBored };
+export { DBOSBored } from "./dbos_bored";
 import { ScheduleDBOps } from "./dbtransactions";
 export { ScheduleDBOps };
 import { getOccurrencesAt } from "../types/taskschedule";
