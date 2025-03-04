@@ -7,7 +7,7 @@ This is a template app built with [DBOS](https://dbos.dev) and [Next.js](https:/
 This template can be used in numerous ways:
 - Create a cloud instance of this app with [DBOS Cloud Console](https://console.dbos.dev/launch) GitHub integration and clone the code from GitHub.
 - Create a cloud instance of this app with [DBOS Cloud Console](https://console.dbos.dev/launch) and download the code via the console.
-- Create a local instance of this app with [`npx @dbos-inc/create`]
+- Create a local instance of this app with [`npx @dbos-inc/create`](https://docs.dbos.dev/typescript/reference/tools/cli#npx-dbos-inccreate)
 - Use another method, such as `git clone`, to obtain a local copy of the files
 
 ### Using GitHub Integration With DBOS Cloud
