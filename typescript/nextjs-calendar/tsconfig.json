@@ -14,8 +14,9 @@
     "noEmit": false,
     "outDir": "./dist",
     "esModuleInterop": true,
-    "module": "CommonJS",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
@@ -31,8 +32,7 @@
       "@dbos/*": [
         "./src/dbos/*"
       ]
-    },
-    "resolveJsonModule": true
+    }
   },
   "include": [
     "next-env.d.ts",
