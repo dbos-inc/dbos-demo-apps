@@ -24,10 +24,10 @@ After a bit of launch activity, you will be presented with:
 - A URL for accessing the app
 - Monitoring dashboards
 - Management options
-- Code download
+- Code download, for local development
 
 ## Running Locally
-If you [started out in DBOS Cloud](#running-in-dbos-cloud), you can download your code to continue local development.  Or, you can [clone the code from the git repository]().
+If you [started out in DBOS Cloud](#running-in-dbos-cloud), you can download your code to your development environment.  Or, you can [clone the code from the git repository](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/nextjs-calendar).
 
 Once you have a copy of the DBOS Task Scheduler locally, run the following:
 
@@ -217,20 +217,20 @@ These migrations will be run by `npx dbos migrate`, because Knex migrations are 
 
 ### Sending Email with Amazon SES
 
-Sending email with task results is done using Amazon SES, and the [@dbos-inc/dbos-email-ses](https://www.npmjs.com/package/@dbos-inc/dbos-email-ses) package.
+The optional sending of task results emails is done using Amazon SES, and the [@dbos-inc/dbos-email-ses](https://www.npmjs.com/package/@dbos-inc/dbos-email-ses) package.
 
 All that is necessary, as shown in `src/dbos/operations.ts`, is to configure the email instance (using environment variables):
 ```typescript
-if (!gThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
-  gThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
+if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
+  globalThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
 }
 ```
 
 And then call `send`:
 ```typescript
   static async sendStatusEmail(subject: string, body: string) {
-    if (!gThis.reportSes) return;
-    await gThis.reportSes.sendEmail({
+    if (!globalThis.reportSes) return;
+    await globalThis.reportSes.sendEmail({
       to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
       from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
       subject: subject,
@@ -318,7 +318,7 @@ Another thing that is not generally possible in Next.js is real-time updates to 
 
 ```typescript
   static notifyListeners(type: string) {
-    const gss = (globalThis as SchedulerAppGlobals).webSocketClients;
+    const gss = globalThis.webSocketClients;
     DBOS.logger.debug(`WebSockets: Sending update '${type}' to ${gss?.size} clients`);
     gss?.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
@@ -329,7 +329,7 @@ Another thing that is not generally possible in Next.js is real-time updates to 
 ```
 
 ### Database Notifications
-While WebSockets can be used to deliver notifications from DBOS to the client, a challenge arises if the database update was running on another viratual machine in the application group.  To detect this, we can watch for changes in the underlying database table, and use those updates to broadcast notifications to the WebSockets.
+While WebSockets can be used to deliver notifications from DBOS to the client, a challenge arises if the database update was running on another virtual machine in the application group.  To detect this, we can watch for changes in the underlying database table, and use those updates to broadcast notifications to the WebSockets.
 
 ```typescript
   @DBTrigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: true})
@@ -410,6 +410,24 @@ In detail:
 - `noEmit`, `outDir`, and `exclude`: Many Next.js projects do not emit the `.js` files corresponding to the `.ts` files, but this app needs them for custom server logic, and to load DBOS logic before requests come in.
 
 ### `next.config.ts`
+It is important keep the DBOS library, and any workflow functions or other code used by DBOS, external to next.js bundles.  This prevents incomplete, duplicate, and incorrect registration of functions.  For this project, we import all DBOS logic with the prefix `@dbos/`, and ask the bundler to treat such files as external:
+```typescript
+  webpack: (config, { isServer, dev: _dev }) => {
+    // Treat @dbos-inc/dbos-sdk and code using it as an external package for builds
+    if (isServer) {
+      config.externals = [
+        ...config.externals,
+        {
+          "@dbos-inc/dbos-sdk": "commonjs @dbos-inc/dbos-sdk",
+        },
+        /^@dbos\/.+$/, // Treat ALL `@dbos/*` imports (from src/dbos) as external
+      ];
+    }
+
+    return config;
+  },
+```
+
 To allow server actions to work in DBOS Cloud, the following was added:
 ```typescript
   experimental: {

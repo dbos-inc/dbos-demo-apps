@@ -114,7 +114,7 @@ export default function CalendarView() {
 
       for (const item of scheduleData) {
         if (!calRange) break;
-        const occasions = getOccurrences(item, calRange.start, calRange.end);
+        const occasions = getOccurrences(item, subDays(calRange.start, 1), addDays(calRange.end, 1));
         for (const occasion of occasions) {
           formattedSchedules.push({
             title: `${item.name}`,
