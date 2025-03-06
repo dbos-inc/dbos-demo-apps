@@ -27,7 +27,7 @@ MAX_CONCURRENT_REQUESTS_PER_FILE = 100
 FILE_CHUNK_SIZE_BYTES = 16*1024*1024
 
 ## S3 Client
-s3 = boto3.client('s3', config=Config(retries={"max_attempts": 5}, max_pool_connections=MAX_FILES_PER_WORKER * MAX_CONCURRENT_REQUESTS_PER_FILE))
+s3 = boto3.client('s3', config=Config(max_pool_connections=MAX_FILES_PER_WORKER * MAX_CONCURRENT_REQUESTS_PER_FILE))
 
 @DBOS.step(retries_allowed=True, max_attempts=3)
 def s3_list_bucket(bucket: str, prefix: str):
