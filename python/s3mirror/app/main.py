@@ -18,8 +18,8 @@ DBOS(fastapi=app)
 
 ## Tuning Parameters
 # Running in DBOS Cloud; S3 max requests per prefix is around 3500
-# This processes up to 1800 requests at once, leaving some room for others using the bucket/prefix
-MAX_FILES_AT_A_TIME = 18
+# This processes up to 3000 requests at once, leaving some room for others using the bucket/prefix
+MAX_FILES_AT_A_TIME = 30
 MAX_FILES_PER_WORKER = 3
 
 # See https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance.html
