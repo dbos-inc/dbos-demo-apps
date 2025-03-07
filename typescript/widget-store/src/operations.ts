@@ -75,8 +75,8 @@ export class Shop {
     // Wait for workflow to give us the order URL
     const orderID = await DBOS.getEvent<string>(key, ORDER_ID_EVENT);
     if (orderID === null) {
-      DBOS.logger.error("retreving order ID failed");
-      throw new DBOSResponseError("Error retreving order ID", 500);
+      DBOS.logger.error("retrieving order ID failed");
+      throw new DBOSResponseError("Error retrieving order ID", 500);
     }
 
     // Return the order status URL to the client
