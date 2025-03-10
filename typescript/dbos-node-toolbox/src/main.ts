@@ -56,9 +56,9 @@ export class Toolbox {
   //// Scheduled workflows
   //////////////////////////////////
 
-  @DBOS.scheduled({ crontab: "* * * * *", mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
+  @DBOS.scheduled({ crontab: "*/15 * * * *", mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
   @DBOS.workflow()
-  static async runEveryMinute(scheduledTime: Date, startTime: Date) {
+  static async runEvery15Min(scheduledTime: Date, startTime: Date) {
     DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
   }
 
