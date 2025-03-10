@@ -61,9 +61,9 @@ def queue_workflow():
 ##################################
 
 
-@DBOS.scheduled("* * * * *")
+@DBOS.scheduled("*/15 * * * *")
 @DBOS.workflow()
-def run_every_minute(scheduled_time, actual_time):
+def run_every_15min(scheduled_time, actual_time):
     DBOS.logger.info(f"I am a scheduled workflow. It is currently {scheduled_time}.")
 
 
