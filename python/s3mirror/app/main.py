@@ -205,3 +205,8 @@ def transfer_status(transfer_id: str):
         'rate': transfer_rate,
         'filewise': filewise_status
     }
+
+# Finally, here is the crash endpoint. It crashes your app. For demonstration purposes only. :)
+@app.post("/crash_application")
+def crash_application():
+    os._exit(1)
