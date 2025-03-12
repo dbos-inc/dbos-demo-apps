@@ -356,7 +356,7 @@ As is customary, `package.json` contains a list of the project's dependencies, f
 ```json
   "scripts": {
     "dev": "npx dbos migrate && nodemon",
-    "build": "next build && tsc",
+    "build": "tsc && next build",
     "start": "NODE_ENV=production node dist/src/server.js",
     "test": "npx dbos migrate && jest --detectOpenHandles",
     "lint": "next lint --fix"
@@ -397,6 +397,14 @@ While `tsconfig.json` is described in detail elsewhere, please note that the fol
     "noEmit": false,
     "outDir": "./dist",
   },
+  "paths": {
+    "@/*": [
+      "./src/*"
+    ],
+    "@dbos/*": [
+      "./src/dbos/*"
+    ]
+  },
   "exclude": [
     "node_modules", 
     "dist"
@@ -408,6 +416,7 @@ In detail:
 - `experimentalDecorators`: Used by the DBOS decorator framework
 - `emitDecoratorMetadata`: Used by the DBOS decorator framework
 - `noEmit`, `outDir`, and `exclude`: Many Next.js projects do not emit the `.js` files corresponding to the `.ts` files, but this app needs them for custom server logic, and to load DBOS logic before requests come in.
+- `paths`: These are set to allow `@` and `@dbos` as module aliases within the code.  `@dbos` is handy for identifying imports that should not be subject to bundling.
 
 ### `next.config.ts`
 It is important keep the DBOS library, and any workflow functions or other code used by DBOS, external to next.js bundles.  This prevents incomplete, duplicate, and incorrect registration of functions.  For this project, we import all DBOS logic with the prefix `@dbos/`, and ask the bundler to treat such files as external:
@@ -436,8 +445,6 @@ To allow server actions to work in DBOS Cloud, the following was added:
     },
   },
 ```
-
-Changes to this file are also needed to preserve the class and function names of DBOS workflows, in case the code is being minimized.
 
 ### `dbos-config.yaml`
 [`dbos-config.yaml`](https://docs.dbos.dev/typescript/reference/configuration) sets up important operational aspects, such as the database migration scripts and the environment variables for sending email.
