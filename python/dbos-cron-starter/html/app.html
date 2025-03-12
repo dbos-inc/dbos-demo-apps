@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico"
+      type="image/x-icon"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <title>DBOS Toolbox</title>
+    <style>
+      .hljs {
+        /* Add these two lines to the existing .hljs rule */
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+      }
+
+      /* Add these two new rules */
+      pre {
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+      }
+
+      pre code {
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+      }
+
+      .hljs {
+        background: #f6f8fa;
+        padding: 0.75em 0.25em 0.75em 0.75em;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .step-highlight {
+        background-color: #fff3b4;
+        display: block;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen font-sans">
+    <div class="max-w-2xl mx-auto py-12 px-4">
+      <div class="bg-white rounded-lg shadow-lg p-8 space-y-8">
+        <h1 class="text-3xl font-bold text-gray-900">Welcome to the DBOS Cron Starter!</h1>
+        <p class="text-gray-800">
+          DBOS lets you easily run code on a schedule in the cloud. For example, this app runs the following function
+          every minute, updating an in-memory counter:
+        </p>
+
+        <div class="bg-gray-100 rounded-lg overflow-hidden">
+          <pre><code class="python">@DBOS.scheduled("* * * * *")
+@DBOS.step()
+def scheduled_function(scheduled_time, actual_time):
+    global counter
+    counter += 1
+    DBOS.logger.info(f"At {scheduled_time}, incremented counter to {counter}")</code></pre>
+        </div>
+
+        <p class="text-gray-800" id="counter-display">
+            The current value of the counter is <span id="counter-value" class="font-bold">0</span>.
+        </p>
+
+        <p class="text-gray-800">
+          To use DBOS scheduling, simply annotate your Python function with
+          <code class="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-sm">@DBOS.scheduled</code>, providing a schedule
+          in
+          <a
+            href="https://en.wikipedia.org/wiki/Cron"
+            target="_blank"
+            class="text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            crontab
+          </a>
+          syntax. For example, the schedule
+          <code class="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-sm">* * * * *</code> means "run every minute."
+        </p>
+
+        <div class="space-y-6">
+          <p class="text-gray-800 font-medium">To get started developing locally:</p>
+          <ul class="space-y-4">
+            <li class="flex items-start">
+              <span class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                <span class="text-blue-600 text-sm font-medium">1</span>
+              </span>
+              <code class="bg-gray-100 px-3 py-1 rounded font-mono text-sm">pip install dbos</code>
+            </li>
+            <li class="flex items-start">
+              <span class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                <span class="text-blue-600 text-sm font-medium">2</span>
+              </span>
+              <code class="bg-gray-100 px-3 py-1 rounded font-mono text-sm"
+                >dbos init --template dbos-cron-starter</code
+              >
+            </li>
+            <li class="flex items-start">
+              <span class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                <span class="text-blue-600 text-sm font-medium">3</span>
+              </span>
+              Edit <code class="bg-gray-100 px-3 py-1 rounded font-mono text-sm">app/main.py</code> to start building!
+            </li>
+          </ul>
+        </div>
+        <p class="text-gray-800">
+          Check out the
+          <a
+            href="https://docs.dbos.dev/python/examples/cron-starter"
+            target="_blank"
+            class="text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            Cloud Cron Quickstart
+          </a>
+          to learn how to build cron applications with DBOS!
+        </p>
+      </div>
+    </div>
+    <script>
+      hljs.highlightAll();
+    </script>
+
+    <script>
+      function updateCounter() {
+        fetch("/counter")
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("counter-value").textContent = data.counter;
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            document.getElementById("counter-value").textContent = "error";
+          });
+      }
+
+      // Update immediately and then every 10 seconds
+      updateCounter();
+      setInterval(updateCounter, 10000);
+    </script>
+  </body>
+</html>

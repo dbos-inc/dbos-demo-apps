@@ -1,16 +1,15 @@
 # To enable auto-completion and validation for this file in VSCode, install the RedHat YAML extension
 # https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml
 
-# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-py/main/dbos/dbos-config.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-ts/main/dbos-config.schema.json
 
-name: dbos-ai-starter
-language: python
+language: node
 runtimeConfig:
   start:
-    - "fastapi run app/main.py"
+    - node dist/main.js
 database:
   migrate:
     - echo 'No migrations specified'
 telemetry:
   logs:
-    logLevel: INFO
+    logLevel: 'info'

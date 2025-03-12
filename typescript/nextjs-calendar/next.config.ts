@@ -1,32 +1,21 @@
 import type { NextConfig } from "next";
 
+import "module-alias/register";
+
 const nextConfig: NextConfig = {
+  output: "standalone",
+
   /* config options here */
-  webpack: (config, { isServer, dev }) => {
-    // Treat @dbos-inc/dbos-sdk as an external package for client builds
-    config.externals = [
-      ...config.externals,
-      {
-        "@dbos-inc/dbos-sdk": "commonjs @dbos-inc/dbos-sdk",
-      },
-    ];
-
-    if (isServer || dev) {
-      //If the minimizer is causing problems with class / function names,
-      //  consider the following.
-      const TerserPlugin = require('terser-webpack-plugin');
-
-      config.optimization.minimizer = [
-        new TerserPlugin({
-          terserOptions: {
-            keep_classnames: true, // Preserve class names
-            keep_fnames: true,    // Preserve function names
-          },
-        }),
+  webpack: (config, { isServer, dev: _dev }) => {
+    // Treat @dbos-inc/dbos-sdk and code using it as an external package for builds
+    if (isServer) {
+      config.externals = [
+        ...config.externals,
+        {
+          "@dbos-inc/dbos-sdk": "commonjs @dbos-inc/dbos-sdk",
+        },
+        /^@dbos\/.+$/, // Treat ALL `@dbos/*` imports (from src/dbos) as external
       ];
-
-      // Or, more draconian:
-      // config.optimization.minimize = false;
     }
 
     return config;

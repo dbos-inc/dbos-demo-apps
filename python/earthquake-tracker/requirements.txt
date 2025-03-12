@@ -15,7 +15,7 @@ charset-normalizer==3.4.1
 click==8.1.8
 colorama==0.4.6; sys_platform == "win32" or platform_system == "Windows"
 cryptography==44.0.0
-dbos==0.20.0
+dbos==0.23.0
 deprecated==1.2.18
 dnspython==2.7.0
 docker==7.1.0
@@ -100,6 +100,6 @@ uvicorn[standard]==0.34.0
 uvloop==0.21.0; (sys_platform != "cygwin" and sys_platform != "win32") and platform_python_implementation != "PyPy"
 watchdog==6.0.0; platform_system != "Darwin"
 watchfiles==1.0.4
-websockets==14.2
+websockets==15.0.1
 wrapt==1.17.2
 zipp==3.21.0

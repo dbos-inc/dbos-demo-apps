@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npx dbos migrate && nodemon",
-    "build": "next build && tsc",
+    "build": "tsc && next build",
     "start": "NODE_ENV=production node dist/src/server.js",
     "test": "npx dbos migrate && jest --detectOpenHandles",
     "lint": "next lint --fix"
@@ -13,7 +13,7 @@
     "@dbos-inc/dbos-dbtriggers": "^2.2.10-preview.g90e74a1e32",
     "@dbos-inc/dbos-email-ses": "^2.1.17",
     "@dbos-inc/dbos-random": "^2.1.17",
-    "@dbos-inc/dbos-sdk": "^2.1.17",
+    "@dbos-inc/dbos-sdk": "^2.5.16",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.1",
@@ -24,7 +24,8 @@
     "dompurify": "^3.2.3",
     "fast-glob": "^3.3.3",
     "knex": "^3.1.0",
-    "next": "15.1.4",
+    "module-alias": "^2.2.3",
+    "next": "15.2.1",
     "react": "^19.0.0",
     "react-big-calendar": "^1.17.1",
     "react-dom": "^19.0.0",
@@ -35,6 +36,7 @@
     "@dbos-inc/dbos-cloud": "^2.0.2",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^29.5.14",
+    "@types/module-alias": "^2.0.4",
     "@types/node": "^20.17.16",
     "@types/react": "^19",
     "@types/react-big-calendar": "^1.16.1",
@@ -46,7 +48,6 @@
     "jest": "^29.7.0",
     "nodemon": "^3.1.9",
     "supertest": "^7.0.0",
-    "terser-webpack-plugin": "^5.3.11",
     "typescript": "^5.7.3"
   },
   "overrides": {

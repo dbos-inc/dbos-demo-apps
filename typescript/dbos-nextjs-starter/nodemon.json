@@ -3,5 +3,5 @@
   "watch": ["src/dbos/"],
   "ext": "ts,js,tsx,jsx",
   "ignore": ["src/**/*.test.ts"],
-  "exec": "next dev"
+  "exec": "tsc && node dist/src/server.js"
 }

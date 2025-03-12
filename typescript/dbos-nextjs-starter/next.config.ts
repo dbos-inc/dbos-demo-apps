@@ -2,14 +2,17 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  webpack: (config) => {
-    // Treat @dbos-inc/dbos-sdk as an external package for client builds
-    config.externals = [
-      ...config.externals,
-      {
-        "@dbos-inc/dbos-sdk": "commonjs @dbos-inc/dbos-sdk",
-      },
-    ];
+  webpack: (config, { isServer, dev: _dev }) => {
+    // Treat @dbos-inc/dbos-sdk and code using it as an external package for builds
+    if (isServer) {
+      config.externals = [
+        ...config.externals,
+        {
+          "@dbos-inc/dbos-sdk": "commonjs @dbos-inc/dbos-sdk",
+        },
+        /^@dbos\/.+$/, // Treat ALL `@dbos/*` imports as external
+      ];
+    }
 
     return config;
   },
