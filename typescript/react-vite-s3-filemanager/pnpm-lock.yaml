@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@dbos-inc/component-aws-s3':
         specifier: ^2.3.10
-        version: 2.3.10(@dbos-inc/aws-config@2.3.10(@dbos-inc/dbos-sdk@2.3.10(@types/koa@2.15.0)(koa@2.15.4)))(@dbos-inc/dbos-sdk@2.3.10(@types/koa@2.15.0)(koa@2.15.4))
+        version: 2.3.10(@dbos-inc/aws-config@2.3.10(@dbos-inc/dbos-sdk@2.5.16(@types/koa@2.15.0)(koa@2.15.4)))(@dbos-inc/dbos-sdk@2.5.16(@types/koa@2.15.0)(koa@2.15.4))
       '@dbos-inc/dbos-sdk':
-        specifier: ^2.3.10
-        version: 2.3.10(@types/koa@2.15.0)(koa@2.15.4)
+        specifier: ^2.5.16
+        version: 2.5.16(@types/koa@2.15.0)(koa@2.15.4)
       '@tanstack/react-query':
         specifier: ^5.66.0
         version: 5.66.0(react@19.0.0)
@@ -344,12 +344,12 @@ packages:
       '@dbos-inc/aws-config': '*'
       '@dbos-inc/dbos-sdk': '*'
 
-  '@dbos-inc/dbos-sdk@2.3.10':
-    resolution: {integrity: sha512-Ku8tm15a7IKTbmzxmN4up4a0RNFgBsxlORNFxUlZjk/HqTetQe/5q4VAiTJKx1BS0V+GZW2l14QfRMc/49kbFw==}
+  '@dbos-inc/dbos-sdk@2.5.16':
+    resolution: {integrity: sha512-BdjZCaRtKZzNIeo+E/RZ6WT/K/U4jqDOaJC82wDG84Xfq8I039A4nBEzBPXWLZfL7lePKAaDM/pmQtWnKDyoCw==}
     hasBin: true
     peerDependencies:
       '@types/koa': ^2.15.0
-      koa: ^2.15.0
+      koa: ^2.15.4
 
   '@esbuild/aix-ppc64@0.24.2':
     resolution: {integrity: sha512-thpVCb/rhxE/BnMLQ7GReQLLN8q9qbHmI55F4489/ByVg2aQaQ6kbcLb6FHkocZzQhxc4gx0sCk0tJkKBFzDhA==}
@@ -1107,6 +1107,9 @@ packages:
   '@types/node@20.17.19':
     resolution: {integrity: sha512-LEwC7o1ifqg/6r2gn9Dns0f1rhK+fPFDoMiceTJ6kWmVk6bgXBI/9IOWfVan4WiAavK9pIVWdX0/e3J+eEUh5A==}
 
+  '@types/node@20.17.24':
+    resolution: {integrity: sha512-d7fGCyB96w9BnWQrOsJtpyiSaBcAYYr75bnK6ZRjDbql2cGLj/3GsL5OYmLPNq76l7Gf2q4Rv9J2o6h5CrD9sA==}
+
   '@types/node@22.13.4':
     resolution: {integrity: sha512-ywP2X0DYtX3y08eFVx5fNIw7/uIv8hYUKgXoK8oayJlLnKcRfEYCxWMVE1XagUdVtCJlZT1AU4LXEABW+L1Peg==}
 
@@ -1265,6 +1268,10 @@ packages:
 
   call-bound@1.0.3:
     resolution: {integrity: sha512-YTd+6wGlNlPxSuri7Y6X8tY2dmm12UMH66RpKMhiX6rsk5wXXnYgbUcOt8kiS31/AjfoTOvCsE+w8nZQLQnzHA==}
+    engines: {node: '>= 0.4'}
+
+  call-bound@1.0.4:
+    resolution: {integrity: sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==}
     engines: {node: '>= 0.4'}
 
   caniuse-lite@1.0.30001699:
@@ -1584,6 +1591,10 @@ packages:
 
   get-intrinsic@1.2.7:
     resolution: {integrity: sha512-VW6Pxhsrk0KAOqs3WEd0klDiF/+V7gQOpAvY1jVU/LHmaD/kQO4523aiJuikX/QAKYiW6x8Jh+RJej1almdtCA==}
+    engines: {node: '>= 0.4'}
+
+  get-intrinsic@1.3.0:
+    resolution: {integrity: sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ==}
     engines: {node: '>= 0.4'}
 
   get-package-type@0.1.0:
@@ -2450,8 +2461,12 @@ packages:
     resolution: {integrity: sha512-ajBj65K5I7denzer2IYW6+2bNIVqLGDHqDw3Ow8Ohh+vdW+rv4MZ6eiDvHoKhfJFZ2auyN8byXieDDJ96ViONg==}
     engines: {node: '>= 12.0.0'}
 
-  winston@3.12.0:
-    resolution: {integrity: sha512-OwbxKaOlESDi01mC9rkM0dQqQt2I8DAUMRLZ/HpbwvDXm85IryEHgoogy5fziQy38PntgZsLlhAYHz//UPHZ5w==}
+  winston-transport@4.9.0:
+    resolution: {integrity: sha512-8drMJ4rkgaPo1Me4zD/3WLfI/zPdA9o2IipKODunnGDcuqbHwjsbB79ylv04LCGGzU0xQ6vTznOMpQGaLhhm6A==}
+    engines: {node: '>= 12.0.0'}
+
+  winston@3.17.0:
+    resolution: {integrity: sha512-DLiFIXYC5fMPxaRg832S6F5mJYvePtmO5G9v9IgUFPhXm9/GkXarH/TUrBAVzhTCzAj9anE/+GjrgXp/54nOgw==}
     engines: {node: '>= 12.0.0'}
 
   wrap-ansi@6.2.0:
@@ -3124,21 +3139,21 @@ snapshots:
       enabled: 2.0.0
       kuler: 2.0.0
 
-  '@dbos-inc/aws-config@2.3.10(@dbos-inc/dbos-sdk@2.3.10(@types/koa@2.15.0)(koa@2.15.4))':
+  '@dbos-inc/aws-config@2.3.10(@dbos-inc/dbos-sdk@2.5.16(@types/koa@2.15.0)(koa@2.15.4))':
     dependencies:
-      '@dbos-inc/dbos-sdk': 2.3.10(@types/koa@2.15.0)(koa@2.15.4)
+      '@dbos-inc/dbos-sdk': 2.5.16(@types/koa@2.15.0)(koa@2.15.4)
 
-  '@dbos-inc/component-aws-s3@2.3.10(@dbos-inc/aws-config@2.3.10(@dbos-inc/dbos-sdk@2.3.10(@types/koa@2.15.0)(koa@2.15.4)))(@dbos-inc/dbos-sdk@2.3.10(@types/koa@2.15.0)(koa@2.15.4))':
+  '@dbos-inc/component-aws-s3@2.3.10(@dbos-inc/aws-config@2.3.10(@dbos-inc/dbos-sdk@2.5.16(@types/koa@2.15.0)(koa@2.15.4)))(@dbos-inc/dbos-sdk@2.5.16(@types/koa@2.15.0)(koa@2.15.4))':
     dependencies:
       '@aws-sdk/s3-presigned-post': 3.749.0
       '@aws-sdk/s3-request-presigner': 3.749.0
-      '@dbos-inc/aws-config': 2.3.10(@dbos-inc/dbos-sdk@2.3.10(@types/koa@2.15.0)(koa@2.15.4))
-      '@dbos-inc/dbos-sdk': 2.3.10(@types/koa@2.15.0)(koa@2.15.4)
+      '@dbos-inc/aws-config': 2.3.10(@dbos-inc/dbos-sdk@2.5.16(@types/koa@2.15.0)(koa@2.15.4))
+      '@dbos-inc/dbos-sdk': 2.5.16(@types/koa@2.15.0)(koa@2.15.4)
       uuid: 9.0.1
     transitivePeerDependencies:
       - aws-crt
 
-  '@dbos-inc/dbos-sdk@2.3.10(@types/koa@2.15.0)(koa@2.15.4)':
+  '@dbos-inc/dbos-sdk@2.5.16(@types/koa@2.15.0)(koa@2.15.4)':
     dependencies:
       '@inquirer/prompts': 5.5.0
       '@koa/bodyparser': 5.0.0
@@ -3168,7 +3183,7 @@ snapshots:
       serialize-error: 8.1.0
       uuid: 9.0.1
       validator: 13.12.0
-      winston: 3.12.0
+      winston: 3.17.0
       winston-transport: 4.7.0
       yaml: 2.4.1
     transitivePeerDependencies:
@@ -3916,7 +3931,7 @@ snapshots:
 
   '@types/accepts@1.3.7':
     dependencies:
-      '@types/node': 20.17.19
+      '@types/node': 20.17.24
 
   '@types/babel__core@7.20.5':
     dependencies:
@@ -3955,7 +3970,7 @@ snapshots:
       '@types/connect': 3.4.38
       '@types/express': 4.17.21
       '@types/keygrip': 1.0.6
-      '@types/node': 20.17.19
+      '@types/node': 20.17.24
 
   '@types/cors@2.8.17':
     dependencies:
@@ -4001,7 +4016,7 @@ snapshots:
       '@types/http-errors': 2.0.4
       '@types/keygrip': 1.0.6
       '@types/koa-compose': 3.2.8
-      '@types/node': 20.17.19
+      '@types/node': 20.17.24
 
   '@types/mime@1.3.5': {}
 
@@ -4012,6 +4027,10 @@ snapshots:
       '@types/node': 20.17.19
 
   '@types/node@20.17.19':
+    dependencies:
+      undici-types: 6.19.8
+
+  '@types/node@20.17.24':
     dependencies:
       undici-types: 6.19.8
 
@@ -4201,6 +4220,11 @@ snapshots:
     dependencies:
       call-bind-apply-helpers: 1.0.2
       get-intrinsic: 1.2.7
+
+  call-bound@1.0.4:
+    dependencies:
+      call-bind-apply-helpers: 1.0.2
+      get-intrinsic: 1.3.0
 
   caniuse-lite@1.0.30001699: {}
 
@@ -4546,6 +4570,19 @@ snapshots:
       hasown: 2.0.2
       math-intrinsics: 1.1.0
 
+  get-intrinsic@1.3.0:
+    dependencies:
+      call-bind-apply-helpers: 1.0.2
+      es-define-property: 1.0.1
+      es-errors: 1.3.0
+      es-object-atoms: 1.1.1
+      function-bind: 1.1.2
+      get-proto: 1.0.1
+      gopd: 1.2.0
+      has-symbols: 1.1.0
+      hasown: 2.0.2
+      math-intrinsics: 1.1.0
+
   get-package-type@0.1.0: {}
 
   get-proto@1.0.1:
@@ -4628,7 +4665,7 @@ snapshots:
 
   is-generator-function@1.1.0:
     dependencies:
-      call-bound: 1.0.3
+      call-bound: 1.0.4
       get-proto: 1.0.1
       has-tostringtag: 1.0.2
       safe-regex-test: 1.1.0
@@ -4641,7 +4678,7 @@ snapshots:
 
   is-regex@1.2.1:
     dependencies:
-      call-bound: 1.0.3
+      call-bound: 1.0.4
       gopd: 1.2.0
       has-tostringtag: 1.0.2
       hasown: 2.0.2
@@ -5058,7 +5095,7 @@ snapshots:
 
   safe-regex-test@1.1.0:
     dependencies:
-      call-bound: 1.0.3
+      call-bound: 1.0.4
       es-errors: 1.3.0
       is-regex: 1.2.1
 
@@ -5367,7 +5404,13 @@ snapshots:
       readable-stream: 3.6.2
       triple-beam: 1.4.1
 
-  winston@3.12.0:
+  winston-transport@4.9.0:
+    dependencies:
+      logform: 2.7.0
+      readable-stream: 3.6.2
+      triple-beam: 1.4.1
+
+  winston@3.17.0:
     dependencies:
       '@colors/colors': 1.6.0
       '@dabh/diagnostics': 2.0.3
@@ -5379,7 +5422,7 @@ snapshots:
       safe-stable-stringify: 2.5.0
       stack-trace: 0.0.10
       triple-beam: 1.4.1
-      winston-transport: 4.7.0
+      winston-transport: 4.9.0
 
   wrap-ansi@6.2.0:
     dependencies:
