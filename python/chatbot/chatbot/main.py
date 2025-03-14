@@ -8,7 +8,7 @@ import time
 from collections import deque
 
 import psutil
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from langchain_core.messages import HumanMessage
@@ -22,7 +22,12 @@ from pydantic import BaseModel
 from .schema import chat_history
 
 app = FastAPI()
-dbos = DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "chatbot",
+    "database_url": f"postgresql://postgres:{os.environ.get('PGPASSWORD')}@localhost:5432/",
+    "log_level": "DEBUG",
+}
+dbos = DBOS(fastapi=app, config=config)
 
 # Next, let's set up LangChain. We'll use LangChain to
 # answer each chat message using OpenAI's gpt-3.5-turbo.

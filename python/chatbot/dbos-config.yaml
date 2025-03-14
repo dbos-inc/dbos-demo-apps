@@ -9,14 +9,8 @@ runtimeConfig:
   start:
     - "fastapi run chatbot/main.py"
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
   migrate:
     - alembic upgrade head
-telemetry:
-  logs:
-    logLevel: INFO
 env:
   OPENAI_API_KEY: ${OPENAI_API_KEY}
+  PGPASSWORD: ${PGPASSWORD}
