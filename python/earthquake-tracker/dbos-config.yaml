@@ -6,12 +6,5 @@ runtimeConfig:
   start:
     - python3 -m earthquake_tracker.main & streamlit run earthquake_tracker/streamlit.py --server.port 8000 --server.enableCORS=false --server.enableXsrfProtection=false --browser.gatherUsageStats=false
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
   migrate:
     - alembic upgrade head
-telemetry:
-  logs:
-    logLevel: INFO
