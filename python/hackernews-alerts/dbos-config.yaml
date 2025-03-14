@@ -6,14 +6,7 @@ runtimeConfig:
   start:
     - "python3 main.py"
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
   migrate:
     - echo "No migrations"
-telemetry:
-  logs:
-    logLevel: INFO
 env:
   SLACK_HN_BOT_OAUTH_TOKEN: ${SLACK_HN_BOT_OAUTH_TOKEN}
