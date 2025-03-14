@@ -1,13 +1,16 @@
 import time
 
-from dbos import DBOS, Queue
+from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 from schema import example_table
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-toolbox",
+}
+DBOS(fastapi=app, config=config)
 
 ##################################
 #### Workflows and Steps
