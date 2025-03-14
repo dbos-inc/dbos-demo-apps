@@ -1,7 +1,7 @@
 import os
 import time
 
-from dbos import DBOS, SetWorkflowID
+from dbos import DBOS, DBOSConfig, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
@@ -10,7 +10,11 @@ from fastapi.responses import HTMLResponse
 # It shows you how to use DBOS to build durable workflows that are resilient to any failure.
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-app-starter",
+    "database_url": f"postgresql://postgres:{os.environ.get('PGPASSWORD')}@localhost:5432",
+}
+DBOS(fastapi=app, config=config)
 
 steps_event = "steps_event"
 
