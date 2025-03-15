@@ -9,10 +9,6 @@ runtimeConfig:
   start:
     - "fastapi run reliable_refunds/main.py"
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
   migrate:
     - alembic upgrade head
     - python3 -m migrations.reset_database

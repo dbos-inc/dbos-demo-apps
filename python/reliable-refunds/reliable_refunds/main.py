@@ -5,7 +5,7 @@ from pathlib import Path
 from string import Template
 from typing import Optional
 
-from dbos import DBOS, DBOSConfiguredInstance
+from dbos import DBOS, DBOSConfig, DBOSConfiguredInstance
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -21,7 +21,10 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 html_dir = os.path.join(os.path.dirname(script_dir), "html")
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "reliable-refunds",
+}
+DBOS(fastapi=app, config=config)
 
 
 @DBOS.dbos_class()
