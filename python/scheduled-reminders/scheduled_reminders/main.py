@@ -5,7 +5,7 @@
 import os
 from datetime import datetime
 
-from dbos import DBOS, SetWorkflowID
+from dbos import DBOS, DBOSConfig, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
@@ -13,7 +13,10 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "scheduled-reminders",
+}
+DBOS(fastapi=app, config=config)
 
 # Next, let's write the workflow that sends emails.
 # We'll send a quick confirmation email, then wait
