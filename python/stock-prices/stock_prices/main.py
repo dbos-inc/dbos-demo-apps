@@ -11,13 +11,17 @@ import datetime
 import os
 import threading
 
-import pytz
 import yfinance as yf
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from schema import alerts, stock_prices
 from twilio.rest import Client
 
-DBOS()
+config: DBOSConfig = {
+    "name": "stock_prices",
+    "database_url": f"postgresql://postgres:{os.environ.get('PGPASSWORD')}@localhost:5432/stock_prices",
+    "log_level": "DEBUG",
+}
+DBOS(config=config)
 
 
 # Then let's write a function that fetches stock prices from Yahoo Finance.

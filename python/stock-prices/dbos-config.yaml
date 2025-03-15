@@ -4,13 +4,8 @@ runtimeConfig:
   start:
     - python3 stock_prices/main.py & streamlit run stock_prices/streamlit.py --server.port 8000 --server.enableCORS=false --server.enableXsrfProtection=false --browser.gatherUsageStats=false
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
   migrate:
     - alembic upgrade head
-  local_suffix: false
 telemetry:
   logs:
     logLevel: INFO
