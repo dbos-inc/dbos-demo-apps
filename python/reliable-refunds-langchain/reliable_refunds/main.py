@@ -5,7 +5,7 @@ from pathlib import Path
 from string import Template
 from typing import Annotated, Optional
 
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from langchain_core.messages import AIMessage, HumanMessage
@@ -30,7 +30,10 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 html_dir = os.path.join(os.path.dirname(script_dir), "html")
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "reliable-refunds-langchain",
+}
+DBOS(fastapi=app, config=config)
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week timeout for manual review
 

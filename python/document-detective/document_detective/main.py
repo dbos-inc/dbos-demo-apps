@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from typing import List
 
 import requests
-from dbos import DBOS, Queue, WorkflowHandle, load_config
+from dbos import DBOS, DBOSConfig, Queue, WorkflowHandle, load_config
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
@@ -18,6 +18,9 @@ from pydantic import BaseModel, HttpUrl
 from .schema import chat_history
 
 app = FastAPI()
+config: DBOSConfig = {
+    "name": "document-detective",
+}
 DBOS(fastapi=app)
 
 

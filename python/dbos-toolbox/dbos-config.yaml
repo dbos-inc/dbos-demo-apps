@@ -11,6 +11,3 @@ runtimeConfig:
 database:
   migrate:
     - alembic upgrade head
-telemetry:
-  logs:
-    logLevel: INFO
