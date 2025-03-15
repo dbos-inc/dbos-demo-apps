@@ -12,9 +12,6 @@ database:
   migrate:
     - alembic upgrade head
     - python3 -m migrations.reset_database
-telemetry:
-  logs:
-    logLevel: INFO
 env:
   OPENAI_API_KEY: ${OPENAI_API_KEY}
   SENDGRID_API_KEY: ${SENDGRID_API_KEY}
