@@ -9,6 +9,8 @@
 
 import datetime
 import os
+import sys
+import signal
 import threading
 
 import yfinance as yf
@@ -16,12 +18,7 @@ from dbos import DBOS, DBOSConfig
 from schema import alerts, stock_prices
 from twilio.rest import Client
 
-config: DBOSConfig = {
-    "name": "stock_prices",
-    "database_url": f"postgresql://postgres:{os.environ.get('PGPASSWORD')}@localhost:5432/stock_prices",
-    "log_level": "DEBUG",
-}
-DBOS(config=config)
+DBOS()
 
 
 # Then let's write a function that fetches stock prices from Yahoo Finance.
@@ -93,10 +90,20 @@ def fetch_stock_prices_workflow(scheduled_time: datetime, actual_time: datetime)
             if price > registered_alerts[symbol].price_threshold:
                 send_sms_alert(symbol, price, registered_alerts[symbol].phone_number)
 
+def signal_handler(sig, frame):
+    DBOS.destroy()
+    sys.exit(0)
 
 # Finally, in our main function, let's launch DBOS, then sleep the main thread forever
 # while the background threads run.
 if __name__ == "__main__":
     DBOS.launch()
-    threading.Event().wait()
+    signal.signal(signal.SIGINT, signal_handler)
+    try:
+        DBOS.launch()
+        while True:
+            threading.Event().wait(1)
+    finally:
+        DBOS.destroy()
+
 # To deploy this app to the cloud as a persistent cron job, run `dbos-cloud app deploy`
