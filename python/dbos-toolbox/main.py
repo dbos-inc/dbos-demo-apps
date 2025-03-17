@@ -10,7 +10,7 @@ from schema import example_table
 app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-toolbox",
-    "database_url": os.environ["DBOS_DATABASE_URL"],
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 
