@@ -20,8 +20,9 @@ from .schema import chat_history
 app = FastAPI()
 config: DBOSConfig = {
     "name": "document-detective",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
-DBOS(fastapi=app)
+DBOS(fastapi=app, config=config)
 
 
 # Next, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
