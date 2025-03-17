@@ -27,6 +27,7 @@ from slack_sdk.web import SlackResponse
 app = FastAPI()
 config: DBOSConfig = {
     "name": "llamabot",
+    "database_url": os.environ.get("DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 

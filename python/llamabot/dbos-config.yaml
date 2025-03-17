@@ -5,6 +5,7 @@ language: python
 runtimeConfig:
   start:
     - "fastapi run llamabot/main.py"
+database_url: ${DBOS_DATABASE_URL}
 database:
   migrate:
     - python3 migrations/migrate.py
