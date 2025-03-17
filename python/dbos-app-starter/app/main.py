@@ -12,7 +12,6 @@ from fastapi.responses import HTMLResponse
 app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-app-starter",
-    "database_url": f"postgresql://postgres:{os.environ.get('PGPASSWORD')}@localhost:5432",
 }
 DBOS(fastapi=app, config=config)
 

@@ -11,5 +11,3 @@ runtimeConfig:
 database:
   migrate:
     - echo 'No migrations specified'
-env:
-  PGPASSWORD: ${PGPASSWORD}
