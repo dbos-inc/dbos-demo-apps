@@ -24,7 +24,7 @@ from .schema import chat_history
 app = FastAPI()
 config: DBOSConfig = {
     "name": "chatbot",
-    "database_url": f"postgresql://postgres:{os.environ.get('PGPASSWORD')}@localhost:5432/",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
 }
 dbos = DBOS(fastapi=app, config=config)
 
