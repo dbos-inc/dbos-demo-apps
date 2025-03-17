@@ -17,8 +17,11 @@ import yfinance as yf
 from dbos import DBOS, DBOSConfig
 from schema import alerts, stock_prices
 from twilio.rest import Client
-
-DBOS()
+config: DBOSConfig = {
+    "name": "stock-prices",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(config=config)
 
 
 # Then let's write a function that fetches stock prices from Yahoo Finance.

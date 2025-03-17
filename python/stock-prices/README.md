@@ -16,6 +16,7 @@ python3 start_postgres_docker.py
 Then run:
 
 ```shell
+export DBOS_DATABASE_URL=postgresql://postgres:${PGPASSWORD}@localhost:5432
 dbos migrate
 dbos start
 ```
