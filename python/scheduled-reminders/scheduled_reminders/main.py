@@ -15,6 +15,7 @@ from sendgrid.helpers.mail import Mail
 app = FastAPI()
 config: DBOSConfig = {
     "name": "scheduled-reminders",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
 }
 DBOS(fastapi=app, config=config)
 
