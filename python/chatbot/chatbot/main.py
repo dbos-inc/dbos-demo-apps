@@ -25,7 +25,6 @@ app = FastAPI()
 config: DBOSConfig = {
     "name": "chatbot",
     "database_url": f"postgresql://postgres:{os.environ.get('PGPASSWORD')}@localhost:5432/",
-    "log_level": "DEBUG",
 }
 dbos = DBOS(fastapi=app, config=config)
 

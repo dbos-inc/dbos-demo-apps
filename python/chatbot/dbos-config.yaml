@@ -8,6 +8,7 @@ language: python
 runtimeConfig:
   start:
     - "fastapi run chatbot/main.py"
+database_url: "postgresql://postgres:${PGPASSWORD}@localhost:5432/chatbot"
 database:
   migrate:
     - alembic upgrade head
