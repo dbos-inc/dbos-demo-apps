@@ -5,6 +5,7 @@ language: python
 runtimeConfig:
   start:
     - python3 -m earthquake_tracker.main & streamlit run earthquake_tracker/streamlit.py --server.port 8000 --server.enableCORS=false --server.enableXsrfProtection=false --browser.gatherUsageStats=false
+database_url: ${DBOS_DATABASE_URL}
 database:
   migrate:
     - alembic upgrade head
