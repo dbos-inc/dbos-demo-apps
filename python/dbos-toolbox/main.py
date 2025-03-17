@@ -1,4 +1,5 @@
 import time
+import os
 
 from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
@@ -9,6 +10,7 @@ from schema import example_table
 app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-toolbox",
+    "database_url": os.environ["DBOS_DATABASE_URL"],
 }
 DBOS(fastapi=app, config=config)
 

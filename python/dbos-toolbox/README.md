@@ -10,7 +10,9 @@ To learn more about how to program with DBOS, check out the [DBOS programming gu
 To start this app locally, run:
 
 ```shell
+python3 -m venv .venv
 pip install dbos
+export DBOS_DATABASE_URL=postgresql://postgres:${PGPASSWORD}@localhost:5432
 dbos migrate
 dbos start
 ```
