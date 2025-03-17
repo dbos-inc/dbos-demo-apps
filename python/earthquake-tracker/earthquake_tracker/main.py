@@ -20,6 +20,7 @@ from .schema import earthquake_tracker
 
 config: DBOSConfig = {
     "name": "earthquake-tracker",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
 }
 DBOS(config=config)
 
