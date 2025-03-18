@@ -142,7 +142,7 @@
         program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
       </p>
       <p class="mb-4">
-        Try it: Launch a durable workflow, then crash the application. Your workflow will always recover from the last
+        Try it: Launch a durable workflow, then crash the application. When your application restarts, your workflow will always recover from the last
         completed step!
       </p>
     </div>
@@ -195,19 +195,10 @@
     <!-- Regular width container for remaining content -->
     <div class="max-w-3xl mx-auto">
       <p class="mb-4">
-        To see it's really working, check your app's logs (viewable
-        <a
-          href="https://console.dbos.dev/applications/dbos-app-starter"
-          target="_blank"
-          class="text-blue-600 hover:underline"
-          >here</a
-        >
-        in DBOS Cloud). When you crash your app, you will see it become unresponsive
-        <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700"
-          >(Log buffer retrieved after application became unresponsive)</code
-        >, then restart
-        <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">(DBOS launched)</code>, then
-        recover any active workflows from their last completed step<code
+        To see it's really working, check your app's logs. When you crash your app, its process is forcibly exited.
+        When the process restarts, it recovers any active workflows from their last completed step
+        <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">(Recovering 1 workflows from...)</code>,
+        then runs the recovered workflows <code
           class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700"
           >(Completed step...)</code
         >.
