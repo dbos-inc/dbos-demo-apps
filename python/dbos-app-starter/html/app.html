@@ -307,7 +307,7 @@
             stepEl.textContent = `✓ Completed step ${stepNum}`;
           } else if (stepNum === step && error) {
             stepEl.className = "step recover";
-            stepEl.textContent = `▶ Recovering step ${stepNum}`;
+            stepEl.textContent = `■ Disconnected`;
           } else if (stepNum === step) {
             stepEl.className = "step active";
             stepEl.textContent = `▶ Executing step ${stepNum}`;
