@@ -100,7 +100,6 @@ def signal_handler(sig, frame):
 # Finally, in our main function, let's launch DBOS, then sleep the main thread forever
 # while the background threads run.
 if __name__ == "__main__":
-    DBOS.launch()
     signal.signal(signal.SIGINT, signal_handler)
     try:
         DBOS.launch()
