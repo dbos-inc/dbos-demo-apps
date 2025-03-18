@@ -9,7 +9,7 @@ import path from "path";
 
 export const app = express();
 app.use(express.json());
-app.use(morgan('dev')); // Add request logging
+app.use(morgan('tiny')); // Add request logging
 
 const stepsEvent = "steps_event";
 
