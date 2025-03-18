@@ -74,7 +74,7 @@ def fetch_alerts():
 # Then, let's write a scheduled job that fetches stock prices for a list of symbols every minute.
 # The @DBOS.scheduled() decorator tells DBOS to run this function on a cron schedule.
 # The @DBOS.workflow() decorator tells DBOS to run this function as a reliable workflow, so it runs exactly-once per minute.
-symbols = ["AAPL", "GOOGL", "AMZN", "MSFT", "TSLA", "NVDA"]
+symbols = ["GOOGL", "AMZN", "MSFT", "TSLA", "NVDA"]
 
 
 @DBOS.scheduled("* * * * *")
