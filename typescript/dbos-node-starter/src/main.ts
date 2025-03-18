@@ -60,7 +60,7 @@ export class Example {
 app.get("/workflow/:taskid", async (req, res) => {
     const { taskid } = req.params;
     await DBOS.startWorkflow(Example, { workflowID: taskid }).workflow();
-    res.status(200);
+    res.status(200).send();
   }
 );
 
