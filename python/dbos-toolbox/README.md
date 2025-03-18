@@ -12,7 +12,6 @@ To start this app locally, run:
 ```shell
 python3 -m venv .venv
 pip install dbos
-export DBOS_DATABASE_URL=postgresql://postgres:${PGPASSWORD}@localhost:5432
 dbos migrate
 dbos start
 ```

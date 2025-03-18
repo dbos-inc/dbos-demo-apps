@@ -8,7 +8,6 @@ language: python
 runtimeConfig:
   start:
     - "fastapi run reliable_refunds/main.py"
-database_url: ${DBOS_DATABASE_URL}
 database:
   migrate:
     - alembic upgrade head

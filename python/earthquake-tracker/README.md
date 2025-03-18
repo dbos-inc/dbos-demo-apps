@@ -35,7 +35,6 @@ Then run:
 
 ```shell
 pip install -r requirements.txt
-export DBOS_DATABASE_URL=postgresql://postgres:${PGPASSWORD}@localhost:5432
 dbos migrate
 dbos start
 ```
