@@ -5,6 +5,7 @@
 
 # First, let's do imports and initialize DBOS.
 
+import os
 import threading
 from datetime import datetime, timedelta
 from typing import TypedDict
