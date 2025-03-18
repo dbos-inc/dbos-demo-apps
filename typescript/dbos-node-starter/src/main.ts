@@ -1,49 +1,73 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import express from "express";
+import morgan from 'morgan';
 import path from "path";
 
 // Welcome to DBOS!
 // This is a template application built with DBOS and Express.
-// It shows you how to use DBOS to build background tasks that are resilient to any failure.
+// It shows you how to use DBOS to build durable workflows that are resilient to any failure.
 
 export const app = express();
 app.use(express.json());
+app.use(morgan('dev')); // Add request logging
 
 const stepsEvent = "steps_event";
 
-export class MyApp {
-  // This workflow simulates a background task with N steps.
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
+export class Example {
+  // Here is the code for a durable workflow with three steps.
   // DBOS workflows are resilient to any failure--if your program is crashed,
-  // interrupted, or restarted while running this workflow, the workflow automatically
-  // resumes from the last completed step.
-  @DBOS.workflow()
-  static async backgroundTask(n: number): Promise<void> {
-    for (let i = 1; i <= n; i++) {
-      await MyApp.backgroundTaskStep(i);
-      await DBOS.setEvent(stepsEvent, i);
-    }
+  // interrupted, or restarted while running this workflow, the workflow
+  // automatically resumes from the last completed step.
+  
+  // One interesting implementation detail: we use setEvent to publish the workflow's
+  // status to the frontend after each step completes, so you can observe what your workflow
+  // is doing in real time.
+
+  @DBOS.step()
+  static async stepOne() {
+    await sleep(5000);
+    console.log("Completed step 1!")
   }
 
   @DBOS.step()
-  static async backgroundTaskStep(step: number): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    DBOS.logger.info(`Completed step ${step}!`);
+  static async stepTwo() {
+    await sleep(5000);
+    console.log("Completed step 2!")
+  }
+
+  @DBOS.step()
+  static async stepThree() {
+    await sleep(5000);
+    console.log("Completed step 3!")
+  }
+  
+  @DBOS.workflow()
+  static async workflow(): Promise<void> {
+    await Example.stepOne();
+    await DBOS.setEvent(stepsEvent, 1);
+    await Example.stepTwo();
+    await DBOS.setEvent(stepsEvent, 2);
+    await Example.stepThree();
+    await DBOS.setEvent(stepsEvent, 3);
   }
 }
 
-// This endpoint uses DBOS to idempotently launch a crashproof background task with N steps.
-app.get("/background/:taskid/:steps", async (req, res) => {
-    const { taskid, steps } = req.params;
-    await DBOS.startWorkflow(MyApp, { workflowID: taskid }).backgroundTask(Number(steps));
-    res.send("Task launched!");
+// This endpoint uses DBOS to idempotently launch a durable workflow
+app.get("/workflow/:taskid", async (req, res) => {
+    const { taskid } = req.params;
+    await DBOS.startWorkflow(Example, { workflowID: taskid }).workflow();
+    res.status(200);
   }
 );
 
 // This endpoint retrieves the status of a specific background task.
 app.get("/last_step/:taskid", async (req, res) => {
     const { taskid } = req.params;
-    const step = await DBOS.getEvent(taskid, stepsEvent);
+    const step = await DBOS.getEvent(taskid, stepsEvent, 0);
     res.send(String(step !== null ? step : 0));
   }
 );
