@@ -8,6 +8,7 @@ language: python
 runtimeConfig:
   start:
     - "fastapi run scheduled_reminders/main.py"
+database_url: ${DBOS_DATABASE_URL}
 database:
   migrate:
     - echo "no migrations"
