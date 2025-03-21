@@ -8,6 +8,7 @@ from fastapi import FastAPI, responses
 app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-cron-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 counter = 0
