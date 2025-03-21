@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse
 app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-app-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 
