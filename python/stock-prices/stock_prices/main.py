@@ -11,13 +11,15 @@ import datetime
 import os
 import threading
 
-import pytz
 import yfinance as yf
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from schema import alerts, stock_prices
 from twilio.rest import Client
-
-DBOS()
+config: DBOSConfig = {
+    "name": "stock-prices",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(config=config)
 
 
 # Then let's write a function that fetches stock prices from Yahoo Finance.
@@ -72,7 +74,7 @@ def fetch_alerts():
 # Then, let's write a scheduled job that fetches stock prices for a list of symbols every minute.
 # The @DBOS.scheduled() decorator tells DBOS to run this function on a cron schedule.
 # The @DBOS.workflow() decorator tells DBOS to run this function as a reliable workflow, so it runs exactly-once per minute.
-symbols = ["AAPL", "GOOGL", "AMZN", "MSFT", "TSLA", "NVDA"]
+symbols = ["GOOGL", "AMZN", "MSFT", "TSLA", "NVDA"]
 
 
 @DBOS.scheduled("* * * * *")

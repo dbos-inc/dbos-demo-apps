@@ -1,12 +1,16 @@
 import os
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI, responses
 
 # Welcome to DBOS!
 # This is a template application using DBOS to run some code on a (cron) schedule.
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-cron-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(fastapi=app, config=config)
 counter = 0
 
 # This is a simple scheduled function.

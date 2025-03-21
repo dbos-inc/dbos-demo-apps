@@ -8,17 +8,10 @@ language: python
 runtimeConfig:
   start:
     - "fastapi run scheduled_reminders/main.py"
+database_url: ${DBOS_DATABASE_URL}
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
-  app_db_name: scheduled_reminders
   migrate:
     - echo "no migrations"
-telemetry:
-  logs:
-    logLevel: INFO
 env:
   SENDGRID_API_KEY: ${SENDGRID_API_KEY}
   SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL}

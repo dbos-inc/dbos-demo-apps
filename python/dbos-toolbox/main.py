@@ -1,13 +1,18 @@
 import time
+import os
 
-from dbos import DBOS, Queue
+from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 from schema import example_table
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-toolbox",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(fastapi=app, config=config)
 
 ##################################
 #### Workflows and Steps
