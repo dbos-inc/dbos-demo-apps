@@ -37,7 +37,7 @@ export async function resetDatabase(poolConfig: PoolConfig) {
 }
 
 describe("AlertCenter utilities", () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
     const dbosTestConfig: DBOSConfig = {
       poolConfig: {
         host: "localhost",
@@ -56,7 +56,7 @@ describe("AlertCenter utilities", () => {
     await DBOS.launch();
   }, 10000);
 
-  afterAll(async () => {
+  afterEach(async () => {
     await DBOS.shutdown();
   });
 
@@ -66,7 +66,6 @@ describe("AlertCenter utilities", () => {
       alert_status: AlertStatus.ACTIVE,
       message: "Test message",
     };
-    //await Test.test();
     await RespondUtilities.addAlert(message);
     const alerts = await RespondUtilities.getAlertStatus();
     expect(alerts.length).toBe(1);

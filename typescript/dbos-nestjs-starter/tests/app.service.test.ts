@@ -1,11 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { AppService, GreetingRecord } from '../src/app.service';
 import { PoolConfig } from 'pg';
 import path from "path";
 import knex, { Knex } from "knex";
 
 import { DBOS, DBOSConfig } from "@dbos-inc/dbos-sdk";
-import { expressTracingMiddleware } from '@dbos-inc/dbos-sdk/dist/src/httpServer/middleware';
 
 export async function resetDatabase(poolConfig: PoolConfig) {
     const cwd = process.cwd();
