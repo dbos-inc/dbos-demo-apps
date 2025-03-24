@@ -1,12 +1,26 @@
 name: CI for alert center
 
 on:
-  workflow_call:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'typescript/alert-center/**'
+      - '.github/workflows/alert_center.yml'
   pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'typescript/alert-center/**'
+      - '.github/workflows/alert_center.yml'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
@@ -15,7 +29,7 @@ jobs:
     services:
       # Postgres service container
       postgres:
-        image: sibedge/postgres-plv8:16.3-3.2.2
+        image: postgres:16
         env:
           # Specify the password for Postgres superuser.
           POSTGRES_PASSWORD: dbos
@@ -40,7 +54,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Compile and Test
-        working-directory: ./
+        working-directory: typescript/alert-center/
         run: |
           npm ci
           npm run build
