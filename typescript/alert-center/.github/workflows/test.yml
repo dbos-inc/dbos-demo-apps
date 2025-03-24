@@ -1,4 +1,4 @@
-name: Test DBOS
+name: CI for alert center
 
 on:
   workflow_call:
