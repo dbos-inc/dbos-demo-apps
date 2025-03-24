@@ -1,12 +1,13 @@
-const { parseConfigFile } = require('@dbos-inc/dbos-sdk');
+import { Knex } from 'knex';
+import { parseConfigFile } from '@dbos-inc/dbos-sdk'
+import { DBOSConfig } from '@dbos-inc/dbos-sdk';
 
-const [dbosConfig, ] = parseConfigFile();
+const [dbosConfig, ]: [DBOSConfig, unknown] = parseConfigFile();
 
-const config = {
+const config: Knex.Config = {
   client: 'pg',
   connection: {
     host: dbosConfig.poolConfig.host,
-    port: dbosConfig.poolConfig.port,
     user: dbosConfig.poolConfig.user,
     password: dbosConfig.poolConfig.password,
     database: dbosConfig.poolConfig.database,
@@ -17,4 +18,4 @@ const config = {
   }
 };
 
-module.exports = config;
+export default config;
