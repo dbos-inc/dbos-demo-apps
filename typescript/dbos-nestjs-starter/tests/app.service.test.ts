@@ -46,11 +46,11 @@ describe('AppService', () => {
       poolConfig: {
         host: "localhost",
         port: 5432,
-        database: "alert_center_test",
+        database: "nestjs_starter",
         user: "postgres",
         password: process.env.PGPASSWORD || "dbos",
       },
-      system_database: "alert_center_test_dbos_sys",
+      system_database: "nestjs_starter_dbos_sys",
       userDbclient: "knex",
     };
     DBOS.setConfig(dbosTestConfig);
