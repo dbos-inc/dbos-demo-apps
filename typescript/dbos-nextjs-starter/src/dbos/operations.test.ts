@@ -11,7 +11,7 @@ export async function resetDatabase(poolConfig: PoolConfig) {
   };
   const appDbName = poolConfig.database;
   knexConfig.connection.database = "postgres";
-  let knexDB: Knex = knex(knexConfig);
+  const knexDB: Knex = knex(knexConfig);
   try {
     await knexDB.raw(
       `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`,
