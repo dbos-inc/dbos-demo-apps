@@ -50,7 +50,7 @@ jobs:
           docker restart ${{ job.services.postgres.id }}
       - uses: actions/checkout@v4.1.1
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4.0.2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
       - name: Compile and Test
