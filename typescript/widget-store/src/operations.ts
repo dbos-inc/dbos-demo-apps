@@ -35,7 +35,7 @@ export class Shop {
     try {
       await ShopUtilities.subtractInventory();
     } catch (error) {
-      DBOS.logger.error("Failed to update inventory");
+      DBOS.logger.error(`Failed to update inventory: ${error as Error}`);
       await DBOS.setEvent(PAYMENT_ID_EVENT, null);
       return;
     }
