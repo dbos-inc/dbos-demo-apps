@@ -11,7 +11,7 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, DBOSConfig, Queue, SetWorkflowID
+from dbos import DBOS, Queue, SetWorkflowID, load_config
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
@@ -25,11 +25,7 @@ from slack_bolt.adapter.starlette.handler import to_bolt_request
 from slack_sdk.web import SlackResponse
 
 app = FastAPI()
-config: DBOSConfig = {
-    "name": "llamabot",
-    "database_url": os.environ.get("DATABASE_URL"),
-}
-DBOS(fastapi=app, config=config)
+DBOS(fastapi=app)
 
 # Define a queue to limit processing incoming messages to 10 per minute.
 # This is to prevent the bot from being overwhelmed by a large number of messages.
@@ -39,7 +35,7 @@ work_queue = Queue("llamabot_queue", limiter={"limit": 300, "period": 60}, concu
 # Then, let's initialize LlamaIndex to use the app's Postgres database as the vector store.
 # Note that we don't set up the schema and tables because we've already done that in the schema migration step.
 set_global_handler("simple", logger=DBOS.logger)  # Logs from LlamaIndex will be printed as the `DEBUG` level.
-dbos_config = DBOS.config
+dbos_config = load_config()
 vector_store = PGVectorStore.from_params(
     database=dbos_config["database"]["app_db_name"],
     host=dbos_config["database"]["hostname"],

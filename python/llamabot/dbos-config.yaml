@@ -5,10 +5,17 @@ language: python
 runtimeConfig:
   start:
     - "fastapi run llamabot/main.py"
-database_url: ${DBOS_DATABASE_URL}
 database:
+  hostname: localhost
+  port: 5432
+  username: postgres
+  password: ${PGPASSWORD}
+  app_db_name: llamabot
   migrate:
     - python3 migrations/migrate.py
+telemetry:
+  logs:
+    logLevel: INFO
 env:
   OPENAI_API_KEY: ${OPENAI_API_KEY}
   SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
