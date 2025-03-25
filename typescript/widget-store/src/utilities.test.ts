@@ -60,7 +60,7 @@ describe("Widget store utilities", () => {
     };
     DBOS.setConfig(dbosTestConfig);
     // TODO drop system DB
-    await resetDatabase(DBOS.dbosConfig!.poolConfig);
+    await resetDatabase(DBOS.dbosConfig!.poolConfig!);
     await DBOS.shutdown();
     await DBOS.launch();
   }, 10000);
