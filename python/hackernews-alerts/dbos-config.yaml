@@ -5,8 +5,5 @@ language: python
 runtimeConfig:
   start:
     - "python3 main.py"
-database:
-  migrate:
-    - echo "No migrations"
 env:
   SLACK_HN_BOT_OAUTH_TOKEN: ${SLACK_HN_BOT_OAUTH_TOKEN}
