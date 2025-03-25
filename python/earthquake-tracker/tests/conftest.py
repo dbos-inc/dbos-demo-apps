@@ -1,3 +1,4 @@
+import os
 import pytest
 import sqlalchemy as sa
 from alembic import script
@@ -5,40 +6,25 @@ from alembic.config import Config
 from alembic.operations import Operations
 from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
-from dbos import DBOS, ConfigFile, load_config
+from dbos import DBOS, DBOSConfig
+from sqlalchemy.engine.url import make_url
 
-
-def reset_database(config: ConfigFile):
-    postgres_db_url = sa.URL.create(
-        "postgresql+psycopg",
-        username=config["database"]["username"],
-        password=config["database"]["password"],
-        host=config["database"]["hostname"],
-        port=config["database"]["port"],
-        database="postgres",
-    )
+def reset_database(test_database_url: str):
+    url = make_url(test_database_url)
+    database = url.database
+    postgres_db_url = url.set(database="postgres")
     engine = sa.create_engine(postgres_db_url, isolation_level="AUTOCOMMIT")
     with engine.connect() as conn:
         conn.execute(
             sa.text(
-                f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{config['database']['app_db_name']}'"
+                f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{database}'"
             )
         )
-        conn.execute(
-            sa.text(f"DROP DATABASE IF EXISTS {config['database']['app_db_name']}")
-        )
-        conn.execute(sa.text(f"CREATE DATABASE {config['database']['app_db_name']}"))
+        conn.execute(sa.text(f"DROP DATABASE IF EXISTS {database}"))
+        conn.execute(sa.text(f"CREATE DATABASE {database}"))
 
 
-def run_migrations(config: ConfigFile):
-    app_db_url = sa.URL.create(
-        "postgresql+psycopg",
-        username=config["database"]["username"],
-        password=config["database"]["password"],
-        host=config["database"]["hostname"],
-        port=config["database"]["port"],
-        database=config["database"]["app_db_name"],
-    )
+def run_migrations(test_database_url: str):
     alembic_cfg = Config()
     alembic_cfg.set_main_option("script_location", "./migrations")
     script_dir = script.ScriptDirectory.from_config(alembic_cfg)
@@ -52,19 +38,27 @@ def run_migrations(config: ConfigFile):
                 ):
                     revision.module.upgrade()
 
-    with sa.create_engine(app_db_url).connect() as conn:
+    with sa.create_engine(test_database_url).connect() as conn:
         with EnvironmentContext(alembic_cfg, script_dir, fn=do_run_migrations):
             with conn.begin():
                 do_run_migrations(conn)
 
+@pytest.fixture()
+def test_database_url():
+    test_database_url = os.environ.get("DBOS_TEST_DATABASE_URL", None)
+    if test_database_url is None:
+        pytest.fail("DBOS_TEST_DATABASE_URL is not provided")
+    return test_database_url
 
 @pytest.fixture()
-def dbos():
+def dbos(test_database_url):
     DBOS.destroy()
-    config = load_config()
-    config["database"]["app_db_name"] = f"{config['database']['app_db_name']}_test"
-    reset_database(config)
-    run_migrations(config)
+    config: DBOSConfig = {
+        "name": "earthquake-tracker",
+        "database_url": test_database_url,
+    }
+    reset_database(config["database_url"])
+    run_migrations(config["database_url"])
     DBOS(config=config)
     DBOS.reset_system_database()
     DBOS.launch()
