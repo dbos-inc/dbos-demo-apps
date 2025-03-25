@@ -7,7 +7,7 @@ import {
   animals,
 } from "unique-names-generator";
 
-interface GreetingRecord {
+export interface GreetingRecord {
   greeting_name: string;
   greeting_note_content: string;
 }
@@ -38,7 +38,7 @@ export class AppService extends ConfiguredInstance {
   }
 
   @DBOS.transaction()
-  async insert(): Promise<string> {
+  async insert(): Promise<GreetingRecord[]> {
     const randomName: string = uniqueNamesGenerator({
       dictionaries: [adjectives, colors, animals],
       separator: "-",
