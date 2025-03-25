@@ -26,7 +26,7 @@
   "dependencies": {
     "@dbos-inc/dbos-datetime": "^2.5.16",
     "@dbos-inc/dbos-kafkajs": "^2.5.16",
-    "@dbos-inc/dbos-sdk": "^2.5.16",
+    "@dbos-inc/dbos-sdk": "^2.6.19",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
