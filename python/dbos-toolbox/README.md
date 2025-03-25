@@ -11,6 +11,7 @@ To start this app locally, run:
 
 ```shell
 python3 -m venv .venv
+source .venv/bin/activate
 pip install dbos
 dbos migrate
 dbos start
