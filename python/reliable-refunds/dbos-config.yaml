@@ -8,17 +8,11 @@ language: python
 runtimeConfig:
   start:
     - "fastapi run reliable_refunds/main.py"
+database_url: ${DBOS_DATABASE_URL}
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
   migrate:
     - alembic upgrade head
     - python3 -m migrations.reset_database
-telemetry:
-  logs:
-    logLevel: INFO
 env:
   OPENAI_API_KEY: ${OPENAI_API_KEY}
   SENDGRID_API_KEY: ${SENDGRID_API_KEY}
