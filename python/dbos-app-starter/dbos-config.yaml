@@ -9,6 +9,3 @@ runtimeConfig:
   start:
     - "fastapi run app/main.py"
 database_url: ${DBOS_DATABASE_URL}
-database:
-  migrate:
-    - echo 'No migrations specified'
