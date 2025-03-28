@@ -222,7 +222,7 @@ The optional sending of task results emails is done using Amazon SES, and the [@
 All that is necessary, as shown in `src/dbos/operations.ts`, is to configure the email instance (using environment variables):
 ```typescript
 if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
-  globalThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
+  globalThis.reportSes = new DBOS_SES('reportSES', {awscfgname: 'aws_config'});
 }
 ```
 
