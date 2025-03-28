@@ -171,7 +171,7 @@ export function createDBOSProvider(token: string, name: string): Provider {
   return {
     provide: token,
     useFactory: () => {
-      return DBOS.configureInstance(AppService, name);
+      return new AppService(name);
     },
     inject: [],
   };

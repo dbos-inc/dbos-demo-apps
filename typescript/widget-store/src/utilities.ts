@@ -35,7 +35,7 @@ export interface OrderWithProduct {
 export const PRODUCT_ID = 1;
 
 const reportSes = (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])
-  ? DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'})
+  ? new DBOS_SES('reportSES', {awscfgname: 'aws_config'})
   : undefined;
 
 export class ShopUtilities {
