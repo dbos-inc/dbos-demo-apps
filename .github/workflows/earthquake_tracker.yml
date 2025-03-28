@@ -48,13 +48,13 @@ jobs:
         with:
           python-version: '3.13'
           architecture: 'x64'
-  
+
       - name: Install Dependencies
         run: pdm install
         working-directory: python/earthquake-tracker
-  
+
       - name: Run Unit Tests
         run: pdm run pytest
         working-directory: python/earthquake-tracker
         env:
-          PGPASSWORD: dbos
+          DBOS_TEST_DATABASE_URL: postgresql+psycopg://postgres:dbos@localhost:5432/earthquake_tracker_test
