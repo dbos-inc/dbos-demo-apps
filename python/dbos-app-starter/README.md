@@ -1,43 +1,25 @@
 # Welcome to DBOS!
 
 This is a template app built with DBOS and FastAPI.
+It demonstrates the durability of DBOS workflows.
 
-### Getting Started
+### Run This App
 
-To get started building, edit `app/main.py`.
-
-To include new packages or dependencies, add them to `requirements.txt`.
-
-<details>
-<summary><strong>Deploying via the DBOS Cloud CLI</strong></summary>
-
-You can deploy this app to DBOS Cloud via the DBOS Cloud CLI.
-Install it with this command (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then, run this command to deploy your app:
-
-```shell
-dbos-cloud app deploy
-```
-</details>
-
-### Developing Locally
-
-To run this app locally, create a virtual environment and install dependencies:
+To run this app, create a virtual environment and install dependencies:
 
 ```shell
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install dbos
 ```
-Then start your app. DBOS will automatically guide you through connecting to your app to a Postgres database.
+Then start your app.
+DBOS will automatically help you launch and connect to a new Postgres database (using Docker if available, else DBOS Cloud).
+If you already use Postgres, you can instead set the `DBOS_DATABASE_URL` environment variable to a connection string to your database.
 
 ```shell
-dbos start
+fastapi run app/main.py
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your app!
+
+Then check out the [programming guide](https://docs.dbos.dev/python/programming-guide) to learn more about building with DBOS.

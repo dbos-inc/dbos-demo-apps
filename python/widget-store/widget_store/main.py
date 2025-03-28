@@ -8,15 +8,18 @@
 
 import os
 
-from dbos import DBOS, SetWorkflowID
+from dbos import DBOS, SetWorkflowID, DBOSConfig
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import HTMLResponse
 
 from .schema import OrderStatus, orders, products
 
 app = FastAPI()
-
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "widget-store",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(fastapi=app, config=config)
 
 WIDGET_ID = 1
 PAYMENT_STATUS = "payment_status"
