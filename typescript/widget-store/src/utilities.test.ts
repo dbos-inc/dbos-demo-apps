@@ -5,17 +5,17 @@ import { PoolConfig } from "pg";
 
 import { DBOS, DBOSConfig } from "@dbos-inc/dbos-sdk";
 
-export async function resetDatabase(poolConfig: PoolConfig) {
+export async function resetDatabase() {
   const cwd = process.cwd();
   const knexConfig = {
     client: "pg",
-    connection: poolConfig,
+    connection: DBOS.dbosConfig?.poolConfig as PoolConfig,
     migrations: {
       directory: path.join(cwd, "migrations"),
       tableName: "knex_migrations",
     },
   };
-  const appDbName = poolConfig.database;
+  const appDbName = DBOS.dbosConfig?.poolConfig?.database;
   knexConfig.connection.database = "postgres";
   let knexDB: Knex = knex(knexConfig);
   try {
@@ -48,19 +48,13 @@ export async function resetDatabase(poolConfig: PoolConfig) {
 describe("Widget store utilities", () => {
   beforeEach(async () => {
     const dbosTestConfig: DBOSConfig = {
-      poolConfig: {
-        host: "localhost",
-        port: 5432,
-        database: "widget_store_test",
-        user: "postgres",
-        password: process.env.PGPASSWORD || "dbos",
-      },
-      system_database: "widget_store_test_dbos_sys",
+      databaseUrl: `postgres://postgres:${process.env.PGPASSWORD || "dbos"}@localhost:5432/widget_store_test`,
+      sysDbName: "widget_store_test_dbos_sys",
       userDbclient: "knex",
     };
     DBOS.setConfig(dbosTestConfig);
-    // TODO drop system DB
-    await resetDatabase(DBOS.dbosConfig!.poolConfig!);
+    await resetDatabase();
+    await DBOS.dropSystemDB();
     await DBOS.shutdown();
     await DBOS.launch();
   }, 10000);

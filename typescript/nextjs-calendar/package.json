@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-dbtriggers": "^2.2.10-preview.g90e74a1e32",
-    "@dbos-inc/dbos-email-ses": "^2.1.17",
-    "@dbos-inc/dbos-random": "^2.1.17",
+    "@dbos-inc/dbos-email-ses": "^2.6.19",
+    "@dbos-inc/dbos-random": "^2.6.19",
     "@dbos-inc/dbos-sdk": "^2.6.19",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -29,6 +29,7 @@
     "react": "^19.0.0",
     "react-big-calendar": "^1.17.1",
     "react-dom": "^19.0.0",
+    "ts-node": "^10.9.2",
     "uuid": "^11.0.5",
     "ws": "^8.18.0"
   },
@@ -47,10 +48,7 @@
     "eslint-config-next": "15.1.4",
     "jest": "^29.7.0",
     "nodemon": "^3.1.9",
-    "pg": "^8.14.1",
     "supertest": "^7.0.0",
-    "ts-jest": "^29.3.0",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
   "overrides": {

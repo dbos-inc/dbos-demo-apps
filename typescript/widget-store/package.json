@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-email-ses": "^2.0.2",
-    "@dbos-inc/dbos-sdk": "^2.6.19",
+    "@dbos-inc/dbos-sdk": "preview",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
