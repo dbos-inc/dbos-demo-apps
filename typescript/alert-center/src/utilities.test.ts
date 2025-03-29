@@ -39,14 +39,8 @@ export async function resetDatabase(poolConfig: PoolConfig) {
 describe("AlertCenter utilities", () => {
   beforeEach(async () => {
     const dbosTestConfig: DBOSConfig = {
-      poolConfig: {
-        host: "localhost",
-        port: 5432,
-        database: "alert_center_test",
-        user: "postgres",
-        password: process.env.PGPASSWORD || "dbos",
-      },
-      system_database: "alert_center_test_dbos_sys",
+      databaseUrl: `postgres://postgres:${process.env.PGPASSWORD || "dbos"}@localhost:5432/alert_center_test`,
+      sysDbName: "alert_center_test_dbos_sys",
       userDbclient: "knex",
     };
     DBOS.setConfig(dbosTestConfig);
