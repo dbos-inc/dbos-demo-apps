@@ -54,7 +54,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Compile and Test
-        working-directory: typescript/alert-center/
+        working-directory: typescript/dbos-nestjs-starter
         run: |
           npm ci
           npm run build
