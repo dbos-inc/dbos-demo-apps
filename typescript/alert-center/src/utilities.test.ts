@@ -5,17 +5,17 @@ import { PoolConfig } from "pg";
 
 import { DBOS, DBOSConfig } from "@dbos-inc/dbos-sdk";
 
-export async function resetDatabase(poolConfig: PoolConfig) {
+export async function resetDatabase() {
   const cwd = process.cwd();
   const knexConfig = {
     client: "pg",
-    connection: poolConfig,
+    connection: DBOS.dbosConfig?.poolConfig as PoolConfig,
     migrations: {
       directory: path.join(cwd, "migrations"),
       tableName: "knex_migrations",
     },
   };
-  const appDbName = poolConfig.database;
+  const appDbName = DBOS.dbosConfig?.poolConfig?.database;
   knexConfig.connection.database = "postgres";
   let knexDB: Knex = knex(knexConfig);
   try {
@@ -44,8 +44,7 @@ describe("AlertCenter utilities", () => {
       userDbclient: "knex",
     };
     DBOS.setConfig(dbosTestConfig);
-    // TODO drop system DB
-    await resetDatabase(DBOS.dbosConfig!.poolConfig!);
+    await resetDatabase();
     await DBOS.shutdown();
     await DBOS.launch();
   }, 10000);
