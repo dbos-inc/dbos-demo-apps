@@ -45,6 +45,7 @@ describe("AlertCenter utilities", () => {
     };
     DBOS.setConfig(dbosTestConfig);
     await resetDatabase();
+    await DBOS.dropSystemDB();
     await DBOS.shutdown();
     await DBOS.launch();
   }, 10000);
