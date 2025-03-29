@@ -4,12 +4,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact/main/dbos-config.schema.json
 language: node
 name: dbos-nest-starter
+database_url: ${DBOS_DATABASE_URL}
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
-  connectionTimeoutMillis: 3000
   app_db_client: knex
   migrate:
     - npx knex migrate:latest
@@ -19,6 +15,3 @@ runtimeConfig:
   start:
     - npx nest start
   port: 3000
-telemetry:
-  logs:
-    logLevel: info
