@@ -25,7 +25,7 @@
       <tr *ngFor="let acct of this.accounts">
         <td>{{acct.account_id}}</td>
         <td>{{acct.owner_name}}</td>
-        <td>\${{(acct.balance / 100.0).toFixed(2)}}</td>
+        <td>${{(acct.balance / 100.0).toFixed(2)}}</td>
         <td>{{acct.type}}</td>
         <td>
           <div class="btn-group">
@@ -80,10 +80,10 @@
                   <td>{{txh.to_account_id}} &#64; {{txh.to_location}}</td>
                 </ng-template>
                 <ng-template [ngIf]="txh.to_account_id == txnHistoryAccount && txh.to_location == 'local'" [ngIfElse]="showNegative">
-                  <td><strong class="text-success">+\${{(txh.amount / 100.0).toFixed(2)}}</strong></td>
+                  <td><strong class="text-success">+${{(txh.amount / 100.0).toFixed(2)}}</strong></td>
                 </ng-template>
                 <ng-template #showNegative>
-                  <td><strong class="text-danger">-\${{(txh.amount / 100.0).toFixed(2)}}</strong></td>
+                  <td><strong class="text-danger">-${{(txh.amount / 100.0).toFixed(2)}}</strong></td>
                 </ng-template>
               </tr>
               </tbody>
