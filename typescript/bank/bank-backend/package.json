@@ -14,7 +14,7 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.0.2",
+    "@dbos-inc/dbos-sdk": "^2.6.19",
     "@koa/bodyparser": "^5.0.0",
     "@koa/cors": "^5.0.0",
     "@koa/router": "^12.0.0",
@@ -31,7 +31,7 @@
     "prisma": "^5.1.1"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^2.0.2",
+    "@dbos-inc/dbos-cloud": "^2.6.19",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/jest": "^29.5.3",
     "@types/koa__cors": "^4.0.1",
@@ -45,7 +45,7 @@
     "nodemon": "^3.1.4",
     "supertest": "^7.0.0",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.1.6",
+    "typescript": "^5.5.4",
     "uuid": "^9.0.0"
   }
 }

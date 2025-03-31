@@ -27,7 +27,7 @@
     "module-alias": "^2.2.3",
     "next": "^15.2.4",
     "react": "^19.0.0",
-    "react-big-calendar": "^1.17.1",
+    "react-big-calendar": "^1.18.0",
     "react-dom": "^19.0.0",
     "ts-node": "^10.9.2",
     "uuid": "^11.0.5",
@@ -50,11 +50,5 @@
     "nodemon": "^3.1.9",
     "supertest": "^7.0.0",
     "typescript": "^5.7.3"
-  },
-  "overrides": {
-    "react-big-calendar": {
-      "react": "19.0.0",
-      "react-dom": "19.0.0"
-    }
   }
 }

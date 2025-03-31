@@ -446,7 +446,7 @@ files = [
 
 [[package]]
 name = "dbos"
-version = "0.24.0"
+version = "0.24.1"
 requires_python = ">=3.9"
 summary = "Ultra-lightweight durable execution in Python"
 groups = ["default"]
@@ -471,8 +471,8 @@ dependencies = [
     "websockets>=15.0",
 ]
 files = [
-    {file = "dbos-0.24.0-py3-none-any.whl", hash = "sha256:08e063b027d0f5c2c9c098c423b5d639eb104ae77845648157adad0931a32e64"},
-    {file = "dbos-0.24.0.tar.gz", hash = "sha256:eca79e83175faefe337c0d498678439f8ca52da086d4c5f99bf7e4446e1f11a9"},
+    {file = "dbos-0.24.1-py3-none-any.whl", hash = "sha256:12aa462eb5ef962b2a4b5004dbebbec9f6e8ed439844728065a6c7a0ddc052cc"},
+    {file = "dbos-0.24.1.tar.gz", hash = "sha256:c281c13bdf222d42268f1d11bf73902528a9d782aff11b7790abcdb2f06887b4"},
 ]
 
 [[package]]
