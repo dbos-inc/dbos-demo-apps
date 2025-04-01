@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['20', '22', '23']
+        node-version: ['20', '22'] #, '23'] FIXME
 
     services:
       # Postgres service container

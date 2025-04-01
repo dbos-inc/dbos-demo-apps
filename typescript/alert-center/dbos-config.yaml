@@ -3,7 +3,7 @@
 
 # yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact/main/dbos-config.schema.json
 
-name: 'alert-center'
+name: 'alert center'
 database_url: ${DBOS_DATABASE_URL}
 database:
   app_db_client: 'knex'
