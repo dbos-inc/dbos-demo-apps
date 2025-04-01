@@ -2,7 +2,7 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "target": "esnext",
+    "target": "ES2017",
     "lib": [
       "dom",
       "dom.iterable",
