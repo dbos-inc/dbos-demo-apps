@@ -29,7 +29,7 @@ if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.
     DBOS.logger.warn('`REPORT_EMAIL_TO_ADDRESS` and `REPORT_EMAIL_FROM_ADDRESS` are set, but `AWS_SECRET_ACCESS_KEY` is not.');
   }
   if (ok) {
-    globalThis.reportSes = new DBOS_SES('reportSES', {awscfgname: 'aws_config'});
+    globalThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
   }
 }
 

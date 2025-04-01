@@ -23,10 +23,11 @@ const kafkaConfig: KafkaConfig = {
   logLevel: logLevel.ERROR
 };
 
-const producerConfig: KafkaProduceStep = new KafkaProduceStep(
+const producerConfig: KafkaProduceStep =  DBOS.configureInstance(KafkaProduceStep, 
   'wfKafka', kafkaConfig, respondTopic, {
     createPartitioner: Partitioners.DefaultPartitioner
   });
+
 
 //The structure returned to the frontend when an employee asks for an assignment
 export interface AlertEmployeeInfo
