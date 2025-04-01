@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ConfiguredInstance, DBOS, InitContext } from "@dbos-inc/dbos-sdk";
+import { ConfiguredInstance, DBOS } from "@dbos-inc/dbos-sdk";
 import {
   uniqueNamesGenerator,
   adjectives,
