@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ConfiguredInstance, DBOS, InitContext } from "@dbos-inc/dbos-sdk";
+import { ConfiguredInstance, DBOS } from "@dbos-inc/dbos-sdk";
 import {
   uniqueNamesGenerator,
   adjectives,
@@ -18,7 +18,7 @@ export class AppService extends ConfiguredInstance {
     super(name);
   }
 
-  async initialize(ctx: InitContext): Promise<void> {
+  override async initialize(): Promise<void> {
     DBOS.logger.info(`Initializing DBOS provider ${this.name}`);
   }
 
