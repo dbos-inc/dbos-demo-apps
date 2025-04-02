@@ -1,10 +1,8 @@
-import { Knex } from 'knex';
 import { parseConfigFile } from '@dbos-inc/dbos-sdk'
-import { DBOSConfig } from '@dbos-inc/dbos-sdk';
 
-const [dbosConfig, ]: [DBOSConfig, unknown] = parseConfigFile();
+const [dbosConfig] = parseConfigFile();
 
-const config: Knex.Config = {
+const config = {
   client: 'pg',
   connection: {
     host: dbosConfig.poolConfig.host,

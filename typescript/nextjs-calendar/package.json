@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-dbtriggers": "^2.2.10-preview.g90e74a1e32",
-    "@dbos-inc/dbos-email-ses": "^2.6.19",
-    "@dbos-inc/dbos-random": "^2.6.19",
-    "@dbos-inc/dbos-sdk": "^2.6.19",
+    "@dbos-inc/dbos-email-ses": "2.7.22-preview",
+    "@dbos-inc/dbos-random": "2.7.22-preview",
+    "@dbos-inc/dbos-sdk": "2.7.22-preview",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.1",
@@ -29,12 +29,13 @@
     "react": "^19.0.0",
     "react-big-calendar": "^1.18.0",
     "react-dom": "^19.0.0",
+    "ts-jest": "^29.3.1",
     "ts-node": "^10.9.2",
     "uuid": "^11.0.5",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^2.0.2",
+    "@dbos-inc/dbos-cloud": "2.7.22-preview",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^29.5.14",
     "@types/module-alias": "^2.0.4",
