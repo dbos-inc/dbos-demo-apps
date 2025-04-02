@@ -1,4 +1,4 @@
-import { DBOS, ArgSources, ArgSource } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { Knex } from 'knex';
 import { getRandomInt, getCustomerName } from "./utils";
 
@@ -10,7 +10,7 @@ const INVALID_ITEM_ID = -12345;
 export class TPCC {
 
   @DBOS.getApi('/payment/:warehouses')
-  static async paymentHandler(@ArgSource(ArgSources.URL) warehouses: number) {
+  static async paymentHandler(warehouses: number) {
     const w_id = getRandomInt(warehouses) + 1;
     const d_id = getRandomInt(DIST_PER_WAREHOUSE) + 1;
     let c_d_id, c_w_id;
@@ -45,7 +45,7 @@ export class TPCC {
   }
 
   @DBOS.getApi('/neworder/:warehouses')
-  static async newOrderHandler(@ArgSource(ArgSources.URL) warehouses: number) {
+  static async newOrderHandler(warehouses: number) {
     const w_id = getRandomInt(warehouses) + 1;
     const districtID = getRandomInt(DIST_PER_WAREHOUSE) + 1;
     const customerID = getRandomInt(CUSTOMER_PER_DIST) + 1;

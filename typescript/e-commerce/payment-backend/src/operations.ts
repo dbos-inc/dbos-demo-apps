@@ -1,5 +1,5 @@
 import {
-  DBOS, DBOSResponseError, ArgRequired, ArgOptional, ArgSource, ArgSources, KoaMiddleware
+  DBOS, DBOSResponseError, KoaMiddleware, ArgRequired, ArgOptional,
 } from '@dbos-inc/dbos-sdk';
 
 import KoaViews from '@ladjs/koa-views';
@@ -70,7 +70,7 @@ export class PlaidPayments {
   }
 
   @DBOS.postApi('/payment/:session_id')
-  static async paymentAction(@ArgSource(ArgSources.URL) session_id: string) {
+  static async paymentAction(session_id: string) {
     const session = await PlaidPayments.getSessionInformationTrans(session_id);
     if (!session) {
       return `Invalid session id ${session_id}`;
@@ -114,7 +114,7 @@ export class PlaidPayments {
 
   @DBOS.getApi('/api/session/:session_id')
   @DBOS.transaction({ readOnly: true })
-  static async retrievePaymentSession(@ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSession | undefined> {
+  static async retrievePaymentSession(session_id: string): Promise<PaymentSession | undefined> {
     const rows = await DBOS.knexClient<SessionTable>('session').select('status').where({ session_id });
     if (rows.length === 0) { return undefined; }
 
@@ -137,7 +137,7 @@ export class PlaidPayments {
   }
 
   @DBOS.getApi('/api/session_info/:session_id')
-  static async getSessionInformation(@ArgSource(ArgSources.URL) session_id: string): Promise<PaymentSessionInformation | undefined> {
+  static async getSessionInformation(session_id: string): Promise<PaymentSessionInformation | undefined> {
     return await PlaidPayments.getSessionInformationTrans(session_id);
   }
 

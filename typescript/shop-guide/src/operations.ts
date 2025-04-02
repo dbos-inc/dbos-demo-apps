@@ -1,11 +1,11 @@
-import { DBOS, ArgOptional} from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { ShopUtilities, payment_complete_topic, generatePaymentUrls } from './utilities';
 
 export const session_topic = "payment_session_id";
 
 export class Shop {
   @DBOS.postApi('/checkout/:key?')
-  static async webCheckout(@ArgOptional key: string): Promise<string> {
+  static async webCheckout(key?: string): Promise<string> {
     // A workflow handle is immediately returned. The workflow continues in the background.
     const handle = await DBOS.startWorkflow(Shop, {workflowID: key}).checkoutWorkflow();
     DBOS.logger.info(`Checkout workflow started with UUID: ${handle.workflowID}`);

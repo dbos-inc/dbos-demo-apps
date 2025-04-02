@@ -1,4 +1,4 @@
-import { ArgOptional, DBOS } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 export enum AlertStatus {
   ACTIVE   = 0,
@@ -69,7 +69,7 @@ export class RespondUtilities {
 
 
   @DBOS.transaction()
-  static async getUserAssignment(employee_name: string, currentTime: number, @ArgOptional more_time: boolean | undefined) {
+  static async getUserAssignment(employee_name: string, currentTime: number, more_time: boolean | undefined) {
     let employees = await DBOS.knexClient<Employee>('employee').where({employee_name}).select();
     let newAssignment = false;
 
