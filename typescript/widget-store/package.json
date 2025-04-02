@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "db:setup": "npx knex migrate:up && npx knex seed:run",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",

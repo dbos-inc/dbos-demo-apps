@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
     "dev": "nodemon",
