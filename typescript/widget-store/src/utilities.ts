@@ -112,11 +112,6 @@ export class ShopUtilities {
     return DBOS.knexClient<Order>('orders').select('*');
   }
 
-  @DBOS.transaction({ readOnly: true })
-  static async retrievePaidOrders() {
-    return DBOS.knexClient<Order>('orders').select('*').where({ order_status: OrderStatus.PAID });
-  }
-
   @DBOS.workflow()
   static async dispatchOrder(order_id: number) {
     for (let i = 0; i < 10; i++) {
