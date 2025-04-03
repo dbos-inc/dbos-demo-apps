@@ -96,8 +96,11 @@ fastify.get('/', async (req, reply) => {
 });
 
 async function main() {
-  await DBOS.launch();
   const PORT = 3000;
+  DBOS.setConfig({
+    name: 'widget-store',
+    databaseUrl: process.env.DBOS_DATABASE_URL,
+  });
   await DBOS.launch();
   await fastify.listen({ port: PORT });
   console.log(`🚀 Server is running on http://localhost:${PORT}`);

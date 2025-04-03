@@ -9,4 +9,4 @@ database:
   migrate: ['npx knex migrate:latest', 'npx knex seed:run']
 runtimeConfig:
   start:
-    - "npm run start"
+    - 'npm run start'
