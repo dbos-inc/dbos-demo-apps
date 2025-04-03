@@ -1,4 +1,4 @@
-import { DBOS, ArgOptional, DBOSResponseError } from '@dbos-inc/dbos-sdk';
+import { DBOS, DBOSResponseError } from '@dbos-inc/dbos-sdk';
 import { ShopUtilities } from './utilities';
 export { Frontend } from './frontend';
 
@@ -7,8 +7,8 @@ export const PAYMENT_ID_EVENT = 'payment_url';
 export const ORDER_ID_EVENT = 'order_url';
 
 export class Shop {
-  @DBOS.postApi('/checkout/:key?')
-  static async webCheckout(@ArgOptional key: string): Promise<string | null> {
+  @DBOS.postApi('/checkout/:key')
+  static async webCheckout(key: string): Promise<string | null> {
     // Start the workflow (below): this gives us the handle immediately and continues in background
     const handle = await DBOS.startWorkflow(Shop, { workflowID: key }).paymentWorkflow();
 
