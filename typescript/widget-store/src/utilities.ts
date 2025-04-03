@@ -42,9 +42,6 @@ export class ShopUtilities {
       .update({
         inventory: DBOS.knexClient.raw('inventory - ?', 1),
       });
-    //A good block to uncomment in time-travel debugger to see an example of querying past state
-    // const item = await DBOS.knexClient<Product>('products').select('inventory').where({ product_id: PRODUCT_ID });
-    // DBOS.logger.info(">>> Remaining inventory: " + item[0].inventory);
     if (numAffected <= 0) {
       throw new Error('Insufficient Inventory');
     }
