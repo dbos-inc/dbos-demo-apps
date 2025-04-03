@@ -3,7 +3,6 @@ import { DBOS, DBOSResponseError } from '@dbos-inc/dbos-sdk';
 import { ShopUtilities } from './utilities';
 import { Liquid } from 'liquidjs';
 import path from 'path';
-export { Frontend } from './frontend';
 
 export const PAYMENT_TOPIC = 'payment';
 export const PAYMENT_ID_EVENT = 'payment_url';
@@ -37,7 +36,7 @@ export class Shop {
   }
 }
 
-const fastify: FastifyInstance = Fastify({ logger: true });
+const fastify: FastifyInstance = Fastify();
 
 fastify.post<{
   Params: { key: string };
@@ -95,7 +94,6 @@ fastify.get('/', async (req, reply) => {
   const html = await render('app.html', {});
   return reply.type('text/html').send(html);
 });
-
 
 async function main() {
   await DBOS.launch();

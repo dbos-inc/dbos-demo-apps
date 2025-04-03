@@ -7,3 +7,6 @@ name: 'widget-store'
 database_url: ${DBOS_DATABASE_URL}
 database:
   migrate: ['npx knex migrate:latest', 'npx knex seed:run']
+runtimeConfig:
+  start:
+    - "npm run start"
