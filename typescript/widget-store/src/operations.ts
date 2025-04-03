@@ -1,30 +1,21 @@
-import {
-  DBOS,
-  ArgOptional,
-  DBOSResponseError,
-} from "@dbos-inc/dbos-sdk";
-import { ShopUtilities } from "./utilities";
-export { Frontend } from "./frontend";
+import { DBOS, ArgOptional, DBOSResponseError } from '@dbos-inc/dbos-sdk';
+import { ShopUtilities } from './utilities';
+export { Frontend } from './frontend';
 
-export const PAYMENT_TOPIC = "payment";
-export const PAYMENT_ID_EVENT = "payment_url";
-export const ORDER_ID_EVENT = "order_url";
+export const PAYMENT_TOPIC = 'payment';
+export const PAYMENT_ID_EVENT = 'payment_url';
+export const ORDER_ID_EVENT = 'order_url';
 
 export class Shop {
-  @DBOS.postApi("/checkout/:key?")
-  static async webCheckout(
-    @ArgOptional key: string
-  ): Promise<string | null> {
+  @DBOS.postApi('/checkout/:key?')
+  static async webCheckout(@ArgOptional key: string): Promise<string | null> {
     // Start the workflow (below): this gives us the handle immediately and continues in background
-    const handle = await DBOS.startWorkflow(Shop, {workflowID: key}).paymentWorkflow();
+    const handle = await DBOS.startWorkflow(Shop, { workflowID: key }).paymentWorkflow();
 
     // Wait for the workflow to create the payment ID; return that to the user
-    const paymentID = await DBOS.getEvent<string | null>(
-      handle.workflowID,
-      PAYMENT_ID_EVENT
-    );
+    const paymentID = await DBOS.getEvent<string | null>(handle.workflowID, PAYMENT_ID_EVENT);
     if (paymentID === null) {
-      DBOS.logger.error("workflow failed");
+      DBOS.logger.error('workflow failed');
     }
     return paymentID;
   }
@@ -51,7 +42,7 @@ export class Shop {
     const notification = await DBOS.recv<string>(PAYMENT_TOPIC, 120);
 
     // If the money is good - fulfill the order. Else, cancel:
-    if (notification && notification === "paid") {
+    if (notification && notification === 'paid') {
       DBOS.logger.info(`Payment successful!`);
       await ShopUtilities.markOrderPaid(orderID);
       await DBOS.startWorkflow(ShopUtilities).dispatchOrder(orderID);
@@ -65,48 +56,45 @@ export class Shop {
     await DBOS.setEvent(ORDER_ID_EVENT, orderID);
   }
 
-  @DBOS.postApi("/payment_webhook/:key/:status")
-  static async paymentWebhook(
-    key: string,
-    status: string
-  ): Promise<string> {
+  @DBOS.postApi('/payment_webhook/:key/:status')
+  static async paymentWebhook(key: string, status: string): Promise<string> {
     // Send payment status to the workflow above
     await DBOS.send(key, status, PAYMENT_TOPIC);
 
     // Wait for workflow to give us the order URL
     const orderID = await DBOS.getEvent<string>(key, ORDER_ID_EVENT);
     if (orderID === null) {
-      DBOS.logger.error("retrieving order ID failed");
-      throw new DBOSResponseError("Error retrieving order ID", 500);
+      DBOS.logger.error('retrieving order ID failed');
+      throw new DBOSResponseError('Error retrieving order ID', 500);
     }
 
     // Return the order status URL to the client
     return orderID;
   }
 
-  @DBOS.postApi("/crash_application")
+  @DBOS.postApi('/crash_application')
   static async crashApplication() {
     // For testing and demo purposes :)
     process.exit(1);
     return Promise.resolve();
   }
 
-  @DBOS.getApi("/product")
+  @DBOS.getApi('/product')
   static async product() {
     return await ShopUtilities.retrieveProduct();
   }
 
-  @DBOS.getApi("/order/:order_id")
+  @DBOS.getApi('/order/:order_id')
   static async order(order_id: number) {
     return await ShopUtilities.retrieveOrder(order_id);
   }
 
-  @DBOS.getApi("/orders")
+  @DBOS.getApi('/orders')
   static async orders() {
     return await ShopUtilities.retrieveOrders();
   }
 
-  @DBOS.postApi("/restock")
+  @DBOS.postApi('/restock')
   static async restock() {
     return await ShopUtilities.setInventory(12);
   }
