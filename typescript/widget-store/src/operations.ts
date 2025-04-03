@@ -1,5 +1,5 @@
-import Fastify, { FastifyInstance, FastifyRequest } from 'fastify';
-import { DBOS, DBOSResponseError } from '@dbos-inc/dbos-sdk';
+import Fastify from 'fastify';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { ShopUtilities } from './utilities';
 import { Liquid } from 'liquidjs';
 import path from 'path';
@@ -36,11 +36,11 @@ export class Shop {
   }
 }
 
-const fastify: FastifyInstance = Fastify();
+const fastify = Fastify();
 
 fastify.post<{
   Params: { key: string };
-}>('/checkout/:key', async (req: FastifyRequest<{ Params: { key: string } }>) => {
+}>('/checkout/:key', async (req) => {
   const key = req.params.key;
   const handle = await DBOS.startWorkflow(Shop, { workflowID: key }).paymentWorkflow();
   const paymentID = await DBOS.getEvent<string | null>(handle.workflowID, PAYMENT_ID_EVENT);
@@ -50,13 +50,13 @@ fastify.post<{
 
 fastify.post<{
   Params: { key: string; status: string };
-}>('/payment_webhook/:key/:status', async (req: FastifyRequest<{ Params: { key: string; status: string } }>) => {
+}>('/payment_webhook/:key/:status', async (req, reply) => {
   const { key, status } = req.params;
   await DBOS.send(key, status, PAYMENT_TOPIC);
   const orderID = await DBOS.getEvent<string>(key, ORDER_ID_EVENT);
   if (orderID === null) {
     DBOS.logger.error('retrieving order ID failed');
-    throw new DBOSResponseError('Error retrieving order ID', 500);
+    return reply.code(500).send('Error retrieving order ID');
   }
   return orderID;
 });
@@ -71,7 +71,7 @@ fastify.get('/product', async () => {
 
 fastify.get<{
   Params: { order_id: string };
-}>('/order/:order_id', async (req: FastifyRequest<{ Params: { order_id: string } }>) => {
+}>('/order/:order_id', async (req) => {
   const order_id = Number(req.params.order_id);
   return await ShopUtilities.retrieveOrder(order_id);
 });
