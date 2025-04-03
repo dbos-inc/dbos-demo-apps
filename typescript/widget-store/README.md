@@ -1,6 +1,48 @@
-# DBOS Widget Store
+# Welcome to DBOS!
 
-## Setting up the app
+This is an example app built with DBOS and Fastify.
+
+### Developing Locally
+
+First, install dependencies, build your app, and set up its database tables:
+
+```shell
+npm install
+npm run build
+npx dbos migrate
+```
+
+Then, start it:
+
+```shell
+npm run start
+```
+
+Alternatively, run it in dev mode using `nodemon`:
+
+```shell
+npm install
+npm run dev
+```
+
+Visit [`http://localhost:3000`](http://localhost:3000) to see your app!
+
+<details>
+<summary><strong>Deploying via the DBOS Cloud CLI</strong></summary>
+
+You can also deploy this app to DBOS Cloud via the Cloud CLI.
+Install it globally with this command:
+
+```shell
+npm i -g @dbos-inc/dbos-cloud@latest
+```
+
+Then, run this command to deploy your app:
+
+```shell
+dbos-cloud app deploy
+```
+</details>
 
 ## Usage
 
