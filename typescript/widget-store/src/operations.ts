@@ -74,7 +74,7 @@ export class Shop {
 // The endpoint accepts an idempotency key so that even if the customer presses
 // "buy now" multiple times, only one checkout workflow is started.
 
-const fastify = Fastify();
+const fastify = Fastify({logger: true});
 
 fastify.post<{
   Params: { key: string };
@@ -155,7 +155,7 @@ fastify.post('/crash_application', () => {
 async function main() {
   const PORT = 3000;
   DBOS.setConfig({
-    name: 'widget-store',
+    name: 'widget-store-node',
     databaseUrl: process.env.DBOS_DATABASE_URL,
   });
   await DBOS.launch();
