@@ -1,5 +1,4 @@
-import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
-import { SchedulerMode, DBOS} from '@dbos-inc/dbos-sdk';
+import { DBOS} from '@dbos-inc/dbos-sdk';
 
 export enum OrderStatus {
   PENDING = 0,
@@ -33,10 +32,6 @@ export interface OrderWithProduct {
 }
 
 export const PRODUCT_ID = 1;
-
-const reportSes = (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])
-  ? new DBOS_SES('reportSES', {awscfgname: 'aws_config'})
-  : undefined;
 
 export class ShopUtilities {
   @DBOS.transaction()
@@ -119,8 +114,16 @@ export class ShopUtilities {
     return DBOS.knexClient<Order>('orders').select("*").where({ order_status: OrderStatus.PAID });
   }
 
+  @DBOS.workflow()
+  static async dispatchOrder(order_id: number) {
+    for (let i = 0; i < 10; i++) {
+      await DBOS.sleep(1000);
+      await ShopUtilities.update_order_progress(order_id);
+    }
+  }
+
   @DBOS.transaction()
-  static async makeProgressOnPaidOrder(order_id: number): Promise<void> {
+  static async update_order_progress(order_id: number): Promise<void> {
     const orders = await DBOS.knexClient<Order>('orders').where({
       order_id: order_id,
       order_status: OrderStatus.PAID,
@@ -139,54 +142,4 @@ export class ShopUtilities {
       });
     }
   }
-
-  @DBOS.scheduled({crontab: '0 0 * * *'}) // Every midnight
-  @DBOS.workflow()
-  static async nightlyReport(schedDate: Date, _curdate: Date) {
-    const yesterday = schedDate;
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const sales = await ShopUtilities.getDailySales(yesterday);
-    await ShopUtilities.sendStatusEmail(yesterday, sales);
-  }
-
-  @DBOS.scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '*/20 * * * * *'}) // Every second
-  @DBOS.workflow()
-  static async makeProgressOnAllPaidOrders(_schedDate: Date, _curdate: Date) {
-    const orders = await ShopUtilities.retrievePaidOrders();
-    for (const order of orders) {
-      await ShopUtilities.makeProgressOnPaidOrder(order.order_id);
-    }
-  }
-
-  @DBOS.transaction({readOnly: true})
-  static async getDailySales(day: Date) {
-    const startOfDay = new Date(day.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(day.setHours(23, 59, 59, 999));
-
-    const result = await DBOS.knexClient('orders')
-      .join('products', 'orders.product_id', 'products.product_id')
-      .whereBetween('orders.last_update_time', [startOfDay, endOfDay])
-      .select(DBOS.knexClient.raw('COUNT(DISTINCT orders.order_id) as order_count'))
-      .select(DBOS.knexClient.raw('COUNT(orders.product_id) as product_count'))
-      .select(DBOS.knexClient.raw('SUM(products.price) as total_price'));
-
-    return result[0] as SalesSummary;
-  }
-
-  static async sendStatusEmail(yd: Date, sales: SalesSummary) {
-    if (!reportSes) return;
-    await reportSes.sendEmail({
-      to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
-      from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
-      subject: `Daily report for ${yd.toDateString()}`,
-      bodyText: `Yesterday we had ${sales.order_count} orders, selling ${sales.product_count} units, for a total of ${sales.total_price} dollars`,
-    });
-  }
-}
-
-interface SalesSummary {
-  order_count: number;
-  product_count: number;
-  total_price: number;
 }

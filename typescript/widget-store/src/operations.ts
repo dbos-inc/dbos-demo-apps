@@ -54,6 +54,7 @@ export class Shop {
     if (notification && notification === "paid") {
       DBOS.logger.info(`Payment successful!`);
       await ShopUtilities.markOrderPaid(orderID);
+      await DBOS.startWorkflow(ShopUtilities).dispatchOrder(orderID);
     } else {
       DBOS.logger.warn(`Payment failed...`);
       await ShopUtilities.errorOrder(orderID);
