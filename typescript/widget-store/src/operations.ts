@@ -40,11 +40,14 @@ const fastify = Fastify();
 
 fastify.post<{
   Params: { key: string };
-}>('/checkout/:key', async (req) => {
+}>('/checkout/:key', async (req, reply) => {
   const key = req.params.key;
   const handle = await DBOS.startWorkflow(Shop, { workflowID: key }).paymentWorkflow();
   const paymentID = await DBOS.getEvent<string | null>(handle.workflowID, PAYMENT_ID_EVENT);
-  if (paymentID === null) DBOS.logger.error('workflow failed');
+  if (paymentID === null) {
+    DBOS.logger.error('checkout failed');
+    return reply.code(500).send('Error starting checkout');
+  }
   return paymentID;
 });
 
