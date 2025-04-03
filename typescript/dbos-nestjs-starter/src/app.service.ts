@@ -20,6 +20,7 @@ export class AppService extends ConfiguredInstance {
 
   override async initialize(): Promise<void> {
     DBOS.logger.info(`Initializing DBOS provider ${this.name}`);
+    return Promise.resolve();
   }
 
   @DBOS.workflow()
