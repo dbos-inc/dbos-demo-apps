@@ -11,7 +11,6 @@
     "dev": "nodemon"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "2.7.22-preview",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/jest": "^29.5.14",
     "@types/pg": "^8.11.11",
@@ -25,7 +24,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-email-ses": "2.7.22-preview",
     "@dbos-inc/dbos-sdk": "2.7.22-preview",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
