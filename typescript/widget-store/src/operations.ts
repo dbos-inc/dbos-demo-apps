@@ -159,7 +159,7 @@ async function main() {
     databaseUrl: process.env.DBOS_DATABASE_URL,
   });
   await DBOS.launch();
-  await fastify.listen({ port: PORT });
+  await fastify.listen({ port: PORT, host: "0.0.0.0" });
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 }
 
