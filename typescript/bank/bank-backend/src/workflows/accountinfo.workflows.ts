@@ -1,8 +1,5 @@
 import {
   DBOS,
-  ArgOptional,
-  ArgSource,
-  ArgSources,
   Authentication,
   KoaMiddleware,
 } from "@dbos-inc/dbos-sdk";
@@ -17,7 +14,7 @@ import { PrismaClient } from "@prisma/client";
 export class BankAccountInfo {
   @DBOS.transaction()
   @DBOS.getApi("/api/list_accounts/:ownerName")
-  static async listAccountsFunc(@ArgSource(ArgSources.URL) ownerName: string) {
+  static async listAccountsFunc(ownerName: string) {
     return (DBOS.prismaClient as PrismaClient).accountInfo.findMany({
       where: {
         ownerName: {
@@ -43,7 +40,7 @@ export class BankAccountInfo {
   @DBOS.transaction()
   @DBOS.postApi("/api/create_account")
   @DBOS.requiredRole(["appAdmin"]) // Only an admin can create a new account.
-  static async createAccountFunc(ownerName: string, type: string, @ArgOptional balance?: number) {
+  static async createAccountFunc(ownerName: string, type: string, balance?: number) {
     return (DBOS.prismaClient as PrismaClient).accountInfo.create({
       data: {
         ownerName: ownerName,
