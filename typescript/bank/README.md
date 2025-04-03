@@ -343,7 +343,7 @@ We use the `@DBOS.requiredRole()` decorator to override the defaults.
 @DBOS.transaction()
 @DBOS.postApi("/api/create_account")
 @DBOS.requiredRole(["appAdmin"]) // Only an admin can create a new account.
-static async createAccountFunc(ownerName: string, type: string, @ArgOptional balance?: number) {...}
+static async createAccountFunc(ownerName: string, type: string, balance?: number) {...}
 ```
 
 We can quickly review our assignment of roles to endpoints by reviewing the information DBOS presents at startup:

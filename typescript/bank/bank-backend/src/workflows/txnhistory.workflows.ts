@@ -2,9 +2,6 @@ import {
   DBOS,
   Authentication,
   KoaMiddleware,
-  ArgOptional,
-  ArgSource,
-  ArgSources,
 } from "@dbos-inc/dbos-sdk";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { BankAccountInfo } from "./accountinfo.workflows";
@@ -19,7 +16,7 @@ const REMOTEDB_PREFIX: string = "remoteDB-";
 export class BankTransactionHistory {
   @DBOS.transaction()
   @DBOS.getApi("/api/transaction_history/:accountId")
-  static async listTxnForAccountFunc(@ArgSource(ArgSources.URL) accountId: number) {
+  static async listTxnForAccountFunc(accountId: number) {
     const acctId = BigInt(accountId);
     return (DBOS.prismaClient as PrismaClient).transactionHistory.findMany({
       where: {
@@ -86,7 +83,7 @@ export class BankTransactionHistory {
   }
 
   @DBOS.transaction()
-  static async updateAcctTransactionFunc(acctId: bigint, data: TransactionHistory, deposit: boolean, @ArgOptional undoTxn: bigint | null = null): Promise<bigint> {
+  static async updateAcctTransactionFunc(acctId: bigint, data: TransactionHistory, deposit: boolean, undoTxn: bigint | null = null): Promise<bigint> {
     // First, make sure the account exists, and read the latest balance.
     const acct = await BankAccountInfo.findAccountFunc(acctId);
     if (acct === null) {

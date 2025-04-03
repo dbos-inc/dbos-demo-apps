@@ -1,4 +1,4 @@
-import { DBOS, ArgOptional } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import path from 'path';
 import { Liquid } from "liquidjs";
 import { RespondUtilities } from "./utilities";
@@ -26,7 +26,7 @@ export class Frontend {
 
   //For a new employee to get an assignment or for an assigned employee to ask for more time
   @DBOS.getApi('/assignment')
-  static async getAssignment(name: string, @ArgOptional more_time: boolean | undefined) {
+  static async getAssignment(name: string, more_time: boolean | undefined) {
     const userRecWF = await DBOS.startWorkflow(AlertCenter).userAssignmentWorkflow(name, more_time);
 
     //This Workflow Event lets us know if we have an assignment and, if so, how much time is left

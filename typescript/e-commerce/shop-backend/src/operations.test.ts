@@ -82,7 +82,7 @@ describe("operations", () => {
 
     const bcoresp = await request(DBOS.getHTTPHandlersCallback())
       .post(`/api/checkout_session?username=noshopper`).set("Origin", "xxx");
-    expect(bcoresp.status).toBe(302); // CB TODO - Different status code?
+    expect(bcoresp.status).toBe(400);
 
     // Spy on / stub out the URL fetch
     const paySpy = jest.spyOn(Shop, 'placePaymentSessionRequest');
