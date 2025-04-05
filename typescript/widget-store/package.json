@@ -7,11 +7,10 @@
     "db:setup": "npx knex migrate:up && npx knex seed:run",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
-    "start": "npx dbos-sdk start",
+    "start": "node dist/operations.js",
     "dev": "nodemon"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "2.7.27-preview",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/jest": "^29.5.14",
     "@types/pg": "^8.11.11",
@@ -20,12 +19,13 @@
     "jest": "^29.7.0",
     "nodemon": "^3.1.4",
     "pg": "^8.14.1",
+    "prettier": "^3.5.3",
     "ts-jest": "^29.3.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-email-ses": "2.7.27-preview",
-    "@dbos-inc/dbos-sdk": "2.7.27-preview",
+    "@dbos-inc/dbos-sdk": "^2.7.27-preview",
+    "fastify": "^5.2.2",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
