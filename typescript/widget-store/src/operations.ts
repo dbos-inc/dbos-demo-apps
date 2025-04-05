@@ -17,10 +17,10 @@ export const ORDER_ID_EVENT = 'order_url';
 // First, let's write the checkout workflow.
 // This workflow is triggered whenever a customer buys a widget.
 // It creates a new order, then reserves inventory, then processes payment,
-// then marks the order as paid. If any step fails, it backs out,
+// then marks the order as paid. If any step fails, the workflow backs out,
 // returning reserved inventory and marking the order as cancelled.
 
-// DBOS durably executes this workflow: each of its steps executes exactly-once and
+// DBOS durably executes this workflow: each of its steps executes exactly once and
 // if it's ever interrupted, it automatically resumes from where it left off.
 // You can try this yourself--start an order and press the crash button at any time.
 // Within seconds, your app will recover to exactly the state it was in before the crash

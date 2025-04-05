@@ -120,12 +120,12 @@ export class ShopUtilities {
   static async dispatchOrder(order_id: number) {
     for (let i = 0; i < 10; i++) {
       await DBOS.sleep(1000);
-      await ShopUtilities.update_order_progress(order_id);
+      await ShopUtilities.updateOrderProgress(order_id);
     }
   }
 
   @DBOS.transaction()
-  static async update_order_progress(order_id: number): Promise<void> {
+  static async updateOrderProgress(order_id: number): Promise<void> {
     const orders = await DBOS.knexClient<Order>('orders').where({
       order_id: order_id,
       order_status: OrderStatus.PAID,

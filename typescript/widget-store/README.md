@@ -1,10 +1,12 @@
-# Welcome to DBOS!
+# Fault-Tolerant Checkout
 
-This is an example app built with DBOS and Fastify.
+In this example, we use DBOS and Fastify to build an online storefront that's resilient to any failure.
 
 ### Developing Locally
 
-First, install dependencies, build your app, and set up its database tables:
+First, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
+
+Then, install dependencies, build your app, and set up its database tables:
 
 ```shell
 npm install
