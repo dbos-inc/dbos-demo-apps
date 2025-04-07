@@ -63,7 +63,7 @@ export class ShopUtilities {
     await DBOS.knexClient<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @DBOS.transaction()
   static async retrieveProduct(): Promise<Product> {
     const item = await DBOS.knexClient<Product>('products').select('*').where({ product_id: PRODUCT_ID });
     if (!item.length) {
@@ -102,7 +102,7 @@ export class ShopUtilities {
     });
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @DBOS.transaction()
   static async retrieveOrder(order_id: number): Promise<Order> {
     const item = await DBOS.knexClient<Order>('orders').select('*').where({ order_id: order_id });
     if (!item.length) {
@@ -111,7 +111,7 @@ export class ShopUtilities {
     return item[0];
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @DBOS.transaction()
   static async retrieveOrders() {
     return DBOS.knexClient<Order>('orders').select('*');
   }
