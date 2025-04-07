@@ -11,6 +11,3 @@ runtimeConfig:
 database:
   migrate:
     - npx knex migrate:latest
-telemetry:
-  logs:
-    logLevel: 'info'
