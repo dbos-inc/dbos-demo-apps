@@ -8,7 +8,6 @@ class PollsConfig(AppConfig):
     def ready(self):
         dbos_config = {
             "name": "django-app",
-            "log_level": "DEBUG",
         }
         dbos = DBOS(config=dbos_config)
         dbos.launch()
