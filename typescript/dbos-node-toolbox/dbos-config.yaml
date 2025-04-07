@@ -7,7 +7,7 @@ name: dbos-node-toolbox
 language: node
 runtimeConfig:
   start:
-    - node dist/main.js
+    - npm run start
 database:
   migrate:
     - npx knex migrate:latest
