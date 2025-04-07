@@ -1,4 +1,4 @@
-import { parseConfigFile } from '@dbos-inc/dbos-sdk'
+import { parseConfigFile } from '@dbos-inc/dbos-sdk';
 
 const [dbosConfig] = parseConfigFile();
 
@@ -12,8 +12,8 @@ const config = {
     ssl: dbosConfig.poolConfig.ssl,
   },
   migrations: {
-    directory: './migrations'
-  }
+    directory: './migrations',
+  },
 };
 
 export default config;
