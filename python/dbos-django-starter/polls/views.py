@@ -22,5 +22,4 @@ def transaction(var):
 
 @DBOS.step()
 def step(var):
-    print("test")
     return var
