@@ -8,9 +8,3 @@ language: node
 runtimeConfig:
   start:
     - npm run start
-database:
-  migrate:
-    - echo 'No migrations specified'
-telemetry:
-  logs:
-    logLevel: 'info'
