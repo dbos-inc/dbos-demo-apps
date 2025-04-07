@@ -50,7 +50,7 @@ Because launching DBOS triggers worfklow recovery, it is advised you call `pytho
 
 You can make a Django view durable by annotating your functions with [DBOS decorators](https://docs.dbos.dev/python/reference/decorators).
 
-Here is a new view that calls a workflow of two steps. After you update `polls/urls.py`, you can access the view at `http://localhost:8000/polls/callWorkflow/a/b`.
+Here is a new view that calls a workflow of two steps.
 
 ```python
 def callWorkflow(request, a, b):
@@ -75,3 +75,5 @@ def step2(var):
     rows = DBOS.sql_session.execute(sa.text("SELECT 1")).fetchall()
     return var + str(rows[0][0])
 ```
+
+Update `polls/urls.py` and run your app with `python manage.py runserver --noreload` to access the view at `http://localhost:8000/polls/callWorkflow/a/b`.
