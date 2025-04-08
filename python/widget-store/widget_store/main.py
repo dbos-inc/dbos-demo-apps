@@ -227,13 +227,14 @@ def frontend():
     return HTMLResponse(html)
 
 
-# Finally, here is the crash endpoint. It crashes your app. For demonstration purposes only. :)
+# Here is the crash endpoint. It crashes your app. For demonstration purposes only. :)
 
 
 @app.post("/crash_application")
 def crash_application():
     os._exit(1)
 
+# Finally, launch DBOS and the FastAPI server.
 
 if __name__ == "__main__":
     DBOS.launch()
