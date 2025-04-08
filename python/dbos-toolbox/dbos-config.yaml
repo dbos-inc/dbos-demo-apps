@@ -7,7 +7,7 @@ name: dbos-toolbox
 language: python
 runtimeConfig:
   start:
-    - "fastapi run ./main.py"
+    - python3 main.py
 database_url: ${DBOS_DATABASE_URL}
 database:
   migrate:

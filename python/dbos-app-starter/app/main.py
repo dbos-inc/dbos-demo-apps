@@ -1,6 +1,7 @@
 import os
 import time
 
+import uvicorn
 from dbos import DBOS, DBOSConfig, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -93,3 +94,8 @@ def readme():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return HTMLResponse(html)
+
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
