@@ -8,7 +8,8 @@
 
 import os
 
-from dbos import DBOS, SetWorkflowID, DBOSConfig
+import uvicorn
+from dbos import DBOS, DBOSConfig, SetWorkflowID
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import HTMLResponse
 
@@ -17,7 +18,7 @@ from .schema import OrderStatus, orders, products
 app = FastAPI()
 config: DBOSConfig = {
     "name": "widget-store",
-    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 
@@ -234,5 +235,6 @@ def crash_application():
     os._exit(1)
 
 
-# To deploy this app to the cloud, run `dbos-cloud app deploy`.
-# Visit its URL to see it in action!
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
