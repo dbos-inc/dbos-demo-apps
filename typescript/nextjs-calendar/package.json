@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-dbtriggers": "^2.2.10-preview.g90e74a1e32",
-    "@dbos-inc/dbos-email-ses": "2.7.27-preview",
-    "@dbos-inc/dbos-random": "2.7.27-preview",
-    "@dbos-inc/dbos-sdk": "2.7.27-preview",
+    "@dbos-inc/dbos-email-ses": "2.8.23",
+    "@dbos-inc/dbos-random": "2.8.23",
+    "@dbos-inc/dbos-sdk": "2.8.23",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.1",
@@ -35,7 +35,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "2.7.27-preview",
+    "@dbos-inc/dbos-cloud": "2.8.23",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^29.5.14",
     "@types/module-alias": "^2.0.4",
