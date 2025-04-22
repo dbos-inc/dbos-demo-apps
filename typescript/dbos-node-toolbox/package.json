@@ -11,7 +11,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "2.8.21-preview",
+    "@dbos-inc/dbos-sdk": "2.8.22-preview",
     "express": "^4.21.2"
   }
 }
