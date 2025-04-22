@@ -7,16 +7,17 @@ import { DBOS, DBOSConfig } from "@dbos-inc/dbos-sdk";
 
 export async function resetDatabase() {
   const cwd = process.cwd();
+  const connectionString = new URL((DBOS.dbosConfig?.poolConfig as PoolConfig).connectionString!);
+  connectionString.pathname = '/postgres';
   const knexConfig = {
     client: "pg",
-    connection: DBOS.dbosConfig?.poolConfig as PoolConfig,
+    connection: connectionString.toString(),
     migrations: {
       directory: path.join(cwd, "migrations"),
       tableName: "knex_migrations",
     },
   };
   const appDbName = DBOS.dbosConfig?.poolConfig?.database;
-  knexConfig.connection.database = "postgres";
   let knexDB: Knex = knex(knexConfig);
   try {
     await knexDB.raw(
@@ -27,7 +28,7 @@ export async function resetDatabase() {
   } finally {
     await knexDB.destroy();
   }
-  knexConfig.connection.database = appDbName;
+  knexConfig.connection = (DBOS.dbosConfig?.poolConfig as PoolConfig).connectionString!.toString();
   knexDB = knex(knexConfig);
   try {
     await knexDB.migrate.latest();
@@ -49,9 +50,10 @@ describe("AppService", () => {
     await resetDatabase();
     await DBOS.dropSystemDB();
     await DBOS.shutdown();
-    await DBOS.launch();
 
     service = new AppService("dbosAppService");
+
+    await DBOS.launch();
   }, 10000);
 
   afterEach(async () => {
