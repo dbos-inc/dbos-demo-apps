@@ -1,5 +1,6 @@
 from logging.config import fileConfig
 import os
+import re
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
@@ -29,7 +30,13 @@ target_metadata = metadata
 
 # Programmatically set the sqlalchemy.url field to the DBOS application database URL
 conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/dbos_toolbox?connect_timeout=5")
-config.set_main_option("sqlalchemy.url", conn_string)
+# Alembic requires the % in URL-escaped parameters to itself be escaped to %%
+escaped_conn_string = re.sub(
+    r"%(?=[0-9A-Fa-f]{2})",
+    "%%",
+    conn_string,
+)
+config.set_main_option("sqlalchemy.url", escaped_conn_string)
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
