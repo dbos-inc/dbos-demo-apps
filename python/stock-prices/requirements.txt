@@ -4,3 +4,5 @@
 dbos==0.24.0
 yfinance>=0.2.55
 streamlit>=1.43.2
+twilio==9.5.2
+plotly==6.0.1
