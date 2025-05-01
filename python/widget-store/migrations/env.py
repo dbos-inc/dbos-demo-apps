@@ -1,8 +1,7 @@
-import re
+import os
 from logging.config import fileConfig
 
 from alembic import context
-from dbos import get_dbos_database_url
 from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
@@ -14,14 +13,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Load the database URL from the DBOS config
-# Alembic requires the % in URL-escaped parameters to itself be escaped to %%.
-escaped_conn_string = re.sub(
-    r"%(?=[0-9A-Fa-f]{2})",
-    "%%",
-    get_dbos_database_url(),
-)
-config.set_main_option("sqlalchemy.url", escaped_conn_string)
+# Programmatically set the sqlalchemy.url field to the DBOS application database URL
+conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/widget_store?connect_timeout=5")
+config.set_main_option("sqlalchemy.url", conn_string)
 
 # Import our schema for migration autogeneration
 from widget_store.schema import metadata
