@@ -11,7 +11,7 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, Queue, SetWorkflowID, load_config
+from dbos import DBOS, DBOSConfig, Queue, SetWorkflowID
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
@@ -23,9 +23,14 @@ from llama_index.vector_stores.postgres import PGVectorStore
 from slack_bolt import App, BoltRequest
 from slack_bolt.adapter.starlette.handler import to_bolt_request
 from slack_sdk.web import SlackResponse
+from sqlalchemy.engine import make_url
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "llamabot",
+    "database_url": os.environ.get("DBOS_DATABASE_URL", "postgres://postgres:dbos@localhost:5432/llamabot?connect_timeout=5"),
+}
+DBOS(fastapi=app, config=config)
 
 # Define a queue to limit processing incoming messages to 10 per minute.
 # This is to prevent the bot from being overwhelmed by a large number of messages.
@@ -35,13 +40,14 @@ work_queue = Queue("llamabot_queue", limiter={"limit": 300, "period": 60}, concu
 # Then, let's initialize LlamaIndex to use the app's Postgres database as the vector store.
 # Note that we don't set up the schema and tables because we've already done that in the schema migration step.
 set_global_handler("simple", logger=DBOS.logger)  # Logs from LlamaIndex will be printed as the `DEBUG` level.
-dbos_config = load_config()
+connection_string = config["database_url"]
+db = make_url(connection_string)
 vector_store = PGVectorStore.from_params(
-    database=dbos_config["database"]["app_db_name"],
-    host=dbos_config["database"]["hostname"],
-    password=dbos_config["database"]["password"],
-    port=str(dbos_config["database"]["port"]),
-    user=dbos_config["database"]["username"],
+    database=db.database,
+    host=db.host,
+    password=db.password,
+    port=db.port,
+    user=db.username,
     perform_setup=False,  # Already setup through schema migration
 )
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
