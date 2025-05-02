@@ -23,7 +23,7 @@ html_dir = os.path.join(os.path.dirname(script_dir), "html")
 app = FastAPI()
 config: DBOSConfig = {
     "name": "reliable-refunds",
-    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+    "database_url": os.environ.get('DBOS_DATABASE_URL', "postgres://postgres:dbos@localhost:5432/reliable_refunds?connect_timeout=5"),
 }
 DBOS(fastapi=app, config=config)
 
