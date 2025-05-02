@@ -12,7 +12,6 @@
 
 import os
 
-import dbos
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -37,7 +36,7 @@ st.markdown(
 
 # Then, let's load database connection information from dbos-config.yaml
 # and use it to create a database connection using sqlalchemy.
-database_url = dbos.get_dbos_database_url()
+database_url = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/stock_prices?connect_timeout=5")
 engine = create_engine(database_url)
 
 
