@@ -22,7 +22,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     connection_string = os.environ.get("DBOS_DATABASE_URL", "postgres://postgres:dbos@localhost:5432/reliable_refunds_langchain?connect_timeout=5")
-    with PostgresSaver.from_conn_string(connection_string) as c:
+    db_url = sa.make_url(connection_string).set(drivername="postgres")
+    with PostgresSaver.from_conn_string(db_url.render_as_string(hide_password=False)) as c:
         c.setup()
 
 
