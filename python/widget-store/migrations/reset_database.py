@@ -2,12 +2,13 @@
 
 from decimal import Decimal
 
-from dbos import get_dbos_database_url
+import os
 from sqlalchemy import create_engine, delete, insert
 
 from widget_store import schema
 
-engine = create_engine(get_dbos_database_url())
+connection_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/widget_store?connect_timeout=5")
+engine = create_engine(connection_string)
 
 with engine.connect() as connection:
     # Delete all existing entries

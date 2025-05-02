@@ -18,7 +18,7 @@ from .schema import OrderStatus, orders, products
 app = FastAPI()
 config: DBOSConfig = {
     "name": "widget-store",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "database_url": os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/widget_store?connect_timeout=5"),
 }
 DBOS(fastapi=app, config=config)
 
