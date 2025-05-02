@@ -8,9 +8,9 @@ Create Date: 2025-01-28 16:13:23.849114
 
 from typing import Sequence, Union
 
+import os
 import sqlalchemy as sa
 from alembic import op
-from dbos import load_config
 from langgraph.checkpoint.postgres import PostgresSaver
 
 # revision identifiers, used by Alembic.
@@ -21,8 +21,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    db = load_config()["database"]
-    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
+    connection_string = os.environ.get("DBOS_DATABASE_URL", "postgres://postgres:dbos@localhost:5432/reliable_refunds_langchain?connect_timeout=5")
     with PostgresSaver.from_conn_string(connection_string) as c:
         c.setup()
 
