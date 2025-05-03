@@ -18,7 +18,7 @@ django-admin startproject djangodbos .
 python manage.py startapp polls
 ```
 
-Then, configure `djangodbos/settings.py` to [use Postgres](https://docs.djangoproject.com/en/5.2/ref/settings/#databases), create a database named `djangodbos`, and run `python manage.py migrate`.
+Then, configure `djangodbos/settings.py` to [use Postgres](https://docs.djangoproject.com/en/5.2/ref/settings/#databases) and run `python manage.py migrate`.
 </details>
 
 ## Starting DBOS
