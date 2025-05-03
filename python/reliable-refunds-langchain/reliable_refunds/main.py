@@ -32,7 +32,7 @@ html_dir = os.path.join(os.path.dirname(script_dir), "html")
 app = FastAPI()
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
-    "database_url": os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/reliable_refunds_langchain?connect_timeout=5"),
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 

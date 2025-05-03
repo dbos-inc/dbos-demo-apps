@@ -28,7 +28,7 @@ from sqlalchemy.engine import make_url
 app = FastAPI()
 config: DBOSConfig = {
     "name": "llamabot",
-    "database_url": os.environ.get("DBOS_DATABASE_URL", "postgres://postgres:dbos@localhost:5432/llamabot?connect_timeout=5"),
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 
