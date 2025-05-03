@@ -1,10 +1,10 @@
 # Each time the app is re-deployed, reset the database.
 
+import os
 import json
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from dbos import get_dbos_database_url
 from sqlalchemy import create_engine, delete
 
 from reliable_refunds import schema
@@ -56,7 +56,8 @@ initial_chat = {
     "content": "Hi there! Do you need help refunding an order?",
 }
 
-engine = create_engine(get_dbos_database_url())
+conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/reliable_refunds?connect_timeout=5")
+engine = create_engine(conn_string)
 
 with engine.connect() as connection:
     # Delete chat history

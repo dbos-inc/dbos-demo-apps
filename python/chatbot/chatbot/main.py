@@ -58,8 +58,7 @@ def create_langchain():
         return {"messages": response}
 
     # Create a checkpointer LangChain can use to store message history in Postgres.
-    db = DBOS.config["database"]
-    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
+    connection_string = os.environ.get("DBOS_DATABASE_URL", "postgres://postgres:dbos@localhost:5432/chatbot?connect_timeout=5")
     pool = ConnectionPool(connection_string)
     checkpointer = PostgresSaver(pool)
 
