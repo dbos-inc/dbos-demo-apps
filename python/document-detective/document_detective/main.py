@@ -14,6 +14,7 @@ from llama_index.core import Settings, StorageContext, VectorStoreIndex
 from llama_index.readers.file import PDFReader
 from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel, HttpUrl
+from sqlalchemy import make_url
 
 from .schema import chat_history
 
@@ -30,14 +31,13 @@ DBOS(fastapi=app, config=config)
 
 def configure_index():
     Settings.chunk_size = 512
-    dbos_config = DBOS.config
-    db = dbos_config["database"]
+    db = make_url(config.get("database_url"))
     vector_store = PGVectorStore.from_params(
-        database=db["app_db_name"],
-        host=db["hostname"],
-        password=db["password"],
-        port=db["port"],
-        user=db["username"],
+        database=db.database,
+        host=db.host,
+        password=db.password,
+        port=db.port,
+        user=db.username,
         perform_setup=False,  # Set up during migration step
     )
     storage_context = StorageContext.from_defaults(vector_store=vector_store)

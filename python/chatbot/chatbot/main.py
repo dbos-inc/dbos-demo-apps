@@ -18,6 +18,7 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import START, MessagesState, StateGraph
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
+from sqlalchemy import make_url
 
 from .schema import chat_history
 
@@ -58,8 +59,7 @@ def create_langchain():
         return {"messages": response}
 
     # Create a checkpointer LangChain can use to store message history in Postgres.
-    db = DBOS.config["database"]
-    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
+    connection_string = make_url(config.get("database_url")).set(drivername="postgres").render_as_string(hide_password=False)
     pool = ConnectionPool(connection_string)
     checkpointer = PostgresSaver(pool)
 

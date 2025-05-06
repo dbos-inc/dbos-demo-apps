@@ -11,8 +11,6 @@
 # First, let's do imports and configure Streamlit with a title and some custom CSS.
 
 import os
-
-import dbos
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -37,7 +35,7 @@ st.markdown(
 
 # Then, let's load database connection information from dbos-config.yaml
 # and use it to create a database connection using sqlalchemy.
-database_url = dbos.get_dbos_database_url()
+database_url = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/stock_prices?connect_timeout=5")
 engine = create_engine(database_url)
 
 
@@ -121,7 +119,11 @@ price_threshold = st.text_input("Price Threshold")
 phone_number = os.environ.get("MY_PHONE_NUMBER")
 
 if st.button("Create Alert"):
-    if alert_stock_symbol and price_threshold and phone_number:
+    if not phone_number:
+        st.error("Please set the MY_PHONE_NUMBER environment variable.")
+    elif not alert_stock_symbol or not price_threshold:
+        st.error("Please fill in all the fields.")
+    else:
         with engine.connect() as conn:
             stmt = insert(alerts).values(
                 stock_symbol=alert_stock_symbol,
@@ -132,8 +134,6 @@ if st.button("Create Alert"):
             conn.commit()
             st.success("Alert created successfully.")
             st.rerun()
-    else:
-        st.error("Please fill in all the fields.")
 
 alert_to_delete = st.selectbox(
     "Select Alert to delete",

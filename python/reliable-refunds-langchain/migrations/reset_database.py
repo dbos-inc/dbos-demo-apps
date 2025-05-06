@@ -2,9 +2,8 @@
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-
-from dbos import get_dbos_database_url
-from sqlalchemy import create_engine, delete, text
+import os
+from sqlalchemy import create_engine, delete, text, make_url
 
 from reliable_refunds import schema
 
@@ -49,7 +48,8 @@ sample_purchases = [
     },
 ]
 
-engine = create_engine(get_dbos_database_url())
+connection_string = make_url(os.environ.get('DBOS_DATABASE_URL'))
+engine = create_engine(connection_string)
 
 with engine.connect() as connection:
     # Delete chat history
