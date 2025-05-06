@@ -1,13 +1,13 @@
 # Each time the app is re-deployed, reset the database.
 
 from decimal import Decimal
-
-from dbos import get_dbos_database_url
-from sqlalchemy import create_engine, delete, insert
+import os
+from sqlalchemy import create_engine, delete, insert, make_url
 
 from widget_store import schema
 
-engine = create_engine(get_dbos_database_url())
+db_url = make_url(os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/widget_store?connect_timeout=5"))
+engine = create_engine(db_url)
 
 with engine.connect() as connection:
     # Delete all existing entries
