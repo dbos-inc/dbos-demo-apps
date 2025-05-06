@@ -20,7 +20,7 @@ from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from sqlalchemy import text
+from sqlalchemy import text, make_url
 from typing_extensions import TypedDict
 
 from .schema import OrderStatus, Purchase, purchases
@@ -183,8 +183,7 @@ def create_agent():
     graph_builder.add_edge(START, "chatbot")
 
     # Create a checkpointer LangChain can use to store message history in Postgres.
-    db = DBOS.config["database"]
-    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
+    connection_string = make_url(config.get("database_url")).set(drivername="postgres").render_as_string(hide_password=False)
     pool = ConnectionPool(connection_string)
     checkpointer = PostgresSaver(pool)
 

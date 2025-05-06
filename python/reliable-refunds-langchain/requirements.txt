@@ -7,4 +7,4 @@ langsmith>=0.3.2
 langchain-openai>=0.3.2
 psycopg-pool>=3.2.4
 langgraph-checkpoint-postgres>=2.0.13
-dbos==0.24.0
+dbos==1.0.0
