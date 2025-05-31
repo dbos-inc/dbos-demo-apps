@@ -1,19 +1,9 @@
-import { parseConfigFile } from '@dbos-inc/dbos-sdk';
-
-const [dbosConfig] = parseConfigFile();
-
 const config = {
   client: 'pg',
-  connection: {
-    host: dbosConfig.poolConfig.host,
-    user: dbosConfig.poolConfig.user,
-    password: dbosConfig.poolConfig.password,
-    database: dbosConfig.poolConfig.database,
-    ssl: dbosConfig.poolConfig.ssl,
-  },
+  connection: process.env.DBOS_DATABASE_URL || 'postgresql://postgres:dbos@localhost:5432/widget_store_node',
   migrations: {
-    directory: './migrations',
-  },
+    directory: './migrations'
+  }
 };
 
 export default config;
