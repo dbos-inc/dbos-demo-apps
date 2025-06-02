@@ -111,7 +111,7 @@ async function main() {
     }
   });
 
-  const PORT = DBOS.runtimeConfig?.port ?? 3000;
+  const PORT = 3000;
   const ENV = process.env.NODE_ENV || 'development';
 
   server.listen(PORT, () => {
