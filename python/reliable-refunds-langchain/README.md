@@ -82,7 +82,7 @@ pip install -r requirements.txt
 Then start your app in the virtual environment:
 
 ```shell
-dbos migrate
+alembic upgrade head
 dbos start
 ```
 
