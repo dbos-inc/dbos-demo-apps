@@ -21,7 +21,7 @@ export KAFKA_BROKER="localhost:9092"
 export PGPASSWORD="..." #export your password if using Docker for Postgres
 npm install
 npm run build
-npx dbos migrate
+npx knex migrate:latest
 
 # in order to restart on crash, we run the app in a loop. On Linux or Mac:
 while [ 1 ] ; do npx dbos start; done 

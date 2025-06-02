@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npx dbos migrate && nodemon",
+    "dev": "npx knex migrate:latest && nodemon",
     "build": "tsc && next build",
     "start": "NODE_ENV=production node dist/src/server.js",
-    "test": "npx dbos migrate && jest --detectOpenHandles",
+    "test": "npx knex migrate:latest && jest --detectOpenHandles",
     "lint": "next lint --fix"
   },
   "dependencies": {

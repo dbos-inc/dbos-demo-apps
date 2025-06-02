@@ -2,5 +2,5 @@
   "watch": ["src/", "migrations/", "public/"],
   "ext": "ts,json,liquid,js",
   "ignore": ["src/**/*.test.ts"],
-  "exec": "npm run build && npx dbos migrate && npm run start"
+  "exec": "npm run build && npx knex migrate:latest && npm run start"
 }

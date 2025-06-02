@@ -11,7 +11,7 @@ Then, install dependencies, build your app, and set up its database tables:
 ```shell
 npm install
 npm run build
-npx dbos migrate
+npx knex migrate:latest
 ```
 
 Then, start it:
@@ -44,6 +44,7 @@ Then, run this command to deploy your app:
 ```shell
 dbos-cloud app deploy
 ```
+
 </details>
 
 ## Usage
