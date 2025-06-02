@@ -58,7 +58,7 @@ Then run the app in the virtual environment:
 
 ```shell
 pip install -r requirements.txt
-dbos migrate
+alembic upgrade head
 dbos start
 ```
 

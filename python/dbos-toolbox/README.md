@@ -13,7 +13,7 @@ To start this app locally, run:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install dbos
-dbos migrate
+alembic upgrade head
 dbos start
 ```
 

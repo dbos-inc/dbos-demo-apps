@@ -16,7 +16,7 @@ python3 start_postgres_docker.py
 Then run:
 
 ```shell
-dbos migrate
+alembic upgrade head
 dbos start
 ```
 
