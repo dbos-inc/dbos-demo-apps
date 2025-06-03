@@ -82,14 +82,14 @@ export class PlaidPayments {
       return `Invalid session id ${session_id}`;
     }
 
-    const body = DBOS.koaContext.request.body as object;
+    const body = DBOSKoa.koaContext.request.body as object;
     const submit = 'submit' in body;
     if (submit) {
       await PlaidPayments.submitPayment(session_id);
-      DBOS.koaContext.redirect(session.success_url);
+      DBOSKoa.koaContext.redirect(session.success_url);
     } else {
       await PlaidPayments.cancelPayment(session_id);
-      DBOS.koaContext.redirect(session.cancel_url);
+      DBOSKoa.koaContext.redirect(session.cancel_url);
     }
   }
 

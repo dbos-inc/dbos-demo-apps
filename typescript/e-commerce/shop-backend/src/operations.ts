@@ -1,4 +1,5 @@
 import { DBOS, DBOSResponseError } from '@dbos-inc/dbos-sdk';
+import { ArgSources, DBOSKoa } from '@dbos-inc/koa-serve';
 import { BcryptStep } from '@dbos-inc/dbos-bcrypt';
 import { Request } from 'koa';
 
@@ -128,9 +129,11 @@ class UndoList {
   }
 }
 
+export const dhttp = new DBOSKoa();
+
 export class Shop {
 
-  @DBOS.postApi('/api/login')
+  @dhttp.postApi('/api/login')
   @DBOS.transaction({ readOnly: true })
   static async login(username: string, password: string): Promise<void> {
     const user = await DBOS.knexClient<User>('users').select("password").where({ username }).first();
@@ -139,7 +142,7 @@ export class Shop {
     }
   }
 
-  @DBOS.postApi('/api/register')
+  @dhttp.postApi('/api/register')
   @DBOS.workflow()
   static async register(username: string, password: string): Promise<void> {
     const hashedPassword = await BcryptStep.bcryptHash(password, 10);
@@ -155,7 +158,7 @@ export class Shop {
     await DBOS.knexClient<User>('users').insert({ username, password: hashedPassword });
   }
 
-  @DBOS.getApi('/api/products')
+  @dhttp.getApi('/api/products')
   @DBOS.transaction({ readOnly: true })
   static async getProducts(): Promise<DisplayProduct[]> {
     const rows = await DBOS.knexClient<Product>('products').select("product_id", "product", "description", "image_name", "price");
@@ -166,7 +169,7 @@ export class Shop {
     return formattedRows;
   }
 
-  @DBOS.getApi('/api/products/:id')
+  @dhttp.getApi('/api/products/:id')
   @DBOS.transaction({ readOnly: true })
   static async getProduct(id: number): Promise<DisplayProduct | null> {
     return Shop.getProductInternal(id);
@@ -194,7 +197,7 @@ export class Shop {
     return rows[0].inventory;
   }
 
-  @DBOS.postApi('/api/add_to_cart')
+  @dhttp.postApi('/api/add_to_cart')
   @DBOS.transaction()
   static async addToCart(username: string, product_id: number): Promise<void> {
     await DBOS.knexClient<Cart>('cart').insert({ username, product_id, quantity: 1 })
@@ -202,7 +205,7 @@ export class Shop {
       .merge({ quantity: DBOS.knexClient.raw('cart.quantity + 1') });
   }
 
-  @DBOS.postApi('/api/get_cart')
+  @dhttp.postApi('/api/get_cart')
   @DBOS.transaction({ readOnly: true })
   static async getCart(username: string): Promise<CartProduct[]> {
     const user = await DBOS.knexClient<User>('users').select("username").where({ username });
@@ -218,9 +221,9 @@ export class Shop {
     return await Promise.all(products);
   }
 
-  @DBOS.postApi('/api/checkout_session')
+  @dhttp.postApi('/api/checkout_session')
   static async webCheckout(username: string): Promise<void> {
-    const origin = DBOS.koaContext.request?.headers.origin as string;
+    const origin = DBOSKoa.koaContext.request?.headers.origin as string;
     if (typeof username !== 'string' || typeof origin !== 'string') {
       throw new DBOSResponseError("Invalid request!", 400);
     }
@@ -230,9 +233,9 @@ export class Shop {
 
     if (url === null) {
       DBOS.logger.warn(`Canceling checkout for ${username}. Checkout Workflow UUID: ${handle.workflowID}`);
-      DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
+      DBOSKoa.koaContext.redirect(`${origin}/checkout/cancel`);
     } else {
-      DBOS.koaContext.redirect(url);
+      DBOSKoa.koaContext.redirect(url);
     }
   }
 
@@ -407,9 +410,9 @@ export class Shop {
     return session;
   }
 
-  @DBOS.postApi('/payment_webhook')
+  @dhttp.postApi('/payment_webhook')
   static async paymentWebhook(): Promise<void> {
-    const req: Request = DBOS.koaContext.request;
+    const req: Request = DBOSKoa.koaContext.request;
 
     type Session = { session_id: string; client_reference_id?: string; payment_status: string };
     const payload = req.body as Session;
