@@ -4,12 +4,10 @@ import Router from '@koa/router';
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import { PaymentItem, PaymentSessionInformation, dhttp, payment_complete_topic } from "./operations";
 import request from "supertest";
-import { Server } from 'http';
 
 describe("operations", () => {
   const koa = new Koa();
   const router = new Router();
-  let server: Server | undefined = undefined;
 
   beforeAll(async () => {
     process.env['frontend_host'] = 'http://localhost:8086';
@@ -19,14 +17,9 @@ describe("operations", () => {
     await DBOS.queryUserDB(`delete from items;`);
     await DBOS.queryUserDB(`delete from session;`);
     DBOS.setAppConfig('unittest', true);
-
-    server = koa.listen(8086, () => {
-      console.log('Server running on http://localhost:8086');
-    });
   });
 
   afterAll(async () => {
-    server?.close();
     await DBOS.shutdown();
   });
 
