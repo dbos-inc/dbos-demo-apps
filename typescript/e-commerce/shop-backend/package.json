@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-bcrypt": "^2.0.2",
-    "@dbos-inc/dbos-sdk": "^2.0.2",
+    "@dbos-inc/dbos-sdk": "^2.11.7-preview.gc208400219",
+    "@dbos-inc/koa-serve": "^2.11.7-preview.gc208400219",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
