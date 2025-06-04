@@ -4,7 +4,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "test": "jest --detectOpenHandles",
-    "db:setup": "npx knex migrate:up",
+    "db:create": "ts-node create-db.ts",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
     "start": "npx dbos-sdk start",
@@ -26,7 +26,8 @@
   "dependencies": {
     "@dbos-inc/dbos-datetime": "2.8.23",
     "@dbos-inc/dbos-kafkajs": "2.8.23",
-    "@dbos-inc/dbos-sdk": "2.8.23",
+    "@dbos-inc/dbos-sdk": "^2.10.22",
+    "knex": "^3.1.0",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
