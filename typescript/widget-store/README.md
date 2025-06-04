@@ -11,7 +11,7 @@ Then, install dependencies, build your app, and set up its database tables:
 ```shell
 npm install
 npm run build
-npx knex migrate:latest
+npm run db:setup
 ```
 
 Then, start it:
