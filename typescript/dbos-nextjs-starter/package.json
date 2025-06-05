@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npx knex migrate:latest && nodemon",
+    "dev": "nodemon",
     "build": "next build && tsc",
     "start": "NODE_ENV=production node dist/src/server.js",
     "lint": "next lint --fix"

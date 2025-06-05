@@ -4,7 +4,7 @@
   "ext": "ts,js,tsx,jsx",
   "ignore": ["src/**/*.test.ts"],
   "events": {
-    "restart": "bash -c \"if [[ $FILENAME =~ migrations ]]; then npx knex migrate:latest; fi\"  # TODO Change me if you do not have 'bash'..."
+    "restart": "bash -c \"if [[ $FILENAME =~ migrations ]]; then npm run db:setup; fi\"  # TODO Change me if you do not have 'bash'..."
   },
   "exec": "tsc && node dist/src/server.js"
 }
