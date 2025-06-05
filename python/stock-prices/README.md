@@ -16,7 +16,7 @@ python3 start_postgres_docker.py
 Then run:
 
 ```shell
-alembic upgrade head
+alembic upgrade head # will create a database if it does not exist -- only for demo purposes
 dbos start
 ```
 

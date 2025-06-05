@@ -82,7 +82,7 @@ pip install -r requirements.txt
 Then start your app in the virtual environment:
 
 ```shell
-alembic upgrade head
+alembic upgrade head # will create a database if it does not exist -- only for demo purposes
 dbos start
 ```
 

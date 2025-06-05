@@ -37,7 +37,7 @@ Then run:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-alembic upgrade head
+alembic upgrade head # will create a database if it does not exist -- only for demo purposes
 dbos start
 ```
 

@@ -13,7 +13,7 @@ To start this app locally, run:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install dbos
-alembic upgrade head
+alembic upgrade head # will create a database if it does not exist -- only for demo purposes
 dbos start
 ```
 
