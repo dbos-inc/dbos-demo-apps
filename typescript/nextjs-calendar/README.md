@@ -46,7 +46,7 @@ Instead of `npm run dev` it is also possible to run the following sequence of co
 ```
 npm install
 npm run build
-npx knex migrate:latest
+npm run db:setup
 npm run start
 ```
 
@@ -348,10 +348,11 @@ As is customary, `package.json` contains a list of the project's dependencies, f
 `package.json` also includes the following scripts that are worth mentioning:
 ```json
   "scripts": {
-    "dev": "npx knex migrate:latest && nodemon",
+    "dev": "ts-node create-db.ts && npx knex migrate:latest && nodemon",
     "build": "tsc && next build",
     "start": "NODE_ENV=production node dist/src/server.js",
-    "test": "npx knex migrate:latest && jest --detectOpenHandles",
+    "db:setup": "ts-node create-db.ts && npx knex migrate:latest",
+    "test": "ts-node create-db.ts && npx knex migrate:latest && jest --detectOpenHandles",
     "lint": "next lint --fix"
   },
 ```
