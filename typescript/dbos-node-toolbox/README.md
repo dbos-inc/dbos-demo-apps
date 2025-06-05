@@ -11,7 +11,7 @@ To start this app locally, run:
 
 ```shell
 npm install
-npx knex migrate:latest
+npm run db:setup
 npm run dev
 ```
 
