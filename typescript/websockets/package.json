@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "scripts": {
     "build": "tsc",
-    "test": "npx dbos rollback && npx knex migrate:latest && jest",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
     "dev": "nodemon",
@@ -23,7 +22,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.0.2",
+    "@dbos-inc/dbos-sdk": "^2.10.22",
     "knex": "3.1.0",
     "ws": "^8.18.0"
   }
