@@ -3,6 +3,6 @@
   "ext": "ts,json,liquid,js",
   "ignore": ["src/**/*.test.ts"],
   "exitcrash": true,
-  "exec": "npm run build && npx knex migrate:latest && npm run start"
+  "exec": "npm run build && npm run db:create && npx knex migrate:latest && npm run start"
 }
 
