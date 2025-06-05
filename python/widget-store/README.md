@@ -34,7 +34,7 @@ Then run:
 
 ```shell
 pip install -r requirements.txt
-dbos migrate
+alembic upgrade head # will create a database if it does not exist -- only for demo purposes
 dbos start
 ```
 

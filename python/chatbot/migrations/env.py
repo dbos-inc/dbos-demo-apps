@@ -2,7 +2,8 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, create_engine, text
+from sqlalchemy.engine import make_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -13,9 +14,48 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+
+def create_database_if_not_exists(conn_string):
+    """Create the database if it doesn't exist."""
+    # Parse the connection string to extract database name and connection details
+    parsed_url = make_url(conn_string)
+
+    # Extract database name
+    database_name = parsed_url.database
+
+    # Create connection string without database name (connect to default 'postgres' database)
+    admin_url = parsed_url.set(database='postgres')
+
+    try:
+        # Connect to PostgreSQL server (postgres database)
+        admin_engine = create_engine(admin_url, isolation_level='AUTOCOMMIT')
+
+        with admin_engine.connect() as conn:
+            # Check if database exists
+            result = conn.execute(
+                text("SELECT 1 FROM pg_database WHERE datname = :db_name"),
+                {"db_name": database_name}
+            )
+
+            if not result.fetchone():
+                # Database doesn't exist, create it
+                print(f"Creating database: {database_name}")
+                conn.execute(text(f'CREATE DATABASE "{database_name}"'))
+                print(f"Database {database_name} created successfully")
+            else:
+                print(f"Database {database_name} already exists")
+
+    except Exception as e:
+        print(f"Error creating database: {e}")
+        raise
+
+
 # Programmatically set the sqlalchemy.url field to the DBOS application database URL
 conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/chatbot?connect_timeout=5")
 config.set_main_option("sqlalchemy.url", conn_string)
+
+# Create database if it doesn't exist
+create_database_if_not_exists(conn_string)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
