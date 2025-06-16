@@ -2,6 +2,9 @@
 
 DBOS powered utility for performant, durable and observable transfers between S3 buckets.
 
+Created in collaboration with Bristol Myers Squibb. Read our joint manuscript about this app here:
+https://www.biorxiv.org/content/10.1101/2025.06.13.657723v1
+
 ## Running the app on your system
 
 Clone this repo.
