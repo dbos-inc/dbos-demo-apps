@@ -14,8 +14,10 @@ async function bootstrap() {
   // Pass the nest router to DBOS so it can attach OTel tracing middlewares
   await DBOS.launch({ nestApp: app });
   // Nest must be set to listen on 3000 and external networks to run on DBOS Cloud
-  // You can also use an environment variables in dbos-config.yaml to set the port
-  await app.listen(DBOS.runtimeConfig?.port || 3000, "0.0.0.0");
+  await app.listen(3000, "0.0.0.0");
 }
 
-bootstrap();
+bootstrap().catch(err => {
+    console.error('Failed to bootstrap application:', err);
+    process.exit(1);
+  });

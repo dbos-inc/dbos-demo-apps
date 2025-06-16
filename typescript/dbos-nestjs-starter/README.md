@@ -80,7 +80,7 @@ The DBOS workflow has two steps: fetch an external API and insert a record in th
 ```typescript
 //app.service.ts
 import { Injectable } from "@nestjs/common";
-import { ConfiguredInstance, DBOS, InitContext } from "@dbos-inc/dbos-sdk";
+import { ConfiguredInstance, DBOS } from "@dbos-inc/dbos-sdk";
 import {
   uniqueNamesGenerator,
   adjectives,
@@ -99,7 +99,7 @@ export class AppService extends ConfiguredInstance {
     super(name);
   }
 
-  async initialize(ctx: InitContext): Promise<void> {
+  override async initialize(): Promise<void> {
     DBOS.logger.info(`Initializing DBOS provider ${this.name}`);
   }
 
@@ -171,7 +171,7 @@ export function createDBOSProvider(token: string, name: string): Provider {
   return {
     provide: token,
     useFactory: () => {
-      return DBOS.configureInstance(AppService, name);
+      return new AppService(name);
     },
     inject: [],
   };

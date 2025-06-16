@@ -7,10 +7,8 @@ name: dbos-cron-starter
 language: python
 runtimeConfig:
   start:
-    - "fastapi run app/main.py"
+    - "python3 app/main.py"
+database_url: ${DBOS_DATABASE_URL}
 database:
   migrate:
     - echo 'No migrations specified'
-telemetry:
-  logs:
-    logLevel: INFO

@@ -90,8 +90,12 @@ app.get("/", (_, res) => {
 
 // Launch DBOS and start the Express.js server
 async function main() {
+  DBOS.setConfig({
+    "name": "dbos-node-starter",
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  });
   await DBOS.launch({ expressApp: app });
-  const PORT = DBOS.runtimeConfig?.port || 3000;
+  const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });

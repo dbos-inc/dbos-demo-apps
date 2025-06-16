@@ -5,7 +5,7 @@ from pathlib import Path
 from string import Template
 from typing import Annotated, Optional
 
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from langchain_core.messages import AIMessage, HumanMessage
@@ -20,7 +20,7 @@ from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from sqlalchemy import text
+from sqlalchemy import text, make_url
 from typing_extensions import TypedDict
 
 from .schema import OrderStatus, Purchase, purchases
@@ -30,7 +30,11 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 html_dir = os.path.join(os.path.dirname(script_dir), "html")
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "reliable-refunds-langchain",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(fastapi=app, config=config)
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week timeout for manual review
 
@@ -179,8 +183,7 @@ def create_agent():
     graph_builder.add_edge(START, "chatbot")
 
     # Create a checkpointer LangChain can use to store message history in Postgres.
-    db = DBOS.config["database"]
-    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
+    connection_string = make_url(config.get("database_url")).set(drivername="postgres").render_as_string(hide_password=False)
     pool = ConnectionPool(connection_string)
     checkpointer = PostgresSaver(pool)
 

@@ -1,4 +1,4 @@
-import { DBOS, ArgOptional } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceStep, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
@@ -23,11 +23,10 @@ const kafkaConfig: KafkaConfig = {
   logLevel: logLevel.ERROR
 };
 
-const producerConfig: KafkaProduceStep =  DBOS.configureInstance(KafkaProduceStep, 
+const producerConfig: KafkaProduceStep = new KafkaProduceStep(
   'wfKafka', kafkaConfig, respondTopic, {
     createPartitioner: Partitioners.DefaultPartitioner
   });
-
 
 //The structure returned to the frontend when an employee asks for an assignment
 export interface AlertEmployeeInfo
@@ -62,7 +61,7 @@ export class AlertCenter {
   // 2. An employee asks for more time with the existing assignment, or
   // 3. There's a simple refresh of the page to let the employee know how much time is left
   @DBOS.workflow()
-  static async userAssignmentWorkflow(name: string, @ArgOptional more_time: boolean | undefined) {
+  static async userAssignmentWorkflow(name: string, more_time: boolean | undefined) {
     
     // Get the current time from a checkpointed step;
     //   This ensures the same time is used for recovery or in the time-travel debugger

@@ -4,14 +4,14 @@
   "scripts": {
     "build": "tsc",
     "dev": "nodemon",
-    "start": "npx dbos start"
+    "start": "node dist/main.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.0",
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.5.16",
+    "@dbos-inc/dbos-sdk": "^2.10.22",
     "express": "^4.21.2"
   }
 }

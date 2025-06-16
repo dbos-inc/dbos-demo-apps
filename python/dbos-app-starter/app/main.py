@@ -1,7 +1,8 @@
 import os
 import time
 
-from dbos import DBOS, SetWorkflowID
+import uvicorn
+from dbos import DBOS, DBOSConfig, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
@@ -10,7 +11,11 @@ from fastapi.responses import HTMLResponse
 # It shows you how to use DBOS to build durable workflows that are resilient to any failure.
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-app-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(fastapi=app, config=config)
 
 steps_event = "steps_event"
 
@@ -89,3 +94,8 @@ def readme():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return HTMLResponse(html)
+
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)

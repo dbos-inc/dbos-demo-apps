@@ -1,13 +1,19 @@
+import os
 import time
 
-from dbos import DBOS, Queue
+import uvicorn
+from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 from schema import example_table
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-toolbox",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(fastapi=app, config=config)
 
 ##################################
 #### Workflows and Steps
@@ -168,3 +174,8 @@ async def read_root():
 </body>
 </html>
     """
+
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)

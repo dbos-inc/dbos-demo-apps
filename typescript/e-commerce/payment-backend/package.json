@@ -23,7 +23,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.0.2",
+    "@dbos-inc/dbos-sdk": "^2.11.13-preview",
     "@ladjs/koa-views": "^9.0.0",
     "ejs": "^3.1.10",
     "ts-node": "^10.9.2"

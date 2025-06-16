@@ -1,10 +1,8 @@
-import re
 from logging.config import fileConfig
 
+import os
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-
-from dbos import get_dbos_database_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -15,14 +13,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# programmatically set the sqlalchemy.url field from DBOS Config
-# Alembic requires the % in URL-escaped parameters to itself be escaped to %%.
-escaped_conn_string = re.sub(
-    r"%(?=[0-9A-Fa-f]{2})",
-    "%%",
-    get_dbos_database_url(),
-)
-config.set_main_option("sqlalchemy.url", escaped_conn_string)
+# Programmatically set the sqlalchemy.url field to the DBOS application database URL
+conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/stock_prices?connect_timeout=5")
+config.set_main_option("sqlalchemy.url", conn_string)
 
 # add your model's MetaData object here
 # for 'autogenerate' support

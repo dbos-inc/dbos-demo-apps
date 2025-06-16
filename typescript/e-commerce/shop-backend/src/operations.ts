@@ -1,4 +1,4 @@
-import { DBOS, DBOSResponseError, ArgSource, ArgSources } from '@dbos-inc/dbos-sdk';
+import { DBOS, DBOSResponseError } from '@dbos-inc/dbos-sdk';
 import { BcryptStep } from '@dbos-inc/dbos-bcrypt';
 import { Request } from 'koa';
 
@@ -168,7 +168,7 @@ export class Shop {
 
   @DBOS.getApi('/api/products/:id')
   @DBOS.transaction({ readOnly: true })
-  static async getProduct(@ArgSource(ArgSources.URL) id: number): Promise<DisplayProduct | null> {
+  static async getProduct(id: number): Promise<DisplayProduct | null> {
     return Shop.getProductInternal(id);
   }
 
@@ -219,7 +219,7 @@ export class Shop {
   }
 
   @DBOS.postApi('/api/checkout_session')
-  static async webCheckout(@ArgSource(ArgSources.QUERY) username: string): Promise<void> {
+  static async webCheckout(username: string): Promise<void> {
     const origin = DBOS.koaContext.request?.headers.origin as string;
     if (typeof username !== 'string' || typeof origin !== 'string') {
       throw new DBOSResponseError("Invalid request!", 400);

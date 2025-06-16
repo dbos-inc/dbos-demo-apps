@@ -7,8 +7,8 @@ describe("operations", () => {
   beforeAll(async () => {
     await DBOS.launch();
     await DBOS.launchAppHTTPServer();
-    await DBOS.executor.queryUserDB(`delete from items;`);
-    await DBOS.executor.queryUserDB(`delete from session;`);
+    await DBOS.queryUserDB(`delete from items;`);
+    await DBOS.queryUserDB(`delete from session;`);
 
     DBOS.setAppConfig('unittest', true);
   });

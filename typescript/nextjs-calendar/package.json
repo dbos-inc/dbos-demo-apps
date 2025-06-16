@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-dbtriggers": "^2.2.10-preview.g90e74a1e32",
-    "@dbos-inc/dbos-email-ses": "^2.1.17",
-    "@dbos-inc/dbos-random": "^2.1.17",
-    "@dbos-inc/dbos-sdk": "^2.5.16",
+    "@dbos-inc/dbos-email-ses": "2.8.23",
+    "@dbos-inc/dbos-random": "2.8.23",
+    "@dbos-inc/dbos-sdk": "^2.10.22",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.1",
@@ -25,16 +25,17 @@
     "fast-glob": "^3.3.3",
     "knex": "^3.1.0",
     "module-alias": "^2.2.3",
-    "next": "15.2.1",
+    "next": "^15.2.4",
     "react": "^19.0.0",
-    "react-big-calendar": "^1.17.1",
+    "react-big-calendar": "^1.18.0",
     "react-dom": "^19.0.0",
+    "ts-jest": "^29.3.1",
     "ts-node": "^10.9.2",
     "uuid": "^11.0.5",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^2.0.2",
+    "@dbos-inc/dbos-cloud": "2.8.23",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^29.5.14",
     "@types/module-alias": "^2.0.4",
@@ -50,11 +51,5 @@
     "nodemon": "^3.1.9",
     "supertest": "^7.0.0",
     "typescript": "^5.7.3"
-  },
-  "overrides": {
-    "react-big-calendar": {
-      "react": "19.0.0",
-      "react-dom": "19.0.0"
-    }
   }
 }

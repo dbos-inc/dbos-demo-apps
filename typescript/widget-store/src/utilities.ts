@@ -1,5 +1,4 @@
-import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
-import { SchedulerMode, DBOS} from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 export enum OrderStatus {
   PENDING = 0,
@@ -9,19 +8,19 @@ export enum OrderStatus {
 }
 
 export interface Product {
-  product_id: number,
-  product: string,
-  description: string,
-  inventory: number,
-  price: number,
+  product_id: number;
+  product: string;
+  description: string;
+  inventory: number;
+  price: number;
 }
 
 export interface Order {
-  order_id: number,
-  order_status: number,
-  last_update_time: Date,
-  product_id: number,
-  progress_remaining: number,
+  order_id: number;
+  order_status: number;
+  last_update_time: Date;
+  product_id: number;
+  progress_remaining: number;
 }
 
 export interface OrderWithProduct {
@@ -34,28 +33,29 @@ export interface OrderWithProduct {
 
 export const PRODUCT_ID = 1;
 
-const reportSes = (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])
-  ? DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'})
-  : undefined;
+// Here, let's write some database operations. Each of these functions performs a simple
+// CRUD operation. We apply the @DBOS.transaction() decorator to each of them to give them
+// access to a Knex database connection.
 
 export class ShopUtilities {
   @DBOS.transaction()
   static async subtractInventory(): Promise<void> {
-    const numAffected = await DBOS.knexClient<Product>('products').where('product_id', PRODUCT_ID).andWhere('inventory', '>=', 1)
+    const numAffected = await DBOS.knexClient<Product>('products')
+      .where('product_id', PRODUCT_ID)
+      .andWhere('inventory', '>=', 1)
       .update({
-        inventory: DBOS.knexClient.raw('inventory - ?', 1)
+        inventory: DBOS.knexClient.raw('inventory - ?', 1),
       });
-    //A good block to uncomment in time-travel debugger to see an example of querying past state
-    // const item = await DBOS.knexClient<Product>('products').select('inventory').where({ product_id: PRODUCT_ID });
-    // DBOS.logger.info(">>> Remaining inventory: " + item[0].inventory);
     if (numAffected <= 0) {
-      throw new Error("Insufficient Inventory");
+      throw new Error('Insufficient Inventory');
     }
   }
 
   @DBOS.transaction()
   static async undoSubtractInventory(): Promise<void> {
-    await DBOS.knexClient<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory: DBOS.knexClient.raw('inventory + ?', 1) });
+    await DBOS.knexClient<Product>('products')
+      .where({ product_id: PRODUCT_ID })
+      .update({ inventory: DBOS.knexClient.raw('inventory + ?', 1) });
   }
 
   @DBOS.transaction()
@@ -63,9 +63,9 @@ export class ShopUtilities {
     await DBOS.knexClient<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @DBOS.transaction()
   static async retrieveProduct(): Promise<Product> {
-    const item = await DBOS.knexClient<Product>('products').select("*").where({ product_id: PRODUCT_ID });
+    const item = await DBOS.knexClient<Product>('products').select('*').where({ product_id: PRODUCT_ID });
     if (!item.length) {
       throw new Error(`Product ${PRODUCT_ID} not found`);
     }
@@ -74,12 +74,14 @@ export class ShopUtilities {
 
   @DBOS.transaction()
   static async createOrder(): Promise<number> {
-    const orders = await DBOS.knexClient<Order>('orders').insert({
-      order_status: OrderStatus.PENDING,
-      product_id: PRODUCT_ID,
-      last_update_time: DBOS.knexClient.fn.now(),
-      progress_remaining: 10,
-    }).returning('order_id');
+    const orders = await DBOS.knexClient<Order>('orders')
+      .insert({
+        order_status: OrderStatus.PENDING,
+        product_id: PRODUCT_ID,
+        last_update_time: DBOS.knexClient.fn.now(),
+        progress_remaining: 10,
+      })
+      .returning('order_id');
     const orderID = orders[0].order_id;
     return orderID;
   }
@@ -88,7 +90,7 @@ export class ShopUtilities {
   static async markOrderPaid(order_id: number): Promise<void> {
     await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
       order_status: OrderStatus.PAID,
-      last_update_time: DBOS.knexClient.fn.now()
+      last_update_time: DBOS.knexClient.fn.now(),
     });
   }
 
@@ -96,31 +98,34 @@ export class ShopUtilities {
   static async errorOrder(order_id: number): Promise<void> {
     await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
       order_status: OrderStatus.CANCELLED,
-      last_update_time: DBOS.knexClient.fn.now()
+      last_update_time: DBOS.knexClient.fn.now(),
     });
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @DBOS.transaction()
   static async retrieveOrder(order_id: number): Promise<Order> {
-    const item = await DBOS.knexClient<Order>('orders').select("*").where({ order_id: order_id });
+    const item = await DBOS.knexClient<Order>('orders').select('*').where({ order_id: order_id });
     if (!item.length) {
       throw new Error(`Order ${order_id} not found`);
     }
     return item[0];
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @DBOS.transaction()
   static async retrieveOrders() {
-    return DBOS.knexClient<Order>('orders').select("*");
+    return DBOS.knexClient<Order>('orders').select('*');
   }
 
-  @DBOS.transaction({ readOnly: true })
-  static async retrievePaidOrders() {
-    return DBOS.knexClient<Order>('orders').select("*").where({ order_status: OrderStatus.PAID });
+  @DBOS.workflow()
+  static async dispatchOrder(order_id: number) {
+    for (let i = 0; i < 10; i++) {
+      await DBOS.sleep(1000);
+      await ShopUtilities.updateOrderProgress(order_id);
+    }
   }
 
   @DBOS.transaction()
-  static async makeProgressOnPaidOrder(order_id: number): Promise<void> {
+  static async updateOrderProgress(order_id: number): Promise<void> {
     const orders = await DBOS.knexClient<Order>('orders').where({
       order_id: order_id,
       order_status: OrderStatus.PAID,
@@ -131,62 +136,14 @@ export class ShopUtilities {
 
     const order = orders[0];
     if (order.progress_remaining > 1) {
-      await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({ progress_remaining: order.progress_remaining - 1 });
+      await DBOS.knexClient<Order>('orders')
+        .where({ order_id: order_id })
+        .update({ progress_remaining: order.progress_remaining - 1 });
     } else {
       await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
         order_status: OrderStatus.DISPATCHED,
-        progress_remaining: 0
+        progress_remaining: 0,
       });
     }
   }
-
-  @DBOS.scheduled({crontab: '0 0 * * *'}) // Every midnight
-  @DBOS.workflow()
-  static async nightlyReport(schedDate: Date, _curdate: Date) {
-    const yesterday = schedDate;
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const sales = await ShopUtilities.getDailySales(yesterday);
-    await ShopUtilities.sendStatusEmail(yesterday, sales);
-  }
-
-  @DBOS.scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '*/20 * * * * *'}) // Every second
-  @DBOS.workflow()
-  static async makeProgressOnAllPaidOrders(_schedDate: Date, _curdate: Date) {
-    const orders = await ShopUtilities.retrievePaidOrders();
-    for (const order of orders) {
-      await ShopUtilities.makeProgressOnPaidOrder(order.order_id);
-    }
-  }
-
-  @DBOS.transaction({readOnly: true})
-  static async getDailySales(day: Date) {
-    const startOfDay = new Date(day.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(day.setHours(23, 59, 59, 999));
-
-    const result = await DBOS.knexClient('orders')
-      .join('products', 'orders.product_id', 'products.product_id')
-      .whereBetween('orders.last_update_time', [startOfDay, endOfDay])
-      .select(DBOS.knexClient.raw('COUNT(DISTINCT orders.order_id) as order_count'))
-      .select(DBOS.knexClient.raw('COUNT(orders.product_id) as product_count'))
-      .select(DBOS.knexClient.raw('SUM(products.price) as total_price'));
-
-    return result[0] as SalesSummary;
-  }
-
-  static async sendStatusEmail(yd: Date, sales: SalesSummary) {
-    if (!reportSes) return;
-    await reportSes.sendEmail({
-      to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
-      from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
-      subject: `Daily report for ${yd.toDateString()}`,
-      bodyText: `Yesterday we had ${sales.order_count} orders, selling ${sales.product_count} units, for a total of ${sales.total_price} dollars`,
-    });
-  }
-}
-
-interface SalesSummary {
-  order_count: number;
-  product_count: number;
-  total_price: number;
 }

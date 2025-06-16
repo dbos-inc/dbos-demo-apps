@@ -4,7 +4,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "nodemon",
-    "start": "npx dbos start"
+    "start": "node dist/main.js"
   },
   "devDependencies": {
     "@types/morgan": "^1.9.9",
@@ -12,7 +12,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.5.16",
+    "@dbos-inc/dbos-sdk": "^2.10.22",
     "express": "^4.21.2",
     "morgan": "^1.10.0"
   }

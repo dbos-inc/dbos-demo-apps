@@ -7,18 +7,23 @@ from tempfile import TemporaryDirectory
 from typing import List
 
 import requests
-from dbos import DBOS, Queue, WorkflowHandle, load_config
+from dbos import DBOS, DBOSConfig, Queue, WorkflowHandle
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
 from llama_index.readers.file import PDFReader
 from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel, HttpUrl
+from sqlalchemy import make_url
 
 from .schema import chat_history
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "document-detective",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(fastapi=app, config=config)
 
 
 # Next, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
@@ -26,14 +31,13 @@ DBOS(fastapi=app)
 
 def configure_index():
     Settings.chunk_size = 512
-    dbos_config = load_config()
-    db = dbos_config["database"]
+    db = make_url(config.get("database_url"))
     vector_store = PGVectorStore.from_params(
-        database=db["app_db_name"],
-        host=db["hostname"],
-        password=db["password"],
-        port=db["port"],
-        user=db["username"],
+        database=db.database,
+        host=db.host,
+        password=db.password,
+        port=db.port,
+        user=db.username,
         perform_setup=False,  # Set up during migration step
     )
     storage_context = StorageContext.from_defaults(vector_store=vector_store)

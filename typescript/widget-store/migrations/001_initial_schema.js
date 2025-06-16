@@ -1,5 +1,5 @@
-exports.up = async function(knex) {
-  await knex.schema.createTable('products', table => {
+exports.up = async function (knex) {
+  await knex.schema.createTable('products', (table) => {
     table.integer('product_id').primary();
     table.string('product', 255).unique().notNullable();
     table.text('description').notNullable();
@@ -7,7 +7,7 @@ exports.up = async function(knex) {
     table.float('price').notNullable();
   });
 
-  await knex.schema.createTable('orders', table => {
+  await knex.schema.createTable('orders', (table) => {
     table.increments('order_id').primary();
     table.integer('order_status').notNullable();
     table.datetime('last_update_time').notNullable().defaultTo(knex.fn.now());
@@ -17,7 +17,7 @@ exports.up = async function(knex) {
   });
 };
 
-exports.down = async function(knex) {
+exports.down = async function (knex) {
   await knex.schema.dropTable('orders');
   await knex.schema.dropTable('products');
 };

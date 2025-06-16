@@ -7,11 +7,11 @@ Create Date: 2024-10-09 15:47:35.834817
 """
 
 from typing import Sequence, Union
-
+import os
 import sqlalchemy as sa
 from alembic import op
-from dbos import load_config
 from langgraph.checkpoint.postgres import PostgresSaver
+from sqlalchemy.engine.url import make_url
 
 # revision identifiers, used by Alembic.
 revision: str = "f4e458725794"
@@ -21,9 +21,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    db = load_config()["database"]
-    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
-    with PostgresSaver.from_conn_string(connection_string) as c:
+    connection_string = os.environ.get("DBOS_DATABASE_URL", "postgresql//postgres:dbos@localhost:5432/chatbot?connect_timeout=5")
+    db_url = make_url(connection_string).set(drivername="postgres").render_as_string(hide_password=False)
+    with PostgresSaver.from_conn_string(db_url) as c:
         c.setup()
 
 

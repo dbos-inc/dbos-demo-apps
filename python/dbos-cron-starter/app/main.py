@@ -1,12 +1,17 @@
 import os
-from dbos import DBOS
+import uvicorn
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI, responses
 
 # Welcome to DBOS!
 # This is a template application using DBOS to run some code on a (cron) schedule.
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-cron-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(fastapi=app, config=config)
 counter = 0
 
 # This is a simple scheduled function.
@@ -34,3 +39,7 @@ def readme():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return responses.HTMLResponse(html)
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
