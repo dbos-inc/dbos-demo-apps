@@ -64,10 +64,7 @@ The transfer will proceed durably. If you `CTRL+C` the app and restart, it will 
 
 The `rate` field output by transfer_status is in GB/s. 
 
-To reset a DB, removing all data about past transfers, run
-```
-dbos reset
-```
+To cancel a transfer, sent an empty POST request to `/cancel/TRANSFER_ID`
 
 The script `clear_dst.sh` cleans a bucket. Edit it to add your bucket name instead of `YOUR_BUCKET_HERE`. Use it carefully as it deletes all the data in the specified path.
 
@@ -119,10 +116,5 @@ This starts a Postgres server for you in the cloud, uploads your app and returns
 You can use the [Dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard) to view app logs. 
 
 You can upgrade to DBOS Pro at https://console.dbos.dev. This will make transfers auto-scale to multiple workers and increase speed by over 4x. 
-
-If developing or debugging, the equivalent of `dbos reset` in the cloud is 
-```
-dbos-cloud app delete --dropdb
-```
 
 See also https://docs.dbos.dev/
