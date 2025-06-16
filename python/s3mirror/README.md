@@ -35,6 +35,7 @@ Export the AWS credentials and launch like so
 ```bash
 export AWS_ACCESS_KEY_ID="YOURKEY..."
 export AWS_SECRET_ACCESS_KEY="YourSecretKey..."
+export AWS_DEFAULT_REGION="us-east-1" #substitute for your case
 dbos start
 ```
 App runs and writes logs in this terminal window.
@@ -100,8 +101,10 @@ Follow the instructions
 The AWS keys are passed to the app at deploy time. Like so:
 
 ```bash
-export AWS_ACCESS_KEY_ID="YOURKEY..."
-export AWS_SECRET_ACCESS_KEY="YourSecretKey..."
+dbos-cloud app register -d your-database-name
+dbos-cloud app env create -s AWS_ACCESS_KEY_ID -v "YOURKEY..."
+dbos-cloud app env create -s AWS_SECRET_ACCESS_KEY -v "AWS_SECRET_ACCESS_KEY"
+dbos-cloud app env create -s AWS_DEFAULT_REGION -v "us-east-1" #substitute for your case
 dbos-cloud app deploy
 ```
 If you need to provide other environment variables, add them to the `env` section of `dbos-config.yaml`. 

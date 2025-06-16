@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 import boto3
 from boto3.s3.transfer import TransferConfig
 from botocore.config import Config
-from dbos import DBOS, Queue
+from dbos import DBOS, DBOSConfig, Queue
 import time
 from typing import List, Optional
 import threading
@@ -14,12 +14,16 @@ from pydantic import BaseModel
 from sqlalchemy import text
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(fastapi=app, config=config)
 
 ## Tuning Parameters
 # Running in DBOS Cloud; S3 max requests per prefix is around 3500
-# This processes up to 3000 requests at once, leaving some room for others using the bucket/prefix
-MAX_FILES_AT_A_TIME = 30
+# This processes up to 1500 requests at once, leaving some room for others using the bucket/prefix
+MAX_FILES_AT_A_TIME = 15
 MAX_FILES_PER_WORKER = 3
 
 # See https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance.html
@@ -108,7 +112,8 @@ def transfer_job(buckets: BucketPaths, tasks: List[FileTransferTask]):
     DBOS.set_event('tasks', tasks)
     # For each task, start a workflow on the queue
     handles = [ transfer_queue.enqueue(s3_transfer_file, task = task, buckets = buckets) for task in tasks ]
-    # Babysit them until all finish
+    # Babysit them until all finish. 
+    # Note: much of this loop can be removed and transfer_status can be rewritten to use the new DBOS.list_workflows instead
     while not all( [ task.status in [ TransferStatus.SUCCESS, TransferStatus.ERROR ] for task in tasks ] ):
         DBOS.sleep(1)
         for i, (task, handle) in enumerate(zip(tasks, handles)):
@@ -206,7 +211,17 @@ def transfer_status(transfer_id: str):
         'filewise': filewise_status
     }
 
-# Finally, here is the crash endpoint. It crashes your app. For demonstration purposes only. :)
+# An endpoint to cancel a transfer
+@app.post("/cancel/{transfer_id}")
+def cancel(transfer_id: str):
+    tasks = DBOS.get_event(transfer_id, 'tasks', timeout_seconds=0)
+    if tasks is None:
+        raise HTTPException(status_code=404, detail="Transfer not found")
+    workflows = DBOS.list_workflows(workflow_id_prefix=transfer_id)
+    for workflow in workflows:
+        DBOS.cancel_workflow(workflow.workflow_id)
+
+# Finally, this endpoint crashes your app. For demonstration purposes only. :)
 @app.post("/crash_application")
 def crash_application():
     os._exit(1)
