@@ -21,16 +21,9 @@ pip install -r requirements.txt
 ### 2. Set up Postgres
 If you have Docker on your machine, this is the easiest path:
 ```bash
-export PGPASSWORD=dbos
-python3 start_postgres_docker.py
+dbos postgres start
 ```
-Alternatively, if you have a Postgres DB somewhere, edit the file `dbos-config.yaml` to set up a connection. For other options, see https://docs.dbos.dev/quickstart
-
-Then run:
-```bash
-dbos migrate
-```
-This sets up the initial database for the app.
+Alternatively, if you have a Postgres DB somewhere, set the variable `DBOS_DATABASE_URL` appropriately. See https://docs.dbos.dev/python/programming-guide
 
 ### 3. Start the App
 Export the AWS credentials and launch like so
@@ -41,8 +34,6 @@ export AWS_SECRET_ACCESS_KEY="YourSecretKey..."
 export AWS_DEFAULT_REGION="us-east-1" #substitute for your case
 dbos start
 ```
-App runs and writes logs in this terminal window.
-
 
 ### 4. Run a Transfer
 In another window, edit the file `start_transfer_example.py` and replace `YOUR_BUCKET_HERE` with the bucket to write to (using the creds exported above). It's currently configured to read from the public Google Genomics bucket, so you don't need to change `src_` settings for a test. 
