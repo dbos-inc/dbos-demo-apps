@@ -106,6 +106,6 @@ This starts a Postgres server for you in the cloud, uploads your app and returns
 
 You can use the [Dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard) to view app logs. 
 
-You can upgrade to DBOS Pro at https://console.dbos.dev. This will make transfers auto-scale to multiple workers and increase speed by over 4x. 
+You can upgrade to DBOS Pro at https://console.dbos.dev. This will make transfers auto-scale to multiple workers and increase speed by over 4x. You can further tune the performance by starting a [linking a larger Postgres database](https://docs.dbos.dev/production/dbos-cloud/cloud-cli#dbos-cloud-db-link) and increasing your [per-vm RAM](https://docs.dbos.dev/production/dbos-cloud/cloud-cli#dbos-cloud-db-link).
 
 See also https://docs.dbos.dev/
