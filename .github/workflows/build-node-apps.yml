@@ -3,8 +3,6 @@ name: Build Node Apps
 on:
   pull_request:
     branches: [ main ]
-    paths:
-      - 'typescript/**'
 
 jobs:
   build-typescript-apps:
