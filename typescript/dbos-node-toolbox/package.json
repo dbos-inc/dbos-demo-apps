@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "tsc",
+    "db:setup": "ts-node create-db.ts && npx knex migrate:latest",
     "dev": "nodemon",
     "start": "node dist/main.js"
   },
@@ -12,6 +13,8 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-sdk": "^2.10.22",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "knex": "^3.1.0",
+    "ts-node": "^10.9.2"
   }
 }
