@@ -31,7 +31,7 @@ async function main() {
     handle(req, res as ServerResponse<IncomingMessage>);
   });
 
-  const PORT = DBOS.runtimeConfig?.port ?? 3000;
+  const PORT = process.env.NODE_PORT ?? 3000;
   const ENV = process.env.NODE_ENV || 'development';
 
   server.listen(PORT, () => {

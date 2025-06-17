@@ -10,7 +10,7 @@
     "start": "npx dbos start"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^2.0.2",
+    "@dbos-inc/dbos-cloud": "^2.10.24",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/jest": "^29.5.12",
     "@types/supertest": "^2.0.16",
@@ -23,7 +23,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.0.2",
+    "@dbos-inc/dbos-sdk": "^2.10.24",
     "knex": "3.1.0",
     "ws": "^8.18.0"
   }

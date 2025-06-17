@@ -7,12 +7,12 @@
     "start": "npx dbos start"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^2.4.20",
+    "@dbos-inc/dbos-cloud": "^2.10.24",
     "nodemon": "^3.1.0",
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.4.20",
+    "@dbos-inc/dbos-sdk": "^2.10.24",
     "express": "^4.21.2"
   }
 }

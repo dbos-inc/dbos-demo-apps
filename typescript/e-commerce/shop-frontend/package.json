@@ -10,7 +10,7 @@
   "dependencies": {
     "axios": "^1.4.0",
     "bootstrap": "^5.3.0",
-    "iron-session": "^6.3.1",
+    "iron-session": "^8.0.4",
     "next": "^14.2.3",
     "oazapfts": "^4.10.0",
     "react": "18.2.0",
