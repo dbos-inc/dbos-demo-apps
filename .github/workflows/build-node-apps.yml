@@ -19,5 +19,5 @@ jobs:
         cache: 'npm'
         cache-dependency-path: 'typescript/**/package-lock.json'
       
-    - name: Run build script on typescript folder
+    - name: Build Node Apps
       run: .github/utilities/build_node_apps.sh typescript
