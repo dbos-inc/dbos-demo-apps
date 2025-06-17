@@ -1,0 +1,25 @@
+name: Build Node Apps
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'typescript/**'
+
+jobs:
+  build-typescript-apps:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: 'typescript/**/package-lock.json'
+      
+    - name: Run build script on typescript folder
+      run: .github/utilities/build_node_apps.sh typescript
