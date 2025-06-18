@@ -5,7 +5,6 @@ import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { convertTransactionHistory } from "./router";
 import Koa from 'koa';
 import Router from "@koa/router";
-import { Server } from "http";
 
 describe("bank-tests", () => {
   const app = new Koa();
