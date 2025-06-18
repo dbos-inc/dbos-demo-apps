@@ -12,8 +12,7 @@
   "dependencies": {
     "@dbos-inc/dbos-dbtriggers": "^2.2.10-preview.g90e74a1e32",
     "@dbos-inc/dbos-email-ses": "^2.10.24",
-    "@dbos-inc/dbos-random": "^2.10.24",
-    "@dbos-inc/dbos-sdk": "^2.10.24",
+    "@dbos-inc/dbos-sdk": "^3.0.6-preview",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.1",
