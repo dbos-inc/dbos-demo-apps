@@ -1,18 +1,26 @@
 import { DBOS, parseConfigFile } from "@dbos-inc/dbos-sdk";
-import { BankEndpoints as _endpoints, BankAccountInfo, BankTransactionHistory } from "./operations";
+import { BankEndpoints as _endpoints, BankAccountInfo, BankTransactionHistory, dkoa } from "./operations";
 import request from "supertest";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { convertTransactionHistory } from "./router";
+import Koa from 'koa';
+import Router from "@koa/router";
+import { Server } from "http";
 
 describe("bank-tests", () => {
+  const app = new Koa();
+  const router = new Router();
+
   beforeAll(async () => {
-    //testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "dbos-test-config.yaml");
-    //export function parseConfigFile(cliOptions?: ParseOptions, useProxy: boolean = false): [DBOSConfig, DBOSRuntimeConfig] {
+    await DBOS.launch();
+    dkoa.registerWithApp(app, router);
+  });
+
+  beforeAll(async () => {
     const [dbosConfig, rtConfig] = parseConfigFile({configfile: "dbos-test-config.yaml"});
     DBOS.setConfig(dbosConfig, rtConfig);
 
     await DBOS.launch();
-    await DBOS.launchAppHTTPServer();
     await DBOS.queryUserDB(`delete from "AccountInfo" where "ownerName"=$1;`, ["alice"]);
   });
 
@@ -22,7 +30,7 @@ describe("bank-tests", () => {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   test("test-greeting", async () => {
-    const response = await request(DBOS.getHTTPHandlersCallback()).get("/api/greeting");
+    const response = await request(app.callback()).get("/api/greeting");
     expect(response.statusCode).toBe(401); // This is because we don't have a valid JWT token.
   });
 

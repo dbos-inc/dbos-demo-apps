@@ -341,7 +341,6 @@ Some functions may need special treatment, for example, we only want to allow an
 We use the `@DBOS.requiredRole()` decorator to override the defaults.
 ```ts
 @DBOS.transaction()
-@DBOS.postApi("/api/create_account")
 @DBOS.requiredRole(["appAdmin"]) // Only an admin can create a new account.
 static async createAccountFunc(ownerName: string, type: string, balance?: number) {...}
 ```

@@ -235,9 +235,9 @@ uses `getEvent` to wait for the `paymentWorkflow` to provide the payment redirec
   const handle = await Shop.paymentWorkflow(username, origin);
   const url = await DBOS.getEvent<string>(handle.getWorkflowID(), checkout_url_topic);
   if (url === null) {
-    DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
+    DBOSKoa.koaContext.redirect(`${origin}/checkout/cancel`);
   } else {
-    DBOS.koaContext.redirect(url);
+    DBOSKoa.koaContext.redirect(url);
   }
 ```
 
@@ -291,9 +291,9 @@ When the payment system is done processing a payment, it calls back the HTTP han
 The HTTP handler forwards the payment details to the workflow instance via the `send` method. 
  
 ```ts
-@DBOS.postApi('/payment_webhook')
+@dhttp.postApi('/payment_webhook')
 static async paymentWebhook(): Promise<void> {
-  const req = DBOS.koaContext.request;
+  const req = DBOSKoa.koaContext.request;
 
   type Session = { session_id: string; client_reference_id?: string; payment_status: string };
   const payload = req.body as Session;
@@ -355,7 +355,7 @@ For more information on testing in DBOS, see the [Testing and Debugging](https:/
 
 The `payment-backend` project uses:
 * The [`jest`](https://jestjs.io/) testing framework for defining test suites (setup, teardown, and tests) and reporting test results.
-* [`supertest`](https://github.com/ladjs/supertest) executed against [`DBOS.getHTTPHandlersCallback()`](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#http-testing) to test HTTP handling logic in combination with the DBOS-based application code.
+* [`supertest`](https://github.com/ladjs/supertest) executed against [`app.callback()`] to test HTTP handling logic in combination with the DBOS-based application code.
 * `DBOS.send` and `DBOS.retrieveWorkflow` to examine and interact with the workflow under test.
 * `DBOS.setConfig` to set [application configuration](https://docs.dbos.dev/typescript/reference/configuration#application) items, allowing the resulting behavior to be unit-tested.
 

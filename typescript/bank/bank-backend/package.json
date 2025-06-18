@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npx prisma generate && tsc",
     "dev": "nodemon",
-    "start": "npx dbos start",
+    "start": "node dist/main.js",
     "test": "npm run build && npx dbos migrate && jest --detectOpenHandles",
     "lint-fix": "eslint --ext .ts --fix .",
     "lint": "eslint --ext .ts ."
@@ -14,7 +14,8 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.10.24",
+    "@dbos-inc/dbos-sdk": "^3.0.11-preview.gc9233b8190",
+    "@dbos-inc/koa-serve": "^3.0.11-preview.gc9233b8190",
     "@koa/bodyparser": "^5.0.0",
     "@koa/cors": "^5.0.0",
     "@koa/router": "^12.0.0",
