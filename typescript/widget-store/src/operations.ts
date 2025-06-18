@@ -153,7 +153,7 @@ fastify.post('/crash_application', () => {
 });
 
 async function main() {
-  const PORT = 3000;
+  const PORT = parseInt(process.env.NODE_PORT || '3000');
   DBOS.setConfig({
     name: 'widget-store-node',
     databaseUrl: process.env.DBOS_DATABASE_URL,
