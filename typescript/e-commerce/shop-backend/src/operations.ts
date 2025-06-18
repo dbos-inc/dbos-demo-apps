@@ -1,5 +1,5 @@
 import { DBOS, DBOSResponseError } from '@dbos-inc/dbos-sdk';
-import { DBOSKoa } from '@dbos-inc/koa-serve';
+import { DBOSKoa, DefaultArgValidate } from '@dbos-inc/koa-serve';
 import bcrypt from 'bcrypt';
 import { Request } from 'koa';
 
@@ -131,8 +131,7 @@ class UndoList {
 
 export const dhttp = new DBOSKoa();
 
-// eslint-disable-next-line @typescript-eslint/unbound-method
-@DBOSKoa.defaultArgValidate
+@DefaultArgValidate
 export class Shop {
   @dhttp.postApi('/api/login')
   @DBOS.transaction({ readOnly: true })

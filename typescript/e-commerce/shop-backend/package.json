@@ -11,8 +11,8 @@
     "start": "npx dbos start"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.0.2-preview",
-    "@dbos-inc/koa-serve": "^3.0.2-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.6-2",
+    "@dbos-inc/koa-serve": "^3.0.8-preview.g493d2d1c2b",
     "@koa/router": "^13.1.0",
     "bcrypt": "^6.0.0",
     "koa": "^3.0.0",
