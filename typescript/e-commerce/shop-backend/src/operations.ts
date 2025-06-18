@@ -131,6 +131,7 @@ class UndoList {
 
 export const dhttp = new DBOSKoa();
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 @DBOSKoa.defaultArgValidate
 export class Shop {
   @dhttp.postApi('/api/login')
