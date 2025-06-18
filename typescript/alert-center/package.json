@@ -26,7 +26,7 @@
   "dependencies": {
     "@dbos-inc/dbos-kafkajs": "^2.10.24",
     "@dbos-inc/dbos-sdk": "^3.0.6-preview",
-    "@dbos-inc/koa-serve": "^2.11.6-preview.gcb74958171",
+    "@dbos-inc/koa-serve": "^3.0.6-preview",
     "@koa/router": "^13.1.0",
     "koa": "^3.0.0",
     "liquidjs": "^10.10.1",
