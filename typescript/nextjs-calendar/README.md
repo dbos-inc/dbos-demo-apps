@@ -306,10 +306,10 @@ Note that while this successfully registers the `/api/boredactivity` endpoint, i
 ### DBOS Routes
 DBOS provides a much simpler way to register API endpoints.
 
-By simply decorating a method with [`@DBOS.getAPI`](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial), the API will be available, with built-in type checking, and available for OpenAPI support.  The following registers the API at `/dbos/boredapi/activity`:
+By simply decorating a method with [`@dkoa.getAPI`](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial), the API will be available, with built-in type checking, and available for OpenAPI support.  The following registers the API at `/dbos/boredapi/activity`:
 
 ```typescript
-  @DBOS.getApi('/dbos/boredapi/activity')
+  @dkoa.getApi('/dbos/boredapi/activity')
   static async boredAPIActivity() {
     return await DBOSBored.getActivity();
   }
