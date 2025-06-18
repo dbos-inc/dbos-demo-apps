@@ -1,6 +1,10 @@
 import { DBOS } from '@dbos-inc/dbos-sdk';
 import { activities, Activity } from '../bored/db/activities';
 
+import { DBOSKoa } from '@dbos-inc/koa-serve';
+
+export const dkoa = new DBOSKoa();
+
 export class DBOSBored {
   @DBOS.workflow()
   static async getActivity() : Promise<Activity> {
@@ -10,7 +14,7 @@ export class DBOSBored {
     return activities[choice];
   }
 
-  @DBOS.getApi('/dbos/boredapi/activity')
+  @dkoa.getApi('/dbos/boredapi/activity')
   static async boredAPIActivity() {
     return await DBOSBored.getActivity();
   }
