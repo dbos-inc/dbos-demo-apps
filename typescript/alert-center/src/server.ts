@@ -1,4 +1,4 @@
-import { DBOS } from '@dbos-inc/dbos-sdk'
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { dkoa } from './frontend';
 import Koa from 'koa';
 import Router from '@koa/router';
