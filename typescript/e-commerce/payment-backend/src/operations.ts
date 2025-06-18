@@ -5,6 +5,8 @@ import {
 import KoaViews from '@ladjs/koa-views';
 
 import {
+  ArgOptional,
+  ArgRequired,
   DBOSKoa
 } from '@dbos-inc/koa-serve';
 
@@ -96,11 +98,11 @@ export class PlaidPayments {
   // API for shop
   @dhttp.postApi('/api/create_payment_session')
   static async createPaymentSession(
-    @DBOSKoa.argRequired webhook: string,
-    @DBOSKoa.argRequired success_url: string,
-    @DBOSKoa.argRequired cancel_url: string,
-    @DBOSKoa.argRequired items: PaymentItem[],
-    @DBOSKoa.argOptional client_reference_id?: string
+    @ArgRequired webhook: string,
+    @ArgRequired success_url: string,
+    @ArgRequired cancel_url: string,
+    @ArgRequired items: PaymentItem[],
+    @ArgOptional client_reference_id?: string
   ): Promise<PaymentSession> {
     if (items.length === 0) {
       throw new DBOSResponseError("items must be non-empty", 404);
@@ -167,7 +169,7 @@ export class PlaidPayments {
     success_url: string,
     cancel_url: string,
     items: PaymentItem[],
-    @DBOSKoa.argOptional client_ref?: string
+    @ArgOptional client_ref?: string
   ) {
     const session_id = DBOS.workflowID!;
     DBOS.logger.info(`creating payment session ${session_id}`);
@@ -189,7 +191,7 @@ export class PlaidPayments {
     success_url: string,
     cancel_url: string,
     items: PaymentItem[],
-    @DBOSKoa.argOptional client_reference_id?: string
+    @ArgOptional client_reference_id?: string
   ): Promise<void> {
     await DBOS.knexClient<SessionTable>('session').insert({ session_id, client_reference_id, webhook, success_url, cancel_url });
     for (const item of items) {

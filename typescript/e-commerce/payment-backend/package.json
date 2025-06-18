@@ -24,8 +24,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.0.2-preview",
-    "@dbos-inc/koa-serve": "^3.0.2-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.6-preview",
+    "@dbos-inc/koa-serve": "^3.0.7-preview.gfe77addda7",
     "@koa/router": "^13.1.0",
     "@ladjs/koa-views": "^9.0.0",
     "ejs": "^3.1.10",
