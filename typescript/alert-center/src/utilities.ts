@@ -1,4 +1,5 @@
 import { DBOS } from '@dbos-inc/dbos-sdk';
+import { DBOSKoa } from '@dbos-inc/koa-serve';
 
 export enum AlertStatus {
   ACTIVE   = 0,
@@ -141,7 +142,7 @@ export class RespondUtilities {
 
   // This will return null if the assignment expired, or the expiration if an unexpired assignment exists
   @DBOS.transaction()
-  static async checkForExpiredAssignment(employee_name: string, currentDate: Date) : Promise<Date | null> {
+  static async checkForExpiredAssignment(employee_name: string, currentTime: number) : Promise<Date | null> {
     const employees = await DBOS.knexClient<Employee>('employee').where({employee_name}).select();
 
     if (!employees[0].alert_id) {
@@ -149,9 +150,9 @@ export class RespondUtilities {
       return null;
     }
 
-    if ((employees[0].expiration?.getTime() ?? 0) > currentDate.getTime()) {
+    if ((employees[0].expiration?.getTime() ?? 0) > currentTime) {
       //This employee is assigned and their time is not yet expired
-      DBOS.logger.info(`Not yet expired: ${employees[0].expiration?.getTime()} > ${currentDate.getTime()}`);
+      DBOS.logger.info(`Not yet expired: ${employees[0].expiration?.getTime()} > ${currentTime}`);
       return employees[0].expiration;
     }
 
@@ -161,3 +162,5 @@ export class RespondUtilities {
     return null;
   }
 }
+export const dkoa = new DBOSKoa();
+

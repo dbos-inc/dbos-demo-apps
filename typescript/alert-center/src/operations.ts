@@ -1,8 +1,7 @@
 import { DBOS } from '@dbos-inc/dbos-sdk';
-import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee } from './utilities';
+import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee, dkoa } from './utilities';
 import { Kafka, KafkaConfig, KafkaProduceStep, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
-import { DBOSDateTime } from "@dbos-inc/dbos-datetime";
 
 //The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
@@ -65,7 +64,7 @@ export class AlertCenter {
     
     // Get the current time from a checkpointed step;
     //   This ensures the same time is used for recovery or in the time-travel debugger
-    let ctime = await DBOSDateTime.getCurrentTime();
+    let ctime = await DBOS.now();
 
     //Assign, extend time or simply return current assignment
     const userRec = await RespondUtilities.getUserAssignment(name, ctime, more_time);
@@ -84,9 +83,8 @@ export class AlertCenter {
       while (expirationMS > ctime) {
         DBOS.logger.debug(`Sleeping ${expirationMS-ctime}`);
         await DBOS.sleepms(expirationMS - ctime);
-        const curDate = await DBOSDateTime.getCurrentDate();
-        ctime = curDate.getTime();
-        const nextTime = await RespondUtilities.checkForExpiredAssignment(name, curDate);
+        ctime = await DBOS.now();
+        const nextTime = await RespondUtilities.checkForExpiredAssignment(name, ctime);
 
         if (!nextTime) {
           //The time on this assignment expired, and we can stop monitoring it
@@ -101,7 +99,7 @@ export class AlertCenter {
   }
 
 
-  @DBOS.postApi('/crash_application')
+  @dkoa.postApi('/crash_application')
   static async crashApplication() {
     // For testing and demo purposes :)
     process.exit(1);
@@ -110,7 +108,7 @@ export class AlertCenter {
 
 
   //Produce a new alert message to our broker
-  @DBOS.postApi('/do_send')
+  @dkoa.postApi('/do_send')
   @DBOS.workflow()
   static async sendAlert(message: string) {
     const max_id = await RespondUtilities.getMaxId();
