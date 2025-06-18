@@ -1,6 +1,6 @@
 import { DBOS, DBOSResponseError } from '@dbos-inc/dbos-sdk';
 import { DBOSKoa } from '@dbos-inc/koa-serve';
-import { BcryptStep } from '@dbos-inc/dbos-bcrypt';
+import bcrypt from 'bcrypt';
 import { Request } from 'koa';
 
 export const OrderStatus = {
@@ -137,7 +137,7 @@ export class Shop {
   @DBOS.transaction({ readOnly: true })
   static async login(username: string, password: string): Promise<void> {
     const user = await DBOS.knexClient<User>('users').select("password").where({ username }).first();
-    if (!(user && await BcryptStep.bcryptCompare(password, user.password))) {
+    if (!user || !await DBOS.runStep(()=>bcrypt.compare(password, user.password), {name: 'comparePassword'})) {
       throw new DBOSResponseError("Invalid username or password", 400);
     }
   }
@@ -145,7 +145,7 @@ export class Shop {
   @dhttp.postApi('/api/register')
   @DBOS.workflow()
   static async register(username: string, password: string): Promise<void> {
-    const hashedPassword = await BcryptStep.bcryptHash(password, 10);
+    const hashedPassword = await DBOS.runStep(()=>bcrypt.hash(password, 10), {name: 'hashPassword'});
     await Shop.saveNewUser(username, hashedPassword);
   }
 

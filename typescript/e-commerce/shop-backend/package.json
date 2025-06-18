@@ -11,18 +11,22 @@
     "start": "npx dbos start"
   },
   "dependencies": {
-    "@dbos-inc/dbos-bcrypt": "^3.0.2-preview",
     "@dbos-inc/dbos-sdk": "^3.0.2-preview",
     "@dbos-inc/koa-serve": "^3.0.2-preview",
+    "@koa/router": "^13.1.0",
+    "bcrypt": "^6.0.0",
+    "koa": "^3.0.0",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@dbos-inc/dbos-cloud": "^2.10.24",
     "@dbos-inc/dbos-openapi": "^1.24.15",
     "@dbos-inc/eslint-plugin": "^3.3.4",
+    "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.5",
-    "@types/koa": "2.15.0",
+    "@types/koa": "^2.15.0",
+    "@types/koa__router": "^12.0.4",
     "@types/koa-bodyparser": "4.3.12",
     "@types/supertest": "^2.0.14",
     "eslint": "^8.56.0",
