@@ -131,13 +131,13 @@ class UndoList {
 
 export const dhttp = new DBOSKoa();
 
+@DBOSKoa.defaultArgValidate
 export class Shop {
-
   @dhttp.postApi('/api/login')
   @DBOS.transaction({ readOnly: true })
   static async login(username: string, password: string): Promise<void> {
     const user = await DBOS.knexClient<User>('users').select("password").where({ username }).first();
-    if (!user || !await DBOS.runStep(()=>bcrypt.compare(password, user.password), {name: 'comparePassword'})) {
+    if (!user || !await bcrypt.compare(password, user.password)) {
       throw new DBOSResponseError("Invalid username or password", 400);
     }
   }
