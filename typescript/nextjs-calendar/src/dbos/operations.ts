@@ -9,7 +9,7 @@ export { ScheduleDBOps };
 import { getOccurrencesAt } from "../types/taskschedule";
 import { WebSocket } from "ws";
 
-import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
+import { SESv2 } from '@aws-sdk/client-sesv2';
 import { DBTrigger, TriggerOperation } from '@dbos-inc/dbos-dbtriggers';
 
 globalThis.DBOSBored = DBOSBored;
@@ -29,7 +29,13 @@ if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.
     DBOS.logger.warn('`REPORT_EMAIL_TO_ADDRESS` and `REPORT_EMAIL_FROM_ADDRESS` are set, but `AWS_SECRET_ACCESS_KEY` is not.');
   }
   if (ok) {
-    globalThis.reportSes = new DBOS_SES('reportSES', {awscfgname: 'aws_config'});
+    globalThis.reportSes = new SESv2({
+      region: process.env['AWS_REGION'],
+      credentials: {
+        accessKeyId: process.env['AWS_ACCESS_KEY_ID']!,
+        secretAccessKey: process.env['AWS_SECRET_ACCESS_KEY']!,
+      },
+    });
   }
 }
 
@@ -46,14 +52,20 @@ export class SchedulerOps
     return doTaskFetch(task);
   }
 
-  // Note, while this is not a @DBOS.step, DBOS_SES.sendEmail is.
+  @DBOS.step()
   static async sendStatusEmail(subject: string, body: string) {
     if (!globalThis.reportSes) return;
     await globalThis.reportSes.sendEmail({
-      to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
-      from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
-      subject: subject,
-      bodyText: body,
+      FromEmailAddress: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
+      Destination: { ToAddresses: [process.env['REPORT_EMAIL_TO_ADDRESS']!] },
+      Content: {
+        Simple: {
+          Subject: { Data: subject },
+          Body: {
+            Text: { Data: body, Charset: 'utf-8' },
+          },
+        },
+      },
     });
   }
 

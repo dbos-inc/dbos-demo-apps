@@ -217,12 +217,12 @@ These migrations will be run by `npx dbos migrate`, because Knex migrations are 
 
 ### Sending Email with Amazon SES
 
-The optional sending of task results emails is done using Amazon SES, and the [@dbos-inc/dbos-email-ses](https://www.npmjs.com/package/@dbos-inc/dbos-email-ses) package.
+The optional sending of task results emails is done using Amazon SES.
 
 All that is necessary, as shown in `src/dbos/operations.ts`, is to configure the email instance (using environment variables):
 ```typescript
 if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
-  globalThis.reportSes = new DBOS_SES('reportSES', {awscfgname: 'aws_config'});
+  globalThis.reportSes = new SESv2(...);
 }
 ```
 
@@ -231,10 +231,7 @@ And then call `send`:
   static async sendStatusEmail(subject: string, body: string) {
     if (!globalThis.reportSes) return;
     await globalThis.reportSes.sendEmail({
-      to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
-      from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
-      subject: subject,
-      bodyText: body,
+      ...
     });
   }
 ```
