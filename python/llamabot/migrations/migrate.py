@@ -1,17 +1,18 @@
 # A script to set up the vector store schema in the app's database
 
-from dbos import load_config
+import os
 from llama_index.vector_stores.postgres import PGVectorStore
-from sqlalchemy import URL
+from sqlalchemy import make_url
 
-dbos_config = load_config()
+db_url = os.environ.get("DBOS_DATABASE_URL", "")
+db_url_config = make_url(db_url)
 
 vector_store = PGVectorStore.from_params(
-    database=dbos_config["database"]["app_db_name"],
-    host=dbos_config["database"]["hostname"],
-    password=dbos_config["database"]["password"],
-    port=str(dbos_config["database"]["port"]),
-    user=dbos_config["database"]["username"],
+    database=db_url_config.database,
+    host=db_url_config.host,
+    password=db_url_config.password,
+    port=str(db_url_config.port),
+    user=db_url_config.username,
     perform_setup=True,  # Set up the schema and tables
 )
 

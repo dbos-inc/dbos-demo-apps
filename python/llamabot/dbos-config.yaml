@@ -4,7 +4,7 @@ name: llamabot
 language: python
 runtimeConfig:
   start:
-    - "fastapi run llamabot/main.py"
+    - python3 llamabot/main.py
 database:
   hostname: localhost
   port: 5432

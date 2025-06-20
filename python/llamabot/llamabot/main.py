@@ -11,7 +11,7 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, Queue, SetWorkflowID, load_config
+from dbos import DBOS, DBOSConfig, Queue, SetWorkflowID
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
@@ -23,9 +23,16 @@ from llama_index.vector_stores.postgres import PGVectorStore
 from slack_bolt import App, BoltRequest
 from slack_bolt.adapter.starlette.handler import to_bolt_request
 from slack_sdk.web import SlackResponse
+from sqlalchemy import make_url
+import uvicorn
 
 app = FastAPI()
-DBOS(fastapi=app)
+db_url = os.environ.get("DBOS_DATABASE_URL", "")
+config: DBOSConfig = {
+    "name": "llamabot",
+    "database_url": db_url,
+}
+DBOS(fastapi=app, config=config)
 
 # Define a queue to limit processing incoming messages to 10 per minute.
 # This is to prevent the bot from being overwhelmed by a large number of messages.
@@ -35,13 +42,13 @@ work_queue = Queue("llamabot_queue", limiter={"limit": 300, "period": 60}, concu
 # Then, let's initialize LlamaIndex to use the app's Postgres database as the vector store.
 # Note that we don't set up the schema and tables because we've already done that in the schema migration step.
 set_global_handler("simple", logger=DBOS.logger)  # Logs from LlamaIndex will be printed as the `DEBUG` level.
-dbos_config = load_config()
+db_url_config = make_url(db_url)
 vector_store = PGVectorStore.from_params(
-    database=dbos_config["database"]["app_db_name"],
-    host=dbos_config["database"]["hostname"],
-    password=dbos_config["database"]["password"],
-    port=str(dbos_config["database"]["port"]),
-    user=dbos_config["database"]["username"],
+    database=db_url_config.database,
+    host=db_url_config.host,
+    password=db_url_config.password,
+    port=str(db_url_config.port),
+    user=db_url_config.username,
     perform_setup=False,  # Already setup through schema migration
 )
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
@@ -155,8 +162,8 @@ def get_slack_replies(channel: str, thread_ts: str) -> SlackResponse:
 # Get a Slack user's username from their user id
 @DBOS.step()
 def get_user_name(user_id: str) -> str:
-    user_info = slackapp.client.users_info(user=user_id)
-    user_name: str = user_info["user"]["name"]
+    user_info = slackapp.client.users_info(user=user_id).get("user", {})
+    user_name: str = user_info["name"]
     return user_name
 
 
@@ -169,8 +176,9 @@ def answer_question(query: str, message: Dict[str, Any], replies: Optional[Slack
     who_is_asking = get_user_name(message["user"])
     replies_stanza = ""
     if replies is not None:
+        replies_messages = replies.get("messages", [])
         replies_stanza = "In addition to the context above, the question you're about to answer has been discussed in the following chain of replies:\n"
-        for reply in replies["messages"]:
+        for reply in replies_messages:
             replies_stanza += get_user_name(reply["user"]) + ": " + reply["text"] + "\n"
     template = (
         "Your context is a series of chat messages. Each one is tagged with 'who:' \n"
@@ -214,3 +222,7 @@ def insert_node(text: str, user_name: str, formatted_time: str) -> None:
 
 
 # To deploy this app to the cloud and get a public URL, run `dbos-cloud app deploy`
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
