@@ -12,8 +12,8 @@
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.830.0",
     "@dbos-inc/dbos-dbtriggers": "^2.2.10-preview.g90e74a1e32",
-    "@dbos-inc/dbos-sdk": "^3.0.6-preview",
-    "@dbos-inc/koa-serve": "^3.0.6-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.7-preview",
+    "@dbos-inc/koa-serve": "^3.0.7-preview",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@koa/router": "^13.1.0",
@@ -37,7 +37,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^2.10.24",
+    "@dbos-inc/dbos-cloud": "^3.0.7-preview",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^29.5.14",
     "@types/koa": "^2.15.0",
