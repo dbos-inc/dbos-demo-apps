@@ -11,7 +11,7 @@
     "dev": "nodemon"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^3.0.6-preview",
+    "@dbos-inc/dbos-cloud": "3.0.7-preview",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/jest": "^29.5.14",
     "@types/koa": "^2.15.0",
@@ -25,8 +25,8 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-kafkajs": "^2.10.24",
-    "@dbos-inc/dbos-sdk": "^3.0.6-preview",
-    "@dbos-inc/koa-serve": "^3.0.6-preview",
+    "@dbos-inc/dbos-sdk": "3.0.7-preview",
+    "@dbos-inc/koa-serve": "3.0.7-preview",
     "@koa/router": "^13.1.0",
     "koa": "^3.0.0",
     "liquidjs": "^10.10.1",
