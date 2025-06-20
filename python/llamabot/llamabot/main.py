@@ -11,6 +11,7 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
+import uvicorn
 from dbos import DBOS, DBOSConfig, Queue, SetWorkflowID
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
@@ -24,7 +25,6 @@ from slack_bolt import App, BoltRequest
 from slack_bolt.adapter.starlette.handler import to_bolt_request
 from slack_sdk.web import SlackResponse
 from sqlalchemy import make_url
-import uvicorn
 
 app = FastAPI()
 db_url = os.environ.get("DBOS_DATABASE_URL", "")
