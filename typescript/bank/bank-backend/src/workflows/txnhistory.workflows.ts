@@ -1,7 +1,5 @@
 import {
   DBOS,
-  Authentication,
-  KoaMiddleware,
 } from "@dbos-inc/dbos-sdk";
 import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
 import { BankAccountInfo } from "./accountinfo.workflows";
@@ -10,12 +8,14 @@ import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
 
+import { dkoa } from "../koaserver";
+
 @DBOS.defaultRequiredRole(["appUser"])
-@Authentication(bankAuthMiddleware)
-@KoaMiddleware(koaLogger, bankJwt)
+@dkoa.authentication(bankAuthMiddleware)
+@dkoa.koaMiddleware(koaLogger, bankJwt)
 export class BankTransactionHistory {
   @DBOS.transaction()
-  @DBOS.getApi("/api/transaction_history/:accountId")
+  @dkoa.getApi("/api/transaction_history/:accountId")
   static async listTxnForAccountFunc(accountId: number) {
     const acctId = BigInt(accountId);
     return (DBOS.prismaClient as PrismaClient).transactionHistory.findMany({

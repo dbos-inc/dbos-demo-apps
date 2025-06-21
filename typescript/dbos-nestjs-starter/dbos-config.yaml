@@ -12,4 +12,3 @@ database:
 runtimeConfig:
   start:
     - npx nest start
-  port: 3000

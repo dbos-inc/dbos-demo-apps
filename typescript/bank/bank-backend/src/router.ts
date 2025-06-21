@@ -1,23 +1,25 @@
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
-import { DBOS, DBOSResponseError, Authentication, KoaMiddleware } from "@dbos-inc/dbos-sdk";
+import { DBOS, DBOSResponseError } from "@dbos-inc/dbos-sdk";
 import { bankAuthMiddleware, koaLogger, bankJwt } from "./middleware";
+import { DBOSKoa } from "@dbos-inc/koa-serve";
+import { dkoa } from "./koaserver";
 
 @DBOS.defaultRequiredRole(["appUser"])
-@Authentication(bankAuthMiddleware)
-@KoaMiddleware(koaLogger, bankJwt)
+@dkoa.authentication(bankAuthMiddleware)
+@dkoa.koaMiddleware(koaLogger, bankJwt)
 export class BankEndpoints {
   // Can we have some class-wide default required roles?
   // eslint-disable-next-line @typescript-eslint/require-await
-  @DBOS.getApi("/api/greeting")
+  @dkoa.getApi("/api/greeting")
   static async greeting() {
     return Promise.resolve("Hello from " + DBOS.getConfig<string>("bankname"));
   }
 
   // Deposit.
-  @DBOS.postApi("/api/deposit")
+  @dkoa.postApi("/api/deposit")
   static async deposit() {
-    const data = convertTransactionHistory(DBOS.koaContext.request.body as TransactionHistory);
+    const data = convertTransactionHistory(DBOSKoa.koaContext.request.body as TransactionHistory);
     if (!data.fromLocation) {
       throw new DBOSResponseError("fromLocation must not be empty!", 400);
     }
@@ -26,16 +28,16 @@ export class BankEndpoints {
     data.toLocation = "local";
 
     // Check the header for a specific UUID for the workflow.
-    const txnUUID = DBOS.koaContext.get("dbos-workflowuuid");
+    const txnUUID = DBOSKoa.koaContext.get("dbos-workflowuuid");
     return await DBOS.withNextWorkflowID(txnUUID, async () => {
       return await BankTransactionHistory.depositWorkflow(data);
     });
   }
 
   // Withdraw.
-  @DBOS.postApi("/api/withdraw")
+  @dkoa.postApi("/api/withdraw")
   static async withdraw() {
-    const data = convertTransactionHistory(DBOS.koaContext.request.body as TransactionHistory);
+    const data = convertTransactionHistory(DBOSKoa.koaContext.request.body as TransactionHistory);
     if (!data.toLocation) {
       throw new DBOSResponseError("toLocation must not be empty!", 400);
     }
@@ -44,16 +46,16 @@ export class BankEndpoints {
     data.fromLocation = "local";
 
     // Check the header for a specific UUID for the workflow.
-    const txnUUID = DBOS.koaContext.get("dbos-workflowuuid");
+    const txnUUID = DBOSKoa.koaContext.get("dbos-workflowuuid");
     return await DBOS.withNextWorkflowID(txnUUID, async () => {
       return await BankTransactionHistory.withdrawWorkflow(data);
     });
   }
 
   // Internal transfer
-  @DBOS.postApi("/api/transfer")
+  @dkoa.postApi("/api/transfer")
   static async internalTransfer() {
-    const data = convertTransactionHistory(DBOS.koaContext.request.body as TransactionHistory);
+    const data = convertTransactionHistory(DBOSKoa.koaContext.request.body as TransactionHistory);
     // Check the transaction is within the local database.
     if ((data.fromLocation !== undefined && data.fromLocation !== "local") || (data.toLocation !== undefined && data.toLocation !== "local")) {
       throw new Error("Must be a local transaction! Instead: " + data.fromLocation + " -> " + data.toLocation);
@@ -70,7 +72,7 @@ export class BankEndpoints {
 
 // For demo purposes
 export class CrashEndpoint {
- @DBOS.getApi('/crash_application')
+ @dkoa.getApi('/crash_application')
   static async crashApplication() {
     // For testing and demo purposes :)
     process.exit(1);

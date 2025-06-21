@@ -217,12 +217,12 @@ These migrations will be run by `npx dbos migrate`, because Knex migrations are 
 
 ### Sending Email with Amazon SES
 
-The optional sending of task results emails is done using Amazon SES, and the [@dbos-inc/dbos-email-ses](https://www.npmjs.com/package/@dbos-inc/dbos-email-ses) package.
+The optional sending of task results emails is done using Amazon SES.
 
 All that is necessary, as shown in `src/dbos/operations.ts`, is to configure the email instance (using environment variables):
 ```typescript
 if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
-  globalThis.reportSes = new DBOS_SES('reportSES', {awscfgname: 'aws_config'});
+  globalThis.reportSes = new SESv2(...);
 }
 ```
 
@@ -231,10 +231,7 @@ And then call `send`:
   static async sendStatusEmail(subject: string, body: string) {
     if (!globalThis.reportSes) return;
     await globalThis.reportSes.sendEmail({
-      to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
-      from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
-      subject: subject,
-      bodyText: body,
+      ...
     });
   }
 ```
@@ -293,7 +290,9 @@ Which in turn calls the DBOS logic:
 export class DBOSBored {
   @DBOS.workflow()
   static async getActivity() : Promise<Activity> {
-    const choice = Math.floor(await DBOSRandom.random() * activities.length);
+    const choice = await DBOS.runStep(() => {
+      return Promise.resolve(Math.floor(Math.random() * activities.length));
+    }, {name: 'chooseActivity'});
     return activities[choice];
   }
 }
@@ -304,10 +303,10 @@ Note that while this successfully registers the `/api/boredactivity` endpoint, i
 ### DBOS Routes
 DBOS provides a much simpler way to register API endpoints.
 
-By simply decorating a method with [`@DBOS.getAPI`](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial), the API will be available, with built-in type checking, and available for OpenAPI support.  The following registers the API at `/dbos/boredapi/activity`:
+By simply decorating a method with [`@dkoa.getAPI`](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial), the API will be available, with built-in type checking, and available for OpenAPI support.  The following registers the API at `/dbos/boredapi/activity`:
 
 ```typescript
-  @DBOS.getApi('/dbos/boredapi/activity')
+  @dkoa.getApi('/dbos/boredapi/activity')
   static async boredAPIActivity() {
     return await DBOSBored.getActivity();
   }

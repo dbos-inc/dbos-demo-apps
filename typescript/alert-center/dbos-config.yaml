@@ -5,6 +5,9 @@
 
 name: 'alert center'
 database_url: ${DBOS_DATABASE_URL}
+runtimeConfig:
+  start:
+    - npm run start
 database:
   app_db_client: 'knex'
   migrate: ['npx knex migrate:latest']
