@@ -13,7 +13,7 @@ async function main() {
 
   DBOS.registerLifecycleCallback(dkoa);
   await DBOS.launch();
-  await DBOS.logRegisteredEndpoints();
+  DBOS.logRegisteredEndpoints();
 
   const app = new Koa();
   const appRouter = new Router();
