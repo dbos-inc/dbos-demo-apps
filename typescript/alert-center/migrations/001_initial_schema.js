@@ -1,7 +1,6 @@
 const {
-  createTransactionCompletionSchemaPG,
-  createTransactionCompletionTablePG,
-} = require('@dbos-inc/dbos-sdk/datasource');
+  KnexDataSource
+} = require('@dbos-inc/knex-datasource');
 
 // Our schema
 //
@@ -30,11 +29,12 @@ exports.up = async function(knex) {
     table.string('employee_name', 255).defaultTo(null);
   });
 
-  await knex.raw(createTransactionCompletionSchemaPG);
-  await knex.raw(createTransactionCompletionTablePG);
+  await KnexDataSource.initializeSchema(knex);
 };
 
 exports.down = async function(knex) {
   await knex.schema.dropTable('alert_employee');
   await knex.schema.dropTable('employee');
+
+  await KnexDataSource.uninitializeSchema(knex);
 };
