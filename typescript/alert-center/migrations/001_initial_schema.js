@@ -1,3 +1,8 @@
+const {
+  createTransactionCompletionSchemaPG,
+  createTransactionCompletionTablePG,
+} = require('@dbos-inc/dbos-sdk/datasource');
+
 // Our schema
 //
 // An employee table
@@ -24,6 +29,9 @@ exports.up = async function(knex) {
     table.string('message', 255).defaultTo('');
     table.string('employee_name', 255).defaultTo(null);
   });
+
+  await knex.raw(createTransactionCompletionSchemaPG);
+  await knex.raw(createTransactionCompletionTablePG);
 };
 
 exports.down = async function(knex) {
