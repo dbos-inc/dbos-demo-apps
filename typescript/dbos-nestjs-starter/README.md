@@ -118,7 +118,7 @@ export class AppService extends ConfiguredInstance {
     return data;
   }
 
-  @DBOS.transaction()
+  @appds.transaction()
   async insert(): Promise<string> {
     const randomName: string = uniqueNamesGenerator({
       dictionaries: [adjectives, colors, animals],
@@ -126,7 +126,7 @@ export class AppService extends ConfiguredInstance {
       length: 2,
       style: "capital",
     });
-    return await DBOS.knexClient<GreetingRecord>("dbos_greetings").insert(
+    return await KnexDataSource.client<GreetingRecord>("dbos_greetings").insert(
       { greeting_name: randomName, greeting_note_content: "Hello World!" },
       ["greeting_name", "greeting_note_content"],
     );

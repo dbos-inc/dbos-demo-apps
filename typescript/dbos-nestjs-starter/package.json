@@ -1,16 +1,16 @@
 {
-  "name": "test",
+  "name": "dbos-nest-starter",
   "version": "0.0.1",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "test": "jest --detectOpenHandles",
+    "test": "PGDATABASE=nestjs_starter_test jest --detectOpenHandles",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
     "dev": "nodemon",
     "start": "nest start"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^3.0.7-preview",
+    "@dbos-inc/dbos-cloud": "^3.0.10-preview",
     "@dbos-inc/eslint-plugin": "^3.4.1",
     "@nestjs/testing": "^11.0.12",
     "@types/jest": "^29.5.14",
@@ -26,7 +26,8 @@
     "typescript-eslint": "^8.24.0"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.0.7-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.10-preview",
+    "@dbos-inc/knex-datasource": "^3.0.10-preview",
     "@nestjs/cli": "^11.0.2",
     "@nestjs/common": "^11.0.9",
     "@nestjs/core": "^11.0.9",

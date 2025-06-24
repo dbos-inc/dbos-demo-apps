@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "test": "jest --detectOpenHandles",
+    "test": "PGDATABASE=alert_center_test jest --detectOpenHandles",
     "db:setup": "npx knex migrate:up",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
