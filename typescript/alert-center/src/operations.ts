@@ -53,7 +53,7 @@ async function setupTopics(kafka: Kafka, topics: string[]) {
 }
 
 export async function setUpKafka() {
-  return await Promise.all([setupTopics(kafka, [respondTopic]), producer.connect()])  
+  return await Promise.all([setupTopics(kafka, [respondTopic]), producer.connect()]);  
 }
 
 //const producerConfig: KafkaProduceStep = new KafkaProduceStep(
@@ -146,7 +146,7 @@ export class AlertCenter {
   static async sendAlert(message: string) {
     const max_id = await RespondUtilities.getMaxId();
     await DBOS.runStep(async () => {
-      producer.send(
+      await producer.send(
         {
           topic: respondTopic,
           messages: [{
@@ -161,7 +161,7 @@ export class AlertCenter {
             })
           }]
         }
-      )
+      );
     });
   }
 }
