@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@clerk/backend": "latest",
-    "@dbos-inc/dbos-sdk": "^3.0.6-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.20-preview",
     "express": "^4.21.2"
   }
 }

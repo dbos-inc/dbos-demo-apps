@@ -1,7 +1,3 @@
-const {
-  KnexDataSource
-} = require('@dbos-inc/knex-datasource');
-
 // Our schema
 //
 // An employee table
@@ -28,13 +24,9 @@ exports.up = async function(knex) {
     table.string('message', 255).defaultTo('');
     table.string('employee_name', 255).defaultTo(null);
   });
-
-  await KnexDataSource.initializeSchema(knex);
 };
 
 exports.down = async function(knex) {
   await knex.schema.dropTable('alert_employee');
   await knex.schema.dropTable('employee');
-
-  await KnexDataSource.uninitializeSchema(knex);
 };
