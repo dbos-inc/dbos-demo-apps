@@ -158,6 +158,7 @@ async function main() {
     name: 'widget-store-node',
     databaseUrl: process.env.DBOS_DATABASE_URL,
   });
+  DBOS.logRegisteredEndpoints();
   await DBOS.launch();
   await fastify.listen({ port: PORT, host: "0.0.0.0" });
   console.log(`🚀 Server is running on http://localhost:${PORT}`);

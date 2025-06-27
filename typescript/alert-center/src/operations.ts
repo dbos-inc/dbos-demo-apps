@@ -1,7 +1,9 @@
 import { DBOS } from '@dbos-inc/dbos-sdk';
 import { RespondUtilities, AlertEmployee, AlertStatus, AlertWithMessage, Employee, dkoa } from './utilities';
-import { Kafka, KafkaConfig, KafkaProduceStep, Partitioners, KafkaConsume, KafkaMessage, logLevel } from '@dbos-inc/dbos-kafkajs';
 export { Frontend } from './frontend';
+
+import { Kafka, KafkaMessage, logLevel, KafkaConfig } from 'kafkajs';
+import { KafkaReceiver } from '@dbos-inc/kafkajs-receive';
 
 //The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
@@ -22,10 +24,42 @@ const kafkaConfig: KafkaConfig = {
   logLevel: logLevel.ERROR
 };
 
-const producerConfig: KafkaProduceStep = new KafkaProduceStep(
-  'wfKafka', kafkaConfig, respondTopic, {
-    createPartitioner: Partitioners.DefaultPartitioner
-  });
+const kafkaReceiver = new KafkaReceiver(kafkaConfig);
+
+const kafka = new Kafka(kafkaConfig);
+export const producer = kafka.producer();
+
+async function setupTopics(kafka: Kafka, topics: string[]) {
+  const admin = kafka.admin();
+  try {
+    await admin.connect();
+    // Delete and recreate topics to ensure a clean state
+    const existingTopics = await admin.listTopics();
+    const topicsToDelete = topics.filter((t) => existingTopics.includes(t));
+    await admin.deleteTopics({ topics: topicsToDelete, timeout: 5000 });
+
+    await new Promise((r) => setTimeout(r, 3000));
+    await admin.createTopics({
+      topics: topics.map((t) => ({
+        topic: t,
+        numPartitions: 1,
+        replicationFactor: 1,
+      })),
+      timeout: 5000,
+    });
+  } finally {
+    await admin.disconnect();
+  }
+}
+
+export async function setUpKafka() {
+  return await Promise.all([setupTopics(kafka, [respondTopic]), producer.connect()])  
+}
+
+//const producerConfig: KafkaProduceStep = new KafkaProduceStep(
+//  'wfKafka', kafkaConfig, respondTopic, {
+//    createPartitioner: Partitioners.DefaultPartitioner
+//  });
 
 //The structure returned to the frontend when an employee asks for an assignment
 export interface AlertEmployeeInfo
@@ -36,13 +70,12 @@ export interface AlertEmployeeInfo
   newAssignment: boolean;
 }
 
-@Kafka(kafkaConfig)
 export class AlertCenter {
 
   //This is invoked when a new alert message arrives using the @KafkaConsume decorator
   @DBOS.workflow()
-  @KafkaConsume(respondTopic)
-  static async inboundAlertWorkflow(topic: string, _partition: number, message: KafkaMessage) {
+  @kafkaReceiver.consumer(respondTopic)
+  static async inboundAlertWorkflow(_topic: string, _partition: number, message: KafkaMessage) {
     const payload = JSON.parse(message.value!.toString()) as {
       alerts: AlertWithMessage[],
     };
@@ -112,18 +145,23 @@ export class AlertCenter {
   @DBOS.workflow()
   static async sendAlert(message: string) {
     const max_id = await RespondUtilities.getMaxId();
-    await producerConfig.send(
-      {
-        value: JSON.stringify({
-          alerts: [
-            { 
-              alert_id: max_id+1,
-              alert_status: AlertStatus.ACTIVE,
-              message: message
-            }
-          ]
-        })
-      }
-    );
+    await DBOS.runStep(async () => {
+      producer.send(
+        {
+          topic: respondTopic,
+          messages: [{
+            value: JSON.stringify({
+              alerts: [
+                { 
+                  alert_id: max_id+1,
+                  alert_status: AlertStatus.ACTIVE,
+                  message: message
+                }
+              ]
+            })
+          }]
+        }
+      )
+    });
   }
 }

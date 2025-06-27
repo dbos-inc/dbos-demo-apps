@@ -2,6 +2,7 @@ import { DBOS } from '@dbos-inc/dbos-sdk';
 import { dkoa } from './frontend';
 import Koa from 'koa';
 import Router from '@koa/router';
+import { setUpKafka } from './operations';
 
 const PORT = parseInt(process.env.NODE_PORT ?? '3000');
 
@@ -12,6 +13,9 @@ async function main() {
   });
 
   DBOS.registerLifecycleCallback(dkoa);
+
+  await setUpKafka();
+
   await DBOS.launch();
   DBOS.logRegisteredEndpoints();
 
