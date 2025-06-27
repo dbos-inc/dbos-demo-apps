@@ -1,4 +1,5 @@
 import { DBOS } from '@dbos-inc/dbos-sdk';
+import { KnexDataSource } from '@dbos-inc/knex-datasource';
 
 export enum OrderStatus {
   PENDING = 0,
@@ -33,52 +34,65 @@ export interface OrderWithProduct {
 
 export const PRODUCT_ID = 1;
 
+const config = {
+  client: 'pg',
+  connection: {
+    host: process.env.PGHOST || 'localhost',
+    port: parseInt(process.env.PGPORT || '5432'),
+    database: process.env.PGDATABASE || 'widget_store_node',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'dbos',
+  },
+};
+
+const knexds = new KnexDataSource('app-db', config);
+
 // Here, let's write some database operations. Each of these functions performs a simple
 // CRUD operation. We apply the @DBOS.transaction() decorator to each of them to give them
 // access to a Knex database connection.
 
 export class ShopUtilities {
-  @DBOS.transaction()
+  @knexds.transaction()
   static async subtractInventory(): Promise<void> {
-    const numAffected = await DBOS.knexClient<Product>('products')
+    const numAffected = await KnexDataSource.client<Product>('products')
       .where('product_id', PRODUCT_ID)
       .andWhere('inventory', '>=', 1)
       .update({
-        inventory: DBOS.knexClient.raw('inventory - ?', 1),
+        inventory: KnexDataSource.client.raw('inventory - ?', 1),
       });
     if (numAffected <= 0) {
       throw new Error('Insufficient Inventory');
     }
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async undoSubtractInventory(): Promise<void> {
-    await DBOS.knexClient<Product>('products')
+    await KnexDataSource.client<Product>('products')
       .where({ product_id: PRODUCT_ID })
-      .update({ inventory: DBOS.knexClient.raw('inventory + ?', 1) });
+      .update({ inventory: KnexDataSource.client.raw('inventory + ?', 1) });
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async setInventory(inventory: number): Promise<void> {
-    await DBOS.knexClient<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
+    await KnexDataSource.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async retrieveProduct(): Promise<Product> {
-    const item = await DBOS.knexClient<Product>('products').select('*').where({ product_id: PRODUCT_ID });
+    const item = await KnexDataSource.client<Product>('products').select('*').where({ product_id: PRODUCT_ID });
     if (!item.length) {
       throw new Error(`Product ${PRODUCT_ID} not found`);
     }
     return item[0];
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async createOrder(): Promise<number> {
-    const orders = await DBOS.knexClient<Order>('orders')
+    const orders = await KnexDataSource.client<Order>('orders')
       .insert({
         order_status: OrderStatus.PENDING,
         product_id: PRODUCT_ID,
-        last_update_time: DBOS.knexClient.fn.now(),
+        last_update_time: KnexDataSource.client.fn.now(),
         progress_remaining: 10,
       })
       .returning('order_id');
@@ -86,34 +100,34 @@ export class ShopUtilities {
     return orderID;
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async markOrderPaid(order_id: number): Promise<void> {
-    await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
+    await KnexDataSource.client<Order>('orders').where({ order_id: order_id }).update({
       order_status: OrderStatus.PAID,
-      last_update_time: DBOS.knexClient.fn.now(),
+      last_update_time: KnexDataSource.client.fn.now(),
     });
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async errorOrder(order_id: number): Promise<void> {
-    await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
+    await KnexDataSource.client<Order>('orders').where({ order_id: order_id }).update({
       order_status: OrderStatus.CANCELLED,
-      last_update_time: DBOS.knexClient.fn.now(),
+      last_update_time: KnexDataSource.client.fn.now(),
     });
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async retrieveOrder(order_id: number): Promise<Order> {
-    const item = await DBOS.knexClient<Order>('orders').select('*').where({ order_id: order_id });
+    const item = await KnexDataSource.client<Order>('orders').select('*').where({ order_id: order_id });
     if (!item.length) {
       throw new Error(`Order ${order_id} not found`);
     }
     return item[0];
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async retrieveOrders() {
-    return DBOS.knexClient<Order>('orders').select('*');
+    return KnexDataSource.client<Order>('orders').select('*');
   }
 
   @DBOS.workflow()
@@ -124,9 +138,9 @@ export class ShopUtilities {
     }
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async updateOrderProgress(order_id: number): Promise<void> {
-    const orders = await DBOS.knexClient<Order>('orders').where({
+    const orders = await KnexDataSource.client<Order>('orders').where({
       order_id: order_id,
       order_status: OrderStatus.PAID,
     });
@@ -136,11 +150,11 @@ export class ShopUtilities {
 
     const order = orders[0];
     if (order.progress_remaining > 1) {
-      await DBOS.knexClient<Order>('orders')
+      await KnexDataSource.client<Order>('orders')
         .where({ order_id: order_id })
         .update({ progress_remaining: order.progress_remaining - 1 });
     } else {
-      await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
+      await KnexDataSource.client<Order>('orders').where({ order_id: order_id }).update({
         order_status: OrderStatus.DISPATCHED,
         progress_remaining: 0,
       });
