@@ -184,13 +184,13 @@ Note that the use of `mode: SchedulerMode.ExactlyOncePerIntervalWhenActive` mean
 DBOS Task Scheduler stores its schedule and results data in a Postgres database using [Knex](https://knexjs.org/).  The code for the transactions resides in `src/dbos/dbtransactions.ts`.  For example, the `getSchedule` method in `ScheduleDBOps` retrieves the entire schedule from the database:
 
 ```typescript
-  @DBOS.transaction({readOnly: true})
+  @knexds.transaction({readOnly: true})
   static async getSchedule() {
-    return await DBOS.knexClient<ScheduleRecord>('schedule').select();
+    return await knexds.client<ScheduleRecord>('schedule').select();
   }
 ```
 
-Note that the transaction function is decorated with [`@DBOS.transaction`](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial).  The `ScheduleRecord` has been defined in `src/types/models.ts` and is applied to the query for type checking.
+Note that the transaction function is decorated with [`@<data source>.transaction`](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial).  The `ScheduleRecord` has been defined in `src/types/models.ts` and is applied to the query for type checking.
 
 The database schema, which defines the `schedule` table, can be found in `migrations/20250122121006_create_calendar_tables/.js`:
 ```javascript

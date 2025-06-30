@@ -48,7 +48,7 @@ const config = {
 const knexds = new KnexDataSource('app-db', config);
 
 // Here, let's write some database operations. Each of these functions performs a simple
-// CRUD operation. We apply the @DBOS.transaction() decorator to each of them to give them
+// CRUD operation. We apply the @knexds.transaction() decorator to each of them to give them
 // access to a Knex database connection.
 
 export class ShopUtilities {
