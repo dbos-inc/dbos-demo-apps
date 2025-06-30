@@ -29,6 +29,20 @@ export interface ItemTable {
   session_id: string;
 }
 
+import { KnexDataSource } from '@dbos-inc/knex-datasource';
+
+const config = {
+  client: 'pg',
+  connection: {
+    host: process.env.PGHOST || 'localhost',
+    port: parseInt(process.env.PGPORT || '5432'),
+    database: process.env.PGDATABASE || 'payment',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'dbos',
+  },
+};
+const knexds = new KnexDataSource('app-db', config);
+
 export const payment_complete_topic = "payment_complete_topic";
 export const payment_session_started_topic = "payment_session_started_topic";
 export const payment_submitted = "payment.submitted";
@@ -120,9 +134,9 @@ export class PlaidPayments {
   }
 
   @dhttp.getApi('/api/session/:session_id')
-  @DBOS.transaction({ readOnly: true })
+  @knexds.transaction({ readOnly: true })
   static async retrievePaymentSession(session_id: string): Promise<PaymentSession | undefined> {
-    const rows = await DBOS.knexClient<SessionTable>('session').select('status').where({ session_id });
+    const rows = await knexds.client<SessionTable>('session').select('status').where({ session_id });
     if (rows.length === 0) { return undefined; }
 
     return {
@@ -148,16 +162,16 @@ export class PlaidPayments {
     return await PlaidPayments.getSessionInformationTrans(session_id);
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @knexds.transaction({ readOnly: true })
   static async getSessionInformationTrans(session_id: string): Promise<PaymentSessionInformation | undefined> {
     DBOS.logger.info(`getting session record ${session_id}`);
-    const session = await DBOS.knexClient<SessionTable>('session')
+    const session = await knexds.client<SessionTable>('session')
       .select("session_id", "success_url", "cancel_url", "status")
       .where({ session_id })
       .first();
     if (!session) { return undefined; }
 
-    const items = await DBOS.knexClient<ItemTable>('items')
+    const items = await knexds.client<ItemTable>('items')
       .select("description", "price", "quantity")
       .where({ session_id });
     return { ...session, items };
@@ -184,7 +198,7 @@ export class PlaidPayments {
     await PlaidPayments.paymentWebhook(webhook, session_id, notification, client_ref);
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async insertSession(
     session_id: string,
     webhook: string,
@@ -193,18 +207,18 @@ export class PlaidPayments {
     items: PaymentItem[],
     @ArgOptional client_reference_id?: string
   ): Promise<void> {
-    await DBOS.knexClient<SessionTable>('session').insert({ session_id, client_reference_id, webhook, success_url, cancel_url });
+    await knexds.client<SessionTable>('session').insert({ session_id, client_reference_id, webhook, success_url, cancel_url });
     for (const item of items) {
-      await DBOS.knexClient<ItemTable>('items').insert({ ...item, session_id });
+      await knexds.client<ItemTable>('items').insert({ ...item, session_id });
     }
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async updateSessionStatus(
     session_id: string,
     status: string
   ): Promise<void> {
-    await DBOS.knexClient<SessionTable>('session').where({ session_id }).update({ status });
+    await knexds.client<SessionTable>('session').where({ session_id }).update({ status });
   }
 
   @DBOS.step()

@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "tsc",
-    "test": "npx dbos rollback && npx dbos migrate && jest --detectOpenHandles",
+    "test": "npx dbos migrate && jest --detectOpenHandles",
     "db:setup": "npx dbos migrate",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
@@ -11,15 +11,16 @@
     "start": "npx dbos start"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "3.0.7-preview",
-    "@dbos-inc/koa-serve": "3.0.7-preview",
+    "@dbos-inc/dbos-sdk": "3.0.20-preview",
+    "@dbos-inc/knex-datasource": "3.0.20-preview",
+    "@dbos-inc/koa-serve": "3.0.20-preview",
     "@koa/router": "^13.1.0",
     "bcrypt": "^6.0.0",
     "koa": "^3.0.0",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "3.0.7-preview",
+    "@dbos-inc/dbos-cloud": "3.0.20-preview",
     "@dbos-inc/dbos-openapi": "^1.24.15",
     "@dbos-inc/eslint-plugin": "^3.3.4",
     "@types/bcrypt": "^5.0.2",
