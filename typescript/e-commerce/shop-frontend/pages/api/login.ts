@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { sessionOptions } from "@/lib/session";
-import { withIronSessionApiRoute } from "iron-session/next";
+import { sessionOptions, User } from "@/lib/session";
+import { getIronSession } from "iron-session";
 import { api } from '@/lib/backend';
 import { HttpError, ok } from 'oazapfts';
 
-export async function loginRoute(req: NextApiRequest, res: NextApiResponse) {
+export default async function loginRoute(req: NextApiRequest, res: NextApiResponse) {
+  const session = await getIronSession<{user?: User}>(req, res, sessionOptions);
   if (req.method !== 'POST') {
     return res.status(405).end(); // Method Not Allowed
   }
@@ -17,8 +18,8 @@ export async function loginRoute(req: NextApiRequest, res: NextApiResponse) {
 
   try {
     await ok(api.login({ username, password }));
-    req.session.user = username;
-    await req.session.save();
+    session.user = { username };
+    await session.save();
     return res.status(200).json({ message: 'User logged in successfully' });
   } catch (error) {
     if (error instanceof HttpError) {
@@ -30,5 +31,3 @@ export async function loginRoute(req: NextApiRequest, res: NextApiResponse) {
     }
   }
 }
-
-export default withIronSessionApiRoute(loginRoute, sessionOptions);

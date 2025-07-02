@@ -143,11 +143,11 @@ class UndoList {
   }
 }
 
-export const dhttp = new DBOSKoa();
+export const dkoa = new DBOSKoa();
 
 @DefaultArgValidate
 export class Shop {
-  @dhttp.postApi('/api/login')
+  @dkoa.postApi('/api/login')
   @knexds.transaction({ readOnly: true })
   static async login(username: string, password: string): Promise<void> {
     const user = await knexds.client<User>('users').select("password").where({ username }).first();
@@ -156,7 +156,7 @@ export class Shop {
     }
   }
 
-  @dhttp.postApi('/api/register')
+  @dkoa.postApi('/api/register')
   @DBOS.workflow()
   static async register(username: string, password: string): Promise<void> {
     const hashedPassword = await DBOS.runStep(()=>bcrypt.hash(password, 10), {name: 'hashPassword'});
@@ -172,7 +172,7 @@ export class Shop {
     await knexds.client<User>('users').insert({ username, password: hashedPassword });
   }
 
-  @dhttp.getApi('/api/products')
+  @dkoa.getApi('/api/products')
   @knexds.transaction({ readOnly: true })
   static async getProducts(): Promise<DisplayProduct[]> {
     const rows = await knexds.client<Product>('products').select("product_id", "product", "description", "image_name", "price");
@@ -183,7 +183,7 @@ export class Shop {
     return formattedRows;
   }
 
-  @dhttp.getApi('/api/products/:id')
+  @dkoa.getApi('/api/products/:id')
   @knexds.transaction({ readOnly: true })
   static async getProduct(id: number): Promise<DisplayProduct | null> {
     return Shop.getProductInternal(id);
@@ -212,7 +212,7 @@ export class Shop {
   }
 
   @knexds.transaction()
-  @dhttp.postApi('/api/add_to_cart')
+  @dkoa.postApi('/api/add_to_cart')
   static async addToCart(username: string, product_id: number): Promise<void> {
     await knexds.client<Cart>('cart').insert({ username, product_id, quantity: 1 })
       .onConflict(['username', 'product_id'])
@@ -220,7 +220,7 @@ export class Shop {
   }
 
   @knexds.transaction({ readOnly: true })
-  @dhttp.postApi('/api/get_cart')
+  @dkoa.postApi('/api/get_cart')
   static async getCart(username: string): Promise<CartProduct[]> {
     const user = await knexds.client<User>('users').select("username").where({ username });
     if (!user.length) {
@@ -235,7 +235,7 @@ export class Shop {
     return await Promise.all(products);
   }
 
-  @dhttp.postApi('/api/checkout_session')
+  @dkoa.postApi('/api/checkout_session')
   static async webCheckout(username: string): Promise<void> {
     const origin = DBOSKoa.koaContext.request?.headers.origin as string;
     if (typeof username !== 'string' || typeof origin !== 'string') {
@@ -424,7 +424,7 @@ export class Shop {
     return session;
   }
 
-  @dhttp.postApi('/payment_webhook')
+  @dkoa.postApi('/payment_webhook')
   static async paymentWebhook(): Promise<void> {
     const req: Request = DBOSKoa.koaContext.request;
 

@@ -1,8 +1,10 @@
 import Home from './home-client'
 import { cookies } from "next/headers";
-import { getRequestCookie } from "@/lib/session";
 import { api, Product } from '@/lib/backend';
+import { redirect } from "next/navigation";
 import { HttpError, ok } from 'oazapfts';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, User } from '@/lib/session';
 
 
 const getProducts = async (): Promise<Product[]> => {
@@ -19,8 +21,11 @@ const getProducts = async (): Promise<Product[]> => {
   }
 
   export default async function Page() {
-    
-    const user = await getRequestCookie(cookies());
+    const session = await getIronSession<{user?: User}>(cookies(), sessionOptions);
+    const user = session.user?.username;
+    if (!user) {
+        redirect("/login");
+    }
     // Fetch data directly in a Server Component
     const products = await getProducts();
     // Forward fetched data to your Client Component

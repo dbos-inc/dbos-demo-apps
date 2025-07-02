@@ -2,7 +2,7 @@ import Koa from 'koa';
 import Router from '@koa/router';
 
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import { Shop, Product, checkout_url_topic, dhttp } from "./operations";
+import { Shop, Product, checkout_url_topic, dkoa } from "./operations";
 import request from "supertest";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -13,7 +13,7 @@ describe("operations", () => {
 
   beforeAll(async () => {
     await DBOS.launch();
-    dhttp.registerWithApp(koa, router);
+    dkoa.registerWithApp(koa, router);
   });
 
   afterAll(async () => {

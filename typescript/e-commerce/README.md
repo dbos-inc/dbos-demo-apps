@@ -22,24 +22,11 @@ This script will run a PostgreSQL 16.0 database container, create the shop and p
 
 ### Database Configuration (local)
 
-If you're using your own PostgreSQL database, you need to configure the hostname, port, username and password for each of the backend packages.
-Each backend package needs its own database, but they can be on the same PostgreSQL server.
-There is an `dbos-config.yaml` file in each of the backend package directories. 
-These config files must be updated to the appropriate settings for your PostgreSQL server.
+If you're using your own PostgreSQL database, you need to configure the hostname, port, username and password in your environment prior to running the commands below.
 
 > Note, the PostgreSQL user specified for both backend packages *MUST* have database creation permissions.
 
-Here is a snippet of a `dbos-config.yaml` file showing the database connection settings that must be updated:
-
-```yaml
-database:
-  hostname: 'localhost'
-  port: 5432
-  username: 'postgres'
-  password: ${PGPASSWORD}
-```
-
-Once the `dbos-config.yaml` files have been updated, you also need to create the two demo databases `shop` and `payment`.
+You also need to create the two demo databases `shop` and `payment`.
 The `start_postgres_docker.sh` script does this by calling `CREATE DATABASE shop;` and `CREATE DATABASE payment;` 
 via [psql](https://www.postgresql.org/docs/current/app-psql.html) in the docker container.
 
@@ -51,7 +38,7 @@ Both shop and payment use [knex.js](https://knexjs.org/) as a database access li
 Each of the three parts of the demo must run in its own terminal window.
 For each setup, each package has a single npm command that is used to build and launch the package.
 
-* For payment-backend and shop-backend, run `npm run build` and `npx dbos start` to build and launch the app, respectively.
+* For payment-backend and shop-backend, run `npm run build` and `SHOP_PORT=8082 PAYMENT_PORT=8086 npx dbos start` to build and launch the app, respectively.
 * For shop-frontend, run `npm run dev` to launch the app.
 
 > If you are using VSCode, there are launch configurations for each individual package in the demo.

@@ -1,9 +1,10 @@
 import Checkout from './checkout-client'
 import { cookies } from "next/headers";
-import { getRequestCookie } from "@/lib/session";
 import { api, CartProduct } from '@/lib/backend';
 import { redirect } from "next/navigation";
 import { HttpError, ok } from 'oazapfts';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, User } from '@/lib/session';
 
 const getCart = async (username: string): Promise<CartProduct[]> => {
     try {
@@ -19,8 +20,9 @@ const getCart = async (username: string): Promise<CartProduct[]> => {
   }
 
   export default async function Page() {
-    
-    const username = await getRequestCookie(cookies());
+    const session = await getIronSession<{user?: User}>(cookies(), sessionOptions);
+
+    const username = session.user?.username;
 
     if (!username) {
         redirect("/login");

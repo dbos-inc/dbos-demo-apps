@@ -10,7 +10,7 @@ import {
   DBOSKoa
 } from '@dbos-inc/koa-serve';
 
-export const dhttp = new DBOSKoa();
+export const dkoa = new DBOSKoa();
 
 export interface SessionTable {
   session_id: string;
@@ -78,10 +78,10 @@ export interface PaymentSessionInformation {
   items: PaymentItem[];
 }
 
-@dhttp.koaMiddleware(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }))
+@dkoa.koaMiddleware(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }))
 export class PlaidPayments {
   // UI
-  @dhttp.getApi('/payment/:session_id')
+  @dkoa.getApi('/payment/:session_id')
   static async paymentPage(session_id: string) {
     const session = await PlaidPayments.getSessionInformationTrans(session_id);
     if (!session) {
@@ -91,7 +91,7 @@ export class PlaidPayments {
     await DBOSKoa.koaContext.render('payment', { session });
   }
 
-  @dhttp.postApi('/payment/:session_id')
+  @dkoa.postApi('/payment/:session_id')
   static async paymentAction(session_id: string) {
     const session = await PlaidPayments.getSessionInformationTrans(session_id);
     if (!session) {
@@ -110,7 +110,7 @@ export class PlaidPayments {
   }
 
   // API for shop
-  @dhttp.postApi('/api/create_payment_session')
+  @dkoa.postApi('/api/create_payment_session')
   static async createPaymentSession(
     @ArgRequired webhook: string,
     @ArgRequired success_url: string,
@@ -133,7 +133,7 @@ export class PlaidPayments {
     };
   }
 
-  @dhttp.getApi('/api/session/:session_id')
+  @dkoa.getApi('/api/session/:session_id')
   @knexds.transaction({ readOnly: true })
   static async retrievePaymentSession(session_id: string): Promise<PaymentSession | undefined> {
     const rows = await knexds.client<SessionTable>('session').select('status').where({ session_id });
@@ -147,17 +147,17 @@ export class PlaidPayments {
   }
 
   // Optional API, used in shop guide and/or unit tests
-  @dhttp.postApi('/api/submit_payment')
+  @dkoa.postApi('/api/submit_payment')
   static async submitPayment(session_id: string) {
     await DBOS.send(session_id, payment_submitted, payment_complete_topic);
   }
 
-  @dhttp.postApi('/api/cancel_payment')
+  @dkoa.postApi('/api/cancel_payment')
   static async cancelPayment(session_id: string) {
     await DBOS.send(session_id, payment_cancelled, payment_complete_topic);
   }
 
-  @dhttp.getApi('/api/session_info/:session_id')
+  @dkoa.getApi('/api/session_info/:session_id')
   static async getSessionInformation(session_id: string): Promise<PaymentSessionInformation | undefined> {
     return await PlaidPayments.getSessionInformationTrans(session_id);
   }
