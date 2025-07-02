@@ -24,9 +24,9 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "3.0.20-preview",
-    "@dbos-inc/knex-datasource": "3.0.20-preview",
-    "@dbos-inc/koa-serve": "3.0.20-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.37-preview.gfd7eaf193c",
+    "@dbos-inc/knex-datasource": "^3.0.37-preview.gfd7eaf193c",
+    "@dbos-inc/koa-serve": "^3.0.37-preview.gfd7eaf193c",
     "@koa/router": "^13.1.0",
     "@ladjs/koa-views": "^9.0.0",
     "ejs": "^3.1.10",

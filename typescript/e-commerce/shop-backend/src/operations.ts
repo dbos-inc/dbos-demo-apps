@@ -53,6 +53,20 @@ export interface PaymentSession {
   payment_status: string,
 }
 
+import { KnexDataSource } from '@dbos-inc/knex-datasource';
+
+const config = {
+  client: 'pg',
+  connection: {
+    host: process.env.PGHOST || 'localhost',
+    port: parseInt(process.env.PGPORT || '5432'),
+    database: process.env.PGDATABASE || 'shop',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'dbos',
+  },
+};
+const knexds = new KnexDataSource('app-db', config);
+
 export const checkout_url_topic = "payment_checkout_url";
 export const checkout_complete_topic = "payment_checkout_complete";
 
@@ -134,9 +148,9 @@ export const dhttp = new DBOSKoa();
 @DefaultArgValidate
 export class Shop {
   @dhttp.postApi('/api/login')
-  @DBOS.transaction({ readOnly: true })
+  @knexds.transaction({ readOnly: true })
   static async login(username: string, password: string): Promise<void> {
-    const user = await DBOS.knexClient<User>('users').select("password").where({ username }).first();
+    const user = await knexds.client<User>('users').select("password").where({ username }).first();
     if (!user || !await bcrypt.compare(password, user.password)) {
       throw new DBOSResponseError("Invalid username or password", 400);
     }
@@ -149,19 +163,19 @@ export class Shop {
     await Shop.saveNewUser(username, hashedPassword);
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async saveNewUser(username: string, hashedPassword: string): Promise<void> {
-    const user = await DBOS.knexClient<User>('users').select().where({ username }).first();
+    const user = await knexds.client<User>('users').select().where({ username }).first();
     if (user) {
       throw new DBOSResponseError("Username already exists", 400);
     }
-    await DBOS.knexClient<User>('users').insert({ username, password: hashedPassword });
+    await knexds.client<User>('users').insert({ username, password: hashedPassword });
   }
 
   @dhttp.getApi('/api/products')
-  @DBOS.transaction({ readOnly: true })
+  @knexds.transaction({ readOnly: true })
   static async getProducts(): Promise<DisplayProduct[]> {
-    const rows = await DBOS.knexClient<Product>('products').select("product_id", "product", "description", "image_name", "price");
+    const rows = await knexds.client<Product>('products').select("product_id", "product", "description", "image_name", "price");
     const formattedRows: DisplayProduct[] = rows.map((row) => ({
       ...row,
       display_price: (row.price / 100).toFixed(2),
@@ -170,13 +184,13 @@ export class Shop {
   }
 
   @dhttp.getApi('/api/products/:id')
-  @DBOS.transaction({ readOnly: true })
+  @knexds.transaction({ readOnly: true })
   static async getProduct(id: number): Promise<DisplayProduct | null> {
     return Shop.getProductInternal(id);
   }
 
   static async getProductInternal(id: number) {
-    const rows = await DBOS.knexClient<Product>('products').select("product_id", "product", "description", "image_name", "price").where({ product_id: id });
+    const rows = await knexds.client<Product>('products').select("product_id", "product", "description", "image_name", "price").where({ product_id: id });
     if (rows.length === 0) {
       return null;
     }
@@ -187,33 +201,33 @@ export class Shop {
     return product;
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @knexds.transaction({ readOnly: true })
   static async getInventory(id: number): Promise<number | null> {
 
-    const rows = await DBOS.knexClient<Product>('products').select("product_id", "inventory").where({ product_id: id });
+    const rows = await knexds.client<Product>('products').select("product_id", "inventory").where({ product_id: id });
     if (rows.length === 0) {
       return null;
     }
     return rows[0].inventory;
   }
 
+  @knexds.transaction()
   @dhttp.postApi('/api/add_to_cart')
-  @DBOS.transaction()
   static async addToCart(username: string, product_id: number): Promise<void> {
-    await DBOS.knexClient<Cart>('cart').insert({ username, product_id, quantity: 1 })
+    await knexds.client<Cart>('cart').insert({ username, product_id, quantity: 1 })
       .onConflict(['username', 'product_id'])
-      .merge({ quantity: DBOS.knexClient.raw('cart.quantity + 1') });
+      .merge({ quantity: knexds.client.raw('cart.quantity + 1') });
   }
 
+  @knexds.transaction({ readOnly: true })
   @dhttp.postApi('/api/get_cart')
-  @DBOS.transaction({ readOnly: true })
   static async getCart(username: string): Promise<CartProduct[]> {
-    const user = await DBOS.knexClient<User>('users').select("username").where({ username });
+    const user = await knexds.client<User>('users').select("username").where({ username });
     if (!user.length) {
       DBOS.logger.error(`getCart for ${username} failed: no such user`);
       throw new DBOSResponseError("No such user", 400);
     }
-    const rows = await DBOS.knexClient<Cart>('cart').select("product_id", "quantity").where({ username });
+    const rows = await knexds.client<Cart>('cart').select("product_id", "quantity").where({ username });
     const products = rows.map(async (row) => {
       const product = await Shop.getProductInternal(row.product_id)!;
       return <CartProduct>{ ...product, inventory: row.quantity };
@@ -313,29 +327,29 @@ export class Shop {
     }
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async createOrder(username: string, products: Product[]): Promise<number> {
-    const orders = await DBOS.knexClient<Order>('orders')
+    const orders = await knexds.client<Order>('orders')
       .insert({ username, order_status: OrderStatus.PENDING, last_update_time: 0n })
       .returning('order_id');
     const order_id = orders[0].order_id;
 
     const items = products.map(p => ({ order_id, product_id: p.product_id, price: p.price, quantity: p.inventory}));
-    await DBOS.knexClient<OrderItem>('order_items').insert(items);
+    await knexds.client<OrderItem>('order_items').insert(items);
 
     return order_id;
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async subtractInventory(products: Product[]): Promise<void> {
     return await Shop.subtractInventoryInternal(products);
   }
 
   static async subtractInventoryInternal(products: Product[]): Promise<void> {
     for (const product of products) {
-      const numAffected = await DBOS.knexClient<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
+      const numAffected = await knexds.client<Product>('products').where('product_id', product.product_id).andWhere('inventory', '>=', product.inventory)
       .update({
-        inventory: DBOS.knexClient.raw('inventory - ?', [product.inventory])
+        inventory: knexds.client.raw('inventory - ?', [product.inventory])
       });
       if (numAffected <= 0) {
         throw new Error("Insufficient Inventory");
@@ -343,26 +357,26 @@ export class Shop {
     }
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async undoSubtractInventory(products: Product[]): Promise<void> {
     for (const product of products) {
-      await DBOS.knexClient<Product>('products').where({ product_id: product.product_id }).update({ inventory: DBOS.knexClient.raw('inventory + ?', [product.inventory]) });
+      await knexds.client<Product>('products').where({ product_id: product.product_id }).update({ inventory: knexds.client.raw('inventory + ?', [product.inventory]) });
     }
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async fulfillOrder(orderID: number): Promise<void> {
-    await DBOS.knexClient<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.FULFILLED });
+    await knexds.client<Order>('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.FULFILLED });
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async errorOrder(orderID: number): Promise<void> {
-    await DBOS.knexClient('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.CANCELLED });
+    await knexds.client('orders').where({ order_id: orderID }).update({ order_status: OrderStatus.CANCELLED });
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async clearCart(username: string): Promise<void> {
-    await DBOS.knexClient<Cart>('cart').where({ username }).del();
+    await knexds.client<Cart>('cart').where({ username }).del();
   }
 
   @DBOS.step()
