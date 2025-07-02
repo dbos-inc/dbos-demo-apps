@@ -5,6 +5,7 @@
 
 database:
   migrate: ['npx knex migrate:latest']
+  app_db_name: 'payment'
 runtimeConfig:
   start:
     - npm run start
