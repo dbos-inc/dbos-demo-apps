@@ -5,6 +5,7 @@ In this example, we use DBOS and Fastify to build an online storefront that's re
 ### Developing Locally
 
 First, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
+(The default `DBOS_DATABASE_URL` for this demo is `postgresql://postgres:dbos@localhost:5432/widget_store_node`.)
 
 Then, install dependencies, build your app, and set up its database tables:
 

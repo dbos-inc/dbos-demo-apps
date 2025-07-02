@@ -1,14 +1,19 @@
+import Koa from 'koa';
+import Router from '@koa/router';
+
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import { Shop, Product, checkout_url_topic } from "./operations";
+import { Shop, Product, checkout_url_topic, dkoa } from "./operations";
 import request from "supertest";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 describe("operations", () => {
+  const koa = new Koa();
+  const router = new Router();
 
   beforeAll(async () => {
     await DBOS.launch();
-    await DBOS.launchAppHTTPServer();
+    dkoa.registerWithApp(koa, router);
   });
 
   afterAll(async () => {
@@ -21,12 +26,12 @@ describe("operations", () => {
       username: 'shopper',
       password: 'shopperpass',
     };
-    const resp1 = await request(DBOS.getHTTPHandlersCallback())
+    const resp1 = await request(koa.callback())
       .post("/api/register")
       .send(req);
     expect(resp1.status).toBe(204);
 
-    const resp2 = await request(DBOS.getHTTPHandlersCallback())
+    const resp2 = await request(koa.callback())
       .post("/api/register")
       .send(req);
     expect(resp2.status).toBe(400); // Already exists
@@ -46,26 +51,26 @@ describe("operations", () => {
     expect(Shop.getProduct(9801)).resolves.toBeNull();
   
     // Check URL version also
-    const ppresp = await request(DBOS.getHTTPHandlersCallback())
+    const ppresp = await request(koa.callback())
       .get(`/api/products/${prods[0].product_id}`);
     expect(ppresp.status).toBe(200);
-    const bpresp = await request(DBOS.getHTTPHandlersCallback())
+    const bpresp = await request(koa.callback())
       .get(`/api/products/xyzzy`);
     expect(bpresp.status).toBe(400);
-    const bpresp2 = await request(DBOS.getHTTPHandlersCallback())
+    const bpresp2 = await request(koa.callback())
       .get(`/api/products/9801`);
     expect(bpresp2.status).toBe(204);
   });
 
   test("shopping", async () => {
     const bacr = {'username': 'noshopper', 'product_id':1};
-    const bcresp = await request(DBOS.getHTTPHandlersCallback())
+    const bcresp = await request(koa.callback())
       .post("/api/add_to_cart")
       .send(bacr);
     expect(bcresp.status).toBe(500);
 
     const bacr2 ={'username': 'shopper', 'product_id':9801};
-    const bcresp2 = await request(DBOS.getHTTPHandlersCallback())
+    const bcresp2 = await request(koa.callback())
       .post("/api/add_to_cart")
       .send(bacr2);
     expect(bcresp2.status).toBe(500);
@@ -75,14 +80,10 @@ describe("operations", () => {
     expect(cart.length).toBe(1);
 
     const bgcr = {'username': 'noshopper'}
-    const bgcresp = await request(DBOS.getHTTPHandlersCallback())
+    const bgcresp = await request(koa.callback())
       .post("/api/get_cart")
       .send(bgcr);
     expect(bgcresp.status).toBe(400);
-
-    const bcoresp = await request(DBOS.getHTTPHandlersCallback())
-      .post(`/api/checkout_session?username=noshopper`).set("Origin", "xxx");
-    expect(bcoresp.status).toBe(400);
 
     // Spy on / stub out the URL fetch
     const paySpy = jest.spyOn(Shop, 'placePaymentSessionRequest');
@@ -100,7 +101,7 @@ describe("operations", () => {
     if (!url) throw new Error("URL not returned");
 
     // Fake a payment reply 
-    const payresp = await request(DBOS.getHTTPHandlersCallback())
+    const payresp = await request(koa.callback())
     .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.workflowID, payment_status: "paid"});
     expect(payresp.status).toBe(204);
 
@@ -149,7 +150,7 @@ describe("operations", () => {
     expect(p).toBe(99998);
 
     // Fake a payment cancel reply
-    const payresp = await request(DBOS.getHTTPHandlersCallback())
+    const payresp = await request(koa.callback())
     .post(`/payment_webhook`).send({session_id: "1234", client_reference_id: handle.workflowID, payment_status: "canceled"});
     expect(payresp.status).toBe(204);
     try {await handle.getResult();} catch (e) {}

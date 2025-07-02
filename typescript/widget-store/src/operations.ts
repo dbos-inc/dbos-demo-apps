@@ -153,11 +153,12 @@ fastify.post('/crash_application', () => {
 });
 
 async function main() {
-  const PORT = 3000;
+  const PORT = parseInt(process.env.NODE_PORT || '3000');
   DBOS.setConfig({
     name: 'widget-store-node',
     databaseUrl: process.env.DBOS_DATABASE_URL,
   });
+  DBOS.logRegisteredEndpoints();
   await DBOS.launch();
   await fastify.listen({ port: PORT, host: "0.0.0.0" });
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
