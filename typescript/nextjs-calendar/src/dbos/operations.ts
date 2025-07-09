@@ -2,15 +2,15 @@ import { DBOS, SchedulerMode } from "@dbos-inc/dbos-sdk";
 
 import { TaskOption } from "@/types/models";
 import { doTaskFetch, schedulableTasks } from "./tasks";
+import { TriggerOperation } from '@dbos-inc/pgnotifier-receiver';
 import { DBOSBored } from "./dbos_bored";
 export { DBOSBored };
-import { ScheduleDBOps } from "./dbtransactions";
+import { ScheduleDBOps, trig } from "./dbtransactions";
 export { ScheduleDBOps };
 import { getOccurrencesAt } from "../types/taskschedule";
 import { WebSocket } from "ws";
 
 import { SESv2 } from '@aws-sdk/client-sesv2';
-import { DBTrigger, TriggerOperation } from '@dbos-inc/dbos-dbtriggers';
 
 globalThis.DBOSBored = DBOSBored;
 
@@ -131,13 +131,13 @@ export class SchedulerOps
     });
   }
 
-  @DBTrigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: false})
+  @trig.trigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: false})
   static async scheduleListener(_operation: TriggerOperation, _key: string[], _record: unknown) {
     SchedulerOps.notifyListeners('schedule');
     return Promise.resolve();
   }
 
-  @DBTrigger({tableName: 'results', useDBNotifications: true, installDBTrigger: false})
+  @trig.trigger({tableName: 'results', useDBNotifications: true, installDBTrigger: false})
   static async resultListener(_operation: TriggerOperation, _key: string[], _record: unknown) {
     SchedulerOps.notifyListeners('result');
     return Promise.resolve();

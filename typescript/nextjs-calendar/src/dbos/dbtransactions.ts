@@ -2,18 +2,40 @@ import { v4 as uuidv4 } from 'uuid';
 import { ScheduleRecord, ResultsRecord } from '../types/models';
 
 import { KnexDataSource } from '@dbos-inc/knex-datasource';
+import { ClientBase, Pool, PoolClient } from 'pg';
+
+import { DBTrigger } from '@dbos-inc/pgnotifier-receiver';
 
 const config = {
-  client: 'pg',
-  connection: {
     host: process.env.PGHOST || 'localhost',
     port: parseInt(process.env.PGPORT || '5432'),
     database: process.env.PGDATABASE || 'dbos_next_calendar',
     user: process.env.PGUSER || 'postgres',
     password: process.env.PGPASSWORD || 'dbos',
-  },
 };
-const knexds = new KnexDataSource('app-db', config);
+
+const pool = new Pool(config);
+
+export const trig = new DBTrigger({
+  connect: async () => {
+    const conn = pool.connect();
+    return conn;
+  },
+  disconnect: async (c: ClientBase) => {
+    (c as PoolClient).release();
+    return Promise.resolve();
+  },
+  query: async <R>(sql: string, params?: unknown[]) => {
+    return (await pool.query(sql, params)).rows as R[];
+  },
+});
+
+const kconfig = {
+  client: 'pg',
+  connection: config,
+};
+
+const knexds = new KnexDataSource('app-db', kconfig);
 
 export class ScheduleDBOps
 {
