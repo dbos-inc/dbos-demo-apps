@@ -9,7 +9,9 @@ import (
 	"github.com/dbos-inc/dbos-transact-go/dbos"
 )
 
-/**** WORKFLOWS AND STEPS ****/
+/*****************************/
+/**** WORKFLOWS AND STEPS
+/*****************************/
 var (
 	wf = dbos.WithWorkflow(workflow)
 )
@@ -31,8 +33,9 @@ func step2(ctx context.Context, _ string) (string, error) {
 	return "Step 2 completed - Workflow finished successfully", nil
 }
 
-/**** QUEUES ****/
-
+/*****************************/
+/**** QUEUES
+/*****************************/
 var (
 	queue   = dbos.NewWorkflowQueue("example-queue")
 	step    = dbos.WithWorkflow(stepFunction)
