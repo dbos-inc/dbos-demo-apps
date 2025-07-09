@@ -1,23 +1,18 @@
-# My Go Project
+# DBOS Toolbox
 
-This project is a simple Go application that demonstrates the use of functions and local package imports.
+This app contains example code for many DBOS features, including workflows, steps, queues, scheduled workflows, and transactions.
+You can use it as a template when starting a new DBOS app&mdash;start by editing `main.go`.
 
-## Purpose
+To learn more about how to program with DBOS, check out the [DBOS programming guide](https://docs.dbos.dev/golang/programming-guide).
 
-The application imports the `dbos-transact` package and defines a workflow that consists of two steps. The main function orchestrates the execution of these steps.
+### Running Locally
 
-## Structure
+To start this app locally, run:
 
-- `main.go`: Contains the main function and the workflow logic.
-- `go.mod`: Module definition and dependencies.
-- `go.sum`: Dependency checksums.
-
-## Usage
-
-To run the application, navigate to the project directory and use the following command:
-
-```
-go run main.go
+```shell
+go mod tidy
+go build -o main
+./main
 ```
 
-Make sure that the `dbos-transact` package is available at the specified local path: `/Users/max/codeZ/dbos-transact-golang`.
+Visit http://localhost:8888/ to see the app!
