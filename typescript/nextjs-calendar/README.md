@@ -184,13 +184,13 @@ Note that the use of `mode: SchedulerMode.ExactlyOncePerIntervalWhenActive` mean
 DBOS Task Scheduler stores its schedule and results data in a Postgres database using [Knex](https://knexjs.org/).  The code for the transactions resides in `src/dbos/dbtransactions.ts`.  For example, the `getSchedule` method in `ScheduleDBOps` retrieves the entire schedule from the database:
 
 ```typescript
-  @DBOS.transaction({readOnly: true})
+  @knexds.transaction({readOnly: true})
   static async getSchedule() {
-    return await DBOS.knexClient<ScheduleRecord>('schedule').select();
+    return await knexds.client<ScheduleRecord>('schedule').select();
   }
 ```
 
-Note that the transaction function is decorated with [`@DBOS.transaction`](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial).  The `ScheduleRecord` has been defined in `src/types/models.ts` and is applied to the query for type checking.
+Note that the transaction function is decorated with [`@<data source>.transaction`](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial).  The `ScheduleRecord` has been defined in `src/types/models.ts` and is applied to the query for type checking.
 
 The database schema, which defines the `schedule` table, can be found in `migrations/20250122121006_create_calendar_tables/.js`:
 ```javascript
@@ -217,12 +217,12 @@ These migrations will be run by `npx dbos migrate`, because Knex migrations are 
 
 ### Sending Email with Amazon SES
 
-The optional sending of task results emails is done using Amazon SES, and the [@dbos-inc/dbos-email-ses](https://www.npmjs.com/package/@dbos-inc/dbos-email-ses) package.
+The optional sending of task results emails is done using Amazon SES.
 
 All that is necessary, as shown in `src/dbos/operations.ts`, is to configure the email instance (using environment variables):
 ```typescript
 if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
-  globalThis.reportSes = new DBOS_SES('reportSES', {awscfgname: 'aws_config'});
+  globalThis.reportSes = new SESv2(...);
 }
 ```
 
@@ -231,10 +231,7 @@ And then call `send`:
   static async sendStatusEmail(subject: string, body: string) {
     if (!globalThis.reportSes) return;
     await globalThis.reportSes.sendEmail({
-      to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
-      from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
-      subject: subject,
-      bodyText: body,
+      ...
     });
   }
 ```
@@ -293,7 +290,9 @@ Which in turn calls the DBOS logic:
 export class DBOSBored {
   @DBOS.workflow()
   static async getActivity() : Promise<Activity> {
-    const choice = Math.floor(await DBOSRandom.random() * activities.length);
+    const choice = await DBOS.runStep(() => {
+      return Promise.resolve(Math.floor(Math.random() * activities.length));
+    }, {name: 'chooseActivity'});
     return activities[choice];
   }
 }
@@ -304,10 +303,10 @@ Note that while this successfully registers the `/api/boredactivity` endpoint, i
 ### DBOS Routes
 DBOS provides a much simpler way to register API endpoints.
 
-By simply decorating a method with [`@DBOS.getAPI`](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial), the API will be available, with built-in type checking, and available for OpenAPI support.  The following registers the API at `/dbos/boredapi/activity`:
+By simply decorating a method with [`@dkoa.getAPI`](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial), the API will be available, with built-in type checking, and available for OpenAPI support.  The following registers the API at `/dbos/boredapi/activity`:
 
 ```typescript
-  @DBOS.getApi('/dbos/boredapi/activity')
+  @dkoa.getApi('/dbos/boredapi/activity')
   static async boredAPIActivity() {
     return await DBOSBored.getActivity();
   }
@@ -332,7 +331,7 @@ Another thing that is not generally possible in Next.js is real-time updates to 
 While WebSockets can be used to deliver notifications from DBOS to the client, a challenge arises if the database update was running on another virtual machine in the application group.  To detect this, we can watch for changes in the underlying database table, and use those updates to broadcast notifications to the WebSockets.
 
 ```typescript
-  @DBTrigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: true})
+  @trig.trigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: true})
   static async scheduleListener(_operation: TriggerOperation, _key: string[], _record: unknown) {
     SchedulerOps.notifyListeners('schedule');
     return Promise.resolve();

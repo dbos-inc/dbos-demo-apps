@@ -1,9 +1,11 @@
 // this file is a wrapper with defaults to be used in both API routes and `getServerSideProps` functions
-import type { IronSessionOptions } from "iron-session";
-import { unsealData } from "iron-session";
-import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
+import type { SessionOptions } from "iron-session";
 
-export const sessionOptions: IronSessionOptions = {
+export interface User {
+  username: string;
+}
+
+export const sessionOptions: SessionOptions = {
   cookieName: process.env.SESSION_COOKIE_NAME as string || "dbos-cookie",
   password: process.env.SESSION_COOKIE_PASSWORD as string || "dbos-secure-password-is-very-long-and-secure",
   // secure: true should be used in production (HTTPS) but can't be used in development (HTTP)
@@ -15,26 +17,6 @@ export const sessionOptions: IronSessionOptions = {
 // This is where we specify the typings of req.session.*
 declare module "iron-session" {
   interface IronSessionData {
-    user?: string;
+    user?: User;
   }
-}
-
-/**
- * Can be called in page/layout server component.
- * @param cookies ReadonlyRequestCookies
- * @returns SessionUser or null
- */
-export async function getRequestCookie(
-  cookies: ReadonlyRequestCookies
-): Promise<string | null> {
-  const cookieName = process.env.SESSION_COOKIE_NAME as string || "dbos-cookie";
-  const found = cookies.get(cookieName);
-
-  if (!found) return null;
-
-  const { user } = await unsealData(found.value, {
-    password: process.env.SESSION_COOKIE_PASSWORD as string || "dbos-secure-password-is-very-long-and-secure",
-  });
-
-  return user as string;
 }

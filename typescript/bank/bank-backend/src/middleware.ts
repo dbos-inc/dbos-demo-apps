@@ -1,11 +1,12 @@
-import { MiddlewareContext, DBOSResponseError } from "@dbos-inc/dbos-sdk";
+import { DBOSResponseError } from "@dbos-inc/dbos-sdk";
 import jwt from "koa-jwt";
 import logger from "koa-logger";
+import { DBOSKoaAuthContext } from '@dbos-inc/koa-serve';
 
 // If we put these middleware functions in router.ts, txnhistory and accountinfo classes will get undefined middlewares due to circular dependencies.
 
 // eslint-disable-next-line @typescript-eslint/require-await
-export async function bankAuthMiddleware(ctx: MiddlewareContext) {
+export async function bankAuthMiddleware(ctx: DBOSKoaAuthContext) {
   // Only extract user and roles if the operation specifies required roles.
   if (ctx.requiredRole.length > 0) {
     //console.log("required role: ", ctx.requiredRole);

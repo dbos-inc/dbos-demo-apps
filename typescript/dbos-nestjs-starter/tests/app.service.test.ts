@@ -43,9 +43,8 @@ describe("AppService", () => {
 
   beforeEach(async () => {
     const dbosTestConfig: DBOSConfig = {
-      databaseUrl: `postgres://postgres:${process.env.PGPASSWORD || "dbos"}@localhost:5432/nestjs_starter_test`,
+      databaseUrl: `postgres://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || "dbos"}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'nestjs_starter'}`,
       sysDbName: 'nestjs_starter_dbos_sys',
-      userDbclient: "knex",
     };
     DBOS.setConfig(dbosTestConfig);
     await resetDatabase();

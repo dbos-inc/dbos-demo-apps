@@ -1,19 +1,19 @@
 import {
   DBOS,
-  Authentication,
-  KoaMiddleware,
 } from "@dbos-inc/dbos-sdk";
+
+import { dkoa } from "../koaserver";
 
 import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
 
 import { PrismaClient } from "@prisma/client";
 
 @DBOS.defaultRequiredRole(["appUser"])
-@Authentication(bankAuthMiddleware)
-@KoaMiddleware(koaLogger, bankJwt)
+@dkoa.authentication(bankAuthMiddleware)
+@dkoa.koaMiddleware(koaLogger, bankJwt)
 export class BankAccountInfo {
   @DBOS.transaction()
-  @DBOS.getApi("/api/list_accounts/:ownerName")
+  @dkoa.getApi("/api/list_accounts/:ownerName")
   static async listAccountsFunc(ownerName: string) {
     return (DBOS.prismaClient as PrismaClient).accountInfo.findMany({
       where: {
@@ -28,7 +28,7 @@ export class BankAccountInfo {
   }
 
   @DBOS.transaction()
-  @DBOS.getApi("/api/list_all_accounts")
+  @dkoa.getApi("/api/list_all_accounts")
   static async listAllAccountsFunc() {
     return (DBOS.prismaClient as PrismaClient).accountInfo.findMany({
       orderBy: {
@@ -38,7 +38,7 @@ export class BankAccountInfo {
   }
 
   @DBOS.transaction()
-  @DBOS.postApi("/api/create_account")
+  @dkoa.postApi("/api/create_account")
   @DBOS.requiredRole(["appAdmin"]) // Only an admin can create a new account.
   static async createAccountFunc(ownerName: string, type: string, balance?: number) {
     return (DBOS.prismaClient as PrismaClient).accountInfo.create({

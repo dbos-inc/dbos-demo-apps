@@ -41,14 +41,12 @@ export async function resetDatabase() {
 describe("AlertCenter utilities", () => {
   beforeEach(async () => {
     const dbosTestConfig: DBOSConfig = {
-      databaseUrl: `postgres://postgres:${process.env.PGPASSWORD || "dbos"}@localhost:5432/alert_center_test`,
+      databaseUrl: `postgres://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || "dbos"}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'alert_center'}`,
       sysDbName: "alert_center_test_dbos_sys",
-      userDbclient: "knex",
     };
     DBOS.setConfig(dbosTestConfig);
     await resetDatabase();
     await DBOS.dropSystemDB();
-    await DBOS.shutdown();
     await DBOS.launch();
   }, 10000);
 
