@@ -216,6 +216,7 @@ def synthesize_findings_step(
     - Performance metrics, benchmarks, or quantitative data when available
     - Notable opinions or debates in the community
     - INLINE LINKS: When making claims, include clickable links directly in the text using this format: [link text](HN_URL)
+    - Use MANY inline links throughout the report. Aim for at least 4-5 links per paragraph.
     
     CRITICAL CITATION RULES - FOLLOW EXACTLY:
     
@@ -223,7 +224,7 @@ def synthesize_findings_step(
     2. ALWAYS write complete sentences with all words present
     3. Add citations using descriptive link text in brackets: [descriptive text](URL)
     4. Every sentence must be grammatically complete and readable without the links
-    5. Use MANY inline links throughout the report. Aim for at least 4-5 links per paragraph.
+    5. Links should ALWAYS be to the Hacker News discussion, NEVER directly to the article.
     
     CORRECT examples:
     "PostgreSQL's performance improvements have been significant in recent versions, as discussed in [community forums](https://news.ycombinator.com/item?id=123456), with developers highlighting [specific optimizations](https://news.ycombinator.com/item?id=789012) in query processing."
