@@ -24,3 +24,11 @@ dbos postgres start
 ```bash
 uv run python -m hacker_news_agent "artificial intelligence"
 ```
+
+## Code Structure
+
+- **`workflows.py`** - Main DBOS workflows orchestrating the research process
+- **`agent.py`** - Core agent decision-making logic
+- **`llm.py`** - OpenAI API integration with core LLM calls
+- **`api.py`** - Hacker News API integration
+- **`cli.py`** - Command-line interface and result formatting

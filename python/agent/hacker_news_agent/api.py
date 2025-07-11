@@ -1,9 +1,3 @@
-"""Hacker News API integration using Algolia search.
-
-This module provides DBOS step functions for searching Hacker News stories and comments.
-All functions are durable and will retry on failure.
-"""
-
 from typing import Any, Dict, List
 
 import httpx

@@ -1,9 +1,3 @@
-"""CLI interface for the DBOS Agentic Hacker News Research Agent.
-
-This demonstrates how to build a user-friendly interface for DBOS agents,
-handling initialization, error reporting, and result display.
-"""
-
 import argparse
 import os
 import sys
@@ -13,7 +7,6 @@ from dbos import DBOS, DBOSConfig
 from rich.console import Console
 from rich.panel import Panel
 
-# Import workflows to register DBOS decorators
 from .workflows import agentic_research_workflow
 
 console = Console()
@@ -119,10 +112,9 @@ def main():
             "[dim]The agent will autonomously plan and execute research using DBOS...[/dim]\n"
         )
 
-        # Execute the main agentic workflow
         result = agentic_research_workflow(args.topic, args.max_iterations)
 
-        # Display comprehensive results
+        # Display the results
         format_output(result)
 
         console.print(f"\n[bold green]✅ Research completed successfully![/bold green]")
