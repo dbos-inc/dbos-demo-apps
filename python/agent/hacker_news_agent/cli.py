@@ -141,7 +141,7 @@ def main():
         )
         console.print("Please set your OpenAI API key:")
         console.print("  export OPENAI_API_KEY='your-api-key-here'")
-        return 1
+        sys.exit(1)
 
     # Initialize DBOS
     try:
@@ -156,7 +156,7 @@ def main():
         console.print(
             "Note: DBOS requires a PostgreSQL database. Make sure PostgreSQL is running."
         )
-        return 1
+        sys.exit(1)
 
     try:
         # Start agentic research
@@ -169,15 +169,16 @@ def main():
         # Display results with verbose output (default)
         display_verbose_output(result)
 
+        # Research completed successfully
+        console.print(f"\n[bold green]✅ Research completed successfully![/bold green]")
+
     except KeyboardInterrupt:
         console.print("\n[yellow]Research interrupted by user[/yellow]")
-        return 1
+        sys.exit(1)
     except Exception as e:
         console.print(f"[bold red]❌ Error during research: {e}[/bold red]")
-        return 1
-
-    return 0
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
