@@ -15,10 +15,6 @@ dependencies = [
 [project.scripts]
 hn-agent = "hacker_news_agent.cli:main"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [tool.uv]
 dev-dependencies = [
     "pytest>=7.0.0",
