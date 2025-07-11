@@ -4,11 +4,7 @@ import os
 import sys
 from typing import Dict, Any
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
 from rich.panel import Panel
-from rich.text import Text
-from rich.table import Table
-from rich.json import JSON
 
 from dbos import DBOS
 # Import all modules to ensure decorators are registered
@@ -16,36 +12,49 @@ from . import api
 from . import llm
 from . import agent
 from . import workflows
-from .workflows import agentic_research_workflow, quick_research_workflow, deep_research_workflow
+from .workflows import agentic_research_workflow
 
 
 console = Console()
 
 
-def display_progress(workflow_handle, research_type: str):
-    """Display progress of the research workflow."""
-    console.print(f"\n[bold blue]🤖 Starting {research_type} Research Agent[/bold blue]")
-    console.print("[dim]The agent will autonomously plan and execute research...[/dim]\n")
+
+
+
+def display_verbose_output(result: Dict[str, Any]) -> None:
+    """Display verbose output showing agent reasoning and research results."""
+    console.print(f"\n[bold blue]🤖 Agent Reasoning Process[/bold blue]")
     
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        BarColumn(),
-        TimeElapsedColumn(),
-        console=console,
-        transient=True
-    ) as progress:
-        task = progress.add_task("Agent working...", total=None)
+    # Research Plan
+    research_plan = result.get("research_plan", {})
+    if research_plan:
+        console.print(f"\n[bold]📋 Initial Research Plan:[/bold]")
+        console.print(f"  • Success Criteria: {research_plan.get('success_criteria', 'Not specified')}")
+        console.print(f"  • Max Iterations: {research_plan.get('max_iterations', 'Not specified')}")
         
-        # Wait for workflow to complete
-        result = workflow_handle.result()
-        progress.update(task, description="Research complete!", completed=True)
+        initial_queries = research_plan.get("initial_queries", [])
+        if initial_queries:
+            console.print(f"  • Initial Queries: {', '.join(initial_queries)}")
+    
+    # Research History
+    research_history = result.get("research_history", [])
+    if research_history:
+        console.print(f"\n[bold]🔄 Research Iterations:[/bold]")
         
-    return result
-
-
-def format_research_output(result: Dict[str, Any]) -> None:
-    """Format and display research results."""
+        for iteration in research_history:
+            iter_num = iteration.get("iteration", 0)
+            query = iteration.get("query", "Unknown")
+            evaluation = iteration.get("evaluation", {})
+            
+            console.print(f"\n  [bold cyan]Iteration {iter_num}:[/bold cyan] {query}")
+            console.print(f"    Stories: {iteration.get('stories_found', 0)}, Comments: {iteration.get('comments_analyzed', 0)}")
+            console.print(f"    Relevance: {evaluation.get('relevance_score', 0)}/10")
+            
+            insights = evaluation.get("insights", [])
+            if insights:
+                console.print(f"    Key Insights: {', '.join(insights[:2])}")
+    
+    # Research Report
     topic = result.get("topic", "Unknown")
     summary = result.get("summary", {})
     final_report = result.get("final_report", {})
@@ -113,56 +122,10 @@ def format_research_output(result: Dict[str, Any]) -> None:
     console.print("[dim]Research completed by DBOS Agentic Research Agent[/dim]")
 
 
-def format_json_output(result: Dict[str, Any]) -> None:
-    """Format and display results as JSON."""
-    console.print(JSON.from_data(result))
-
-
-def display_verbose_output(result: Dict[str, Any]) -> None:
-    """Display verbose output showing agent reasoning."""
-    console.print(f"\n[bold blue]🤖 Agent Reasoning Process[/bold blue]")
-    
-    # Research Plan
-    research_plan = result.get("research_plan", {})
-    if research_plan:
-        console.print(f"\n[bold]📋 Initial Research Plan:[/bold]")
-        console.print(f"  • Success Criteria: {research_plan.get('success_criteria', 'Not specified')}")
-        console.print(f"  • Max Iterations: {research_plan.get('max_iterations', 'Not specified')}")
-        
-        initial_queries = research_plan.get("initial_queries", [])
-        if initial_queries:
-            console.print(f"  • Initial Queries: {', '.join(initial_queries)}")
-    
-    # Research History
-    research_history = result.get("research_history", [])
-    if research_history:
-        console.print(f"\n[bold]🔄 Research Iterations:[/bold]")
-        
-        for iteration in research_history:
-            iter_num = iteration.get("iteration", 0)
-            query = iteration.get("query", "Unknown")
-            evaluation = iteration.get("evaluation", {})
-            
-            console.print(f"\n  [bold cyan]Iteration {iter_num}:[/bold cyan] {query}")
-            console.print(f"    Stories: {iteration.get('stories_found', 0)}, Comments: {iteration.get('comments_analyzed', 0)}")
-            console.print(f"    Relevance: {evaluation.get('relevance_score', 0)}/10")
-            
-            insights = evaluation.get("insights", [])
-            if insights:
-                console.print(f"    Key Insights: {', '.join(insights[:2])}")
-    
-    # Then show the formatted output
-    format_research_output(result)
-
-
 def main():
     parser = argparse.ArgumentParser(description="DBOS Agentic Hacker News Research Agent")
     parser.add_argument("topic", help="Topic to research on Hacker News")
-    parser.add_argument("--max-iterations", type=int, default=None, help="Maximum research iterations")
-    parser.add_argument("--quick", action="store_true", help="Quick research (2 iterations, no comments)")
-    parser.add_argument("--deep", action="store_true", help="Deep research (5 iterations with comments)")
-    parser.add_argument("--json", action="store_true", help="Output results in JSON format")
-    parser.add_argument("--verbose", action="store_true", help="Show agent reasoning process")
+    parser.add_argument("--max-iterations", type=int, default=5, help="Maximum research iterations (default: 5)")
     
     args = parser.parse_args()
     
@@ -192,31 +155,13 @@ def main():
         return 1
     
     try:
-        # Choose workflow based on arguments
-        if args.quick:
-            console.print(f"\n[bold blue]🤖 Starting Quick Research Agent[/bold blue]")
-            console.print("[dim]The agent will autonomously plan and execute research...[/dim]\n")
-            result = quick_research_workflow(args.topic)
-            research_type = "Quick"
-        elif args.deep:
-            console.print(f"\n[bold blue]🤖 Starting Deep Research Agent[/bold blue]")
-            console.print("[dim]The agent will autonomously plan and execute research...[/dim]\n")
-            result = deep_research_workflow(args.topic)
-            research_type = "Deep"
-        else:
-            # Default agentic research
-            console.print(f"\n[bold blue]🤖 Starting Agentic Research Agent[/bold blue]")
-            console.print("[dim]The agent will autonomously plan and execute research...[/dim]\n")
-            result = agentic_research_workflow(args.topic, args.max_iterations)
-            research_type = "Agentic"
+        # Start agentic research
+        console.print(f"\n[bold blue]🤖 Starting Agentic Research Agent[/bold blue]")
+        console.print("[dim]The agent will autonomously plan and execute research...[/dim]\n")
+        result = agentic_research_workflow(args.topic, args.max_iterations)
         
-        # Display results
-        if args.json:
-            format_json_output(result)
-        elif args.verbose:
-            display_verbose_output(result)
-        else:
-            format_research_output(result)
+        # Display results with verbose output (default)
+        display_verbose_output(result)
             
     except KeyboardInterrupt:
         console.print("\n[yellow]Research interrupted by user[/yellow]")

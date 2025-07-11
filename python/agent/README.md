@@ -25,34 +25,26 @@ export OPENAI_API_KEY='your-api-key-here'
 
 ## Usage
 
-### Basic Agentic Research
+### Basic Agentic Research (Default: 5 iterations with verbose output)
 ```bash
 python -m hacker_news_agent "artificial intelligence"
 ```
 
-### Quick Research (2 iterations, no comments)
-```bash
-python -m hacker_news_agent "blockchain" --quick
-```
-
-### Deep Research (5 iterations with comments)
-```bash
-python -m hacker_news_agent "startup funding" --deep
-```
-
 ### Control Max Iterations
 ```bash
-python -m hacker_news_agent "python frameworks" --max-iterations 4
+python -m hacker_news_agent "blockchain technology" --max-iterations 3
 ```
 
-### JSON Output
+### Examples
 ```bash
-python -m hacker_news_agent "machine learning" --json
-```
+# Research AI safety with default settings
+python -m hacker_news_agent "artificial intelligence safety"
 
-### Verbose Mode (see agent reasoning)
-```bash
-python -m hacker_news_agent "web3" --verbose
+# Research startup funding with 4 iterations  
+python -m hacker_news_agent "startup funding trends" --max-iterations 4
+
+# Research quantum computing with 6 iterations
+python -m hacker_news_agent "quantum computing" --max-iterations 6
 ```
 
 ## How It Works

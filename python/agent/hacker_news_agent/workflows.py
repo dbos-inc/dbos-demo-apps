@@ -131,21 +131,3 @@ def agentic_research_workflow(
     }
 
 
-@DBOS.workflow()
-def quick_research_workflow(topic: str) -> Dict[str, Any]:
-    """Quick research workflow with minimal iterations."""
-    return agentic_research_workflow(
-        topic, 
-        max_iterations=2, 
-        include_comments=False
-    )
-
-
-@DBOS.workflow()
-def deep_research_workflow(topic: str) -> Dict[str, Any]:
-    """Deep research workflow with more iterations and comment analysis."""
-    return agentic_research_workflow(
-        topic, 
-        max_iterations=5, 
-        include_comments=True
-    )
