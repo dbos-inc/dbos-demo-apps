@@ -30,7 +30,7 @@ def llm_call_step(
     max_tokens: int = DEFAULT_MAX_TOKENS,
 ) -> str:
     """Core LLM API call wrapped as a durable DBOS step.
-    
+
     The @DBOS.step() decorator makes this function durable - if it fails,
     DBOS will automatically retry it. This is essential for building reliable
     agents that can recover from transient failures.
@@ -49,21 +49,21 @@ def llm_call_step(
 
 def _clean_json_response(response: str) -> str:
     """Clean LLM response to extract valid JSON.
-    
+
     LLMs often return JSON wrapped in markdown code blocks.
     This utility function strips that formatting for reliable parsing.
     """
     cleaned = response.strip()
-    
+
     # Remove markdown code blocks
     if cleaned.startswith("```json"):
         cleaned = cleaned[7:]
     elif cleaned.startswith("```"):
         cleaned = cleaned[3:]
-    
+
     if cleaned.endswith("```"):
         cleaned = cleaned[:-3]
-    
+
     return cleaned.strip()
 
 
@@ -74,50 +74,54 @@ def synthesize_findings_step(
     """Synthesize all research findings into a comprehensive report."""
     findings_text = ""
     story_links = []
-    
+
     for i, finding in enumerate(all_findings, 1):
         findings_text += f"\n=== Finding {i} ===\n"
         findings_text += f"Query: {finding.get('query', 'Unknown')}\n"
         findings_text += f"Summary: {finding.get('summary', 'No summary')}\n"
         findings_text += f"Key Points: {finding.get('key_points', [])}\n"
         findings_text += f"Insights: {finding.get('insights', 'No insights')}\n"
-        
+
         # Extract story links and details for reference
-        if finding.get('top_stories'):
-            for story in finding['top_stories']:
-                story_links.append({
-                    'title': story.get('title', 'Unknown'),
-                    'url': story.get('url', ''),
-                    'hn_url': f"https://news.ycombinator.com/item?id={story.get('objectID', '')}",
-                    'points': story.get('points', 0),
-                    'comments': story.get('num_comments', 0)
-                })
+        if finding.get("top_stories"):
+            for story in finding["top_stories"]:
+                story_links.append(
+                    {
+                        "title": story.get("title", "Unknown"),
+                        "url": story.get("url", ""),
+                        "hn_url": f"https://news.ycombinator.com/item?id={story.get('objectID', '')}",
+                        "points": story.get("points", 0),
+                        "comments": story.get("num_comments", 0),
+                    }
+                )
 
     # Build comprehensive story and citation data
     story_citations = {}
     citation_id = 1
-    
+
     for finding in all_findings:
-        if finding.get('top_stories'):
-            for story in finding['top_stories']:
-                story_id = story.get('objectID', '')
+        if finding.get("top_stories"):
+            for story in finding["top_stories"]:
+                story_id = story.get("objectID", "")
                 if story_id and story_id not in story_citations:
                     story_citations[story_id] = {
-                        'id': citation_id,
-                        'title': story.get('title', 'Unknown'),
-                        'url': story.get('url', ''),
-                        'hn_url': story.get('hn_url', ''),
-                        'points': story.get('points', 0),
-                        'comments': story.get('num_comments', 0)
+                        "id": citation_id,
+                        "title": story.get("title", "Unknown"),
+                        "url": story.get("url", ""),
+                        "hn_url": story.get("hn_url", ""),
+                        "points": story.get("points", 0),
+                        "comments": story.get("num_comments", 0),
                     }
                     citation_id += 1
 
     # Create citation references text
-    citations_text = "\n".join([
-        f"[{cite['id']}] {cite['title']} ({cite['points']} points, {cite['comments']} comments) - {cite['hn_url']}" +
-        (f" - {cite['url']}" if cite['url'] else "")
-        for cite in story_citations.values()
-    ])
+    citations_text = "\n".join(
+        [
+            f"[{cite['id']}] {cite['title']} ({cite['points']} points, {cite['comments']} comments) - {cite['hn_url']}"
+            + (f" - {cite['url']}" if cite["url"] else "")
+            for cite in story_citations.values()
+        ]
+    )
 
     prompt = f"""
     You are a research analyst. Synthesize the following research findings into a comprehensive, detailed report about: {topic}
@@ -199,7 +203,7 @@ def synthesize_findings_step(
         basic_report = f"Research on {topic} revealed {len(all_findings)} key areas of investigation with varying levels of activity and discussion."
         if basic_insights:
             basic_report += f" Key insights include: {'; '.join(basic_insights[:3])}."
-        
+
         return {
             "report": basic_report,
             "error": f"JSON parsing failed, created basic synthesis. Error: {str(e)}",

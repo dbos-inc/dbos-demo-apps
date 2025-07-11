@@ -31,7 +31,7 @@ def display_verbose_output(result: Dict[str, Any]) -> None:
         research_approach = research_plan.get("research_approach", "")
         if research_approach:
             console.print(f"  • Research Approach: {research_approach}")
-        
+
         key_aspects = research_plan.get("key_aspects", [])
         if key_aspects:
             console.print(f"  • Key Aspects: {', '.join(key_aspects)}")

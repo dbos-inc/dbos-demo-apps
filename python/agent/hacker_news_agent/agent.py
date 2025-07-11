@@ -86,53 +86,57 @@ def evaluate_results_step(
     # Create detailed content digest for LLM
     stories_text = ""
     top_stories = []
-    
+
     for i, story in enumerate(stories[:10]):  # Limit to top 10 stories
-        title = story.get('title', 'No title')
-        url = story.get('url', 'No URL')
+        title = story.get("title", "No title")
+        url = story.get("url", "No URL")
         hn_url = f"https://news.ycombinator.com/item?id={story.get('objectID', '')}"
-        points = story.get('points', 0)
-        num_comments = story.get('num_comments', 0)
-        author = story.get('author', 'Unknown')
-        
+        points = story.get("points", 0)
+        num_comments = story.get("num_comments", 0)
+        author = story.get("author", "Unknown")
+
         stories_text += f"Story {i+1}:\n"
         stories_text += f"  Title: {title}\n"
         stories_text += f"  Points: {points}, Comments: {num_comments}\n"
         stories_text += f"  URL: {url}\n"
         stories_text += f"  HN Discussion: {hn_url}\n"
         stories_text += f"  Author: {author}\n\n"
-        
+
         # Store top stories for reference
-        top_stories.append({
-            'title': title,
-            'url': url,
-            'hn_url': hn_url,
-            'points': points,
-            'num_comments': num_comments,
-            'author': author,
-            'objectID': story.get('objectID', '')
-        })
+        top_stories.append(
+            {
+                "title": title,
+                "url": url,
+                "hn_url": hn_url,
+                "points": points,
+                "num_comments": num_comments,
+                "author": author,
+                "objectID": story.get("objectID", ""),
+            }
+        )
 
     comments_text = ""
     interesting_comments = []
-    
+
     if comments:
         for i, comment in enumerate(comments[:20]):  # Limit to top 20 comments
             comment_text = comment.get("comment_text", "")
             if comment_text:
-                author = comment.get('author', 'Unknown')
+                author = comment.get("author", "Unknown")
                 # Get longer excerpts for better analysis
-                excerpt = comment_text[:400] + "..." if len(comment_text) > 400 else comment_text
-                
+                excerpt = (
+                    comment_text[:400] + "..."
+                    if len(comment_text) > 400
+                    else comment_text
+                )
+
                 comments_text += f"Comment {i+1}:\n"
                 comments_text += f"  Author: {author}\n"
                 comments_text += f"  Text: {excerpt}\n\n"
-                
-                interesting_comments.append({
-                    'author': author,
-                    'text': excerpt,
-                    'full_text': comment_text
-                })
+
+                interesting_comments.append(
+                    {"author": author, "text": excerpt, "full_text": comment_text}
+                )
 
     prompt = f"""
     You are a research agent evaluating search results for: {topic}
