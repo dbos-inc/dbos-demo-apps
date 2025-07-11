@@ -1,6 +1,8 @@
-from typing import Dict, List, Any, Optional
 import json
+from typing import Any, Dict, List, Optional
+
 from dbos import DBOS
+
 from .llm import llm_call_step
 
 
@@ -29,25 +31,28 @@ def plan_research_step(topic: str) -> Dict[str, Any]:
         "max_iterations": 3
     }}
     """
-    
+
     messages = [
-        {"role": "system", "content": "You are a research planning agent. Create focused research plans in JSON format."},
-        {"role": "user", "content": prompt}
+        {
+            "role": "system",
+            "content": "You are a research planning agent. Create focused research plans in JSON format.",
+        },
+        {"role": "user", "content": prompt},
     ]
-    
+
     response = llm_call_step(messages)
-    
+
     try:
         # Clean the response
         cleaned_response = response.strip()
-        if cleaned_response.startswith('```json'):
+        if cleaned_response.startswith("```json"):
             cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith('```'):
+        if cleaned_response.startswith("```"):
             cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith('```'):
+        if cleaned_response.endswith("```"):
             cleaned_response = cleaned_response[:-3]
         cleaned_response = cleaned_response.strip()
-        
+
         plan = json.loads(cleaned_response)
         # Ensure required fields exist
         if "initial_queries" not in plan:
@@ -60,24 +65,24 @@ def plan_research_step(topic: str) -> Dict[str, Any]:
             "initial_queries": [topic],
             "key_aspects": ["general analysis"],
             "success_criteria": f"Basic understanding of {topic}",
-            "max_iterations": 3
+            "max_iterations": 3,
         }
 
 
 @DBOS.step()
 def evaluate_results_step(
-    topic: str, 
-    query: str, 
-    stories: List[Dict[str, Any]], 
-    comments: Optional[List[Dict[str, Any]]] = None
+    topic: str,
+    query: str,
+    stories: List[Dict[str, Any]],
+    comments: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Agent evaluates search results and extracts insights."""
-    
+
     # Prepare content for analysis
     content_summary = f"Found {len(stories)} stories"
     if comments:
         content_summary += f" and {len(comments)} comments"
-    
+
     # Create content digest for LLM
     stories_text = ""
     for story in stories[:10]:  # Limit to top 10 stories
@@ -85,15 +90,15 @@ def evaluate_results_step(
         stories_text += f"Points: {story.get('points', 0)}, Comments: {story.get('num_comments', 0)}\n"
         stories_text += f"URL: {story.get('url', 'No URL')}\n"
         stories_text += f"Author: {story.get('author', 'Unknown')}\n\n"
-    
+
     comments_text = ""
     if comments:
         for comment in comments[:20]:  # Limit to top 20 comments
-            comment_text = comment.get('comment_text', '')
+            comment_text = comment.get("comment_text", "")
             if comment_text:
                 comments_text += f"Comment: {comment_text[:200]}...\n"
                 comments_text += f"Author: {comment.get('author', 'Unknown')}\n\n"
-    
+
     prompt = f"""
     You are a research agent evaluating search results for: {topic}
     
@@ -119,25 +124,28 @@ def evaluate_results_step(
     - "summary": Brief summary of findings
     - "key_points": Array of most important points discovered
     """
-    
+
     messages = [
-        {"role": "system", "content": "You are a research evaluation agent. Analyze search results and provide structured insights in JSON format."},
-        {"role": "user", "content": prompt}
+        {
+            "role": "system",
+            "content": "You are a research evaluation agent. Analyze search results and provide structured insights in JSON format.",
+        },
+        {"role": "user", "content": prompt},
     ]
-    
+
     response = llm_call_step(messages, max_tokens=2000)
-    
+
     try:
         # Clean the response
         cleaned_response = response.strip()
-        if cleaned_response.startswith('```json'):
+        if cleaned_response.startswith("```json"):
             cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith('```'):
+        if cleaned_response.startswith("```"):
             cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith('```'):
+        if cleaned_response.endswith("```"):
             cleaned_response = cleaned_response[:-3]
         cleaned_response = cleaned_response.strip()
-        
+
         evaluation = json.loads(cleaned_response)
         # Add metadata
         evaluation["query"] = query
@@ -154,25 +162,25 @@ def evaluate_results_step(
             "key_points": [],
             "query": query,
             "stories_count": len(stories),
-            "comments_count": len(comments) if comments else 0
+            "comments_count": len(comments) if comments else 0,
         }
 
 
 @DBOS.step()
 def generate_follow_ups_step(
-    topic: str, 
-    current_findings: List[Dict[str, Any]], 
-    iteration: int
+    topic: str, current_findings: List[Dict[str, Any]], iteration: int
 ) -> List[str]:
     """Agent generates follow-up research queries based on current findings."""
-    
+
     findings_summary = ""
     for finding in current_findings:
         findings_summary += f"Query: {finding.get('query', 'Unknown')}\n"
         findings_summary += f"Summary: {finding.get('summary', 'No summary')}\n"
         findings_summary += f"Key insights: {finding.get('insights', [])}\n"
-        findings_summary += f"Unanswered questions: {finding.get('unanswered_questions', [])}\n\n"
-    
+        findings_summary += (
+            f"Unanswered questions: {finding.get('unanswered_questions', [])}\n\n"
+        )
+
     prompt = f"""
     You are a research agent investigating: {topic}
     
@@ -191,25 +199,28 @@ def generate_follow_ups_step(
     
     Return only a JSON array of query strings: ["query1", "query2", "query3"]
     """
-    
+
     messages = [
-        {"role": "system", "content": "You are a research agent. Generate focused follow-up queries based on current findings. Return only JSON array."},
-        {"role": "user", "content": prompt}
+        {
+            "role": "system",
+            "content": "You are a research agent. Generate focused follow-up queries based on current findings. Return only JSON array.",
+        },
+        {"role": "user", "content": prompt},
     ]
-    
+
     response = llm_call_step(messages)
-    
+
     try:
         # Clean the response
         cleaned_response = response.strip()
-        if cleaned_response.startswith('```json'):
+        if cleaned_response.startswith("```json"):
             cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith('```'):
+        if cleaned_response.startswith("```"):
             cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith('```'):
+        if cleaned_response.endswith("```"):
             cleaned_response = cleaned_response[:-3]
         cleaned_response = cleaned_response.strip()
-        
+
         queries = json.loads(cleaned_response)
         return queries if isinstance(queries, list) else []
     except json.JSONDecodeError:
@@ -218,19 +229,19 @@ def generate_follow_ups_step(
 
 @DBOS.step()
 def should_continue_step(
-    topic: str, 
-    all_findings: List[Dict[str, Any]], 
-    current_iteration: int, 
-    max_iterations: int
+    topic: str,
+    all_findings: List[Dict[str, Any]],
+    current_iteration: int,
+    max_iterations: int,
 ) -> Dict[str, Any]:
     """Agent decides whether to continue research or conclude."""
-    
+
     if current_iteration >= max_iterations:
         return {
             "should_continue": False,
-            "reason": f"Reached maximum iterations ({max_iterations})"
+            "reason": f"Reached maximum iterations ({max_iterations})",
         }
-    
+
     # Analyze findings completeness
     findings_summary = ""
     total_relevance = 0
@@ -238,10 +249,10 @@ def should_continue_step(
         findings_summary += f"Query: {finding.get('query', 'Unknown')}\n"
         findings_summary += f"Summary: {finding.get('summary', 'No summary')}\n"
         findings_summary += f"Relevance: {finding.get('relevance_score', 5)}/10\n"
-        total_relevance += finding.get('relevance_score', 5)
-    
+        total_relevance += finding.get("relevance_score", 5)
+
     avg_relevance = total_relevance / len(all_findings) if all_findings else 0
-    
+
     prompt = f"""
     You are a research agent investigating: {topic}
     
@@ -263,30 +274,33 @@ def should_continue_step(
     - "reason": string explaining the decision
     - "confidence": number 1-10 in the decision
     """
-    
+
     messages = [
-        {"role": "system", "content": "You are a research decision agent. Evaluate research completeness and decide whether to continue. Return JSON."},
-        {"role": "user", "content": prompt}
+        {
+            "role": "system",
+            "content": "You are a research decision agent. Evaluate research completeness and decide whether to continue. Return JSON.",
+        },
+        {"role": "user", "content": prompt},
     ]
-    
+
     response = llm_call_step(messages)
-    
+
     try:
         # Clean the response
         cleaned_response = response.strip()
-        if cleaned_response.startswith('```json'):
+        if cleaned_response.startswith("```json"):
             cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith('```'):
+        if cleaned_response.startswith("```"):
             cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith('```'):
+        if cleaned_response.endswith("```"):
             cleaned_response = cleaned_response[:-3]
         cleaned_response = cleaned_response.strip()
-        
+
         decision = json.loads(cleaned_response)
         return decision
     except json.JSONDecodeError:
         return {
             "should_continue": current_iteration < max_iterations and avg_relevance < 8,
             "reason": "Default decision based on iteration count and relevance",
-            "confidence": 5
+            "confidence": 5,
         }

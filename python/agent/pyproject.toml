@@ -9,7 +9,9 @@ dependencies = [
     "httpx>=0.25.0",
     "openai>=1.0.0",
     "click>=8.0.0",
-    "rich>=13.0.0"
+    "rich>=13.0.0",
+    "black>=25.1.0",
+    "isort>=6.0.1",
 ]
 
 [project.scripts]
