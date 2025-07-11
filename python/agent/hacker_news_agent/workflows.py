@@ -23,45 +23,36 @@ def research_iteration_workflow(
     stories = search_hackernews_step(query, max_results=30)
     
     if stories:
-        console.print(f"[dim]📚 Found {len(stories)} stories, analyzing diverse selection...[/dim]")
+        console.print(f"[dim]📚 Found {len(stories)} stories, analyzing all stories...[/dim]")
         
-        # Log interesting stories we're analyzing - show variety, not just top ones
-        for i, story in enumerate(stories[:8]):  # Show more stories
-            title = story.get("title", "No title")[:60]
+        # Log ALL stories we're analyzing
+        for i, story in enumerate(stories):
+            title = story.get("title", "No title")[:80]
             points = story.get("points", 0)
             num_comments = story.get("num_comments", 0)
             console.print(f"[dim]  📖 Story {i+1}: {title}... ({points} points, {num_comments} comments)[/dim]")
     else:
         console.print("[dim]❌ No stories found for this query[/dim]")
 
-    # Optionally get comments for diverse stories
+    # Always get comments from ALL stories
     comments = []
-    if include_comments and stories:
-        # Get comments from diverse stories (mix of high and medium engagement)
-        # Take top 2 stories and 2 from middle range for diversity
-        high_engagement = [
-            story for story in stories[:3] 
-            if story.get("points", 0) > 5 and story.get("num_comments", 0) > 3
-        ][:2]
+    if stories:
+        console.print(f"[dim]💬 Reading comments from ALL {len(stories)} stories...[/dim]")
         
-        medium_engagement = [
-            story for story in stories[3:10] 
-            if story.get("points", 0) > 0 and story.get("num_comments", 0) > 1
-        ][:2]
-        
-        selected_stories = high_engagement + medium_engagement
-
-        if selected_stories:
-            console.print(f"[dim]💬 Reading comments from {len(selected_stories)} diverse stories...[/dim]")
+        for i, story in enumerate(stories):
+            story_id = story.get("objectID")
+            title = story.get("title", "Unknown")[:50]
+            num_comments = story.get("num_comments", 0)
             
-            for i, story in enumerate(selected_stories):
-                story_id = story.get("objectID")
-                title = story.get("title", "Unknown")[:40]
-                if story_id:
-                    console.print(f"[dim]  💭 Reading comments from: {title}...[/dim]")
-                    story_comments = get_comments_step(story_id, max_comments=15)
-                    comments.extend(story_comments)
-                    console.print(f"[dim]    ✓ Read {len(story_comments)} comments[/dim]")
+            if story_id and num_comments > 0:
+                console.print(f"[dim]  💭 Reading comments from: {title}... ({num_comments} comments)[/dim]")
+                story_comments = get_comments_step(story_id, max_comments=10)
+                comments.extend(story_comments)
+                console.print(f"[dim]    ✓ Read {len(story_comments)} comments[/dim]")
+            elif story_id:
+                console.print(f"[dim]  📖 Story has no comments: {title}[/dim]")
+            else:
+                console.print(f"[dim]  ❌ No story ID available for: {title}[/dim]")
 
     # Evaluate results
     console.print(f"[dim]🤔 Analyzing findings from {len(stories)} stories and {len(comments)} comments...[/dim]")
