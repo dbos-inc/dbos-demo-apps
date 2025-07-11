@@ -10,7 +10,7 @@ from dbos import DBOS
 from rich.console import Console
 
 from .agent import (evaluate_results_step, generate_follow_ups_step,
-                    plan_research_step, should_continue_step)
+                    should_continue_step)
 from .api import get_comments_step, search_hackernews_step
 from .llm import synthesize_findings_step
 
@@ -106,9 +106,7 @@ def agentic_research_workflow(
     The entire process is durable and can recover from any failure.
     """
 
-    # Step 1: Agent creates initial research plan
-    console.print(f"[dim]🎯 Agent planning research approach for: {topic}[/dim]")
-    research_plan = plan_research_step(topic)
+    console.print(f"[dim]🎯 Starting agentic research for: {topic}[/dim]")
 
     # Initialize agent state
     if max_iterations is None:
@@ -194,7 +192,6 @@ def agentic_research_workflow(
     # Return complete research results
     return {
         "topic": topic,
-        "research_plan": research_plan,
         "total_iterations": current_iteration,
         "max_iterations": max_iterations,
         "research_history": research_history,

@@ -7,69 +7,6 @@ from .llm import llm_call_step
 
 
 @DBOS.step()
-def plan_research_step(topic: str) -> Dict[str, Any]:
-    """Agent creates an initial research plan for the topic."""
-    prompt = f"""
-    You are a research agent tasked with investigating: {topic}
-    
-    Create a research plan that identifies:
-    1. Key aspects to investigate about this topic
-    2. Success criteria for comprehensive research
-    3. Research approach and methodology
-    
-    Return JSON with these fields:
-    - "key_aspects": Array of important aspects to investigate
-    - "success_criteria": What would make this research complete
-    - "research_approach": Brief description of how to approach this topic
-    - "max_iterations": Recommended number of research iterations (3-6)
-    
-    Example format:
-    {{
-        "key_aspects": ["aspect1", "aspect2", "aspect3"],
-        "success_criteria": "Understanding of X, Y, and Z",
-        "research_approach": "Start broad then drill down into specific areas",
-        "max_iterations": 4
-    }}
-    """
-
-    messages = [
-        {
-            "role": "system",
-            "content": "You are a research planning agent. Create focused research plans in JSON format.",
-        },
-        {"role": "user", "content": prompt},
-    ]
-
-    response = llm_call_step(messages)
-
-    try:
-        # Clean the response
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
-        plan = json.loads(cleaned_response)
-        # Ensure required fields exist
-        if "key_aspects" not in plan:
-            plan["key_aspects"] = ["general analysis"]
-        if "max_iterations" not in plan:
-            plan["max_iterations"] = 4
-        return plan
-    except json.JSONDecodeError:
-        return {
-            "key_aspects": ["general analysis"],
-            "success_criteria": f"Basic understanding of {topic}",
-            "research_approach": "Iterative exploration of the topic",
-            "max_iterations": 4,
-        }
-
-
-@DBOS.step()
 def evaluate_results_step(
     topic: str,
     query: str,
