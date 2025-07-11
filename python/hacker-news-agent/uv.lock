@@ -501,7 +501,7 @@ wheels = [
 [[package]]
 name = "hacker-news-agent"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "dbos" },
     { name = "httpx" },

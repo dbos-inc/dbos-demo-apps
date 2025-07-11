@@ -1,9 +1,10 @@
 import argparse
 import os
 import sys
+import uuid
 from typing import Any, Dict
 
-from dbos import DBOS, DBOSConfig
+from dbos import DBOS, DBOSConfig, SetWorkflowID
 from rich.console import Console
 from rich.panel import Panel
 
@@ -78,6 +79,11 @@ def main():
         default=8,
         help="Maximum research iterations (default: 8)",
     )
+    parser.add_argument(
+        "--workflow-id",
+        type=str,
+        help="Workflow ID to resume a previous research session",
+    )
 
     args = parser.parse_args()
 
@@ -112,7 +118,17 @@ def main():
             "[dim]The agent will autonomously plan and execute research using DBOS...[/dim]\n"
         )
 
-        result = agentic_research_workflow(args.topic, args.max_iterations)
+        # Resume if a workflow ID is provided, else generate a new one
+        if args.workflow_id:
+            workflow_id = args.workflow_id
+            console.print(f"[bold yellow]📋 Resuming workflow ID: {workflow_id}[/bold yellow]")
+        else:
+            workflow_id = str(uuid.uuid4())
+            console.print(f"[bold yellow]📋 Workflow ID: {workflow_id}[/bold yellow]")
+            console.print(f"[dim]Use --workflow-id {workflow_id} to resume if interrupted[/dim]\n")
+
+        with SetWorkflowID(workflow_id):
+            result = agentic_research_workflow(args.topic, args.max_iterations)
 
         # Display the results
         format_output(result)
