@@ -25,6 +25,12 @@ dbos postgres start
 uv run python -m hacker_news_agent "artificial intelligence"
 ```
 
+If the agent fails at any point during its research, you can restart it using its workflow ID to recover it from where it left off:
+
+```shell
+python -m hacker_news_agent "artificial intelligence" --workflow-id <id>
+```
+
 ## Code Structure
 
 - **`workflows.py`** - Main DBOS workflows orchestrating the research process
