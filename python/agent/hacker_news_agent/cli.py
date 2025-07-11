@@ -79,46 +79,11 @@ def display_verbose_output(result: Dict[str, Any]) -> None:
         for i, query in enumerate(queries, 1):
             console.print(f"  {i}. {query}")
 
-    # Executive Summary
-    exec_summary = final_report.get("executive_summary", "")
-    if exec_summary:
-        console.print(f"\n[bold]📋 Executive Summary:[/bold]")
-        console.print(Panel(exec_summary, border_style="blue"))
-
-    # Key Findings
-    key_findings = final_report.get("key_findings", [])
-    if key_findings:
-        console.print(f"\n[bold]🎯 Key Findings:[/bold]")
-        for finding in key_findings:
-            console.print(f"  • {finding}")
-
-    # Trends and Patterns
-    trends = final_report.get("trends", [])
-    if trends:
-        console.print(f"\n[bold]📈 Trends & Patterns:[/bold]")
-        for trend in trends:
-            console.print(f"  • {trend}")
-
-    # Important Insights
-    insights = final_report.get("insights", [])
-    if insights:
-        console.print(f"\n[bold]💡 Important Insights:[/bold]")
-        for insight in insights:
-            console.print(f"  • {insight}")
-
-    # Implications
-    implications = final_report.get("implications", [])
-    if implications:
-        console.print(f"\n[bold]🔮 Implications:[/bold]")
-        for implication in implications:
-            console.print(f"  • {implication}")
-
-    # Further Research
-    further_research = final_report.get("further_research", [])
-    if further_research:
-        console.print(f"\n[bold]🔬 Areas for Further Research:[/bold]")
-        for area in further_research:
-            console.print(f"  • {area}")
+    # Research Report with inline links
+    report_text = final_report.get("report", "")
+    if report_text:
+        console.print(f"\n[bold]📊 Research Report:[/bold]")
+        console.print(Panel(report_text, border_style="blue", padding=(1, 2)))
 
     console.print("\n" + "=" * 60)
     console.print("[dim]Research completed by DBOS Agentic Research Agent[/dim]")

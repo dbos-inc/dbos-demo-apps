@@ -83,21 +83,56 @@ def evaluate_results_step(
     if comments:
         content_summary += f" and {len(comments)} comments"
 
-    # Create content digest for LLM
+    # Create detailed content digest for LLM
     stories_text = ""
-    for story in stories[:10]:  # Limit to top 10 stories
-        stories_text += f"Title: {story.get('title', 'No title')}\n"
-        stories_text += f"Points: {story.get('points', 0)}, Comments: {story.get('num_comments', 0)}\n"
-        stories_text += f"URL: {story.get('url', 'No URL')}\n"
-        stories_text += f"Author: {story.get('author', 'Unknown')}\n\n"
+    top_stories = []
+    
+    for i, story in enumerate(stories[:10]):  # Limit to top 10 stories
+        title = story.get('title', 'No title')
+        url = story.get('url', 'No URL')
+        hn_url = f"https://news.ycombinator.com/item?id={story.get('objectID', '')}"
+        points = story.get('points', 0)
+        num_comments = story.get('num_comments', 0)
+        author = story.get('author', 'Unknown')
+        
+        stories_text += f"Story {i+1}:\n"
+        stories_text += f"  Title: {title}\n"
+        stories_text += f"  Points: {points}, Comments: {num_comments}\n"
+        stories_text += f"  URL: {url}\n"
+        stories_text += f"  HN Discussion: {hn_url}\n"
+        stories_text += f"  Author: {author}\n\n"
+        
+        # Store top stories for reference
+        top_stories.append({
+            'title': title,
+            'url': url,
+            'hn_url': hn_url,
+            'points': points,
+            'num_comments': num_comments,
+            'author': author,
+            'objectID': story.get('objectID', '')
+        })
 
     comments_text = ""
+    interesting_comments = []
+    
     if comments:
-        for comment in comments[:20]:  # Limit to top 20 comments
+        for i, comment in enumerate(comments[:20]):  # Limit to top 20 comments
             comment_text = comment.get("comment_text", "")
             if comment_text:
-                comments_text += f"Comment: {comment_text[:200]}...\n"
-                comments_text += f"Author: {comment.get('author', 'Unknown')}\n\n"
+                author = comment.get('author', 'Unknown')
+                # Get longer excerpts for better analysis
+                excerpt = comment_text[:400] + "..." if len(comment_text) > 400 else comment_text
+                
+                comments_text += f"Comment {i+1}:\n"
+                comments_text += f"  Author: {author}\n"
+                comments_text += f"  Text: {excerpt}\n\n"
+                
+                interesting_comments.append({
+                    'author': author,
+                    'text': excerpt,
+                    'full_text': comment_text
+                })
 
     prompt = f"""
     You are a research agent evaluating search results for: {topic}
@@ -110,14 +145,21 @@ def evaluate_results_step(
     Comments analyzed:
     {comments_text}
     
-    Evaluate these results and provide:
-    1. Key insights discovered
-    2. Relevance to the research topic (1-10)
-    3. What important questions remain unanswered
-    4. Suggested follow-up research directions
+    Provide a DETAILED analysis with specific insights, not generalizations. Focus on:
+    - Specific technical details, metrics, or benchmarks mentioned
+    - Concrete tools, libraries, frameworks, or techniques discussed
+    - Interesting problems, solutions, or approaches described
+    - Performance data, comparison results, or quantitative insights
+    - Notable opinions, debates, or community perspectives
+    - Specific use cases, implementation details, or real-world examples
     
     Return JSON with:
-    - "insights": Array of key insights
+    - "detailed_insights": Array of specific, technical insights with context
+    - "technical_findings": Array of concrete technical details or metrics
+    - "tools_mentioned": Array of specific tools/libraries/frameworks discussed
+    - "interesting_quotes": Array of notable quotes or opinions from comments
+    - "use_cases": Array of specific use cases or applications mentioned
+    - "performance_data": Array of any performance metrics or benchmarks
     - "relevance_score": Number 1-10
     - "unanswered_questions": Array of questions needing more research
     - "follow_up_suggestions": Array of specific research directions
@@ -147,10 +189,12 @@ def evaluate_results_step(
         cleaned_response = cleaned_response.strip()
 
         evaluation = json.loads(cleaned_response)
-        # Add metadata
+        # Add metadata and story references
         evaluation["query"] = query
         evaluation["stories_count"] = len(stories)
         evaluation["comments_count"] = len(comments) if comments else 0
+        evaluation["top_stories"] = top_stories
+        evaluation["interesting_comments"] = interesting_comments
         return evaluation
     except json.JSONDecodeError:
         return {

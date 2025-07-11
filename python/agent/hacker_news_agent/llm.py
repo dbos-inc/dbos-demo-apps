@@ -151,29 +151,79 @@ def synthesize_findings_step(
 ) -> Dict[str, Any]:
     """Synthesize all research findings into a comprehensive report."""
     findings_text = ""
+    story_links = []
+    
     for i, finding in enumerate(all_findings, 1):
         findings_text += f"\n=== Finding {i} ===\n"
         findings_text += f"Query: {finding.get('query', 'Unknown')}\n"
         findings_text += f"Summary: {finding.get('summary', 'No summary')}\n"
         findings_text += f"Key Points: {finding.get('key_points', [])}\n"
         findings_text += f"Insights: {finding.get('insights', 'No insights')}\n"
+        
+        # Extract story links and details for reference
+        if finding.get('top_stories'):
+            for story in finding['top_stories']:
+                story_links.append({
+                    'title': story.get('title', 'Unknown'),
+                    'url': story.get('url', ''),
+                    'hn_url': f"https://news.ycombinator.com/item?id={story.get('objectID', '')}",
+                    'points': story.get('points', 0),
+                    'comments': story.get('num_comments', 0)
+                })
+
+    # Build comprehensive story and citation data
+    story_citations = {}
+    citation_id = 1
+    
+    for finding in all_findings:
+        if finding.get('top_stories'):
+            for story in finding['top_stories']:
+                story_id = story.get('objectID', '')
+                if story_id and story_id not in story_citations:
+                    story_citations[story_id] = {
+                        'id': citation_id,
+                        'title': story.get('title', 'Unknown'),
+                        'url': story.get('url', ''),
+                        'hn_url': story.get('hn_url', ''),
+                        'points': story.get('points', 0),
+                        'comments': story.get('num_comments', 0)
+                    }
+                    citation_id += 1
+
+    # Create citation references text
+    citations_text = "\n".join([
+        f"[{cite['id']}] {cite['title']} ({cite['points']} points, {cite['comments']} comments) - {cite['hn_url']}" +
+        (f" - {cite['url']}" if cite['url'] else "")
+        for cite in story_citations.values()
+    ])
 
     prompt = f"""
-    You are a research analyst. Synthesize the following research findings into a comprehensive report about: {topic}
+    You are a research analyst. Synthesize the following research findings into a comprehensive, detailed report about: {topic}
     
     Research Findings:
     {findings_text}
     
+    Available Citations:
+    {citations_text}
+    
     IMPORTANT: You must return ONLY a valid JSON object with no additional text, explanations, or formatting.
     
-    Return a JSON object with these exact keys:
+    Create a comprehensive research report that flows naturally as a single narrative. Include:
+    - Specific technical details and concrete examples
+    - Actionable insights practitioners can use
+    - Interesting discoveries and surprising findings
+    - Specific tools, libraries, or techniques mentioned
+    - Performance metrics, benchmarks, or quantitative data when available
+    - Notable opinions or debates in the community
+    - INLINE LINKS: When making claims, include clickable links directly in the text using this format: [link text](HN_URL)
+    
+    For example: "PostgreSQL's performance improvements [have been significant](https://news.ycombinator.com/item?id=123456) in recent versions."
+    
+    Use the HN discussion URLs from the available citations. Make the link text descriptive and natural within the sentence flow.
+    
+    Return a JSON object with this exact structure:
     {{
-        "executive_summary": "2-3 sentence summary of findings",
-        "key_findings": ["finding1", "finding2", "finding3"],
-        "trends": ["trend1", "trend2"],
-        "insights": ["insight1", "insight2"],
-        "implications": ["implication1", "implication2"],
-        "further_research": ["area1", "area2"]
+        "report": "A comprehensive research report written as flowing narrative text with inline clickable links [like this](https://news.ycombinator.com/item?id=123). Include specific technical details, tools, performance metrics, community opinions, and actionable insights. Make it detailed and informative, not just a summary."
     }}
     """
 
@@ -198,7 +248,8 @@ def synthesize_findings_step(
             cleaned_response = cleaned_response[:-3]
         cleaned_response = cleaned_response.strip()
 
-        return json.loads(cleaned_response)
+        result = json.loads(cleaned_response)
+        return result
     except json.JSONDecodeError as e:
         # Create a basic synthesis from the findings
         basic_insights = []
@@ -207,16 +258,11 @@ def synthesize_findings_step(
             if insights:
                 basic_insights.extend(insights[:2])  # Take first 2 insights
 
+        basic_report = f"Research on {topic} revealed {len(all_findings)} key areas of investigation with varying levels of activity and discussion."
+        if basic_insights:
+            basic_report += f" Key insights include: {'; '.join(basic_insights[:3])}."
+        
         return {
-            "executive_summary": f"Research on {topic} revealed {len(all_findings)} key areas of investigation with varying levels of activity and discussion.",
-            "key_findings": (
-                basic_insights[:5]
-                if basic_insights
-                else [f"Limited findings available for {topic}"]
-            ),
-            "trends": [f"Discussion patterns around {topic}"],
-            "insights": basic_insights[:3] if basic_insights else [],
-            "implications": [f"Further research needed on {topic}"],
-            "further_research": [f"More detailed analysis of {topic} trends"],
+            "report": basic_report,
             "error": f"JSON parsing failed, created basic synthesis. Error: {str(e)}",
         }
