@@ -1,19 +1,14 @@
 from typing import Any, Dict, List, Optional
 
 from dbos import DBOS
+from rich.console import Console
 
 from .agent import (evaluate_results_step, generate_follow_ups_step,
                     plan_research_step, should_continue_step)
 from .api import get_comments_step, search_hackernews_step
 from .llm import synthesize_findings_step
 
-
-@DBOS.step()
-def log_research_step(message: str) -> None:
-    """Log research progress messages."""
-    from rich.console import Console
-    console = Console()
-    console.print(f"[dim]{message}[/dim]")
+console = Console()
 
 
 @DBOS.workflow()
@@ -22,22 +17,22 @@ def research_iteration_workflow(
 ) -> Dict[str, Any]:
     """Execute a single research iteration."""
 
-    log_research_step(f"🔍 Searching for stories: '{query}'")
+    console.print(f"[dim]🔍 Searching for stories: '{query}'[/dim]")
     
     # Search for stories
     stories = search_hackernews_step(query, max_results=30)
     
     if stories:
-        log_research_step(f"📚 Found {len(stories)} stories, analyzing diverse selection...")
+        console.print(f"[dim]📚 Found {len(stories)} stories, analyzing diverse selection...[/dim]")
         
         # Log interesting stories we're analyzing - show variety, not just top ones
         for i, story in enumerate(stories[:8]):  # Show more stories
             title = story.get("title", "No title")[:60]
             points = story.get("points", 0)
             num_comments = story.get("num_comments", 0)
-            log_research_step(f"  📖 Story {i+1}: {title}... ({points} points, {num_comments} comments)")
+            console.print(f"[dim]  📖 Story {i+1}: {title}... ({points} points, {num_comments} comments)[/dim]")
     else:
-        log_research_step("❌ No stories found for this query")
+        console.print("[dim]❌ No stories found for this query[/dim]")
 
     # Optionally get comments for diverse stories
     comments = []
@@ -57,19 +52,19 @@ def research_iteration_workflow(
         selected_stories = high_engagement + medium_engagement
 
         if selected_stories:
-            log_research_step(f"💬 Reading comments from {len(selected_stories)} diverse stories...")
+            console.print(f"[dim]💬 Reading comments from {len(selected_stories)} diverse stories...[/dim]")
             
             for i, story in enumerate(selected_stories):
                 story_id = story.get("objectID")
                 title = story.get("title", "Unknown")[:40]
                 if story_id:
-                    log_research_step(f"  💭 Reading comments from: {title}...")
+                    console.print(f"[dim]  💭 Reading comments from: {title}...[/dim]")
                     story_comments = get_comments_step(story_id, max_comments=15)
                     comments.extend(story_comments)
-                    log_research_step(f"    ✓ Read {len(story_comments)} comments")
+                    console.print(f"[dim]    ✓ Read {len(story_comments)} comments[/dim]")
 
     # Evaluate results
-    log_research_step(f"🤔 Analyzing findings from {len(stories)} stories and {len(comments)} comments...")
+    console.print(f"[dim]🤔 Analyzing findings from {len(stories)} stories and {len(comments)} comments...[/dim]")
     evaluation = evaluate_results_step(topic, query, stories, comments)
 
     return {
@@ -90,7 +85,7 @@ def agentic_research_workflow(
     """Main agentic research workflow that autonomously researches a topic."""
 
     # Step 1: Agent creates initial research plan (just for context, not all queries)
-    log_research_step(f"🎯 Agent planning research approach for: {topic}")
+    console.print(f"[dim]🎯 Agent planning research approach for: {topic}[/dim]")
     research_plan = plan_research_step(topic)
 
     # Use provided max_iterations or default to 8
@@ -109,7 +104,7 @@ def agentic_research_workflow(
     while current_iteration < max_iterations:
         current_iteration += 1
         
-        log_research_step(f"🔄 Starting iteration {current_iteration}/{max_iterations}")
+        console.print(f"[dim]🔄 Starting iteration {current_iteration}/{max_iterations}[/dim]")
         
         # Execute research iteration
         iteration_result = research_iteration_workflow(
@@ -123,7 +118,7 @@ def agentic_research_workflow(
         relevance_score = iteration_result["evaluation"].get("relevance_score", 0)
         
         if stories_found == 0:
-            log_research_step(f"⚠️  No stories found for '{current_query}', trying alternative approach...")
+            console.print(f"[dim]⚠️  No stories found for '{current_query}', trying alternative approach...[/dim]")
             
             # Generate alternative queries when we find nothing
             alternative_queries = generate_follow_ups_step(
@@ -133,38 +128,38 @@ def agentic_research_workflow(
             if alternative_queries:
                 # Try the first alternative
                 current_query = alternative_queries[0]
-                log_research_step(f"🔄 Retrying with: '{current_query}'")
+                console.print(f"[dim]🔄 Retrying with: '{current_query}'[/dim]")
                 continue
             else:
-                log_research_step("❌ No alternative queries available, continuing...")
+                console.print("[dim]❌ No alternative queries available, continuing...[/dim]")
         
         # If we have enough iterations, check if we should continue
         if current_iteration >= 2:
-            log_research_step("🤔 Agent evaluating whether to continue research...")
+            console.print("[dim]🤔 Agent evaluating whether to continue research...[/dim]")
             decision = should_continue_step(
                 topic, all_findings, current_iteration, max_iterations
             )
 
             if not decision.get("should_continue", False):
-                log_research_step(f"✅ Agent decided to conclude research: {decision.get('reason', 'No reason provided')}")
+                console.print(f"[dim]✅ Agent decided to conclude research: {decision.get('reason', 'No reason provided')}[/dim]")
                 break
 
         # Generate next research question based on current findings
         if current_iteration < max_iterations:
-            log_research_step("💭 Agent generating next research question...")
+            console.print("[dim]💭 Agent generating next research question...[/dim]")
             follow_up_queries = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
 
             if follow_up_queries:
                 current_query = follow_up_queries[0]  # Take the first suggestion
-                log_research_step(f"➡️  Next research focus: '{current_query}'")
+                console.print(f"[dim]➡️  Next research focus: '{current_query}'[/dim]")
             else:
-                log_research_step("💡 No new research directions found, concluding...")
+                console.print("[dim]💡 No new research directions found, concluding...[/dim]")
                 break
 
     # Step 3: Agent synthesizes final report
-    log_research_step("📋 Agent synthesizing final research report...")
+    console.print("[dim]📋 Agent synthesizing final research report...[/dim]")
     final_report = synthesize_findings_step(topic, all_findings)
 
     return {
