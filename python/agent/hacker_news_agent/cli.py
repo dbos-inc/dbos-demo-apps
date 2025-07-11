@@ -118,7 +118,7 @@ def main():
         console.print(
             "[dim]The agent will autonomously plan and execute research using DBOS...[/dim]\n"
         )
-        
+
         # Execute the main agentic workflow
         result = agentic_research_workflow(args.topic, args.max_iterations)
 

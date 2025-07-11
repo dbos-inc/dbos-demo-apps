@@ -9,8 +9,7 @@ from typing import Any, Dict, Optional
 from dbos import DBOS
 from rich.console import Console
 
-from .agent import (evaluate_results_step, generate_follow_ups_step,
-                    should_continue_step)
+from .agent import evaluate_results_step, generate_follow_ups_step, should_continue_step
 from .api import get_comments_step, search_hackernews_step
 from .llm import synthesize_findings_step
 
@@ -30,15 +29,13 @@ def research_iteration_workflow(
 
     console.print(f"[dim]🔍 Searching for stories: '{query}'[/dim]")
 
-    # Step 1: Search for stories using durable API call
+    # Step 1: Search Hacker News for stories about the topic
     stories = search_hackernews_step(query, max_results=30)
 
     if stories:
         console.print(
             f"[dim]📚 Found {len(stories)} stories, analyzing all stories...[/dim]"
         )
-
-        # Show what stories the agent is analyzing
         for i, story in enumerate(stories):
             title = story.get("title", "No title")[:80]
             points = story.get("points", 0)
@@ -49,7 +46,7 @@ def research_iteration_workflow(
     else:
         console.print("[dim]❌ No stories found for this query[/dim]")
 
-    # Step 2: Gather comments from all stories for deeper analysis
+    # Step 2: Gather comments from all stories found
     comments = []
     if stories:
         console.print(
@@ -74,7 +71,7 @@ def research_iteration_workflow(
             else:
                 console.print(f"[dim]  ❌ No story ID available for: {title}[/dim]")
 
-    # Step 3: Agent evaluates and extracts insights from gathered data
+    # Step 3: Agent evaluates gathered data and returns its findings
     console.print(
         f"[dim]🤔 Analyzing findings from {len(stories)} stories and {len(comments)} comments...[/dim]"
     )
@@ -97,11 +94,12 @@ def agentic_research_workflow(
 ) -> Dict[str, Any]:
     """Main agentic workflow that autonomously researches a topic.
 
-    This demonstrates a complete agentic workflow using DBOS:
-    1. Agent plans its research approach
-    2. Agent iteratively searches and analyzes
-    3. Agent makes decisions about when to continue
-    4. Agent synthesizes final findings
+    This demonstrates a complete agentic workflow using DBOS.
+    The agent starts with a research topic then:
+    1. Searches Hacker News for information on that topic.
+    2. Iteratively searches related topics, collecting information.
+    3. Makes decisions about when to continue
+    4. Synthesizes findings into a final report.
 
     The entire process is durable and can recover from any failure.
     """
@@ -117,7 +115,7 @@ def agentic_research_workflow(
     current_iteration = 0
     current_query = topic
 
-    # Main agentic research loop - each iteration is a durable workflow
+    # Main agentic research loop - each iteration is a child workflow
     while current_iteration < max_iterations:
         current_iteration += 1
 
@@ -125,7 +123,7 @@ def agentic_research_workflow(
             f"[dim]🔄 Starting iteration {current_iteration}/{max_iterations}[/dim]"
         )
 
-        # Execute one research iteration as a durable workflow
+        # Execute one research iteration as a child workflow
         iteration_result = research_iteration_workflow(
             topic, current_query, current_iteration
         )
@@ -155,19 +153,16 @@ def agentic_research_workflow(
                 )
 
         # Agent decision-making: Evaluate whether to continue research
-        if current_iteration >= 2:
-            console.print(
-                "[dim]🤔 Agent evaluating whether to continue research...[/dim]"
-            )
-            decision = should_continue_step(
-                topic, all_findings, current_iteration, max_iterations
-            )
+        console.print("[dim]🤔 Agent evaluating whether to continue research...[/dim]")
+        decision = should_continue_step(
+            topic, all_findings, current_iteration, max_iterations
+        )
 
-            if not decision.get("should_continue", False):
-                console.print(
-                    f"[dim]✅ Agent decided to conclude research: {decision.get('reason', 'No reason provided')}[/dim]"
-                )
-                break
+        if not decision.get("should_continue", False):
+            console.print(
+                f"[dim]✅ Agent decided to conclude research: {decision.get('reason', 'No reason provided')}[/dim]"
+            )
+            break
 
         # Agent planning: Generate next research question based on findings
         if current_iteration < max_iterations:
@@ -177,7 +172,7 @@ def agentic_research_workflow(
             )
 
             if follow_up_queries:
-                current_query = follow_up_queries[0]  # Take the first suggestion
+                current_query = follow_up_queries[0]
                 console.print(f"[dim]➡️  Next research focus: '{current_query}'[/dim]")
             else:
                 console.print(
