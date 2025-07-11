@@ -69,12 +69,24 @@ func queueWorkflow(ctx context.Context, _ string) (string, error) {
 	return fmt.Sprintf("Successfully completed %d steps", len(results)), nil
 }
 
+/*****************************/
+/**** SCHEDULED WORKFLOWS
+/*****************************/
+var (
+	_ = dbos.WithWorkflow(scheduledWorkflow, dbos.WithSchedule("*/15 * * * * *")) // Every 15 seconds
+)
+
+func scheduledWorkflow(ctx context.Context, input dbos.ScheduledWorkflowInput) (string, error) {
+	fmt.Println("Scheduled workflow scheduled at ", input.ScheduledTime, " started at time ", input.StartTime)
+	return "", nil
+}
+
 func main() {
 	err := dbos.Launch()
 	if err != nil {
 		panic(err)
 	}
-	defer dbos.Destroy()
+	defer dbos.Shutdown()
 
 	http.HandleFunc("/workflow", func(w http.ResponseWriter, r *http.Request) {
 		handle, err := wf(r.Context(), "")
