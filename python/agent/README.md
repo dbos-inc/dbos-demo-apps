@@ -25,7 +25,7 @@ export OPENAI_API_KEY='your-api-key-here'
 
 ## Usage
 
-### Basic Agentic Research (Default: 5 iterations with verbose output)
+### Basic Agentic Research (Default: 8 iterations with verbose output)
 ```bash
 python -m hacker_news_agent "artificial intelligence"
 ```

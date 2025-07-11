@@ -12,23 +12,23 @@ def plan_research_step(topic: str) -> Dict[str, Any]:
     prompt = f"""
     You are a research agent tasked with investigating: {topic}
     
-    Create a research plan that includes:
-    1. Initial search queries to explore the topic
-    2. Key aspects to investigate
-    3. Potential follow-up areas based on what you might find
+    Create a research plan that identifies:
+    1. Key aspects to investigate about this topic
+    2. Success criteria for comprehensive research
+    3. Research approach and methodology
     
     Return JSON with these fields:
-    - "initial_queries": Array of 3-4 search queries to start with
     - "key_aspects": Array of important aspects to investigate
     - "success_criteria": What would make this research complete
-    - "max_iterations": Recommended number of research iterations (2-5)
+    - "research_approach": Brief description of how to approach this topic
+    - "max_iterations": Recommended number of research iterations (3-6)
     
     Example format:
     {{
-        "initial_queries": ["query1", "query2", "query3"],
-        "key_aspects": ["aspect1", "aspect2"],
+        "key_aspects": ["aspect1", "aspect2", "aspect3"],
         "success_criteria": "Understanding of X, Y, and Z",
-        "max_iterations": 3
+        "research_approach": "Start broad then drill down into specific areas",
+        "max_iterations": 4
     }}
     """
 
@@ -55,17 +55,17 @@ def plan_research_step(topic: str) -> Dict[str, Any]:
 
         plan = json.loads(cleaned_response)
         # Ensure required fields exist
-        if "initial_queries" not in plan:
-            plan["initial_queries"] = [topic]
+        if "key_aspects" not in plan:
+            plan["key_aspects"] = ["general analysis"]
         if "max_iterations" not in plan:
-            plan["max_iterations"] = 3
+            plan["max_iterations"] = 4
         return plan
     except json.JSONDecodeError:
         return {
-            "initial_queries": [topic],
             "key_aspects": ["general analysis"],
             "success_criteria": f"Basic understanding of {topic}",
-            "max_iterations": 3,
+            "research_approach": "Iterative exploration of the topic",
+            "max_iterations": 4,
         }
 
 
@@ -189,15 +189,27 @@ def generate_follow_ups_step(
     Current findings:
     {findings_summary}
     
-    Based on these findings, generate 2-4 specific follow-up queries that would:
-    1. Address unanswered questions
-    2. Explore new aspects that emerged
-    3. Deepen understanding of important areas
-    4. Fill gaps in current knowledge
+    Generate 2-4 SHORT KEYWORD-BASED search queries for Hacker News that explore DIVERSE aspects of {topic}.
     
-    Avoid repeating previous queries. Focus on new angles and specific areas.
+    CRITICAL RULES:
+    1. Use SHORT keywords (2-4 words max) - NOT long sentences
+    2. Focus on DIFFERENT aspects of {topic}, not just one narrow area
+    3. Use terms that appear in actual Hacker News story titles
+    4. Avoid repeating previous focus areas
+    5. Think about what tech people actually discuss about {topic}
     
-    Return only a JSON array of query strings: ["query1", "query2", "query3"]
+    For {topic}, consider diverse areas like:
+    - Performance/optimization
+    - Tools/extensions
+    - Comparisons with other technologies
+    - Use cases/applications
+    - Configuration/deployment
+    - Recent developments
+    
+    GOOD examples: ["postgres performance", "database tools", "sql optimization"]
+    BAD examples: ["What are the best practices for PostgreSQL optimization?"]
+    
+    Return only a JSON array of SHORT keyword queries: ["query1", "query2", "query3"]
     """
 
     messages = [

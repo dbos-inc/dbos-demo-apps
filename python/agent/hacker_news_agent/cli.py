@@ -28,9 +28,13 @@ def display_verbose_output(result: Dict[str, Any]) -> None:
             f"  • Max Iterations: {research_plan.get('max_iterations', 'Not specified')}"
         )
 
-        initial_queries = research_plan.get("initial_queries", [])
-        if initial_queries:
-            console.print(f"  • Initial Queries: {', '.join(initial_queries)}")
+        research_approach = research_plan.get("research_approach", "")
+        if research_approach:
+            console.print(f"  • Research Approach: {research_approach}")
+        
+        key_aspects = research_plan.get("key_aspects", [])
+        if key_aspects:
+            console.print(f"  • Key Aspects: {', '.join(key_aspects)}")
 
     # Research History
     research_history = result.get("research_history", [])
@@ -128,8 +132,8 @@ def main():
     parser.add_argument(
         "--max-iterations",
         type=int,
-        default=5,
-        help="Maximum research iterations (default: 5)",
+        default=8,
+        help="Maximum research iterations (default: 8)",
     )
 
     args = parser.parse_args()

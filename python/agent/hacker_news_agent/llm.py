@@ -103,10 +103,19 @@ def generate_queries_step(
     Previous findings:
     {findings_summary}
     
-    Generate 2-4 specific search queries that would help deepen your research on this topic.
-    Focus on areas that haven't been thoroughly explored yet or that emerged as important from previous findings.
+    Generate 2-4 SHORT KEYWORD-BASED search queries for Hacker News that would help deepen your research.
     
-    Return only a JSON array of query strings, like: ["query1", "query2", "query3"]
+    IMPORTANT RULES:
+    1. Use SHORT keywords or phrases (2-4 words max)
+    2. Focus on DIVERSE aspects of the topic, not just one area
+    3. Use terms that would actually appear in Hacker News story titles
+    4. Avoid long sentences or questions
+    5. Think about what developers/tech people would actually discuss
+    
+    GOOD examples: ["redis performance", "database scaling", "sql optimization"]
+    BAD examples: ["How does Redis compare to other databases in terms of performance?"]
+    
+    Return only a JSON array of SHORT keyword queries: ["query1", "query2", "query3"]
     """
 
     messages = [
