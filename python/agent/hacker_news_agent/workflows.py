@@ -9,7 +9,8 @@ from typing import Any, Dict, Optional
 from dbos import DBOS
 from rich.console import Console
 
-from .agent import evaluate_results_step, generate_follow_ups_step, should_continue_step
+from .agent import (evaluate_results_step, generate_follow_ups_step,
+                    should_continue_step)
 from .api import get_comments_step, search_hackernews_step
 from .llm import synthesize_findings_step
 
