@@ -1,25 +1,40 @@
+"""LLM integration for agentic workflows using DBOS.
+
+Demonstrates how to build durable LLM-powered agents with DBOS step functions.
+Each LLM call is wrapped in @DBOS.step() for automatic retries and durability.
+"""
+
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from dbos import DBOS
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Load environment variables from .env file
+# Load environment variables and initialize OpenAI client
 load_dotenv()
-
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+# LLM configuration
+DEFAULT_MODEL = "gpt-4o-mini"
+DEFAULT_TEMPERATURE = 0.1
+DEFAULT_MAX_TOKENS = 2000
 
 
 @DBOS.step()
 def llm_call_step(
     messages: List[Dict[str, str]],
-    model: str = "gpt-4o-mini",
-    temperature: float = 0.1,
-    max_tokens: int = 2000,
+    model: str = DEFAULT_MODEL,
+    temperature: float = DEFAULT_TEMPERATURE,
+    max_tokens: int = DEFAULT_MAX_TOKENS,
 ) -> str:
-    """Core LLM API call with error handling."""
+    """Core LLM API call wrapped as a durable DBOS step.
+    
+    The @DBOS.step() decorator makes this function durable - if it fails,
+    DBOS will automatically retry it. This is essential for building reliable
+    agents that can recover from transient failures.
+    """
     try:
         response = client.chat.completions.create(
             model=model,
@@ -32,117 +47,24 @@ def llm_call_step(
         raise Exception(f"LLM API call failed: {str(e)}")
 
 
-@DBOS.step()
-def analyze_content_step(content: str, context: str = "") -> Dict[str, Any]:
-    """Analyze content using LLM and return structured insights."""
-    prompt = f"""
-    Analyze the following content and extract key insights:
+def _clean_json_response(response: str) -> str:
+    """Clean LLM response to extract valid JSON.
     
-    Context: {context}
-    
-    Content to analyze:
-    {content}
-    
-    Provide analysis in JSON format with these fields:
-    - "key_topics": List of main topics/themes
-    - "sentiment": Overall sentiment (positive/negative/neutral)
-    - "important_points": List of most important points
-    - "trends": Any trends or patterns identified
-    - "relevance_score": Relevance to the research topic (1-10)
-    
-    Return only valid JSON.
+    LLMs often return JSON wrapped in markdown code blocks.
+    This utility function strips that formatting for reliable parsing.
     """
-
-    messages = [
-        {
-            "role": "system",
-            "content": "You are a research analyst. Provide concise, structured analysis in JSON format.",
-        },
-        {"role": "user", "content": prompt},
-    ]
-
-    response = llm_call_step(messages)
-
-    try:
-        # Clean the response
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
-        return json.loads(cleaned_response)
-    except json.JSONDecodeError:
-        return {
-            "key_topics": [],
-            "sentiment": "neutral",
-            "important_points": [],
-            "trends": [],
-            "relevance_score": 5,
-            "error": "Failed to parse LLM response as JSON",
-        }
-
-
-@DBOS.step()
-def generate_queries_step(
-    topic: str, previous_findings: List[Dict[str, Any]], iteration: int = 1
-) -> List[str]:
-    """Generate follow-up search queries based on previous findings."""
-    findings_summary = "\n".join(
-        [f"- {finding.get('summary', 'No summary')}" for finding in previous_findings]
-    )
-
-    prompt = f"""
-    You are a research agent investigating: {topic}
+    cleaned = response.strip()
     
-    This is iteration {iteration} of your research.
+    # Remove markdown code blocks
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]
+    elif cleaned.startswith("```"):
+        cleaned = cleaned[3:]
     
-    Previous findings:
-    {findings_summary}
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]
     
-    Generate 2-4 SHORT KEYWORD-BASED search queries for Hacker News that would help deepen your research.
-    
-    IMPORTANT RULES:
-    1. Use SHORT keywords or phrases (2-4 words max)
-    2. Focus on DIVERSE aspects of the topic, not just one area
-    3. Use terms that would actually appear in Hacker News story titles
-    4. Avoid long sentences or questions
-    5. Think about what developers/tech people would actually discuss
-    
-    GOOD examples: ["redis performance", "database scaling", "sql optimization"]
-    BAD examples: ["How does Redis compare to other databases in terms of performance?"]
-    
-    Return only a JSON array of SHORT keyword queries: ["query1", "query2", "query3"]
-    """
-
-    messages = [
-        {
-            "role": "system",
-            "content": "You are a research agent. Generate focused search queries to deepen research. Return only JSON array.",
-        },
-        {"role": "user", "content": prompt},
-    ]
-
-    response = llm_call_step(messages)
-
-    try:
-        # Clean the response
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
-        queries = json.loads(cleaned_response)
-        return queries if isinstance(queries, list) else [topic]
-    except json.JSONDecodeError:
-        return [f"{topic} analysis", f"{topic} trends"]
+    return cleaned.strip()
 
 
 @DBOS.step()
@@ -263,25 +185,16 @@ def synthesize_findings_step(
     response = llm_call_step(messages, max_tokens=3000)
 
     try:
-        # Clean the response - remove any markdown formatting
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
+        cleaned_response = _clean_json_response(response)
         result = json.loads(cleaned_response)
         return result
     except json.JSONDecodeError as e:
-        # Create a basic synthesis from the findings
+        # Agent resilience: Create fallback synthesis if LLM output can't be parsed
         basic_insights = []
         for finding in all_findings:
             insights = finding.get("insights", [])
             if insights:
-                basic_insights.extend(insights[:2])  # Take first 2 insights
+                basic_insights.extend(insights[:2])
 
         basic_report = f"Research on {topic} revealed {len(all_findings)} key areas of investigation with varying levels of activity and discussion."
         if basic_insights:

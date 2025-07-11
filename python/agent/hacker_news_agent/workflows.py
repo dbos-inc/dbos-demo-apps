@@ -1,4 +1,10 @@
-from typing import Any, Dict, List, Optional
+"""DBOS workflows orchestrating the agentic research process.
+
+This module demonstrates how to build complex agentic workflows using DBOS.
+Each workflow is durable and can recover from failures while maintaining state.
+"""
+
+from typing import Any, Dict, Optional
 
 from dbos import DBOS
 from rich.console import Console
@@ -13,19 +19,24 @@ console = Console()
 
 @DBOS.workflow()
 def research_iteration_workflow(
-    topic: str, query: str, iteration: int, include_comments: bool = True
+    topic: str, query: str, iteration: int
 ) -> Dict[str, Any]:
-    """Execute a single research iteration."""
+    """Execute one research iteration as a durable workflow.
+    
+    This workflow demonstrates how to combine multiple DBOS steps
+    into a cohesive research process. If any step fails, DBOS will
+    automatically retry from the failed step.
+    """
 
     console.print(f"[dim]🔍 Searching for stories: '{query}'[/dim]")
     
-    # Search for stories
+    # Step 1: Search for stories using durable API call
     stories = search_hackernews_step(query, max_results=30)
     
     if stories:
         console.print(f"[dim]📚 Found {len(stories)} stories, analyzing all stories...[/dim]")
         
-        # Log ALL stories we're analyzing
+        # Show what stories the agent is analyzing
         for i, story in enumerate(stories):
             title = story.get("title", "No title")[:80]
             points = story.get("points", 0)
@@ -34,7 +45,7 @@ def research_iteration_workflow(
     else:
         console.print("[dim]❌ No stories found for this query[/dim]")
 
-    # Always get comments from ALL stories
+    # Step 2: Gather comments from all stories for deeper analysis
     comments = []
     if stories:
         console.print(f"[dim]💬 Reading comments from ALL {len(stories)} stories...[/dim]")
@@ -46,6 +57,7 @@ def research_iteration_workflow(
             
             if story_id and num_comments > 0:
                 console.print(f"[dim]  💭 Reading comments from: {title}... ({num_comments} comments)[/dim]")
+                # Each comment fetch is a durable step
                 story_comments = get_comments_step(story_id, max_comments=10)
                 comments.extend(story_comments)
                 console.print(f"[dim]    ✓ Read {len(story_comments)} comments[/dim]")
@@ -54,7 +66,7 @@ def research_iteration_workflow(
             else:
                 console.print(f"[dim]  ❌ No story ID available for: {title}[/dim]")
 
-    # Evaluate results
+    # Step 3: Agent evaluates and extracts insights from gathered data
     console.print(f"[dim]🤔 Analyzing findings from {len(stories)} stories and {len(comments)} comments...[/dim]")
     evaluation = evaluate_results_step(topic, query, stories, comments)
 
@@ -71,60 +83,64 @@ def research_iteration_workflow(
 
 @DBOS.workflow()
 def agentic_research_workflow(
-    topic: str, max_iterations: Optional[int] = None, include_comments: bool = True
+    topic: str, max_iterations: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Main agentic research workflow that autonomously researches a topic."""
+    """Main agentic workflow that autonomously researches a topic.
+    
+    This demonstrates a complete agentic workflow using DBOS:
+    1. Agent plans its research approach
+    2. Agent iteratively searches and analyzes
+    3. Agent makes decisions about when to continue
+    4. Agent synthesizes final findings
+    
+    The entire process is durable and can recover from any failure.
+    """
 
-    # Step 1: Agent creates initial research plan (just for context, not all queries)
+    # Step 1: Agent creates initial research plan
     console.print(f"[dim]🎯 Agent planning research approach for: {topic}[/dim]")
     research_plan = plan_research_step(topic)
 
-    # Use provided max_iterations or default to 8
+    # Initialize agent state
     if max_iterations is None:
         max_iterations = 8
-
-    # Initialize tracking
+    
     all_findings = []
     research_history = []
     current_iteration = 0
-
-    # Step 2: Start with the original topic as first query
     current_query = topic
     
-    # Main iterative research loop
+    # Main agentic research loop - each iteration is a durable workflow
     while current_iteration < max_iterations:
         current_iteration += 1
         
         console.print(f"[dim]🔄 Starting iteration {current_iteration}/{max_iterations}[/dim]")
         
-        # Execute research iteration
+        # Execute one research iteration as a durable workflow
         iteration_result = research_iteration_workflow(
-            topic, current_query, current_iteration, include_comments
+            topic, current_query, current_iteration
         )
         research_history.append(iteration_result)
         all_findings.append(iteration_result["evaluation"])
         
-        # Check if we found anything useful
+        # Agent adaptation: Handle cases where no results are found
         stories_found = iteration_result["stories_found"]
-        relevance_score = iteration_result["evaluation"].get("relevance_score", 0)
         
         if stories_found == 0:
             console.print(f"[dim]⚠️  No stories found for '{current_query}', trying alternative approach...[/dim]")
             
-            # Generate alternative queries when we find nothing
+            # Agent generates alternative queries when hitting dead ends
             alternative_queries = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
             
             if alternative_queries:
-                # Try the first alternative
                 current_query = alternative_queries[0]
                 console.print(f"[dim]🔄 Retrying with: '{current_query}'[/dim]")
                 continue
             else:
                 console.print("[dim]❌ No alternative queries available, continuing...[/dim]")
         
-        # If we have enough iterations, check if we should continue
+        # Agent decision-making: Evaluate whether to continue research
         if current_iteration >= 2:
             console.print("[dim]🤔 Agent evaluating whether to continue research...[/dim]")
             decision = should_continue_step(
@@ -135,7 +151,7 @@ def agentic_research_workflow(
                 console.print(f"[dim]✅ Agent decided to conclude research: {decision.get('reason', 'No reason provided')}[/dim]")
                 break
 
-        # Generate next research question based on current findings
+        # Agent planning: Generate next research question based on findings
         if current_iteration < max_iterations:
             console.print("[dim]💭 Agent generating next research question...[/dim]")
             follow_up_queries = generate_follow_ups_step(
@@ -149,10 +165,11 @@ def agentic_research_workflow(
                 console.print("[dim]💡 No new research directions found, concluding...[/dim]")
                 break
 
-    # Step 3: Agent synthesizes final report
+    # Final step: Agent synthesizes all findings into comprehensive report
     console.print("[dim]📋 Agent synthesizing final research report...[/dim]")
     final_report = synthesize_findings_step(topic, all_findings)
 
+    # Return complete research results
     return {
         "topic": topic,
         "research_plan": research_plan,
