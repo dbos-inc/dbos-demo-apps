@@ -217,7 +217,17 @@ def synthesize_findings_step(
     - Notable opinions or debates in the community
     - INLINE LINKS: When making claims, include clickable links directly in the text using this format: [link text](HN_URL)
     
-    For example: "PostgreSQL's performance improvements [have been significant](https://news.ycombinator.com/item?id=123456) in recent versions."
+    CRITICAL: Use MANY inline links throughout the report. Aim for at least 8-12 links per paragraph.
+    Link to relevant discussions for:
+    - Every specific tool, library, or technology mentioned
+    - Performance claims and benchmarks
+    - Community opinions and debates
+    - Technical implementation details
+    - Companies or projects referenced
+    - Version releases or updates
+    - Problem reports or solutions
+    
+    For example: "PostgreSQL's performance improvements [have been significant](https://news.ycombinator.com/item?id=123456) in recent versions, with [community discussions](https://news.ycombinator.com/item?id=789012) highlighting [specific optimizations](https://news.ycombinator.com/item?id=345678) in [query processing](https://news.ycombinator.com/item?id=901234)."
     
     Use the HN discussion URLs from the available citations. Make the link text descriptive and natural within the sentence flow.
     

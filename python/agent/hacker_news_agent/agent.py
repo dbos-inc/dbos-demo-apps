@@ -319,11 +319,16 @@ def should_continue_step(
     
     Average relevance score: {avg_relevance:.1f}/10
     
-    Decide whether to continue research or conclude. Consider:
-    1. Are the key aspects of the topic well covered?
-    2. Are there significant gaps in understanding?
-    3. Would additional research add meaningful value?
-    4. Is the current information sufficient for a comprehensive report?
+    Decide whether to continue research or conclude. PRIORITIZE THOROUGH EXPLORATION - continue if:
+    1. Current iteration is less than 75% of max_iterations
+    2. Average relevance is above 6.0 and there are likely unexplored aspects
+    3. Recent queries found significant new information
+    4. The research seems to be discovering diverse perspectives on the topic
+    
+    Only stop early if:
+    - Average relevance is below 5.0 for multiple iterations
+    - No new meaningful information in the last 2 iterations
+    - Research appears to be hitting diminishing returns
     
     Return JSON with:
     - "should_continue": boolean
