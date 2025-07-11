@@ -217,19 +217,33 @@ def synthesize_findings_step(
     - Notable opinions or debates in the community
     - INLINE LINKS: When making claims, include clickable links directly in the text using this format: [link text](HN_URL)
     
-    CRITICAL: Use MANY inline links throughout the report. Aim for at least 8-12 links per paragraph.
-    Link to relevant discussions for:
+    CRITICAL CITATION RULES - FOLLOW EXACTLY:
+    
+    1. NEVER replace words with bare URLs like "(https://news.ycombinator.com/item?id=123)"
+    2. ALWAYS write complete sentences with all words present
+    3. Add citations using descriptive link text in brackets: [descriptive text](URL)
+    4. Every sentence must be grammatically complete and readable without the links
+    5. Use MANY inline links throughout the report. Aim for at least 4-5 links per paragraph.
+    
+    CORRECT examples:
+    "PostgreSQL's performance improvements have been significant in recent versions, as discussed in [community forums](https://news.ycombinator.com/item?id=123456), with developers highlighting [specific optimizations](https://news.ycombinator.com/item?id=789012) in query processing."
+    
+    "Redis performance issues can stem from common configuration mistakes, which are well-documented in [troubleshooting guides](https://news.ycombinator.com/item?id=345678) and [community discussions](https://news.ycombinator.com/item?id=901234)."
+    
+    "React's licensing changes have sparked significant community debate, as seen in [detailed discussions](https://news.ycombinator.com/item?id=15316175) about the implications for open-source projects."
+    
+    WRONG examples (NEVER DO THIS):
+    "Community discussions reveal a strong interest in the (https://news.ycombinator.com/item?id=18717168) and the common pitfalls"
+    "One significant topic is the (https://news.ycombinator.com/item?id=15316175), which raises important legal considerations"
+    
+    Always link to relevant discussions for:
     - Every specific tool, library, or technology mentioned
-    - Performance claims and benchmarks
+    - Performance claims and benchmarks  
     - Community opinions and debates
     - Technical implementation details
     - Companies or projects referenced
     - Version releases or updates
     - Problem reports or solutions
-    
-    For example: "PostgreSQL's performance improvements [have been significant](https://news.ycombinator.com/item?id=123456) in recent versions, with [community discussions](https://news.ycombinator.com/item?id=789012) highlighting [specific optimizations](https://news.ycombinator.com/item?id=345678) in [query processing](https://news.ycombinator.com/item?id=901234)."
-    
-    Use the HN discussion URLs from the available citations. Make the link text descriptive and natural within the sentence flow.
     
     Return a JSON object with this exact structure:
     {{
