@@ -1,6 +1,7 @@
 # Hacker News Research Agent
 
 An autonomous research agent for searching Hacker News built with DBOS.
+You can find a detailed walkthrough [here](https://docs.dbos.dev/python/examples/hacker-news-agent).
 
 ## Setup
 
