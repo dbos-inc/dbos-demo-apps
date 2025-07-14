@@ -46,7 +46,7 @@ def call_llm(
         raise Exception(f"LLM API call failed: {str(e)}")
 
 
-def _clean_json_response(response: str) -> str:
+def clean_json_response(response: str) -> str:
     """Clean LLM response to extract valid JSON.
 
     LLMs often return JSON wrapped in markdown code blocks.
@@ -188,7 +188,7 @@ def synthesize_findings_step(
     response = call_llm(messages, max_tokens=3000)
 
     try:
-        cleaned_response = _clean_json_response(response)
+        cleaned_response = clean_json_response(response)
         result = json.loads(cleaned_response)
         return result
     except json.JSONDecodeError as e:

@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from dbos import DBOS
 
-from .llm import call_llm
+from .llm import call_llm, clean_json_response
 
 
 @DBOS.step()
@@ -120,16 +120,7 @@ def evaluate_results_step(
     response = call_llm(messages, max_tokens=2000)
 
     try:
-        # Clean the response
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
+        cleaned_response = clean_json_response(response)
         evaluation = json.loads(cleaned_response)
         # Add metadata and story references
         evaluation["query"] = query
@@ -209,16 +200,7 @@ def generate_follow_ups_step(
     response = call_llm(messages)
 
     try:
-        # Clean the response
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
+        cleaned_response = clean_json_response(response)
         queries = json.loads(cleaned_response)
         return queries if isinstance(queries, list) else []
     except json.JSONDecodeError:
@@ -289,16 +271,7 @@ def should_continue_step(
     response = call_llm(messages)
 
     try:
-        # Clean the response
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
+        cleaned_response = clean_json_response(response)
         decision = json.loads(cleaned_response)
         return decision
     except json.JSONDecodeError:
