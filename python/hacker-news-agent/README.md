@@ -4,9 +4,10 @@ An autonomous research agent for searching Hacker News built with DBOS.
 
 ## Setup
 
-1. Install dependencies:
+1. Install dependencies and activate your virtual environment:
 ```bash
 uv sync
+source .venv/bin/activate
 ```
 
 2. Set your OpenAI API key:
@@ -22,7 +23,7 @@ dbos postgres start
 ## Usage
 
 ```bash
-uv run python -m hacker_news_agent "artificial intelligence"
+python -m hacker_news_agent "artificial intelligence"
 ```
 
 If the agent fails at any point during its research, you can restart it using its workflow ID to recover it from where it left off:
