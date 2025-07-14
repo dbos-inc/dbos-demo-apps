@@ -24,7 +24,7 @@ def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]
     This demonstrates a complete agentic workflow using DBOS.
     The agent starts with a research topic then:
     1. Searches Hacker News for information on that topic.
-    2. Iteratively searches related topics, collecting information.
+    2. Iteratively searches related queries, collecting information.
     3. Makes decisions about when to continue
     4. Synthesizes findings into a final report.
 
@@ -167,7 +167,7 @@ def research_query(topic: str, query: str, iteration: int) -> Dict[str, Any]:
             else:
                 console.print(f"[dim]  ❌ No story ID available for: {title}[/dim]")
 
-    # Step 3: Evaluates gathered data and returns findings
+    # Step 3: Evaluate gathered data and return findings
     console.print(
         f"[dim]🤔 Analyzing findings from {len(stories)} stories and {len(comments)} comments...[/dim]"
     )
