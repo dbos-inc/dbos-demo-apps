@@ -180,7 +180,7 @@ def research_query(topic: str, query: str, iteration: int) -> Dict[str, Any]:
             else:
                 console.print(f"[dim]  ❌ No story ID available for: {title}[/dim]")
 
-    # Step 3: Agent evaluates gathered data and returns its findings
+    # Step 3: Evaluates gathered data and returns findings
     console.print(
         f"[dim]🤔 Analyzing findings from {len(stories)} stories and {len(comments)} comments...[/dim]"
     )
