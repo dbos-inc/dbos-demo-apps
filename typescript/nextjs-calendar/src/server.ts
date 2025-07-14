@@ -48,13 +48,13 @@ const handle = app.getRequestHandler();
 
 
 async function main() {
-  const [cfg, rtcfg] = parseConfigFile();
+  const [cfg] = parseConfigFile();
 
   DBOS.logger.info('Loading server files...');
   const files = await loadAllDBOSServerFiles();
   DBOS.logger.info('  ...loaded.')
 
-  DBOS.setConfig(cfg, rtcfg);
+  DBOS.setConfig(cfg);
   DBOS.logger.info('Launching...');
   await DBOS.launch();
   DBOS.logger.info('  ...launched.');
@@ -64,7 +64,6 @@ async function main() {
   const krouter = new Router();
   dkoa.registerWithApp(kapp, krouter);
 
-  DBOS.logger.info(`Configuration given: ${JSON.stringify(rtcfg)}`);
   DBOS.logger.info(`Loaded: ${JSON.stringify(files)} `);
 
   DBOS.logger.info(`Doing Next App Prepare...`);
