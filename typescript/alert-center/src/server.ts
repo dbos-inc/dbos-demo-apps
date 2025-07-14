@@ -12,8 +12,6 @@ async function main() {
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
 
-  DBOS.registerLifecycleCallback(dkoa);
-
   await setUpKafka();
 
   await DBOS.launch();

@@ -1,35 +1,50 @@
 import { RespondUtilities, AlertWithMessage, AlertStatus } from "./utilities";
 import knex, { Knex } from "knex";
 import path from "path";
-import { PoolConfig } from "pg";
 
 import { DBOS, DBOSConfig } from "@dbos-inc/dbos-sdk";
 
+const config = {
+  client: 'pg',
+  connection: {
+    host: process.env.PGHOST || 'localhost',
+    port: parseInt(process.env.PGPORT || '5432'),
+    database: process.env.PGDATABASE || 'alert_center_test',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'dbos',
+  },
+};
+
+const sysDbName = 'alert_center_test_dbos_sys';
+const appDbName = config.connection.database;
+
 export async function resetDatabase() {
   const cwd = process.cwd();
-  const poolConfig = DBOS.dbosConfig?.poolConfig as PoolConfig;
-  const connectionString = new URL(poolConfig.connectionString!);
-  connectionString.pathname = '/postgres';
-  const knexConfig = {
-    client: "pg",
-    connection: connectionString.toString(),
-    migrations: {
-      directory: path.join(cwd, "migrations"),
-      tableName: "knex_migrations",
+
+  const adminKnexConfig = {
+    client: 'pg',
+    connection: {
+      ...config.connection,
+      database: 'postgres',
     },
   };
-  const appDbName = DBOS.dbosConfig?.poolConfig?.database;
-  let knexDB: Knex = knex(knexConfig);
+
+  const knexConfig = {
+    ...config,
+    migrations: {
+      directory: path.join(cwd, 'migrations'),
+      tableName: 'knex_migrations',
+    },
+  }
+  let knexDB: Knex = knex(adminKnexConfig);
   try {
-    await knexDB.raw(
-      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`,
-    );
+    await knexDB.raw(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`);
     await knexDB.raw(`DROP DATABASE IF EXISTS ${appDbName}`);
+    await knexDB.raw(`DROP DATABASE IF EXISTS ${sysDbName}`);
     await knexDB.raw(`CREATE DATABASE ${appDbName}`);
   } finally {
     await knexDB.destroy();
   }
-  knexConfig.connection = poolConfig.connectionString!.toString();
   knexDB = knex(knexConfig);
   try {
     await knexDB.migrate.latest();
@@ -46,7 +61,6 @@ describe("AlertCenter utilities", () => {
     };
     DBOS.setConfig(dbosTestConfig);
     await resetDatabase();
-    await DBOS.dropSystemDB();
     await DBOS.launch();
   }, 10000);
 
