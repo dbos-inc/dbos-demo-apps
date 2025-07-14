@@ -121,11 +121,15 @@ def main():
         # Resume if a workflow ID is provided, else generate a new one
         if args.workflow_id:
             workflow_id = args.workflow_id
-            console.print(f"[bold yellow]📋 Resuming workflow ID: {workflow_id}[/bold yellow]")
+            console.print(
+                f"[bold yellow]📋 Resuming workflow ID: {workflow_id}[/bold yellow]"
+            )
         else:
             workflow_id = str(uuid.uuid4())
             console.print(f"[bold yellow]📋 Workflow ID: {workflow_id}[/bold yellow]")
-            console.print(f"[dim]Use --workflow-id {workflow_id} to resume if interrupted[/dim]\n")
+            console.print(
+                f"[dim]Use --workflow-id {workflow_id} to resume if interrupted[/dim]\n"
+            )
 
         with SetWorkflowID(workflow_id):
             result = agentic_research_workflow(args.topic, args.max_iterations)

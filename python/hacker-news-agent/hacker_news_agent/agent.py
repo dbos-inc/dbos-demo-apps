@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from dbos import DBOS
 
-from .llm import llm_call_step
+from .llm import call_llm
 
 
 @DBOS.step()
@@ -24,7 +24,8 @@ def evaluate_results_step(
     stories_text = ""
     top_stories = []
 
-    for i, story in enumerate(stories[:10]):  # Limit to top 10 stories
+    # Evaluate only the top 10 most relevant (per HN search) stories
+    for i, story in enumerate(stories[:10]):
         title = story.get("title", "No title")
         url = story.get("url", "No URL")
         hn_url = f"https://news.ycombinator.com/item?id={story.get('objectID', '')}"
@@ -116,7 +117,7 @@ def evaluate_results_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = llm_call_step(messages, max_tokens=2000)
+    response = call_llm(messages, max_tokens=2000)
 
     try:
         # Clean the response
@@ -205,7 +206,7 @@ def generate_follow_ups_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = llm_call_step(messages)
+    response = call_llm(messages)
 
     try:
         # Clean the response
@@ -285,7 +286,7 @@ def should_continue_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = llm_call_step(messages)
+    response = call_llm(messages)
 
     try:
         # Clean the response

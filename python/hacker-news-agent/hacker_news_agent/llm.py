@@ -22,8 +22,7 @@ DEFAULT_TEMPERATURE = 0.1
 DEFAULT_MAX_TOKENS = 2000
 
 
-@DBOS.step()
-def llm_call_step(
+def call_llm(
     messages: List[Dict[str, str]],
     model: str = DEFAULT_MODEL,
     temperature: float = DEFAULT_TEMPERATURE,
@@ -186,7 +185,7 @@ def synthesize_findings_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = llm_call_step(messages, max_tokens=3000)
+    response = call_llm(messages, max_tokens=3000)
 
     try:
         cleaned_response = _clean_json_response(response)
