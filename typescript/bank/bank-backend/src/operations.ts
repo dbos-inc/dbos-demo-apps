@@ -1,6 +1,6 @@
 // A hack for bigint serializing to/from JSON.
 import "json-bigint-patch";
-export { dkoa } from "./koaserver";
+export { dkoa } from "./resources";
 
 export { MockAuth } from './mockoauth';
 export { BankEndpoints } from './router';

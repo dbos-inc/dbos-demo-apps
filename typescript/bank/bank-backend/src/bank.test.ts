@@ -5,6 +5,8 @@ import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { convertTransactionHistory } from "./router";
 import Koa from 'koa';
 import Router from "@koa/router";
+import { PrismaDataSource } from "@dbos-inc/prisma-datasource";
+import { prismaClient } from "./resources";
 
 describe("bank-tests", () => {
   const app = new Koa();
@@ -13,6 +15,7 @@ describe("bank-tests", () => {
   beforeAll(async () => {
     const [dbosConfig] = parseConfigFile({configfile: "dbos-test-config.yaml"});
     DBOS.setConfig(dbosConfig);
+    await PrismaDataSource.initializeDBOSSchema(prismaClient);
 
     await DBOS.launch();
     dkoa.registerWithApp(app, router);

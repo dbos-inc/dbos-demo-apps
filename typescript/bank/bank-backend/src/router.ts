@@ -3,7 +3,7 @@ import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
 import { DBOS, DBOSResponseError } from "@dbos-inc/dbos-sdk";
 import { bankAuthMiddleware, koaLogger, bankJwt } from "./middleware";
 import { DBOSKoa } from "@dbos-inc/koa-serve";
-import { dkoa } from "./koaserver";
+import { dkoa } from "./resources";
 
 const bankname = `DBOS Bank - ${process.env.BANKNAME}`;
 
