@@ -6,8 +6,6 @@ import { dkoa, prisma } from "../resources";
 
 import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
 
-import { PrismaClient } from "@prisma/client";
-
 @DBOS.defaultRequiredRole(["appUser"])
 @dkoa.authentication(bankAuthMiddleware)
 @dkoa.koaMiddleware(koaLogger, bankJwt)

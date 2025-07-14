@@ -1,7 +1,7 @@
 import {
   DBOS,
 } from "@dbos-inc/dbos-sdk";
-import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
+import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";
 import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
