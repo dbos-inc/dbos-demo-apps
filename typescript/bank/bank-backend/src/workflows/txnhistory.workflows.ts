@@ -188,7 +188,7 @@ export class BankTransactionHistory {
         toAccountId: data.toAccountId,
         amount: data.amount,
         fromLocation: "local",
-        toLocation: REMOTEDB_PREFIX + DBOS.getConfig<string>("bankname") + ":" + DBOS.getConfig<string>("bankport"),
+        toLocation: REMOTEDB_PREFIX + process.env.BANKNAME + ":" + process.env.BANKPORT,
       };
 
       const remoteRes: boolean = await BankTransactionHistory.remoteTransferComm(remoteUrl, thReq as TransactionHistory, DBOS.workflowID + '-withdraw');
@@ -221,7 +221,7 @@ export class BankTransactionHistory {
         toAccountId: data.toAccountId,
         amount: data.amount,
         toLocation: "local",
-        fromLocation: REMOTEDB_PREFIX + DBOS.getConfig<string>("bankname") + ":" + DBOS.getConfig<string>("bankport"),
+        fromLocation: REMOTEDB_PREFIX + process.env.BANKNAME + ":" + process.env.BANKPORT,
       };
       const remoteRes: boolean = await BankTransactionHistory.remoteTransferComm(remoteUrl, thReq as TransactionHistory, DBOS.workflowID + '-deposit');
       if (!remoteRes) {

@@ -8,7 +8,6 @@ const PORT = parseInt(process.env.NODE_PORT ?? '3000');
 async function main() {
   DBOS.setConfig(parseConfigFile()[0]);
 
-  DBOS.registerLifecycleCallback(dkoa);
   await DBOS.launch();
 
   const app = new Koa();

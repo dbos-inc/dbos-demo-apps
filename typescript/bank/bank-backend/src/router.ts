@@ -5,6 +5,8 @@ import { bankAuthMiddleware, koaLogger, bankJwt } from "./middleware";
 import { DBOSKoa } from "@dbos-inc/koa-serve";
 import { dkoa } from "./koaserver";
 
+const bankname = `DBOS Bank - ${process.env.BANKNAME}`;
+
 @DBOS.defaultRequiredRole(["appUser"])
 @dkoa.authentication(bankAuthMiddleware)
 @dkoa.koaMiddleware(koaLogger, bankJwt)
@@ -13,7 +15,7 @@ export class BankEndpoints {
   // eslint-disable-next-line @typescript-eslint/require-await
   @dkoa.getApi("/api/greeting")
   static async greeting() {
-    return Promise.resolve("Hello from " + DBOS.getConfig<string>("bankname"));
+    return Promise.resolve("Hello from " + bankname);
   }
 
   // Deposit.

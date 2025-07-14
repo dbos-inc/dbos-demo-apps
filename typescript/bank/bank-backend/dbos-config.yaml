@@ -11,9 +11,3 @@ database:
 runtimeConfig:
   start:
     - npm run start
-#telemetry:
-#    OTLPExporter:
-#        tracesEndpoint: http://localhost:4318/v1/traces
-application:
-  bankname: "DBOS Bank - ${CURRENT_BANK}"
-  bankschema: public

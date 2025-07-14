@@ -233,7 +233,7 @@ const thReq = {
   toAccountId: data.toAccountId,
   amount: data.amount,
   toLocation: "local",
-  fromLocation: REMOTEDB_PREFIX + DBOS.getConfig<string>("bankname") + ":" + DBOS.getConfig<string>("bankport"),
+  fromLocation: REMOTEDB_PREFIX + process.env.BANKNAME + ":" + process.env.BANKPORT,
 };
 
 const remoteRes: boolean = await BankTransactionHistory

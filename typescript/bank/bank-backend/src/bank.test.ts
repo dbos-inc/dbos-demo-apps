@@ -11,15 +11,11 @@ describe("bank-tests", () => {
   const router = new Router();
 
   beforeAll(async () => {
+    const [dbosConfig] = parseConfigFile({configfile: "dbos-test-config.yaml"});
+    DBOS.setConfig(dbosConfig);
+
     await DBOS.launch();
     dkoa.registerWithApp(app, router);
-  });
-
-  beforeAll(async () => {
-    const [dbosConfig, rtConfig] = parseConfigFile({configfile: "dbos-test-config.yaml"});
-    DBOS.setConfig(dbosConfig, rtConfig);
-
-    await DBOS.launch();
     await DBOS.queryUserDB(`delete from "AccountInfo" where "ownerName"=$1;`, ["alice"]);
   });
 
