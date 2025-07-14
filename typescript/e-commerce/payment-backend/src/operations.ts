@@ -31,6 +31,11 @@ export interface ItemTable {
 
 import { KnexDataSource } from '@dbos-inc/knex-datasource';
 
+let unittest = false;
+export function setUnitTest() {
+  unittest = true;
+}
+
 const config = {
   client: 'pg',
   connection: {
@@ -54,7 +59,7 @@ function getPaymentStatus(status?: string): "pending" | "paid" | "cancelled" {
 }
 
 function getRedirectUrl(session_id: string): string {
-  const frontend_host = DBOS.getConfig<string>("frontend_host") || process.env['frontend_host'];
+  const frontend_host = process.env['frontend_host'];
   if (!frontend_host) { throw new DBOSResponseError("frontend_host not configured", 500); }
 
   const url = new URL(frontend_host);
@@ -229,7 +234,7 @@ export class PlaidPayments {
     client_reference_id: string | undefined
   ): Promise<void>
   {
-    if (DBOS.getConfig('unittest', false) && webhook === "http://fakehost/webhook") {
+    if (unittest && webhook === "http://fakehost/webhook") {
       return; // In testing, matching the bogus testing URL
     }
     const body = { session_id, payment_status: getPaymentStatus(status), client_reference_id };

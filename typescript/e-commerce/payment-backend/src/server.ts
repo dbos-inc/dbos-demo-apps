@@ -8,8 +8,6 @@ const PORT = parseInt(process.env.PAYMENT_PORT ?? '3000');
 async function main() {
   DBOS.setConfig(parseConfigFile()[0]);
 
-  DBOS.registerLifecycleCallback(dkoa);
-
   await DBOS.launch();
   DBOS.logRegisteredEndpoints();
 
