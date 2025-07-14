@@ -59,7 +59,7 @@ function getPaymentStatus(status?: string): "pending" | "paid" | "cancelled" {
 }
 
 function getRedirectUrl(session_id: string): string {
-  const frontend_host = process.env['frontend_host'];
+  const frontend_host = process.env.FRONTEND_HOST;
   if (!frontend_host) { throw new DBOSResponseError("frontend_host not configured", 500); }
 
   const url = new URL(frontend_host);
