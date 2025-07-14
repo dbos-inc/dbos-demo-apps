@@ -71,14 +71,14 @@ export const checkout_url_topic = "payment_checkout_url";
 export const checkout_complete_topic = "payment_checkout_complete";
 
 function getHostConfig() {
-  const paymentHost = DBOS.getConfig<string>("payment_host");
+  const paymentHost = process.env.PAYMENT_HOST || 'http://localhost:8086';
   if (!paymentHost) {
-    DBOS.logger.warn("Missing payment_host configuration");
+    DBOS.logger.warn("Missing PAYMENT_HOST env var");
   }
 
-  const localHost = DBOS.getConfig<string>("local_host");
+  const localHost = process.env.LOCAL_HOST || 'http://localhost:8082';
   if (!localHost) {
-    DBOS.logger.warn("Missing local_host configuration");
+    DBOS.logger.warn("Missing LOCAL_HOST env var");
   }
 
   if (!paymentHost || !localHost) {

@@ -1,17 +1,13 @@
 import { Knex } from 'knex';
-import { parseConfigFile } from '@dbos-inc/dbos-sdk'
-import { DBOSConfig } from '@dbos-inc/dbos-sdk';
-
-const [dbosConfig, ]: [DBOSConfig, unknown] = parseConfigFile();
 
 const config: Knex.Config = {
   client: 'pg',
   connection: {
-    host: dbosConfig.poolConfig!.host,
-    user: dbosConfig.poolConfig!.user,
-    password: dbosConfig.poolConfig!.password,
-    database: dbosConfig.poolConfig!.database,
-    ssl: dbosConfig.poolConfig!.ssl,
+    host: process.env.PGHOST || 'localhost',
+    port: parseInt(process.env.PGPORT || '5432'),
+    database: process.env.PGDATABASE || 'shop',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'dbos',
   },
   migrations: {
     directory: './migrations'
