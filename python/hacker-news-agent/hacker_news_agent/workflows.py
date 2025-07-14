@@ -44,7 +44,7 @@ def agentic_research_workflow(
     current_iteration = 0
     current_query = topic
 
-    # Main agentic research loop - each iteration is a child workflow
+    # Main agentic research loop
     while current_iteration < max_iterations:
         current_iteration += 1
 
@@ -52,7 +52,7 @@ def agentic_research_workflow(
             f"[dim]🔄 Starting iteration {current_iteration}/{max_iterations}[/dim]"
         )
 
-        # Execute one research iteration as a child workflow
+        # Research the next query in a child workflow
         iteration_result = research_query(topic, current_query, current_iteration)
         research_history.append(iteration_result)
         all_findings.append(iteration_result["evaluation"])
@@ -171,7 +171,6 @@ def research_query(topic: str, query: str, iteration: int) -> Dict[str, Any]:
                 console.print(
                     f"[dim]  💭 Reading comments from: {title}... ({num_comments} comments)[/dim]"
                 )
-                # Each comment fetch is a durable step
                 story_comments = get_comments_step(story_id, max_comments=10)
                 comments.extend(story_comments)
                 console.print(f"[dim]    ✓ Read {len(story_comments)} comments[/dim]")
