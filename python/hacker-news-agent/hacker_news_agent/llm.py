@@ -192,18 +192,7 @@ def synthesize_findings_step(
         result = json.loads(cleaned_response)
         return result
     except json.JSONDecodeError as e:
-        # Agent resilience: Create fallback synthesis if LLM output can't be parsed
-        basic_insights = []
-        for finding in all_findings:
-            insights = finding.get("insights", [])
-            if insights:
-                basic_insights.extend(insights[:2])
-
-        basic_report = f"Research on {topic} revealed {len(all_findings)} key areas of investigation with varying levels of activity and discussion."
-        if basic_insights:
-            basic_report += f" Key insights include: {'; '.join(basic_insights[:3])}."
-
         return {
-            "report": basic_report,
+            "report": "JSON parsing error, report could not be generated.",
             "error": f"JSON parsing failed, created basic synthesis. Error: {str(e)}",
         }
