@@ -1,7 +1,6 @@
 import { ShopUtilities, OrderStatus, PRODUCT_ID } from './utilities';
 import knex, { Knex } from 'knex';
 import path from 'path';
-import { PoolConfig } from 'pg';
 
 import { DBOS, DBOSConfig } from '@dbos-inc/dbos-sdk';
 
@@ -17,23 +16,27 @@ const config = {
 };
 
 const sysDbName = 'widget_store_test_dbos_sys';
+const appDbName = config.connection.database;
 
 export async function resetDatabase() {
   const cwd = process.cwd();
 
-  const knexConfig = {
+  const adminKnexConfig = {
     client: 'pg',
     connection: {
       ...config.connection,
       database: 'postgres',
     },
+  };
+
+  const knexConfig = {
+    ...config,
     migrations: {
       directory: path.join(cwd, 'migrations'),
       tableName: 'knex_migrations',
     },
-  };
-  const appDbName = DBOS.dbosConfig?.poolConfig?.database;
-  let knexDB: Knex = knex(knexConfig);
+  }
+  let knexDB: Knex = knex(adminKnexConfig);
   try {
     await knexDB.raw(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`);
     await knexDB.raw(`DROP DATABASE IF EXISTS ${appDbName}`);
