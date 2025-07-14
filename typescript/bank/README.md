@@ -83,26 +83,32 @@ Next, execute database migrations and launch the first bank.  The first command 
 
 ```bash
 export PGPASSWORD=<database password>
+export PGUSER=bank_a
+export PGDATABASE=bank_a
 export CURRENT_BANK=bank_a
+export BANK_PORT=8081
 
 # Create tables on the bank_a database.
 npx dbos-sdk migrate
 
-# Start the bank server on port 8081
-npx dbos-sdk start -p 8081
+# Start the bank A server on port 8081
+npx dbos-sdk start
 ```
 
 Then, in a second terminal window, launch the second bank server, using different values for the environment variables:
 
 ```bash
 export PGPASSWORD=<database password>
+export PGUSER=bank_b
+export PGDATABASE=bank_b
 export CURRENT_BANK=bank_b
+export BANK_PORT=8083
 
 # Create tables on the bank_b database
 npx dbos-sdk migrate
 
 # Start a second bank server on port 8083
-npx dbos-sdk start -p 8083
+npx dbos-sdk start
 ```
 
 ### Starting The Frontend

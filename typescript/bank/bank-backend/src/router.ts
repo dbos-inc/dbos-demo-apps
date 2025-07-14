@@ -5,7 +5,7 @@ import { bankAuthMiddleware, koaLogger, bankJwt } from "./middleware";
 import { DBOSKoa } from "@dbos-inc/koa-serve";
 import { dkoa } from "./resources";
 
-const bankname = `DBOS Bank - ${process.env.BANKNAME}`;
+const bankname = `DBOS Bank - ${process.env.CURRENT_BANK}`;
 
 @DBOS.defaultRequiredRole(["appUser"])
 @dkoa.authentication(bankAuthMiddleware)

@@ -3,7 +3,7 @@ import { dkoa } from './operations';
 import Koa from 'koa';
 import Router from '@koa/router';
 
-const PORT = parseInt(process.env.NODE_PORT ?? '3000');
+const PORT = parseInt(process.env.BANK_PORT ?? '3000');
 
 async function main() {
   DBOS.setConfig(parseConfigFile()[0]);
