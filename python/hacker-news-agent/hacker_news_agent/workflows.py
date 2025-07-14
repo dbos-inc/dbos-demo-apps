@@ -77,9 +77,7 @@ def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]
             topic, all_findings, current_iteration, max_iterations
         )
         if not should_continue:
-            console.print(
-                f"[dim]✅ Agent decided to conclude research[/dim]"
-            )
+            console.print(f"[dim]✅ Agent decided to conclude research[/dim]")
             break
 
         # Generate next research question based on findings
