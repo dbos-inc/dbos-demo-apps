@@ -1,35 +1,50 @@
 import { AppService, GreetingRecord } from "../src/app.service";
-import { PoolConfig } from "pg";
 import path from "path";
 import knex, { Knex } from "knex";
 
 import { DBOS, DBOSConfig } from "@dbos-inc/dbos-sdk";
 
+const config = {
+  client: 'pg',
+  connection: {
+    host: process.env.PGHOST || 'localhost',
+    port: parseInt(process.env.PGPORT || '5432'),
+    database: process.env.PGDATABASE || 'nestjs_starter_test',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'dbos',
+  },
+};
+
+const sysDbName = 'nestjs_starter_test_dbos_sys';
+const appDbName = config.connection.database;
+
 export async function resetDatabase() {
   const cwd = process.cwd();
-  const poolConfig = DBOS.dbosConfig?.poolConfig as PoolConfig;
-  const connectionString = new URL(poolConfig.connectionString!);
-  connectionString.pathname = '/postgres';
-  const knexConfig = {
-    client: "pg",
-    connection: connectionString.toString(),
-    migrations: {
-      directory: path.join(cwd, "migrations"),
-      tableName: "knex_migrations",
+
+  const adminKnexConfig = {
+    client: 'pg',
+    connection: {
+      ...config.connection,
+      database: 'postgres',
     },
   };
-  const appDbName = DBOS.dbosConfig?.poolConfig?.database;
-  let knexDB: Knex = knex(knexConfig);
+
+  const knexConfig = {
+    ...config,
+    migrations: {
+      directory: path.join(cwd, 'migrations'),
+      tableName: 'knex_migrations',
+    },
+  }
+  let knexDB: Knex = knex(adminKnexConfig);
   try {
-    await knexDB.raw(
-      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`,
-    );
+    await knexDB.raw(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`);
     await knexDB.raw(`DROP DATABASE IF EXISTS ${appDbName}`);
+    await knexDB.raw(`DROP DATABASE IF EXISTS ${sysDbName}`);
     await knexDB.raw(`CREATE DATABASE ${appDbName}`);
   } finally {
     await knexDB.destroy();
   }
-  knexConfig.connection = poolConfig.connectionString!.toString();
   knexDB = knex(knexConfig);
   try {
     await knexDB.migrate.latest();
@@ -44,11 +59,10 @@ describe("AppService", () => {
   beforeEach(async () => {
     const dbosTestConfig: DBOSConfig = {
       databaseUrl: `postgres://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || "dbos"}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'nestjs_starter'}`,
-      sysDbName: 'nestjs_starter_dbos_sys',
+      sysDbName: 'nestjs_starter_test_dbos_sys',
     };
     DBOS.setConfig(dbosTestConfig);
     await resetDatabase();
-    await DBOS.dropSystemDB();
     await DBOS.shutdown();
 
     service = new AppService("dbosAppService");
