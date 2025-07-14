@@ -237,7 +237,6 @@ def should_continue_step(
     Return JSON with:
     - "should_continue": boolean
     - "reason": string explaining the decision
-    - "confidence": number 1-10 in the decision
     """
 
     messages = [
@@ -258,5 +257,4 @@ def should_continue_step(
         return {
             "should_continue": current_iteration < max_iterations and avg_relevance < 8,
             "reason": "Default decision based on iteration count and relevance",
-            "confidence": 5,
         }
