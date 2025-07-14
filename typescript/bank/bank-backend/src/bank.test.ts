@@ -19,7 +19,7 @@ describe("bank-tests", () => {
 
     await DBOS.launch();
     dkoa.registerWithApp(app, router);
-    await DBOS.queryUserDB(`delete from "AccountInfo" where "ownerName"=$1;`, ["alice"]);
+    await prismaClient.$executeRawUnsafe(`delete from "AccountInfo" where "ownerName"=$1;`, "alice");
   });
 
   afterAll(async () => {
@@ -40,7 +40,7 @@ describe("bank-tests", () => {
       });
     });
 
-    const res = await DBOS.queryUserDB(`select * from "AccountInfo" where "ownerName" = $1;`, ["alice"]) as AccountInfo[];
+    const res = (await prismaClient.$queryRawUnsafe(`select * from "AccountInfo" where "ownerName" = $1;`, "alice")) as AccountInfo[];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(res[0].ownerName).toBe("alice");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
