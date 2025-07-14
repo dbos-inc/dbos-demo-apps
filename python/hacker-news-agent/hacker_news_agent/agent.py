@@ -91,15 +91,8 @@ def evaluate_results_step(
     - Specific use cases, implementation details, or real-world examples
     
     Return JSON with:
-    - "detailed_insights": Array of specific, technical insights with context
-    - "technical_findings": Array of concrete technical details or metrics
-    - "tools_mentioned": Array of specific tools/libraries/frameworks discussed
-    - "interesting_quotes": Array of notable quotes or opinions from comments
-    - "use_cases": Array of specific use cases or applications mentioned
-    - "performance_data": Array of any performance metrics or benchmarks
+    - "insights": Array of specific, technical insights with context
     - "relevance_score": Number 1-10
-    - "unanswered_questions": Array of questions needing more research
-    - "follow_up_suggestions": Array of specific research directions
     - "summary": Brief summary of findings
     - "key_points": Array of most important points discovered
     """
@@ -117,23 +110,16 @@ def evaluate_results_step(
     try:
         cleaned_response = clean_json_response(response)
         evaluation = json.loads(cleaned_response)
-        # Add metadata and story references
         evaluation["query"] = query
-        evaluation["stories_count"] = len(stories)
-        evaluation["comments_count"] = len(comments) if comments else 0
         evaluation["top_stories"] = top_stories
         return evaluation
     except json.JSONDecodeError:
         return {
             "insights": [f"Found {len(stories)} stories about {topic}"],
             "relevance_score": 7,
-            "unanswered_questions": [],
-            "follow_up_suggestions": [],
             "summary": f"Basic search results for {query}",
             "key_points": [],
             "query": query,
-            "stories_count": len(stories),
-            "comments_count": len(comments) if comments else 0,
         }
 
 

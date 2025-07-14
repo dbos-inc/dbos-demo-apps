@@ -79,7 +79,7 @@ def synthesize_findings_step(
         findings_text += f"Query: {finding.get('query', 'Unknown')}\n"
         findings_text += f"Summary: {finding.get('summary', 'No summary')}\n"
         findings_text += f"Key Points: {finding.get('key_points', [])}\n"
-        findings_text += f"Insights: {finding.get('insights', 'No insights')}\n"
+        findings_text += f"Insights: {finding.get('insights', [])}\n"
 
         # Extract story links and details for reference
         if finding.get("top_stories"):

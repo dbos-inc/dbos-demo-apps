@@ -32,10 +32,6 @@ def format_output(result: Dict[str, Any]) -> None:
             )
             console.print(f"    Relevance: {evaluation.get('relevance_score', 0)}/10")
 
-            insights = evaluation.get("insights", [])
-            if insights:
-                console.print(f"    Key Insights: {', '.join(insights[:2])}")
-
     # Display final research results
     topic = result.get("topic", "Unknown")
     summary = result.get("summary", {})
