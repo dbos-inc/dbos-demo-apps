@@ -38,7 +38,7 @@ Both shop and payment use [knex.js](https://knexjs.org/) as a database access li
 Each of the three parts of the demo must run in its own terminal window.
 For each setup, each package has a single npm command that is used to build and launch the package.
 
-* For payment-backend and shop-backend, run `npm run build` and `SHOP_PORT=8082 PAYMENT_PORT=8086 npx dbos start` to build and launch the app, respectively.
+* For payment-backend and shop-backend, run `npm run build` and `SHOP_PORT=8082 PAYMENT_PORT=8086 PAYMENT_HOST=http://localhost:8086 SHOP_HOST=http://localhost:8082 npx dbos start` to build and launch the app, respectively.
 * For shop-frontend, run `npm run dev` to launch the app.
 
 > If you are using VSCode, there are launch configurations for each individual package in the demo.
@@ -76,12 +76,11 @@ The following steps are necessary to deploy the payment backend to the DBOS Clou
 * Use the `npx dbos-cloud login` command from within the application directory, if you haven't already logged in.
 * Provision a DBOS Cloud database instance (using `npx dbos-cloud database provision`) if you have not already done so.
 * Register the application, using `npx dbos-cloud app register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance.
-* In the dbos-config.yaml, set `frontend_host` to the URL that the payment server will have once deployed.  This is of the form `https://<username>-payment-backend.cloud.dbos.dev`.
+* Use `npx dbos cloud app env` to set the URL that the payment server will have once deployed.  This is of the form `https://<username>-payment-backend.cloud.dbos.dev`.
 * Deploy the application, using `npx dbos-cloud app deploy`.
 
 Be sure to note down the URL provided for accessing the payment backend; it is necessary for configuring the shop backend.
 The URL will be of the form `https://<username>-<app-name>.cloud.dbos.dev/`.
-The URL should match what was set as `frontend-host` in `dbos-config.yaml`.  If not, edit `dbos-config.yaml` and redeploy with `npx dbos-cloud app deploy`.
 
 ### Configuring and Deploying the Shop Backend
 Assuming that the payment backend has already been deployed, the following additional steps are necessary to deploy the shop backend to the DBOS Cloud.

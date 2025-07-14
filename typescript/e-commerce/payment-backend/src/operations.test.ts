@@ -10,7 +10,7 @@ describe("operations", () => {
   const router = new Router();
 
   beforeAll(async () => {
-    process.env.FRONTEND_HOST = 'http://localhost:8086';
+    process.env.PAYMENT_HOST = 'http://localhost:8086';
     await DBOS.launch();
     dkoa.registerWithApp(koa, router);
 

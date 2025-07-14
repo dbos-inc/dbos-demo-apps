@@ -60,7 +60,7 @@ function getPaymentStatus(status?: string): "pending" | "paid" | "cancelled" {
 
 function getRedirectUrl(session_id: string): string {
   const payment_host = process.env.PAYMENT_HOST || 'http://localhost:8086';
-  if (!payment_host) { throw new DBOSResponseError("FRONTEND_HOST not configured in environment", 500); }
+  if (!payment_host) { throw new DBOSResponseError("PAYMENT_HOST not configured in environment", 500); }
 
   const url = new URL(payment_host);
   url.pathname = `/payment/${session_id}`;

@@ -76,9 +76,9 @@ function getHostConfig() {
     DBOS.logger.warn("Missing PAYMENT_HOST env var");
   }
 
-  const localHost = process.env.LOCAL_HOST || 'http://localhost:8082';
+  const localHost = process.env.SHOP_HOST || 'http://localhost:8082';
   if (!localHost) {
-    DBOS.logger.warn("Missing LOCAL_HOST env var");
+    DBOS.logger.warn("Missing SHOP_HOST env var");
   }
 
   if (!paymentHost || !localHost) {
