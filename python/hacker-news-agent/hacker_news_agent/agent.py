@@ -54,7 +54,6 @@ def evaluate_results_step(
         )
 
     comments_text = ""
-    interesting_comments = []
 
     if comments:
         for i, comment in enumerate(comments[:20]):  # Limit to top 20 comments
@@ -71,10 +70,6 @@ def evaluate_results_step(
                 comments_text += f"Comment {i+1}:\n"
                 comments_text += f"  Author: {author}\n"
                 comments_text += f"  Text: {excerpt}\n\n"
-
-                interesting_comments.append(
-                    {"author": author, "text": excerpt, "full_text": comment_text}
-                )
 
     prompt = f"""
     You are a research agent evaluating search results for: {topic}
@@ -127,7 +122,6 @@ def evaluate_results_step(
         evaluation["stories_count"] = len(stories)
         evaluation["comments_count"] = len(comments) if comments else 0
         evaluation["top_stories"] = top_stories
-        evaluation["interesting_comments"] = interesting_comments
         return evaluation
     except json.JSONDecodeError:
         return {
