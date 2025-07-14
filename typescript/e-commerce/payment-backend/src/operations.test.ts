@@ -2,7 +2,7 @@ import Koa from 'koa';
 import Router from '@koa/router';
 
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import { PaymentItem, PaymentSessionInformation, dkoa, payment_complete_topic, setUnitTest } from "./operations";
+import { PaymentItem, PaymentSessionInformation, dkoa, knexds, payment_complete_topic, setUnitTest } from "./operations";
 import request from "supertest";
 
 describe("operations", () => {
@@ -14,8 +14,9 @@ describe("operations", () => {
     await DBOS.launch();
     dkoa.registerWithApp(koa, router);
 
-    await DBOS.queryUserDB(`delete from items;`);
-    await DBOS.queryUserDB(`delete from session;`);
+    await knexds.runTransaction(async ()=>{await knexds.client.raw(`delete from items;`)});
+    await knexds.runTransaction(async ()=>{await knexds.client.raw(`delete from session;`)});
+
     setUnitTest();
   });
 

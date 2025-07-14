@@ -46,7 +46,7 @@ const config = {
     password: process.env.PGPASSWORD || 'dbos',
   },
 };
-const knexds = new KnexDataSource('app-db', config);
+export const knexds = new KnexDataSource('app-db', config);
 
 export const payment_complete_topic = "payment_complete_topic";
 export const payment_session_started_topic = "payment_session_started_topic";
