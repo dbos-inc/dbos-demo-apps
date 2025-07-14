@@ -1,5 +1,7 @@
 database:
   connectionTimeoutMillis: 3000
   password: ${PGPASSWORD}
+  username: ${PGUSER}
+  app_db_name: ${PGDATABASE}
   app_db_client: "prisma"
 
