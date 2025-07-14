@@ -4,11 +4,9 @@ import { PrismaClient } from '@prisma/client';
 
 export const dkoa = new DBOSKoa();
 
-const config = { user: process.env.PGUSER || 'postgres', database: 'bank_backend' };
-
 process.env['DATABASE_URL'] =
   process.env['DATABASE_URL'] ||
-  `postgresql://${config.user}:${process.env['PGPASSWORD'] || 'dbos'}@${process.env['PGHOST'] || 'localhost'}:${process.env['PGPORT'] || '5432'}/${config.database}`;
+  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'bank_backend'}`;
 
 export const prismaClient = new PrismaClient();
 
