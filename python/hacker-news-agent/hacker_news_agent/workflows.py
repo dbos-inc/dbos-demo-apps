@@ -4,7 +4,7 @@ This module demonstrates how to build complex agentic workflows using DBOS.
 Each workflow is durable and can recover from failures while maintaining state.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from dbos import DBOS
 from rich.console import Console
