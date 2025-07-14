@@ -53,19 +53,17 @@ def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]
 
         # Handle cases where no results are found
         stories_found = iteration_result["stories_found"]
-
         if stories_found == 0:
             console.print(
                 f"[dim]⚠️  No stories found for '{current_query}', trying alternative approach...[/dim]"
             )
 
             # Generate alternative queries when hitting dead ends
-            alternative_queries = generate_follow_ups_step(
+            alternative_query = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
-
-            if alternative_queries:
-                current_query = alternative_queries[0]
+            if alternative_query:
+                current_query = alternative_query
                 console.print(f"[dim]🔄 Retrying with: '{current_query}'[/dim]")
                 continue
             else:
@@ -75,25 +73,23 @@ def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]
 
         # Evaluate whether to continue research
         console.print("[dim]🤔 Agent evaluating whether to continue research...[/dim]")
-        decision = should_continue_step(
+        should_continue = should_continue_step(
             topic, all_findings, current_iteration, max_iterations
         )
-
-        if not decision.get("should_continue", False):
+        if not should_continue:
             console.print(
-                f"[dim]✅ Agent decided to conclude research: {decision.get('reason', 'No reason provided')}[/dim]"
+                f"[dim]✅ Agent decided to conclude research[/dim]"
             )
             break
 
         # Generate next research question based on findings
         if current_iteration < max_iterations:
             console.print("[dim]💭 Agent generating next research question...[/dim]")
-            follow_up_queries = generate_follow_ups_step(
+            follow_up_query = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
-
-            if follow_up_queries:
-                current_query = follow_up_queries[0]
+            if follow_up_query:
+                current_query = follow_up_query
                 console.print(f"[dim]➡️  Next research focus: '{current_query}'[/dim]")
             else:
                 console.print(

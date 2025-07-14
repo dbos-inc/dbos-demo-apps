@@ -126,7 +126,7 @@ def evaluate_results_step(
 @DBOS.step()
 def generate_follow_ups_step(
     topic: str, current_findings: List[Dict[str, Any]], iteration: int
-) -> List[str]:
+) -> Optional[str]:
     """Agent generates follow-up research queries based on current findings."""
 
     findings_summary = ""
@@ -182,9 +182,9 @@ def generate_follow_ups_step(
     try:
         cleaned_response = clean_json_response(response)
         queries = json.loads(cleaned_response)
-        return queries if isinstance(queries, list) else []
+        return queries[0] if isinstance(queries, list) and len(queries) > 0 else None
     except json.JSONDecodeError:
-        return []
+        return None
 
 
 @DBOS.step()
@@ -193,7 +193,7 @@ def should_continue_step(
     all_findings: List[Dict[str, Any]],
     current_iteration: int,
     max_iterations: int,
-) -> Dict[str, Any]:
+) -> bool:
     """Agent decides whether to continue research or conclude."""
 
     if current_iteration >= max_iterations:
@@ -236,7 +236,6 @@ def should_continue_step(
     
     Return JSON with:
     - "should_continue": boolean
-    - "reason": string explaining the decision
     """
 
     messages = [
@@ -252,9 +251,6 @@ def should_continue_step(
     try:
         cleaned_response = clean_json_response(response)
         decision = json.loads(cleaned_response)
-        return decision
+        return decision.get("should_continue", True)
     except json.JSONDecodeError:
-        return {
-            "should_continue": current_iteration < max_iterations and avg_relevance < 8,
-            "reason": "Default decision based on iteration count and relevance",
-        }
+        return True
