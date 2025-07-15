@@ -32,7 +32,7 @@ alembic upgrade head
 4. Start your app:
 
 ```shell
-python3 app/main.py
+python3 main.py
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your app!
