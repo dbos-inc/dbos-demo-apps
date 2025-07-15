@@ -21,7 +21,7 @@ pip install dbos
 dbos postgres start
 ```
 
- If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
 
 3. Run database migrations:
 
