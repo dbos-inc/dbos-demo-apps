@@ -24,7 +24,7 @@ If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment var
 3. Run database migrations:
 
 ```shell
-alembic upgrade head
+dbos migrate
 ```
 
 4. Start your app:
