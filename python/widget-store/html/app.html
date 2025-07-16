@@ -69,6 +69,17 @@
       }
     </script>
     <style>
+      /* ===========================================
+         ANIMATIONS & KEYFRAMES
+         =========================================== */
+      @keyframes rotation {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* ===========================================
+         UTILITY COMPONENTS
+         =========================================== */
       .spinner {
         width: 24px;
         height: 24px;
@@ -78,15 +89,6 @@
         border-right: 3px solid transparent;
         box-sizing: border-box;
         animation: rotation 1s linear infinite;
-      }
-
-      @keyframes rotation {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
       }
 
       .glass-effect {
@@ -100,6 +102,29 @@
         transition: width 0.3s ease;
       }
 
+      .widget-glow {
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      /* ===========================================
+         CARD COMPONENTS
+         =========================================== */
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      /* ===========================================
+         STATUS BADGE COMPONENTS
+         =========================================== */
       .status-badge {
         display: inline-flex;
         align-items: center;
@@ -131,24 +156,9 @@
         color: #991b1b;
       }
 
-      .card-hover {
-        transition: all 0.3s ease;
-      }
-
-      .card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      }
-
-      .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
-
-      .widget-glow {
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-      }
-
-      /* Modern scrollbar styling */
+      /* ===========================================
+         SCROLLBAR STYLING
+         =========================================== */
       .modern-scrollbar::-webkit-scrollbar {
         width: 8px;
       }
@@ -176,25 +186,47 @@
     </style>
   </head>
   <script>
+    /* ===========================================
+       CONSTANTS & CONFIGURATION
+       =========================================== */
     const VIEW_QUERY_PARAM = "view";
     const ORDER_ID_QUERY_PARAM = "order";
     const PAYMENT_ID_QUERY_PARAM = "payment";
+    
     let nanoidLazy = null;
     const divider = `<div class="relative inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div>`;
+
+    /* ===========================================
+       UTILITY FUNCTIONS
+       =========================================== */
     const getOrderStatus = (status) => {
       switch (status) {
-        case 0:
-          return "PENDING";
-        case 1:
-          return "DISPATCHED";
-        case 2:
-          return "PAID";
-        case -1:
-          return "CANCELLED";
-        default:
-          throw new Error("Invalid order status");
+        case 0: return "PENDING";
+        case 1: return "DISPATCHED";
+        case 2: return "PAID";
+        case -1: return "CANCELLED";
+        default: throw new Error("Invalid order status");
       }
     };
+
+    const setURLQueryParam = (key, value) => {
+      const url = new URL(window.location.href);
+      if (value === null) {
+        url.searchParams.delete(key);
+      } else {
+        url.searchParams.set(key, value);
+      }
+      window.history.replaceState({}, "", url);
+    };
+
+    const getURLQueryParam = (key) => {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(key);
+    };
+
+    /* ===========================================
+       API FUNCTIONS
+       =========================================== */
     async function fetchOrderStatus(orderId) {
       const response = await fetch(`/order/${orderId}`);
       if (response.ok) {
@@ -206,21 +238,12 @@
         throw new Error(errorText);
       }
     }
-    const setURLQueryParam = (key, value) => {
-      const url = new URL(window.location.href);
-      if (value === null) {
-        url.searchParams.delete(key);
-      } else {
-        url.searchParams.set(key, value);
-      }
-      window.history.replaceState({}, "", url);
-    };
-    const getURLQueryParam = (key) => {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(key);
-    };
+    /* ===========================================
+       MAIN ALPINE.JS STORE
+       =========================================== */
     function widgetStore() {
       return {
+        // State Properties
         uuid: null,
         product: {
           inventory: null,
@@ -236,6 +259,7 @@
         updateOrdersInterval: null,
         connectionLost: false,
 
+        // Computed Properties
         get showStoreView() {
           return this.view === "store";
         },
@@ -249,6 +273,7 @@
           return getURLQueryParam(ORDER_ID_QUERY_PARAM);
         },
 
+        // Initialization
         init: function () {
           import("https://cdn.jsdelivr.net/npm/nanoid/nanoid.js").then(
             ({ nanoid }) => {
@@ -256,6 +281,7 @@
               this.resetId();
               this.updateShopInternals();
 
+              // Handle URL parameters for payment and order status
               const paymentId = getURLQueryParam(PAYMENT_ID_QUERY_PARAM);
               if (paymentId !== null) {
                 this.view = "payment";
@@ -267,23 +293,30 @@
                 this.view = "status";
               }
 
-              // While we have paid orders that we know of, we check for updates every 0.5 seconds
+              // Set up periodic order updates
               this.startUpdateOrdersInterval();
-
-              // Otherwise, check every 3 seconds in case an order came in from a different client
               setInterval(() => {
                 this.startUpdateOrdersInterval();
               }, 3000);
             }
           );
         },
+        // Data Management Methods
         fetchInventory: async function () {
           const response = await fetch("/product");
           this.product = await response.json();
         },
+
+        updateShopInternals: function () {
+          this.fetchInventory();
+          this.updateOrders();
+        },
+
+        // ID and View Management
         resetId: function () {
           this.uuid = nanoidLazy(10);
         },
+
         resetView: function () {
           this.resetId();
           this.updateShopInternals();
@@ -291,29 +324,22 @@
           setURLQueryParam(PAYMENT_ID_QUERY_PARAM, null);
           this.view = "store";
         },
-        updateShopInternals: function () {
-          this.fetchInventory();
-          this.updateOrders();
-        },
+        // Purchase and Payment Methods
         purchase: async function (uuid) {
           try {
             if (this.product.inventory <= 0) {
               console.log("No more inventory!");
               return;
             }
+            
             const response = await fetch("/checkout/" + uuid, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
             });
 
             if (response.ok) {
               const paymentId = await response.text();
-
-              if (!paymentId) {
-                return;
-              }
+              if (!paymentId) return;
 
               setURLQueryParam(PAYMENT_ID_QUERY_PARAM, paymentId);
               this.view = "payment";
@@ -327,17 +353,16 @@
             this.resetId();
           }
         },
+
         sendPaymentRequest: async function (status) {
           const paymentId = getURLQueryParam(PAYMENT_ID_QUERY_PARAM);
           try {
-            const response = await fetch(
-              `/payment_webhook/${paymentId}/${status}`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status }),
-              }
-            );
+            const response = await fetch(`/payment_webhook/${paymentId}/${status}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status }),
+            });
+            
             if (response.ok) {
               const orderId = await response.text();
               setURLQueryParam(ORDER_ID_QUERY_PARAM, orderId);
@@ -353,6 +378,7 @@
             console.error("Error:", error);
           }
         },
+        // Order Management Methods
         startUpdateOrdersInterval: function () {
           if (this.updateOrdersInterval === null) {
             this.updateOrdersInterval = setInterval(() => {
@@ -360,28 +386,26 @@
             }, 1000);
           }
         },
+
         updateOrders: async function () {
           try {
             const response = await fetch("/orders");
             if (response.status !== 200) {
               throw new Error("Failed to fetch orders");
             }
+            
             this.connectionLost = false;
             const orders = await response.json();
             this.orders = orders
-              .map((order) => {
-                return {
-                  ...order,
-                  order_status: getOrderStatus(order.order_status),
-                };
-              })
+              .map((order) => ({
+                ...order,
+                order_status: getOrderStatus(order.order_status),
+              }))
               .sort((a, b) => b.order_id - a.order_id);
 
-            if (
-              this.updateOrdersInterval !== null &&
-              !this.orders.filter((order) => order.order_status === "PAID")
-                .length
-            ) {
+            // Stop polling if no paid orders remain
+            if (this.updateOrdersInterval !== null && 
+                !this.orders.filter((order) => order.order_status === "PAID").length) {
               clearInterval(this.updateOrdersInterval);
               this.updateOrdersInterval = null;
             }
@@ -389,14 +413,15 @@
             this.connectionLost = true;
           }
         },
+
+        // Inventory Management
         restockInventory: async function () {
           try {
             const response = await fetch("/restock", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
             });
+            
             if (response.ok) {
               this.fetchInventory();
             } else {
@@ -407,11 +432,16 @@
             console.error("Error:", error);
           }
         },
+
+        // Utility Methods
         timeRemainingToPercentage: function (seconds) {
           return `${100 - seconds * 10}%`;
         },
       };
     }
+    /* ===========================================
+       ORDER RETRIEVAL COMPONENT
+       =========================================== */
     function retrieveOrder(orderId) {
       return {
         order: {
@@ -420,6 +450,7 @@
           last_update_time: null,
           product_id: null,
         },
+        
         init: function () {
           fetch(`/order/${orderId}`)
             .then((response) => response.json())
@@ -439,7 +470,9 @@
     x-data="widgetStore()"
     class="min-h-screen bg-gradient-to-br from-secondary-50 to-primary-50 font-sans"
   >
-    <!-- Connection Status Alert -->
+    <!-- ===========================================
+         CONNECTION STATUS ALERT
+         =========================================== -->
     <div
       x-show="connectionLost"
       x-transition:enter="transition ease-out duration-300"
@@ -456,10 +489,13 @@
       </div>
     </div>
 
-    <!-- Header -->
+    <!-- ===========================================
+         HEADER SECTION
+         =========================================== -->
     <header class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-6">
+          <!-- Logo and Title -->
           <div class="flex items-center space-x-4">
             <div class="w-10 h-10 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
               <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -468,6 +504,8 @@
             </div>
             <h1 class="text-2xl font-bold text-gray-900">Widget Store</h1>
           </div>
+          
+          <!-- DBOS Logo -->
           <img
             src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
             alt="DBOS Logo"
@@ -477,13 +515,17 @@
       </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- ===========================================
+         MAIN CONTENT AREA
+         =========================================== -->
     <main class="flex-1">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Three Column Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          <!-- Left Column - Recent Orders -->
+          <!-- ===========================================
+               LEFT COLUMN - RECENT ORDERS
+               =========================================== -->
           <div class="lg:col-span-1">
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
               <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
@@ -528,7 +570,9 @@
             </div>
           </div>
 
-          <!-- Middle Column - Widget Store -->
+          <!-- ===========================================
+               MIDDLE COLUMN - WIDGET STORE
+               =========================================== -->
           <div class="lg:col-span-1">
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
               <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white text-center">
@@ -541,6 +585,7 @@
               </div>
 
               <div class="p-6">
+                <!-- Store View Template -->
                 <template x-if="showStoreView">
                   <div class="text-center space-y-6">
                     <div class="relative">
@@ -593,6 +638,7 @@
                   </div>
                 </template>
 
+                <!-- Payment View Template -->
                 <template x-if="showPaymentView">
                   <div class="text-center space-y-6">
                     <div class="w-20 h-20 bg-gradient-to-r from-blue-100 to-green-100 rounded-full flex items-center justify-center mx-auto shadow-lg">
@@ -628,6 +674,7 @@
                   </div>
                 </template>
 
+                <!-- Order Status View Template -->
                 <template x-if="showOrderStatusView">
                   <div x-data="retrieveOrder(orderId)" class="text-center space-y-6">
                     <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
@@ -664,7 +711,9 @@
             </div>
           </div>
 
-          <!-- Right Column - Server Tools -->
+          <!-- ===========================================
+               RIGHT COLUMN - SERVER TOOLS
+               =========================================== -->
           <div class="lg:col-span-1">
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
               <div class="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
@@ -723,7 +772,9 @@
           </div>
         </div>
 
-        <!-- Call to Action -->
+        <!-- ===========================================
+             CALL TO ACTION SECTION
+             =========================================== -->
         <div class="mt-12 text-center">
           <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-8 text-white">
             <h3 class="text-2xl font-bold mb-4">Build Your Own Crash-Proof Applications</h3>
