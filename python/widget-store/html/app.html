@@ -147,6 +147,32 @@
       .widget-glow {
         box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
       }
+
+      /* Modern scrollbar styling */
+      .modern-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .modern-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+      }
+
+      .modern-scrollbar::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 4px;
+        transition: background 0.3s ease;
+      }
+
+      .modern-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+      }
+
+      /* Firefox scrollbar styling */
+      .modern-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #3b82f6 #f1f5f9;
+      }
     </style>
   </head>
   <script>
@@ -457,7 +483,7 @@
         <!-- Three Column Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          <!-- Left Column - Shop Internals -->
+          <!-- Left Column - Recent Orders -->
           <div class="lg:col-span-1">
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
               <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
@@ -465,76 +491,38 @@
                   <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
-                  <h2 class="text-2xl font-bold">Shop Internals</h2>
+                  <h2 class="text-2xl font-bold">Recent Orders</h2>
                 </div>
               </div>
               
-              <div class="p-6 space-y-8">
-                <!-- Inventory Section -->
-                <div>
-                  <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-gray-900">Inventory</h3>
-                    <button
-                      x-on:click="restockInventory"
-                      class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
-                    >
-                      <svg class="w-4 h-4 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                      </svg>
-                      Restock
-                    </button>
-                  </div>
-                  
-                  <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="flex items-center space-x-4">
-                      <img
-                        src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
-                        alt="Widget Image"
-                        class="w-16 h-16 object-cover rounded-lg shadow-md"
-                      />
-                      <div class="flex-1">
-                        <h4 class="font-bold text-gray-900" x-text="product.product"></h4>
-                        <p class="text-sm text-gray-600" x-text="product.description"></p>
-                        <div class="mt-2 flex items-center space-x-2">
-                          <span class="text-2xl font-bold text-gray-900" x-text="product.inventory"></span>
-                          <span class="text-sm text-gray-500">units available</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <div class="p-6">
+                <div x-show="orders.length === 0" class="text-center py-12">
+                  <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  <p class="text-gray-500 text-lg">No orders yet</p>
+                  <p class="text-gray-400 text-sm mt-2">Orders will appear here as they're placed</p>
                 </div>
-
-                <!-- Orders Section -->
-                <div>
-                  <h3 class="text-xl font-bold text-gray-900 mb-4">Recent Orders</h3>
-                  
-                  <div x-show="orders.length === 0" class="text-center py-8">
-                    <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <p class="text-gray-500">No orders in the system yet</p>
-                  </div>
-                  
-                  <div x-show="orders.length > 0" class="space-y-3 max-h-96 overflow-y-auto">
-                    <template x-for="order in orders" :key="order.order_id">
-                      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-                        <div class="flex justify-between items-start">
-                          <div>
-                            <div class="font-bold text-gray-900">Order #<span x-text="order.order_id"></span></div>
-                            <div class="status-badge mt-1" :class="'status-' + order.order_status.toLowerCase()" x-text="order.order_status"></div>
-                          </div>
-                          <div class="text-right">
-                            <div x-show="order.order_status === 'PAID'" class="text-sm text-gray-600">
-                              <div>Progress to dispatch:</div>
-                              <div class="w-24 bg-gray-200 rounded-full h-2 mt-1">
-                                <div class="progress-bar h-2 rounded-full" :style="'width: ' + timeRemainingToPercentage(order.progress_remaining)"></div>
-                              </div>
+                
+                <div x-show="orders.length > 0" class="space-y-3 max-h-96 overflow-y-auto modern-scrollbar">
+                  <template x-for="order in orders" :key="order.order_id">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+                      <div class="flex justify-between items-start">
+                        <div>
+                          <div class="font-bold text-gray-900">Order #<span x-text="order.order_id"></span></div>
+                          <div class="status-badge mt-1" :class="'status-' + order.order_status.toLowerCase()" x-text="order.order_status"></div>
+                        </div>
+                        <div class="text-right">
+                          <div x-show="order.order_status === 'PAID'" class="text-sm text-gray-600">
+                            <div>Progress to dispatch:</div>
+                            <div class="w-24 bg-gray-200 rounded-full h-2 mt-1">
+                              <div class="progress-bar h-2 rounded-full" :style="'width: ' + timeRemainingToPercentage(order.progress_remaining)"></div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </template>
-                  </div>
+                    </div>
+                  </template>
                 </div>
               </div>
             </div>
@@ -555,14 +543,26 @@
               <div class="p-6">
                 <template x-if="showStoreView">
                   <div class="text-center space-y-6">
-                    <div class="relative">
-                      <img
-                        src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
-                        alt="Widget Image"
-                        class="w-40 h-40 object-cover rounded-2xl mx-auto shadow-lg widget-glow"
-                      />
-                      <div class="absolute -top-2 -right-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-bounce-subtle">
-                        In Stock
+                    <div class="flex items-center justify-center space-x-6">
+                      <button
+                        x-on:click="restockInventory"
+                        class="bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm flex items-center space-x-2"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span>Restock</span>
+                      </button>
+                      
+                      <div class="relative">
+                        <img
+                          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                          alt="Widget Image"
+                          class="w-40 h-40 object-cover rounded-2xl shadow-lg widget-glow"
+                        />
+                        <div class="absolute -top-2 -right-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-bounce-subtle">
+                          In Stock
+                        </div>
                       </div>
                     </div>
                     
