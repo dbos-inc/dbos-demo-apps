@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 from typing import List
 
 import requests
+import uvicorn
 from dbos import DBOS, DBOSConfig, Queue, WorkflowHandle
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -31,7 +32,7 @@ DBOS(fastapi=app, config=config)
 
 def configure_index():
     Settings.chunk_size = 512
-    db = make_url(config.get("database_url"))
+    db = make_url(os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/document_detective"))
     vector_store = PGVectorStore.from_params(
         database=db.database,
         host=db.host,
@@ -187,3 +188,7 @@ def frontend():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return HTMLResponse(html)
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)

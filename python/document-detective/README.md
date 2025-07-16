@@ -14,46 +14,35 @@ Set your API key as an environment variable:
 ```shell
 export OPENAI_API_KEY=<your_openai_key>
 ```
-### Deploying to the Cloud
 
-To serverlessly deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
+## Setup
 
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then, run this command to deploy your app:
-
-```shell
-dbos-cloud app deploy
-```
-
-This command outputs a URL&mdash;visit it to see your chat agent!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
-
-First create a virtual environment:
+1. Install dependencies and activate your virtual environment:
 
 ```shell
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-DBOS requires a Postgres database.
-If you don't already have one, you can start one with Docker:
-
-```shell
-export PGPASSWORD=dbos
-python3 start_postgres_docker.py
-```
-
-Then run the app in the virtual environment:
-
-```shell
 pip install -r requirements.txt
+```
+
+2. Start Postgres in a local Docker container:
+
+```bash
+dbos postgres start
+```
+
+If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+
+3. Run database migrations:
+
+```shell
 dbos migrate
-dbos start
+```
+
+4. Start your app!
+
+```shell
+python3 -m document_detective.main
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your chat agent!

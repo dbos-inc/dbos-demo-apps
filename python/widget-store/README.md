@@ -3,39 +3,34 @@
 This app uses DBOS to deploy an online storefront that's resilient to any failure.
 You can interrupt it at any time while placing an order (we even provide a "crash button" to facilitate experimentation) and it will resume from exactly where it left off.
 
-### Deploying to the Cloud
+## Setup
 
-To deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
+1. Install dependencies and activate your virtual environment
 
 ```shell
-npm i -g @dbos-inc/dbos-cloud
+python3 -m venv .venv
+source .venv/bin/activate
+pip install dbos
 ```
 
-Then, run this command to deploy your app:
+2. Start Postgres in a local Docker container:
 
-```shell
-dbos-cloud app deploy
+```bash
+dbos postgres start
 ```
 
-This command outputs a URL--visit it to see the storefront!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
+If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
 
-### Running Locally
-
-To run this app locally, you need a Postgres database.
-If you have Docker, you can start one with:
+3. Run database migrations:
 
 ```shell
-export PGPASSWORD=dbos
-python3 start_postgres_docker.py
-```
-
-Then run:
-
-```shell
-pip install -r requirements.txt
 dbos migrate
-dbos start
 ```
 
-Visit [`http://localhost:8000`](http://localhost:8000) to see the storefront!
+4. Start your app:
+
+```shell
+python3 -m widget_store.main
+```
+
+Visit [`http://localhost:8000`](http://localhost:8000) to see your app!
