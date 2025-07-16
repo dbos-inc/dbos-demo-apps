@@ -543,26 +543,14 @@
               <div class="p-6">
                 <template x-if="showStoreView">
                   <div class="text-center space-y-6">
-                    <div class="flex items-center justify-center space-x-6">
-                      <button
-                        x-on:click="restockInventory"
-                        class="bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm flex items-center space-x-2"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                        <span>Restock</span>
-                      </button>
-                      
-                      <div class="relative">
-                        <img
-                          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
-                          alt="Widget Image"
-                          class="w-40 h-40 object-cover rounded-2xl shadow-lg widget-glow"
-                        />
-                        <div class="absolute -top-2 -right-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-bounce-subtle">
-                          In Stock
-                        </div>
+                    <div class="relative">
+                      <img
+                        src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                        alt="Widget Image"
+                        class="w-40 h-40 object-cover rounded-2xl mx-auto shadow-lg widget-glow"
+                      />
+                      <div class="absolute -top-2 -right-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-bounce-subtle">
+                        In Stock
                       </div>
                     </div>
                     
@@ -574,8 +562,20 @@
                         <div class="text-2xl font-bold text-primary-600">
                           $<span x-text="product.price"></span>
                         </div>
-                        <div class="text-sm text-gray-500">
-                          Only <span class="font-bold text-red-600" x-text="product.inventory"></span> left!
+                        <div class="flex items-center space-x-2">
+                          <div class="text-sm text-gray-500">
+                            Only <span class="font-bold text-red-600" x-text="product.inventory"></span> left!
+                          </div>
+                          <button
+                            x-on:click="restockInventory"
+                            class="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-2 rounded text-xs transition-colors duration-200 flex items-center space-x-1"
+                            title="Restock inventory"
+                          >
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span>Restock</span>
+                          </button>
                         </div>
                       </div>
                     </div>
