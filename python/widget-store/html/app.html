@@ -14,6 +14,60 @@
       defer
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: '#f0f9ff',
+                100: '#e0f2fe',
+                200: '#bae6fd',
+                300: '#7dd3fc',
+                400: '#38bdf8',
+                500: '#0ea5e9',
+                600: '#0284c7',
+                700: '#0369a1',
+                800: '#075985',
+                900: '#0c4a6e',
+              },
+              secondary: {
+                50: '#f8fafc',
+                100: '#f1f5f9',
+                200: '#e2e8f0',
+                300: '#cbd5e1',
+                400: '#94a3b8',
+                500: '#64748b',
+                600: '#475569',
+                700: '#334155',
+                800: '#1e293b',
+                900: '#0f172a',
+              }
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-in-out',
+              'slide-up': 'slideUp 0.3s ease-out',
+              'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'bounce-subtle': 'bounceSubtle 1s ease-in-out infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' }
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(10px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' }
+              },
+              bounceSubtle: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-5px)' }
+              }
+            }
+          }
+        }
+      }
+    </script>
     <style>
       .spinner {
         width: 24px;
@@ -33,6 +87,65 @@
         100% {
           transform: rotate(360deg);
         }
+      }
+
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .progress-bar {
+        background: linear-gradient(90deg, #10b981, #059669);
+        transition: width 0.3s ease;
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+      }
+
+      .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      .status-paid {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+
+      .status-dispatched {
+        background-color: #e0e7ff;
+        color: #3730a3;
+      }
+
+      .status-cancelled {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .widget-glow {
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
       }
     </style>
   </head>
@@ -93,6 +206,7 @@
         orders: [],
         divider,
         visiblePanelOnMobile: "store", // internals | store | tools
+        activeTab: "store", // internals | store | tools
         updateOrdersInterval: null,
         connectionLost: false,
 
@@ -297,285 +411,357 @@
   </script>
   <body
     x-data="widgetStore()"
-    class="h-svh md:p-1 bg-neutral-100 font-sans flex flex-col"
+    class="min-h-screen bg-gradient-to-br from-secondary-50 to-primary-50 font-sans"
   >
-    <span
-      x-show="connectionLost"
-      class="w-full flex justify-center items-center text-center bg-red-500 text-white p-2 md:p-4 rounded-lg"
-    >
-      Connection to server lost. Reconnecting...
-      <span class="spinner ml-2"></span>
-    </span>
-
-    <div class="flex flex-col grow overflow-scroll">
-      <div class="w-full flex justify-between mb-2">
-        <div></div>
-        <img
-          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
-          alt="DBOS Logo"
-          class="w-40"
-        />
-        <div></div>
-      </div>
-
-      <div class="md:grid md:grid-cols-3 md:gap-1 grow">
-        <div :class="visiblePanelOnMobile === 'internals' || 'hidden md:block'">
-          <div class="flex flex-col gap-6 p-5">
-            <h2 class="text-3xl text-center">Shop internals</h2>
-            <div x-html="divider"></div>
-            <div class="flow-root w-full">
-              <div class="flex justify-between pb-1">
-                <h3 class="text-2xl mb-2">Inventory</h3>
-                <button
-                  x-on:click="restockInventory"
-                  class="px-4 rounded-lg text-sm border border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-gray-300 focus:outline-none"
-                >
-                  Restock
-                </button>
-              </div>
-              <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div
-                  class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
-                >
-                  <div
-                    class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
-                  >
-                    <table class="min-w-full divide-y divide-gray-300">
-                      <thead class="bg-gray-50">
-                        <tr>
-                          <th scope="col" class="w-12">
-                            <span class="sr-only">Image</span>
-                          </th>
-                          <th
-                            scope="col"
-                            class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                          >
-                            Product
-                          </th>
-                          <th
-                            scope="col"
-                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                          >
-                            Available
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody class="divide-y divide-gray-200 bg-white">
-                        <tr>
-                          <td class="p-1">
-                            <img
-                              src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
-                              alt="Widget Image"
-                              class="rounded-lg"
-                            />
-                          </td>
-                          <td
-                            x-text="product.product"
-                            class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
-                          ></td>
-                          <td
-                            x-text="product.inventory"
-                            class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
-                          ></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="flow-root w-full">
-              <h3 class="text-2xl mb-2">Orders</h3>
-              <p x-show="orders.length === 0" class="text-gray-500 text-center">
-                No orders in the system.
-              </p>
-              <div
-                x-show="orders.length > 0"
-                class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8"
-              >
-                <div
-                  class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8"
-                >
-                  <div
-                    class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
-                  >
-                    <table class="min-w-full divide-y divide-gray-300">
-                      <thead class="bg-gray-50">
-                        <tr>
-                          <th
-                            scope="col"
-                            class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                          >
-                            Order ID
-                          </th>
-                          <th
-                            scope="col"
-                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                          >
-                            Status
-                          </th>
-                          <th
-                            scope="col"
-                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                          >
-                            Progress until dispatch
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody class="divide-y divide-gray-200 bg-white">
-                        <template x-for="order in orders" :key="order.order_id">
-                          <tr>
-                            <td
-                              x-text="order.order_id"
-                              class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
-                            ></td>
-                            <td
-                              x-text="order.order_status"
-                              class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
-                            ></td>
-                            <td
-                              x-text="order.order_status === 'PAID' ? timeRemainingToPercentage(order.progress_remaining) : ''"
-                              class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
-                            ></td>
-                          </tr>
-                        </template>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div :class="visiblePanelOnMobile === 'store' || 'hidden md:block'">
-          <div
-            class="flex flex-col gap-6 bg-white border border-gray-300 rounded-lg p-5 text-center"
-          >
-            <h2 class="text-3xl">Widget Store</h2>
-            <div x-html="divider"></div>
-
-            <template x-if="showStoreView">
-              <div>
-                <img
-                  src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
-                  alt="Widget Image"
-                  class="max-w-[50%] rounded-lg mx-auto"
-                />
-                <div class="text-2xl text-gray-800 my-5">
-                  <span x-text="product.product"></span> &#8212; Only
-                  <b x-text="product.inventory"></b> left!
-                </div>
-                <p x-text="product.description"></p>
-                <button
-                  class="bg-green-500 border-none text-white py-4 px-6 text-center text-2xl cursor-pointer rounded-lg transition duration-300 mt-5 hover:bg-green-600 hover:shadow-lg"
-                  id="purchaseButton"
-                  x-on:click="purchase(uuid)"
-                >
-                  Buy Now for $<span x-text="product.price"></span>
-                </button>
-              </div>
-            </template>
-
-            <template x-if="showPaymentView">
-              <div
-                class="text-center flex flex-col items-center justify-center h-full"
-              >
-                <div class="text-xl font-semibold mb-4">
-                  Do you want to confirm payment?
-                </div>
-                <div class="space-x-4">
-                  <button
-                    x-bind:disabled="connectionLost"
-                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
-                    x-on:click="sendPaymentRequest('paid')"
-                  >
-                    Confirm Payment
-                  </button>
-                  <button
-                    x-bind:disabled="connectionLost"
-                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-500"
-                    x-on:click="sendPaymentRequest('failed')"
-                  >
-                    Deny Payment
-                  </button>
-                </div>
-              </div>
-            </template>
-
-            <template x-if="showOrderStatusView">
-              <div x-data="retrieveOrder(orderId)">
-                <div class="p-4">
-                  <div class="text-lg font-semibold mb-2">
-                    Order ID: <span x-text="order.id"></span><br />Status:
-                    <span x-text="order.status"></span><br />
-                    <span x-text="order.last_update_time"></span>
-                  </div>
-                  <button
-                    x-on:click="resetView()"
-                    class="mt-4 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
-                  >
-                    Continue Shopping
-                  </button>
-                </div>
-              </div>
-            </template>
-          </div>
-          <div class="w-full mt-6 md:mt-8 text-center border-t border-b border-gray-300 px-2 py-4 md:py-6 text-lg md:text-2xl">
-            <p>Want to build your own crashproof applications? Check out our <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" rel="noopener noreferrer" class="font-medium text-cyan-600 hover:text-cyan-500">Programming Guide</a>!</p>
-          </div>
-        </div>
-
-        <div :class="visiblePanelOnMobile === 'tools' || 'hidden md:block'">
-          <div class="flex flex-col gap-6 p-5 text-center">
-            <h2 class="text-3xl text-center">Server Tools</h2>
-            <div x-html="divider"></div>
-            <p class="text-left text-gray-500">
-              Crash the application at any time to simulate a server failure or
-              service interruption. After crashing, the application will
-              momentarily become inaccessible but then resume from exactly where
-              it left off before the crash. Try it and see!
-            </p>
-            <div>
-              <button
-                class="bg-red-600 border-none text-white py-4 px-6 text-center text-xl cursor-pointer rounded-lg transition duration-300 hover:bg-red-700 hover:shadow-lg"
-                x-on:click="fetch('/crash_application', {'method': 'POST'})"
-              >
-                Crash the Application
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <!-- Connection Status Alert -->
     <div
-      class="md:hidden w-full grid grid-cols-3 font-semibold font-mono bg-neutral-200"
+      x-show="connectionLost"
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="opacity-0 transform -translate-y-2"
+      x-transition:enter-end="opacity-100 transform translate-y-0"
+      class="fixed top-4 left-4 right-4 z-50 flex justify-center items-center text-center bg-red-500 text-white p-4 rounded-lg shadow-lg"
     >
-      <button
-        class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black border-r"
-        :class="visiblePanelOnMobile === 'internals' && 'bg-neutral-300'"
-        x-on:click="visiblePanelOnMobile = 'internals'"
-      >
-        <span>Shop</span>
-        <span>Internals</span>
-      </button>
-      <button
-        class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black border-r"
-        :class="visiblePanelOnMobile === 'store' && 'bg-neutral-300'"
-        x-on:click="visiblePanelOnMobile = 'store'"
-      >
-        <span>Widget</span>
-        <span>Store</span>
-      </button>
-      <button
-        class="py-1 flex flex-col text-center justify-center items-center hover:cursor-pointer border-t border-black"
-        :class="visiblePanelOnMobile === 'tools' && 'bg-neutral-300'"
-        x-on:click="visiblePanelOnMobile = 'tools'"
-      >
-        <span>Server</span>
-        <span>Tools</span>
-      </button>
+      <div class="flex items-center space-x-3">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+        </svg>
+        <span>Connection to server lost. Reconnecting...</span>
+        <span class="spinner ml-2"></span>
+      </div>
     </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-6">
+          <div class="flex items-center space-x-4">
+            <div class="w-10 h-10 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+              </svg>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900">Widget Store</h1>
+          </div>
+          <img
+            src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/black_logotype%2Btransparent_bg_h4000px.png"
+            alt="DBOS Logo"
+            class="h-8 opacity-70"
+          />
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Three Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <!-- Left Column - Shop Internals -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
+              <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+                <div class="flex items-center space-x-3">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  <h2 class="text-2xl font-bold">Shop Internals</h2>
+                </div>
+                <p class="text-blue-100 mt-2">Real-time inventory and order management</p>
+              </div>
+              
+              <div class="p-6 space-y-8">
+                <!-- Inventory Section -->
+                <div>
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Inventory</h3>
+                    <button
+                      x-on:click="restockInventory"
+                      class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
+                    >
+                      <svg class="w-4 h-4 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                      </svg>
+                      Restock
+                    </button>
+                  </div>
+                  
+                  <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex items-center space-x-4">
+                      <img
+                        src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                        alt="Widget Image"
+                        class="w-16 h-16 object-cover rounded-lg shadow-md"
+                      />
+                      <div class="flex-1">
+                        <h4 class="font-bold text-gray-900" x-text="product.product"></h4>
+                        <p class="text-sm text-gray-600" x-text="product.description"></p>
+                        <div class="mt-2 flex items-center space-x-2">
+                          <span class="text-2xl font-bold text-gray-900" x-text="product.inventory"></span>
+                          <span class="text-sm text-gray-500">units available</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Orders Section -->
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900 mb-4">Recent Orders</h3>
+                  
+                  <div x-show="orders.length === 0" class="text-center py-8">
+                    <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <p class="text-gray-500">No orders in the system yet</p>
+                  </div>
+                  
+                  <div x-show="orders.length > 0" class="space-y-3 max-h-96 overflow-y-auto">
+                    <template x-for="order in orders" :key="order.order_id">
+                      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+                        <div class="flex justify-between items-start">
+                          <div>
+                            <div class="font-bold text-gray-900">Order #<span x-text="order.order_id"></span></div>
+                            <div class="status-badge mt-1" :class="'status-' + order.order_status.toLowerCase()" x-text="order.order_status"></div>
+                          </div>
+                          <div class="text-right">
+                            <div x-show="order.order_status === 'PAID'" class="text-sm text-gray-600">
+                              <div>Progress to dispatch:</div>
+                              <div class="w-24 bg-gray-200 rounded-full h-2 mt-1">
+                                <div class="progress-bar h-2 rounded-full" :style="'width: ' + timeRemainingToPercentage(order.progress_remaining)"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Middle Column - Widget Store -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
+              <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white text-center">
+                <div class="flex items-center justify-center space-x-3 mb-2">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                  </svg>
+                  <h2 class="text-2xl font-bold">Widget Store</h2>
+                </div>
+                <p class="text-primary-100">High-quality widgets with crash-proof ordering</p>
+              </div>
+
+              <div class="p-6">
+                <template x-if="showStoreView">
+                  <div class="text-center space-y-6">
+                    <div class="relative">
+                      <img
+                        src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/widget-small.webp"
+                        alt="Widget Image"
+                        class="w-40 h-40 object-cover rounded-2xl mx-auto shadow-lg widget-glow"
+                      />
+                      <div class="absolute -top-2 -right-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-bounce-subtle">
+                        In Stock
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                      <h3 class="text-xl font-bold text-gray-900" x-text="product.product"></h3>
+                      <p class="text-gray-600" x-text="product.description"></p>
+                      
+                      <div class="flex justify-center items-center space-x-4">
+                        <div class="text-2xl font-bold text-primary-600">
+                          $<span x-text="product.price"></span>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          Only <span class="font-bold text-red-600" x-text="product.inventory"></span> left!
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                      x-on:click="purchase(uuid)"
+                      :disabled="product.inventory <= 0"
+                    >
+                      <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m.6 8l0 0m0 0l-2 8h12M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8"></path>
+                      </svg>
+                      Buy Now
+                    </button>
+                  </div>
+                </template>
+
+                <template x-if="showPaymentView">
+                  <div class="text-center space-y-6">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+                      <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                      </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900">Payment Confirmation</h3>
+                    <p class="text-gray-600">Please confirm your payment to complete the order</p>
+                    
+                    <div class="space-y-3">
+                      <button
+                        x-bind:disabled="connectionLost"
+                        class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                        x-on:click="sendPaymentRequest('paid')"
+                      >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Confirm Payment
+                      </button>
+                      <button
+                        x-bind:disabled="connectionLost"
+                        class="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                        x-on:click="sendPaymentRequest('failed')"
+                      >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Cancel Payment
+                      </button>
+                    </div>
+                  </div>
+                </template>
+
+                <template x-if="showOrderStatusView">
+                  <div x-data="retrieveOrder(orderId)" class="text-center space-y-6">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                      <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900">Order Status</h3>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Order ID:</span>
+                        <span class="font-bold text-gray-900" x-text="order.id"></span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Status:</span>
+                        <span class="status-badge" :class="'status-' + order.status.toLowerCase()" x-text="order.status"></span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Last Updated:</span>
+                        <span class="text-gray-600 text-sm" x-text="order.last_update_time"></span>
+                      </div>
+                    </div>
+                    
+                    <button
+                      x-on:click="resetView()"
+                      class="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+                    >
+                      Continue Shopping
+                    </button>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column - Server Tools -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
+              <div class="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+                <div class="flex items-center space-x-3 mb-2">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <h2 class="text-2xl font-bold">Server Tools</h2>
+                </div>
+                <p class="text-red-100">Development and testing tools</p>
+              </div>
+              
+              <div class="p-6 space-y-6">
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div class="flex items-start space-x-3">
+                    <svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <div>
+                      <h4 class="font-bold text-yellow-800">Resilience Testing</h4>
+                      <p class="text-yellow-700 mt-1 text-sm">
+                        Test DBOS's crash recovery capabilities by simulating server failures. 
+                        The application will automatically resume from exactly where it left off.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="text-center space-y-4">
+                  <div class="flex justify-center">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                      <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <h4 class="text-lg font-bold text-gray-900">Crash Simulation</h4>
+                  <p class="text-gray-600 text-sm">
+                    Click the button below to instantly crash the application and observe 
+                    how it recovers and continues processing from the exact point of failure.
+                  </p>
+                  
+                  <button
+                    class="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    x-on:click="fetch('/crash_application', {'method': 'POST'})"
+                  >
+                    <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Crash the Application
+                  </button>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div class="flex items-start space-x-3">
+                    <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                      <h4 class="font-bold text-blue-800">How it Works</h4>
+                      <p class="text-blue-700 mt-1 text-sm">
+                        DBOS uses durable execution to ensure that workflows survive failures. 
+                        When you crash the app, it will restart and continue any interrupted operations.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="mt-12 text-center">
+          <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-8 text-white">
+            <h3 class="text-2xl font-bold mb-4">Build Your Own Crash-Proof Applications</h3>
+            <p class="text-primary-100 mb-6">
+              Learn how to create resilient applications that can survive any failure with DBOS
+            </p>
+            <a 
+              href="https://docs.dbos.dev/python/programming-guide" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              class="inline-flex items-center bg-white text-primary-600 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              Read the Programming Guide
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
   </body>
 </html>
