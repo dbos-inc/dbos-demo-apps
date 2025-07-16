@@ -1,7 +1,7 @@
 # Widget Store
 
-This app uses DBOS to deploy an online storefront that's resilient to any failure.
-You can interrupt it at any time while placing an order (we even provide a "crash button" to facilitate experimentation) and it will resume from exactly where it left off.
+This app uses DBOS to build an online storefront that's resilient to any failure.
+You can interrupt it at any time (we even provide a crash button to facilitate experimentation) and it will recover from exactly where it left off.
 
 ## Setup
 
