@@ -1,24 +1,24 @@
 import {
   DBOS,
-  Authentication,
-  KoaMiddleware,
 } from "@dbos-inc/dbos-sdk";
-import { AccountInfo, PrismaClient, TransactionHistory } from "@prisma/client";
+import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { BankAccountInfo } from "./accountinfo.workflows";
 import axios from "axios";
 import { bankAuthMiddleware, bankJwt, koaLogger } from "../middleware";
 
 const REMOTEDB_PREFIX: string = "remoteDB-";
 
+import { dkoa, prisma } from "../resources";
+
 @DBOS.defaultRequiredRole(["appUser"])
-@Authentication(bankAuthMiddleware)
-@KoaMiddleware(koaLogger, bankJwt)
+@dkoa.authentication(bankAuthMiddleware)
+@dkoa.koaMiddleware(koaLogger, bankJwt)
 export class BankTransactionHistory {
-  @DBOS.transaction()
-  @DBOS.getApi("/api/transaction_history/:accountId")
+  @prisma.transaction()
+  @dkoa.getApi("/api/transaction_history/:accountId")
   static async listTxnForAccountFunc(accountId: number) {
     const acctId = BigInt(accountId);
-    return (DBOS.prismaClient as PrismaClient).transactionHistory.findMany({
+    return prisma.client.transactionHistory.findMany({
       where: {
         OR: [
           {
@@ -38,7 +38,7 @@ export class BankTransactionHistory {
   }
 
   static async insertTxnHistoryFunc(data: TransactionHistory) {
-    return (DBOS.prismaClient as PrismaClient).transactionHistory
+    return prisma.client.transactionHistory
       .create({
         data: {
           // Escape txnId and timestamp fields.
@@ -56,7 +56,7 @@ export class BankTransactionHistory {
   }
 
   static async deleteTxnHistoryFunc(txnId: bigint) {
-    return (DBOS.prismaClient as PrismaClient).transactionHistory
+    return prisma.client.transactionHistory
       .delete({
         where: {
           txnId: txnId,
@@ -69,7 +69,7 @@ export class BankTransactionHistory {
   }
 
   static async updateAccountBalanceFunc(acctId: bigint, balance: bigint) {
-    return (DBOS.prismaClient as PrismaClient).accountInfo
+    return prisma.client.accountInfo
       .update({
         where: { accountId: acctId },
         data: {
@@ -82,7 +82,7 @@ export class BankTransactionHistory {
       });
   }
 
-  @DBOS.transaction()
+  @prisma.transaction()
   static async updateAcctTransactionFunc(acctId: bigint, data: TransactionHistory, deposit: boolean, undoTxn: bigint | null = null): Promise<bigint> {
     // First, make sure the account exists, and read the latest balance.
     const acct = await BankAccountInfo.findAccountFunc(acctId);
@@ -144,7 +144,7 @@ export class BankTransactionHistory {
     return true;
   }
 
-  @DBOS.transaction()
+  @prisma.transaction()
   static async internalTransferFunc(data: TransactionHistory): Promise<string> {
     // Check if the fromAccount has enough balance.
     const fromAccount: AccountInfo | null = await BankAccountInfo.findAccountFunc(data.fromAccountId);
@@ -188,7 +188,7 @@ export class BankTransactionHistory {
         toAccountId: data.toAccountId,
         amount: data.amount,
         fromLocation: "local",
-        toLocation: REMOTEDB_PREFIX + DBOS.getConfig<string>("bankname") + ":" + DBOS.getConfig<string>("bankport"),
+        toLocation: REMOTEDB_PREFIX + process.env.BANKNAME + ":" + process.env.BANKPORT,
       };
 
       const remoteRes: boolean = await BankTransactionHistory.remoteTransferComm(remoteUrl, thReq as TransactionHistory, DBOS.workflowID + '-withdraw');
@@ -221,7 +221,7 @@ export class BankTransactionHistory {
         toAccountId: data.toAccountId,
         amount: data.amount,
         toLocation: "local",
-        fromLocation: REMOTEDB_PREFIX + DBOS.getConfig<string>("bankname") + ":" + DBOS.getConfig<string>("bankport"),
+        fromLocation: REMOTEDB_PREFIX + process.env.BANKNAME + ":" + process.env.BANKPORT,
       };
       const remoteRes: boolean = await BankTransactionHistory.remoteTransferComm(remoteUrl, thReq as TransactionHistory, DBOS.workflowID + '-deposit');
       if (!remoteRes) {

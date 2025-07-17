@@ -22,24 +22,11 @@ This script will run a PostgreSQL 16.0 database container, create the shop and p
 
 ### Database Configuration (local)
 
-If you're using your own PostgreSQL database, you need to configure the hostname, port, username and password for each of the backend packages.
-Each backend package needs its own database, but they can be on the same PostgreSQL server.
-There is an `dbos-config.yaml` file in each of the backend package directories. 
-These config files must be updated to the appropriate settings for your PostgreSQL server.
+If you're using your own PostgreSQL database, you need to configure the hostname, port, username and password in your environment prior to running the commands below.
 
 > Note, the PostgreSQL user specified for both backend packages *MUST* have database creation permissions.
 
-Here is a snippet of a `dbos-config.yaml` file showing the database connection settings that must be updated:
-
-```yaml
-database:
-  hostname: 'localhost'
-  port: 5432
-  username: 'postgres'
-  password: ${PGPASSWORD}
-```
-
-Once the `dbos-config.yaml` files have been updated, you also need to create the two demo databases `shop` and `payment`.
+You also need to create the two demo databases `shop` and `payment`.
 The `start_postgres_docker.sh` script does this by calling `CREATE DATABASE shop;` and `CREATE DATABASE payment;` 
 via [psql](https://www.postgresql.org/docs/current/app-psql.html) in the docker container.
 
@@ -51,7 +38,7 @@ Both shop and payment use [knex.js](https://knexjs.org/) as a database access li
 Each of the three parts of the demo must run in its own terminal window.
 For each setup, each package has a single npm command that is used to build and launch the package.
 
-* For payment-backend and shop-backend, run `npm run build` and `npx dbos start` to build and launch the app, respectively.
+* For payment-backend and shop-backend, run `npm run build` and `SHOP_PORT=8082 PAYMENT_PORT=8086 PAYMENT_HOST=http://localhost:8086 SHOP_HOST=http://localhost:8082 npx dbos start` to build and launch the app, respectively.
 * For shop-frontend, run `npm run dev` to launch the app.
 
 > If you are using VSCode, there are launch configurations for each individual package in the demo.
@@ -89,12 +76,11 @@ The following steps are necessary to deploy the payment backend to the DBOS Clou
 * Use the `npx dbos-cloud login` command from within the application directory, if you haven't already logged in.
 * Provision a DBOS Cloud database instance (using `npx dbos-cloud database provision`) if you have not already done so.
 * Register the application, using `npx dbos-cloud app register -d <dbname>`, with `<dbname>` set to match the name of the provisioned database server instance.
-* In the dbos-config.yaml, set `frontend_host` to the URL that the payment server will have once deployed.  This is of the form `https://<username>-payment-backend.cloud.dbos.dev`.
+* Use `npx dbos cloud app env` to set the URL that the payment server will have once deployed.  This is of the form `https://<username>-payment-backend.cloud.dbos.dev`.
 * Deploy the application, using `npx dbos-cloud app deploy`.
 
 Be sure to note down the URL provided for accessing the payment backend; it is necessary for configuring the shop backend.
 The URL will be of the form `https://<username>-<app-name>.cloud.dbos.dev/`.
-The URL should match what was set as `frontend-host` in `dbos-config.yaml`.  If not, edit `dbos-config.yaml` and redeploy with `npx dbos-cloud app deploy`.
 
 ### Configuring and Deploying the Shop Backend
 Assuming that the payment backend has already been deployed, the following additional steps are necessary to deploy the shop backend to the DBOS Cloud.
@@ -235,9 +221,9 @@ uses `getEvent` to wait for the `paymentWorkflow` to provide the payment redirec
   const handle = await Shop.paymentWorkflow(username, origin);
   const url = await DBOS.getEvent<string>(handle.getWorkflowID(), checkout_url_topic);
   if (url === null) {
-    DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
+    DBOSKoa.koaContext.redirect(`${origin}/checkout/cancel`);
   } else {
-    DBOS.koaContext.redirect(url);
+    DBOSKoa.koaContext.redirect(url);
   }
 ```
 
@@ -291,9 +277,9 @@ When the payment system is done processing a payment, it calls back the HTTP han
 The HTTP handler forwards the payment details to the workflow instance via the `send` method. 
  
 ```ts
-@DBOS.postApi('/payment_webhook')
+@dhttp.postApi('/payment_webhook')
 static async paymentWebhook(): Promise<void> {
-  const req = DBOS.koaContext.request;
+  const req = DBOSKoa.koaContext.request;
 
   type Session = { session_id: string; client_reference_id?: string; payment_status: string };
   const payload = req.body as Session;
@@ -355,7 +341,7 @@ For more information on testing in DBOS, see the [Testing and Debugging](https:/
 
 The `payment-backend` project uses:
 * The [`jest`](https://jestjs.io/) testing framework for defining test suites (setup, teardown, and tests) and reporting test results.
-* [`supertest`](https://github.com/ladjs/supertest) executed against [`DBOS.getHTTPHandlersCallback()`](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#http-testing) to test HTTP handling logic in combination with the DBOS-based application code.
+* [`supertest`](https://github.com/ladjs/supertest) executed against [`app.callback()`] to test HTTP handling logic in combination with the DBOS-based application code.
 * `DBOS.send` and `DBOS.retrieveWorkflow` to examine and interact with the workflow under test.
 * `DBOS.setConfig` to set [application configuration](https://docs.dbos.dev/typescript/reference/configuration#application) items, allowing the resulting behavior to be unit-tested.
 

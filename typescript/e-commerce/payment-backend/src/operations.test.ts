@@ -1,16 +1,23 @@
+import Koa from 'koa';
+import Router from '@koa/router';
+
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import { PaymentItem, PaymentSessionInformation, payment_complete_topic } from "./operations";
+import { PaymentItem, PaymentSessionInformation, dkoa, knexds, payment_complete_topic, setUnitTest } from "./operations";
 import request from "supertest";
 
 describe("operations", () => {
+  const koa = new Koa();
+  const router = new Router();
 
   beforeAll(async () => {
+    process.env.PAYMENT_HOST = 'http://localhost:8086';
     await DBOS.launch();
-    await DBOS.launchAppHTTPServer();
-    await DBOS.queryUserDB(`delete from items;`);
-    await DBOS.queryUserDB(`delete from session;`);
+    dkoa.registerWithApp(koa, router);
 
-    DBOS.setAppConfig('unittest', true);
+    await knexds.runTransaction(async ()=>{await knexds.client.raw(`delete from items;`)});
+    await knexds.runTransaction(async ()=>{await knexds.client.raw(`delete from session;`)});
+
+    setUnitTest();
   });
 
   afterAll(async () => {
@@ -29,9 +36,10 @@ describe("operations", () => {
       ]
     };
 
-    const resp1 = await request(DBOS.getHTTPHandlersCallback())
+    const resp1 = await request(koa.callback())
       .post("/api/create_payment_session")
       .send(req);
+    console.log(`${JSON.stringify(resp1)}`);
     expect(resp1.status).toBe(200);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -40,7 +48,7 @@ describe("operations", () => {
     const url = new URL(resp1.body.url as string);
     expect(url.pathname).toBe(`/payment/${session_id}`);
 
-    const resp2 = await request(DBOS.getHTTPHandlersCallback())
+    const resp2 = await request(koa.callback())
       .get(`/api/session_info/${session_id}`);
     expect(resp2.status).toBe(200);
 
