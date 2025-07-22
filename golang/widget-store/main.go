@@ -96,7 +96,7 @@ func getOrders(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var orders []Order
+	orders := []Order{}
 	for rows.Next() {
 		var order Order
 		err := rows.Scan(&order.OrderID, &order.OrderStatus, &order.LastUpdateTime, &order.ProgressRemaining)
