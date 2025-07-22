@@ -12,3 +12,6 @@ CREATE TABLE products (
     inventory INTEGER NOT NULL,
     price DECIMAL(10,2) NOT NULL
 );
+
+INSERT INTO products (product_id, product, description, inventory, price) 
+VALUES (1, 'Premium Quality Widget', 'Enhance your productivity with our top-rated widgets!', 100, 99.99);
