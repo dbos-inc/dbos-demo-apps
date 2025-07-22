@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -11,6 +12,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var (
+	checkoutWF = dbos.WithWorkflow(checkoutWorkflow)
 )
 
 const WIDGET_ID = 1
@@ -37,6 +42,11 @@ type Order struct {
 	OrderStatus       int       `json:"order_status"`
 	LastUpdateTime    time.Time `json:"last_update_time"`
 	ProgressRemaining int       `json:"progress_remaining"`
+}
+
+type UpdateOrderStatusInput struct {
+	OrderID     int
+	OrderStatus OrderStatus
 }
 
 var db *pgxpool.Pool
@@ -69,8 +79,26 @@ func main() {
 	r.GET("/orders", getOrders)
 	r.GET("/order/:id", getOrder)
 	r.POST("/restock", restock)
+	r.POST("/checkout/:idempotency_key", checkoutEndpoint)
 
 	r.Run(":8080")
+}
+
+func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
+	// Create a new order
+	orderID, err := dbos.RunAsStep(ctx, createOrder, "")
+	if err != nil {
+		return "", err
+	}
+
+	// Attempt to reserve inventory, cancelling the order if no inventory remains
+	success, err := dbos.RunAsStep(ctx, reserveInventory, "")
+	if err != nil || !success {
+		fmt.Printf("Failed to reserve inventory for order %d", orderID)
+		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
+		return "", err
+	}
+	return "", nil
 }
 
 func getProduct(c *gin.Context) {
@@ -145,8 +173,8 @@ func restock(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Restocked successfully"})
 }
 
-func reserveInventory(ctx context.Context, tx pgx.Tx) (bool, error) {
-	result, err := tx.Exec(ctx,
+func reserveInventory(ctx context.Context, _ string) (bool, error) {
+	result, err := db.Exec(ctx,
 		"UPDATE products SET inventory = inventory - 1 WHERE product_id = $1 AND inventory > 0",
 		WIDGET_ID)
 	if err != nil {
@@ -155,41 +183,53 @@ func reserveInventory(ctx context.Context, tx pgx.Tx) (bool, error) {
 	return result.RowsAffected() > 0, nil
 }
 
-func undoReserveInventory(ctx context.Context, tx pgx.Tx) error {
-	_, err := tx.Exec(ctx,
+func undoReserveInventory(ctx context.Context, _ string) (string, error) {
+	_, err := db.Exec(ctx,
 		"UPDATE products SET inventory = inventory + 1 WHERE product_id = $1",
 		WIDGET_ID)
-	return err
+	return "", err
 }
 
-func createOrder(ctx context.Context, tx pgx.Tx) (int, error) {
+func createOrder(ctx context.Context, _ string) (int, error) {
 	var orderID int
-	err := tx.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		"INSERT INTO orders (order_status) VALUES ($1) RETURNING order_id",
 		int(PENDING)).Scan(&orderID)
 	return orderID, err
 }
 
-func updateOrderStatus(ctx context.Context, tx pgx.Tx, orderID int, status OrderStatus) error {
-	_, err := tx.Exec(ctx,
+func updateOrderStatus(ctx context.Context, input UpdateOrderStatusInput) (string, error) {
+	_, err := db.Exec(ctx,
 		"UPDATE orders SET order_status = $1 WHERE order_id = $2",
-		int(status), orderID)
-	return err
+		int(input.OrderStatus), input.OrderID)
+	return "", err
 }
 
-func updateOrderProgress(ctx context.Context, tx pgx.Tx, orderID int) (int, error) {
+func updateOrderProgress(ctx context.Context, orderID int) (int, error) {
 	var progressRemaining int
-	err := tx.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		"UPDATE orders SET progress_remaining = progress_remaining - 1 WHERE order_id = $1 RETURNING progress_remaining",
 		orderID).Scan(&progressRemaining)
 
 	if err != nil {
 		return 0, err
 	}
-
 	if progressRemaining == 0 {
-		err = updateOrderStatus(ctx, tx, orderID, DISPATCHED)
+		_, err = updateOrderStatus(ctx, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: DISPATCHED})
 	}
 
 	return progressRemaining, err
+}
+
+func checkoutEndpoint(c *gin.Context) {
+	idempotencyKey := c.Param("idempotency_key")
+
+	// Start the checkout workflow with the idempotency key
+	_, err := checkoutWF(context.Background(), "", dbos.WithWorkflowID(idempotencyKey))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.String(http.StatusOK, "")
 }
