@@ -65,9 +65,8 @@ export async function resetDatabase() {
 describe('Widget store utilities', () => {
   beforeEach(async () => {
     const dbosTestConfig: DBOSConfig = {
-      databaseUrl: `postgres://postgres:${process.env.PGPASSWORD || 'dbos'}@localhost:5432/widget_store_test`,
-      sysDbName,
-      userDbclient: 'knex',
+      databaseUrl: `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'widget_store_test'}`,
+      systemDatabaseUrl: `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${sysDbName}`,
     };
     DBOS.setConfig(dbosTestConfig);
     await resetDatabase();
