@@ -1,4 +1,4 @@
-import { DBOS, parseConfigFile } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import { BankEndpoints as _endpoints, BankAccountInfo, BankTransactionHistory, dkoa } from "./operations";
 import request from "supertest";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
@@ -13,8 +13,7 @@ describe("bank-tests", () => {
   const router = new Router();
 
   beforeAll(async () => {
-    const [dbosConfig] = parseConfigFile({configfile: "dbos-test-config.yaml"});
-    DBOS.setConfig(dbosConfig);
+    DBOS.setConfig({name: 'dbos-bank-test'});
     await PrismaDataSource.initializeDBOSSchema(prismaClient);
 
     await DBOS.launch();

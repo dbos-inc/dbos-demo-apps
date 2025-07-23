@@ -3,7 +3,7 @@ const path = require('node:path');
 
 // Write out the .env file
 const databaseURL = 
-  process.env['DATABASE_URL'] ||
+  process.env['DBOS_DATABASE_URL'] ||
   `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'bank_backend'}`;
 
 try {
