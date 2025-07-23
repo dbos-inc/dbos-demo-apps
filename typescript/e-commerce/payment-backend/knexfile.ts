@@ -2,13 +2,7 @@ import { Knex } from 'knex';
 
 const config: Knex.Config = {
   client: 'pg',
-  connection: {
-    host: process.env.PGHOST || 'localhost',
-    port: parseInt(process.env.PGPORT || '5432'),
-    database: process.env.PGDATABASE || 'payment',
-    user: process.env.PGUSER || 'postgres',
-    password: process.env.PGPASSWORD || 'dbos',
-  },
+  connection: process.env.DBOS_DATABASE_URL || `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'payment'}`,
   migrations: {
     directory: './migrations'
   }

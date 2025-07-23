@@ -1,4 +1,4 @@
-import { DBOS, parseConfigFile } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { dkoa } from './operations';
 import Koa from 'koa';
 import Router from '@koa/router';
@@ -6,8 +6,6 @@ import Router from '@koa/router';
 const PORT = parseInt(process.env.SHOP_PORT ?? '3000');
 
 async function main() {
-  DBOS.setConfig(parseConfigFile()[0]);
-
   await DBOS.launch();
   DBOS.logRegisteredEndpoints();
 
