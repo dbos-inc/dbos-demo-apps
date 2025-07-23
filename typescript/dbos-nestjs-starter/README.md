@@ -14,6 +14,8 @@ npm install
 npx dbos start
 ```
 
+You may need to set your database environment variables (such as `DBOS_DATABASE_URL`, or `PGPASSWORD` et al).
+
 Send a request to [`http://localhost:3000`](http://localhost:3000) to get a greeting message.
 
 ```shell

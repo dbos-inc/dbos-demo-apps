@@ -9,13 +9,13 @@ const config = {
   connection: {
     host: process.env.PGHOST || 'localhost',
     port: parseInt(process.env.PGPORT || '5432'),
-    database: process.env.PGDATABASE || 'nestjs_starter_test',
+    database: process.env.PGDATABASE || 'dbos_nest_starter_test',
     user: process.env.PGUSER || 'postgres',
     password: process.env.PGPASSWORD || 'dbos',
   },
 };
 
-const sysDbName = 'nestjs_starter_test_dbos_sys';
+const sysDbName = 'dbos_nest_starter_test_dbos_sys';
 const appDbName = config.connection.database;
 
 export async function resetDatabase() {
@@ -58,8 +58,8 @@ describe("AppService", () => {
 
   beforeEach(async () => {
     const dbosTestConfig: DBOSConfig = {
-      databaseUrl: `postgres://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || "dbos"}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'nestjs_starter'}`,
-      sysDbName: 'nestjs_starter_test_dbos_sys',
+      databaseUrl: `postgres://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || "dbos"}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${appDbName}`,
+      systemDatabaseUrl: `postgres://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || "dbos"}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${sysDbName}`,
     };
     DBOS.setConfig(dbosTestConfig);
     await resetDatabase();
