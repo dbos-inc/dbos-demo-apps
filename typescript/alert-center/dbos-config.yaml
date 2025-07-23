@@ -9,7 +9,3 @@ runtimeConfig:
     - npm run start
 database:
   migrate: ['npx knex migrate:latest']
-env:
-  KAFKA_BROKER: ${KAFKA_BROKER}
-  KAFKA_USERNAME: ${KAFKA_USERNAME}
-  KAFKA_PASSWORD: ${KAFKA_PASSWORD}

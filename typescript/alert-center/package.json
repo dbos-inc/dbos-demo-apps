@@ -11,7 +11,7 @@
     "dev": "nodemon"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "3.0.35-preview",
+    "@dbos-inc/dbos-cloud": "3.0.45-preview",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/jest": "^29.5.14",
     "@types/koa": "^2.15.0",
@@ -24,10 +24,10 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "3.0.35-preview",
-    "@dbos-inc/kafkajs-receive": "3.0.35-preview",
-    "@dbos-inc/knex-datasource": "3.0.35-preview",
-    "@dbos-inc/koa-serve": "3.0.35-preview",
+    "@dbos-inc/dbos-sdk": "3.0.45-preview",
+    "@dbos-inc/kafkajs-receive": "3.0.45-preview",
+    "@dbos-inc/knex-datasource": "3.0.45-preview",
+    "@dbos-inc/koa-serve": "3.0.45-preview",
     "@koa/router": "^13.1.0",
     "kafkajs": "^2.2.4",
     "koa": "^3.0.0",
