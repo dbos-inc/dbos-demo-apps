@@ -1,5 +1,6 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import Koa from 'koa';
+import type { Context } from 'koa';
 import logger from 'koa-morgan';
 import bodyParser from 'koa-bodyparser';
 import path from 'path';
@@ -62,7 +63,7 @@ export class Example {
 }
 
 // This endpoint uses DBOS to idempotently launch a durable workflow
-router.get("/workflow/:taskid", async (ctx) => {
+router.get("/workflow/:taskid", async (ctx: Context) => {
     const { taskid } = ctx.params;
     await DBOS.startWorkflow(Example, { workflowID: taskid }).workflow();
     ctx.status = 200;
@@ -70,7 +71,7 @@ router.get("/workflow/:taskid", async (ctx) => {
 );
 
 // This endpoint retrieves the status of a specific background task.
-router.get("/last_step/:taskid", async (ctx) => {
+router.get("/last_step/:taskid", async (ctx: Context) => {
     const { taskid } = ctx.params;
     const step = await DBOS.getEvent(taskid, stepsEvent, 0);
     ctx.body = (String(step !== null ? step : 0));
@@ -78,12 +79,12 @@ router.get("/last_step/:taskid", async (ctx) => {
 );
 
 // This endpoint crashes the application. For demonstration purposes only :)
-router.post("/crash", (_ctx): void => {
+router.post("/crash", (_ctx: Context): void => {
   process.exit(1);
 });
 
 // This code serves the HTML readme from the root path.
-router.get("/", async (ctx) => {
+router.get("/", async (ctx: Context) => {
   const filePath = path.resolve(__dirname, "..", "html", "app.html");
   try {
     await send(ctx, filePath, { root: '/' }); // Adjust root as needed
