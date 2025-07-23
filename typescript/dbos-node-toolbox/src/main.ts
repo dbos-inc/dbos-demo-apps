@@ -9,7 +9,7 @@ const queue = new WorkflowQueue("example_queue");
 
 const config = {
   client: 'pg',
-  connection: {
+  connection: process.env.DBOS_DATABASE_URL || {
     host: process.env.PGHOST || 'localhost',
     port: parseInt(process.env.PGPORT || '5432'),
     database: process.env.PGDATABASE || 'dbos_node_toolbox',

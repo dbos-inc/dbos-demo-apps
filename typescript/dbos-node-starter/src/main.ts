@@ -91,7 +91,8 @@ router.get("/", async (ctx) => {
     console.error(err);
     ctx.status = 500;
     ctx.body = 'Internal Server Error';
-  }});
+  }
+});
 
 // Apply routes to app
 app.use(router.routes());
