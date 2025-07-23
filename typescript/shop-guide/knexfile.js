@@ -1,17 +1,6 @@
-const { parseConfigFile } = require('@dbos-inc/dbos-sdk');
-
-const [dbosConfig, ] = parseConfigFile();
-
 const config = {
   client: 'pg',
-  connection: {
-    host: dbosConfig.poolConfig.host,
-    port: dbosConfig.poolConfig.port,
-    user: dbosConfig.poolConfig.user,
-    password: dbosConfig.poolConfig.password,
-    database: dbosConfig.poolConfig.database,
-    ssl: dbosConfig.poolConfig.ssl,
-  },
+  connection: process.env.DBOS_DATABASE_URL || `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'shop_guide'}`,
   migrations: {
     directory: './migrations'
   }

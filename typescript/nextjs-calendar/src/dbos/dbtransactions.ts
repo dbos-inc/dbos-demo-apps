@@ -6,7 +6,9 @@ import { ClientBase, Pool, PoolClient } from 'pg';
 
 import { DBTrigger } from '@dbos-inc/pgnotifier-receiver';
 
-const config = {
+const config = process.env.DBOS_DATABASE_URL 
+? { connection: process.env.DBOS_DATABASE_URL }
+: {
     host: process.env.PGHOST || 'localhost',
     port: parseInt(process.env.PGPORT || '5432'),
     database: process.env.PGDATABASE || 'dbos_next_calendar',

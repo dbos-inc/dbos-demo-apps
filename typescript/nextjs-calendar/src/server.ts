@@ -10,7 +10,7 @@ import Router from '@koa/router';
 import { WebSocketServer, WebSocket } from 'ws';
 
 import "./module-aliases";
-import { DBOS, parseConfigFile } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { dkoa } from './dbos/dbos_bored';
 
 // This is to handle files, in case entrypoints is not manually specified
@@ -48,13 +48,10 @@ const handle = app.getRequestHandler();
 
 
 async function main() {
-  const [cfg] = parseConfigFile();
-
   DBOS.logger.info('Loading server files...');
   const files = await loadAllDBOSServerFiles();
   DBOS.logger.info('  ...loaded.')
 
-  DBOS.setConfig(cfg);
   DBOS.logger.info('Launching...');
   await DBOS.launch();
   DBOS.logger.info('  ...launched.');
