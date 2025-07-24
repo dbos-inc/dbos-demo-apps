@@ -102,7 +102,8 @@ app.use(router.allowedMethods());
 // Launch DBOS and start the Express.js server
 async function main() {
   DBOS.setConfig({
-    "name": "dbos-node-starter",
+    name: "dbos-node-starter",
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
 
