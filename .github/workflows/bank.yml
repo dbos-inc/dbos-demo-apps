@@ -65,10 +65,6 @@ jobs:
           npm run build
           npm run test
         env:
-          DBOS_DBUSER: bank_a
-          DBOS_DBHOST: localhost
-          DBOS_DBPORT: 5432
-          DBOS_DATABASE: bank_a
           PGPASSWORD: bank
           PGDATABASE: bank_a
           PGUSER: bank_a
