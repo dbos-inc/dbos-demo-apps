@@ -52,7 +52,7 @@ export const knexds = new KnexDataSource('app-db', config);
 export async function retrieveOrders() {
   return knexds.runTransaction(async () => {
     return KnexDataSource.client<Order>('orders').select('*');
-  });
+  }, {"name": "retrieveOrders"});
 }
 
 // Here, let's write some database operations. Each of these functions performs a simple
@@ -69,7 +69,7 @@ export async function subtractInventory(): Promise<void> {
     if (numAffected <= 0) {
       throw new Error('Insufficient Inventory');
     }
-  });
+  }, {"name": "subtractInventory"});
 }
 
 export async function undoSubtractInventory(): Promise<void> {
@@ -77,13 +77,13 @@ export async function undoSubtractInventory(): Promise<void> {
     await KnexDataSource.client<Product>('products')
       .where({ product_id: PRODUCT_ID })
       .update({ inventory: KnexDataSource.client.raw('inventory + ?', 1) });
-  });
+  }, {"name": "undoSubtractInventory"});
 }
 
 export async function setInventory(inventory: number): Promise<void> {
   return knexds.runTransaction(async () => {
     await KnexDataSource.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
-  });
+  }, {"name": "setInventory"});
 }
 
 export async function retrieveProduct(): Promise<Product> {
@@ -93,7 +93,7 @@ export async function retrieveProduct(): Promise<Product> {
       throw new Error(`Product ${PRODUCT_ID} not found`);
     }
     return item[0];
-  });
+  }, {"name": "retrieveProduct"});
 }
 
 export async function createOrder(): Promise<number> {
@@ -108,7 +108,7 @@ export async function createOrder(): Promise<number> {
       .returning('order_id');
     const orderID = orders[0].order_id;
     return orderID;
-  });
+  }, {"name": "createOrder"});
 }
 
 export async function markOrderPaid(order_id: number): Promise<void> {
@@ -117,7 +117,7 @@ export async function markOrderPaid(order_id: number): Promise<void> {
       order_status: OrderStatus.PAID,
       last_update_time: KnexDataSource.client.fn.now(),
     });
-  });
+  }, {"name": "markOrderPaid"});
 }
 
 export async function errorOrder(order_id: number): Promise<void> {
@@ -126,7 +126,7 @@ export async function errorOrder(order_id: number): Promise<void> {
       order_status: OrderStatus.CANCELLED,
       last_update_time: KnexDataSource.client.fn.now(),
     });
-  });
+  }, {"name": "errorOrder"});
 }
 
 export async function retrieveOrder(order_id: number): Promise<Order> {
@@ -136,7 +136,7 @@ export async function retrieveOrder(order_id: number): Promise<Order> {
       throw new Error(`Order ${order_id} not found`);
     }
     return item[0];
-  });
+  }, {"name": "retrieveOrder"});
 }
 
 export const dispatchOrder = DBOS.registerWorkflow(async (order_id: number) => {
@@ -144,7 +144,7 @@ export const dispatchOrder = DBOS.registerWorkflow(async (order_id: number) => {
     await DBOS.sleep(1000);
     await updateOrderProgress(order_id);
   }
-});
+}, {"name": "dispatchOrder"});
 
 export async function updateOrderProgress(order_id: number): Promise<void> {
   return knexds.runTransaction(async () => {
@@ -167,5 +167,5 @@ export async function updateOrderProgress(order_id: number): Promise<void> {
         progress_remaining: 0,
       });
     }
-  });
+  }, {"name": "updateOrderProgress"});
 }

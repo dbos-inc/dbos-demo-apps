@@ -37,7 +37,7 @@ export const ORDER_ID_EVENT = 'order_url';
 // Within seconds, your app will recover to exactly the state it was in before the crash
 // and continue as if nothing happened.
 
-async function paymentWorkflowFunction(): Promise<void> {
+const checkoutWorkflow = DBOS.registerWorkflow(async () => {
   // Attempt to reserve inventory, failing if no inventory remains
   try {
     await subtractInventory();
@@ -70,8 +70,7 @@ async function paymentWorkflowFunction(): Promise<void> {
   // Finally, send the order ID to the payment endpoint so it can redirect
   // the customer to the order status page.
   await DBOS.setEvent(ORDER_ID_EVENT, orderID);
-}
-const paymentWorkflow = DBOS.registerWorkflow(paymentWorkflowFunction);
+}, {"name": "checkoutWorkflow"});
 
 // Now, let's use Fastify to write the HTTP endpoint for checkout.
 
@@ -90,7 +89,7 @@ fastify.post<{
 }>('/checkout/:key', async (req, reply) => {
   const key = req.params.key;
   // Idempotently start the checkout workflow in the background.
-  const handle = await DBOS.startWorkflow(paymentWorkflow, { workflowID: key })();
+  const handle = await DBOS.startWorkflow(checkoutWorkflow, { workflowID: key })();
   // Wait for the checkout workflow to send a payment ID, then return it.
   const paymentID = await DBOS.getEvent<string | null>(handle.workflowID, PAYMENT_ID_EVENT);
   if (paymentID === null) {
