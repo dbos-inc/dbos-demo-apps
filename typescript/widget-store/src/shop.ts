@@ -47,7 +47,6 @@ const config = {
       },
 };
 
-
 // Here, let's write some database operations using a Knex DataSource.
 // This lets us call them as steps in the durable checkout workflow.
 

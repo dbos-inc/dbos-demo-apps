@@ -17,7 +17,7 @@ import {
   retrieveProduct,
   retrieveOrder,
   setInventory,
-} from './utilities';
+} from './shop';
 import { Liquid } from 'liquidjs';
 import path from 'path';
 
