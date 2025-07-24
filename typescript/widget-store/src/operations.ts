@@ -6,7 +6,7 @@
 
 import Fastify from 'fastify';
 import { DBOS } from '@dbos-inc/dbos-sdk';
-import { ShopUtilities } from './utilities';
+import { retrieveOrders, subtractInventory, createOrder, markOrderPaid, dispatchOrder, errorOrder, undoSubtractInventory, retrieveProduct, retrieveOrder, setInventory } from './utilities';
 import { Liquid } from 'liquidjs';
 import path from 'path';
 
@@ -29,7 +29,7 @@ export const ORDER_ID_EVENT = 'order_url';
 async function paymentWorkflowFunction(): Promise<void> {
   // Attempt to reserve inventory, failing if no inventory remains
   try {
-    await ShopUtilities.subtractInventory();
+    await subtractInventory();
   } catch (error) {
     DBOS.logger.error(`Failed to update inventory: ${(error as Error).message}`);
     await DBOS.setEvent(PAYMENT_ID_EVENT, null);
@@ -37,7 +37,7 @@ async function paymentWorkflowFunction(): Promise<void> {
   }
 
   // Create a new order
-  const orderID = await ShopUtilities.createOrder();
+  const orderID = await createOrder();
 
   // Send a unique payment ID to the checkout endpoint so it can
   // redirect the customer to the payments page
@@ -48,12 +48,12 @@ async function paymentWorkflowFunction(): Promise<void> {
   // Otherwise, return reserved inventory and cancel the order.
   if (notification && notification === 'paid') {
     DBOS.logger.info(`Payment successful!`);
-    await ShopUtilities.markOrderPaid(orderID);
-    await DBOS.startWorkflow(ShopUtilities).dispatchOrder(orderID);
+    await markOrderPaid(orderID);
+    await DBOS.startWorkflow(dispatchOrder)(orderID);
   } else {
     DBOS.logger.warn(`Payment failed...`);
-    await ShopUtilities.errorOrder(orderID);
-    await ShopUtilities.undoSubtractInventory();
+    await errorOrder(orderID);
+    await undoSubtractInventory();
   }
 
   // Finally, send the order ID to the payment endpoint so it can redirect
@@ -113,22 +113,22 @@ fastify.post<{
 // order and product information.
 
 fastify.get('/product', async () => {
-  return await ShopUtilities.retrieveProduct();
+  return await retrieveProduct();
 });
 
 fastify.get<{
   Params: { order_id: string };
 }>('/order/:order_id', async (req) => {
   const order_id = Number(req.params.order_id);
-  return await ShopUtilities.retrieveOrder(order_id);
+  return await retrieveOrder(order_id);
 });
 
 fastify.get('/orders', async () => {
-  return await ShopUtilities.retrieveOrders();
+  return await retrieveOrders();
 });
 
 fastify.post('/restock', async () => {
-  return await ShopUtilities.setInventory(100);
+  return await setInventory(100);
 });
 
 // Let's serve the app's frontend from an HTML file using Fastify.

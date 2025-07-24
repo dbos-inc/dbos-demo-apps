@@ -1,4 +1,4 @@
-import { ShopUtilities, OrderStatus, PRODUCT_ID } from './utilities';
+import { createOrder, retrieveOrder, OrderStatus, PRODUCT_ID } from './utilities';
 import knex, { Knex } from 'knex';
 import path from 'path';
 
@@ -79,8 +79,8 @@ describe('Widget store utilities', () => {
   });
 
   it('Creates an order', async () => {
-    const orderId = await ShopUtilities.createOrder();
-    const retrievedOrder = await ShopUtilities.retrieveOrder(orderId);
+    const orderId = await createOrder();
+    const retrievedOrder = await retrieveOrder(orderId);
     expect(retrievedOrder).toMatchObject({
       order_id: orderId,
       order_status: OrderStatus.PENDING,
