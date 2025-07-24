@@ -1,8 +1,16 @@
 import {
-  DBOS, DBOSResponseError, KoaMiddleware, ArgRequired, ArgOptional,
+  DBOS, DBOSResponseError
 } from '@dbos-inc/dbos-sdk';
 
 import KoaViews from '@ladjs/koa-views';
+
+import {
+  ArgOptional,
+  ArgRequired,
+  DBOSKoa
+} from '@dbos-inc/koa-serve';
+
+export const dkoa = new DBOSKoa();
 
 export interface SessionTable {
   session_id: string;
@@ -21,6 +29,25 @@ export interface ItemTable {
   session_id: string;
 }
 
+import { KnexDataSource } from '@dbos-inc/knex-datasource';
+
+let unittest = false;
+export function setUnitTest() {
+  unittest = true;
+}
+
+const config = {
+  client: 'pg',
+  connection: process.env.DBOS_DATABASE_URL || {
+    host: process.env.PGHOST || 'localhost',
+    port: parseInt(process.env.PGPORT || '5432'),
+    database: process.env.PGDATABASE || 'payment',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'dbos',
+  },
+};
+export const knexds = new KnexDataSource('app-db', config);
+
 export const payment_complete_topic = "payment_complete_topic";
 export const payment_session_started_topic = "payment_session_started_topic";
 export const payment_submitted = "payment.submitted";
@@ -32,10 +59,10 @@ function getPaymentStatus(status?: string): "pending" | "paid" | "cancelled" {
 }
 
 function getRedirectUrl(session_id: string): string {
-  const frontend_host = DBOS.getConfig<string>("frontend_host");
-  if (!frontend_host) { throw new DBOSResponseError("frontend_host not configured", 500); }
+  const payment_host = process.env.PAYMENT_HOST || 'http://localhost:8086';
+  if (!payment_host) { throw new DBOSResponseError("PAYMENT_HOST not configured in environment", 500); }
 
-  const url = new URL(frontend_host);
+  const url = new URL(payment_host);
   url.pathname = `/payment/${session_id}`;
   return url.href;
 }
@@ -56,39 +83,39 @@ export interface PaymentSessionInformation {
   items: PaymentItem[];
 }
 
-@KoaMiddleware(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }))
+@dkoa.koaMiddleware(KoaViews(`${__dirname}/../views`, { extension: 'ejs' }))
 export class PlaidPayments {
   // UI
-  @DBOS.getApi('/payment/:session_id')
+  @dkoa.getApi('/payment/:session_id')
   static async paymentPage(session_id: string) {
     const session = await PlaidPayments.getSessionInformationTrans(session_id);
     if (!session) {
       return `Invalid session id ${session_id}`;
     }
 
-    await DBOS.koaContext.render('payment', { session });
+    await DBOSKoa.koaContext.render('payment', { session });
   }
 
-  @DBOS.postApi('/payment/:session_id')
+  @dkoa.postApi('/payment/:session_id')
   static async paymentAction(session_id: string) {
     const session = await PlaidPayments.getSessionInformationTrans(session_id);
     if (!session) {
       return `Invalid session id ${session_id}`;
     }
 
-    const body = DBOS.koaContext.request.body as object;
+    const body = DBOSKoa.koaContext.request.body as object;
     const submit = 'submit' in body;
     if (submit) {
       await PlaidPayments.submitPayment(session_id);
-      DBOS.koaContext.redirect(session.success_url);
+      DBOSKoa.koaContext.redirect(session.success_url);
     } else {
       await PlaidPayments.cancelPayment(session_id);
-      DBOS.koaContext.redirect(session.cancel_url);
+      DBOSKoa.koaContext.redirect(session.cancel_url);
     }
   }
 
   // API for shop
-  @DBOS.postApi('/api/create_payment_session')
+  @dkoa.postApi('/api/create_payment_session')
   static async createPaymentSession(
     @ArgRequired webhook: string,
     @ArgRequired success_url: string,
@@ -96,7 +123,6 @@ export class PlaidPayments {
     @ArgRequired items: PaymentItem[],
     @ArgOptional client_reference_id?: string
   ): Promise<PaymentSession> {
-
     if (items.length === 0) {
       throw new DBOSResponseError("items must be non-empty", 404);
     }
@@ -112,10 +138,10 @@ export class PlaidPayments {
     };
   }
 
-  @DBOS.getApi('/api/session/:session_id')
-  @DBOS.transaction({ readOnly: true })
+  @dkoa.getApi('/api/session/:session_id')
+  @knexds.transaction({ readOnly: true })
   static async retrievePaymentSession(session_id: string): Promise<PaymentSession | undefined> {
-    const rows = await DBOS.knexClient<SessionTable>('session').select('status').where({ session_id });
+    const rows = await knexds.client<SessionTable>('session').select('status').where({ session_id });
     if (rows.length === 0) { return undefined; }
 
     return {
@@ -126,31 +152,31 @@ export class PlaidPayments {
   }
 
   // Optional API, used in shop guide and/or unit tests
-  @DBOS.postApi('/api/submit_payment')
+  @dkoa.postApi('/api/submit_payment')
   static async submitPayment(session_id: string) {
     await DBOS.send(session_id, payment_submitted, payment_complete_topic);
   }
 
-  @DBOS.postApi('/api/cancel_payment')
+  @dkoa.postApi('/api/cancel_payment')
   static async cancelPayment(session_id: string) {
     await DBOS.send(session_id, payment_cancelled, payment_complete_topic);
   }
 
-  @DBOS.getApi('/api/session_info/:session_id')
+  @dkoa.getApi('/api/session_info/:session_id')
   static async getSessionInformation(session_id: string): Promise<PaymentSessionInformation | undefined> {
     return await PlaidPayments.getSessionInformationTrans(session_id);
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @knexds.transaction({ readOnly: true })
   static async getSessionInformationTrans(session_id: string): Promise<PaymentSessionInformation | undefined> {
     DBOS.logger.info(`getting session record ${session_id}`);
-    const session = await DBOS.knexClient<SessionTable>('session')
+    const session = await knexds.client<SessionTable>('session')
       .select("session_id", "success_url", "cancel_url", "status")
       .where({ session_id })
       .first();
     if (!session) { return undefined; }
 
-    const items = await DBOS.knexClient<ItemTable>('items')
+    const items = await knexds.client<ItemTable>('items')
       .select("description", "price", "quantity")
       .where({ session_id });
     return { ...session, items };
@@ -177,7 +203,7 @@ export class PlaidPayments {
     await PlaidPayments.paymentWebhook(webhook, session_id, notification, client_ref);
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async insertSession(
     session_id: string,
     webhook: string,
@@ -186,18 +212,18 @@ export class PlaidPayments {
     items: PaymentItem[],
     @ArgOptional client_reference_id?: string
   ): Promise<void> {
-    await DBOS.knexClient<SessionTable>('session').insert({ session_id, client_reference_id, webhook, success_url, cancel_url });
+    await knexds.client<SessionTable>('session').insert({ session_id, client_reference_id, webhook, success_url, cancel_url });
     for (const item of items) {
-      await DBOS.knexClient<ItemTable>('items').insert({ ...item, session_id });
+      await knexds.client<ItemTable>('items').insert({ ...item, session_id });
     }
   }
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async updateSessionStatus(
     session_id: string,
     status: string
   ): Promise<void> {
-    await DBOS.knexClient<SessionTable>('session').where({ session_id }).update({ status });
+    await knexds.client<SessionTable>('session').where({ session_id }).update({ status });
   }
 
   @DBOS.step()
@@ -208,7 +234,7 @@ export class PlaidPayments {
     client_reference_id: string | undefined
   ): Promise<void>
   {
-    if (DBOS.getConfig('unittest', false) && webhook === "http://fakehost/webhook") {
+    if (unittest && webhook === "http://fakehost/webhook") {
       return; // In testing, matching the bogus testing URL
     }
     const body = { session_id, payment_status: getPaymentStatus(status), client_reference_id };

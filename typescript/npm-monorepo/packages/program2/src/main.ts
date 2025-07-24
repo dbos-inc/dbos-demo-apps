@@ -66,7 +66,7 @@ app.get("/", (_, res) => {
 
 // Launch DBOS and start the Express.js server
 async function main() {
-  await DBOS.launch({ expressApp: app });
+  await DBOS.launch();
   const PORT = process.env.NODE_PORT || 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);

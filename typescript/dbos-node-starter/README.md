@@ -1,6 +1,6 @@
 # Welcome to DBOS!
 
-This is a template app built with DBOS and Express.
+This is a template app built with DBOS and Koa.
 
 ### Developing Locally
 

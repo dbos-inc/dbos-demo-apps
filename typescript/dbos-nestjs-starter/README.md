@@ -14,6 +14,8 @@ npm install
 npx dbos start
 ```
 
+You may need to set your database environment variables (such as `DBOS_DATABASE_URL`, or `PGPASSWORD` et al).
+
 Send a request to [`http://localhost:3000`](http://localhost:3000) to get a greeting message.
 
 ```shell
@@ -65,9 +67,9 @@ async function bootstrap() {
   );
   // Pass the nest router to DBOS so it can attach OTel tracing middlewares
   await DBOS.launch({ nestApp: app });
-  // Nest must be set to listen on 3000 and external networks to run on DBOS Cloud
-  // You can also use an environment variables in dbos-config.yaml to set the port
-  await app.listen(DBOS.runtimeConfig?.port || 3000, "0.0.0.0");
+  // Nest must be set to listen on 3000 and external networks to run on DBOS Cloud.
+  //  The port can be overridden in development by using an environment variable.
+  await app.listen(parseInt(process.env.NODE_PORT || '3000'), "0.0.0.0");
 }
 
 bootstrap();
@@ -118,7 +120,7 @@ export class AppService extends ConfiguredInstance {
     return data;
   }
 
-  @DBOS.transaction()
+  @appds.transaction()
   async insert(): Promise<string> {
     const randomName: string = uniqueNamesGenerator({
       dictionaries: [adjectives, colors, animals],
@@ -126,7 +128,7 @@ export class AppService extends ConfiguredInstance {
       length: 2,
       style: "capital",
     });
-    return await DBOS.knexClient<GreetingRecord>("dbos_greetings").insert(
+    return await KnexDataSource.client<GreetingRecord>("dbos_greetings").insert(
       { greeting_name: randomName, greeting_note_content: "Hello World!" },
       ["greeting_name", "greeting_note_content"],
     );

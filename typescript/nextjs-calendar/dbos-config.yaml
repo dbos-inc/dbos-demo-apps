@@ -8,22 +8,8 @@ runtimeConfig:
   start:
     - npm run start
 database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
-  app_db_client: knex
   migrate:
     - npx knex migrate:latest
 telemetry:
   logs:
     logLevel: 'info'
-application:
-  aws_config:
-    aws_region: ${AWS_REGION}
-    aws_access_key_id: ${AWS_ACCESS_KEY_ID}
-    aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY}
-env:
-  # If you want email results, set these, and the AWS info above
-  REPORT_EMAIL_FROM_ADDRESS: ${REPORT_EMAIL_FROM_ADDRESS}
-  REPORT_EMAIL_TO_ADDRESS: ${REPORT_EMAIL_TO_ADDRESS}

@@ -17,7 +17,6 @@ async function main() {
   DBOS.logger.info('Launching...');
   DBOS.setConfig({
     "name": "dbos-nextjs-starter",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
   });
   await DBOS.launch();
   DBOS.logger.info('  ...launched.');

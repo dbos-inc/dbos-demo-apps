@@ -18,7 +18,10 @@ Then, in another terminal window, build build, migrate and run the app:
 ```shell
 cd alert-center
 export KAFKA_BROKER="localhost:9092"
-export PGPASSWORD="..." #export your password if using Docker for Postgres
+# Export your password or other Postgres settings to allow database creation and migration
+export PGPASSWORD="..." 
+# Alternatively, for just running the app, export the URL to the app database
+# export DBOS_DATABASE_URL="postgresql://postgres:dbos@localhost:5432/alert_center"
 npm install
 npm run build
 npx dbos migrate

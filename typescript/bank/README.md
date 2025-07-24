@@ -77,32 +77,38 @@ npm install
 npm run build
 ```
 
-Do a quick review of `dbos-config.yaml`, to make sure the information is correct, especially if you are not using the default database port.  Note that this setup uses the same Postgres server process for both databases for simplicity, but they can easily be separated by making additional changes here.
+Note that this setup uses the same Postgres server process for both databases for simplicity, but they can easily be separated by making additional changes here.
 
 Next, execute database migrations and launch the first bank.  The first command below uses [Prisma](https://www.prisma.io/) to create tables for the first bank; the second command launches the bank.
 
 ```bash
 export PGPASSWORD=<database password>
+export PGUSER=bank_a
+export PGDATABASE=bank_a
 export CURRENT_BANK=bank_a
+export BANK_PORT=8081
 
 # Create tables on the bank_a database.
 npx dbos-sdk migrate
 
-# Start the bank server on port 8081
-npx dbos-sdk start -p 8081
+# Start the bank A server on port 8081
+npx dbos-sdk start
 ```
 
 Then, in a second terminal window, launch the second bank server, using different values for the environment variables:
 
 ```bash
 export PGPASSWORD=<database password>
+export PGUSER=bank_b
+export PGDATABASE=bank_b
 export CURRENT_BANK=bank_b
+export BANK_PORT=8083
 
 # Create tables on the bank_b database
 npx dbos-sdk migrate
 
 # Start a second bank server on port 8083
-npx dbos-sdk start -p 8083
+npx dbos-sdk start
 ```
 
 ### Starting The Frontend
@@ -233,7 +239,7 @@ const thReq = {
   toAccountId: data.toAccountId,
   amount: data.amount,
   toLocation: "local",
-  fromLocation: REMOTEDB_PREFIX + DBOS.getConfig<string>("bankname") + ":" + DBOS.getConfig<string>("bankport"),
+  fromLocation: REMOTEDB_PREFIX + process.env.BANKNAME + ":" + process.env.BANKPORT,
 };
 
 const remoteRes: boolean = await BankTransactionHistory
@@ -340,8 +346,7 @@ export class BankEndpoints {...}
 Some functions may need special treatment, for example, we only want to allow an admin to create a new account.
 We use the `@DBOS.requiredRole()` decorator to override the defaults.
 ```ts
-@DBOS.transaction()
-@DBOS.postApi("/api/create_account")
+@prisma.transaction()
 @DBOS.requiredRole(["appAdmin"]) // Only an admin can create a new account.
 static async createAccountFunc(ownerName: string, type: string, balance?: number) {...}
 ```

@@ -1,34 +1,50 @@
 import { ShopUtilities, OrderStatus, PRODUCT_ID } from './utilities';
 import knex, { Knex } from 'knex';
 import path from 'path';
-import { PoolConfig } from 'pg';
 
 import { DBOS, DBOSConfig } from '@dbos-inc/dbos-sdk';
+
+const config = {
+  client: 'pg',
+  connection: {
+    host: process.env.PGHOST || 'localhost',
+    port: parseInt(process.env.PGPORT || '5432'),
+    database: process.env.PGDATABASE || 'widget_store_test',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'dbos',
+  },
+};
+
+const sysDbName = 'widget_store_test_dbos_sys';
+const appDbName = config.connection.database;
 
 export async function resetDatabase() {
   const cwd = process.cwd();
 
-  const poolConfig = DBOS.dbosConfig?.poolConfig as PoolConfig;
-  const connectionString = new URL(poolConfig.connectionString!);
-  connectionString.pathname = '/postgres';
-  const knexConfig = {
+  const adminKnexConfig = {
     client: 'pg',
-    connection: connectionString.toString(),
+    connection: {
+      ...config.connection,
+      database: 'postgres',
+    },
+  };
+
+  const knexConfig = {
+    ...config,
     migrations: {
       directory: path.join(cwd, 'migrations'),
       tableName: 'knex_migrations',
     },
-  };
-  const appDbName = DBOS.dbosConfig?.poolConfig?.database;
-  let knexDB: Knex = knex(knexConfig);
+  }
+  let knexDB: Knex = knex(adminKnexConfig);
   try {
     await knexDB.raw(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`);
     await knexDB.raw(`DROP DATABASE IF EXISTS ${appDbName}`);
+    await knexDB.raw(`DROP DATABASE IF EXISTS ${sysDbName}`);
     await knexDB.raw(`CREATE DATABASE ${appDbName}`);
   } finally {
     await knexDB.destroy();
   }
-  knexConfig.connection = poolConfig.connectionString!.toString();
   knexDB = knex(knexConfig);
   try {
     await knexDB.migrate.latest();
@@ -49,13 +65,11 @@ export async function resetDatabase() {
 describe('Widget store utilities', () => {
   beforeEach(async () => {
     const dbosTestConfig: DBOSConfig = {
-      databaseUrl: `postgres://postgres:${process.env.PGPASSWORD || 'dbos'}@localhost:5432/widget_store_test`,
-      sysDbName: 'widget_store_test_dbos_sys',
-      userDbclient: 'knex',
+      databaseUrl: `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'widget_store_test'}`,
+      systemDatabaseUrl: `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${sysDbName}`,
     };
     DBOS.setConfig(dbosTestConfig);
     await resetDatabase();
-    await DBOS.dropSystemDB();
     await DBOS.shutdown();
     await DBOS.launch();
   }, 10000);

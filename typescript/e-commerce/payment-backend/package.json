@@ -4,16 +4,18 @@
   "scripts": {
     "build": "tsc",
     "db:setup": "npx knex migrate:up",
-    "test": "npx knex migrate:rollback && npx knex migrate:up && jest --detectOpenHandles",
+    "test": "npx dbos migrate && jest --detectOpenHandles",
     "lint": "eslint src",
-    "lint-fix": "eslint --fix src"
+    "lint-fix": "eslint --fix src",
+    "start": "node dist/server.js"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^2.10.24",
+    "@dbos-inc/dbos-cloud": "3.0.45-preview",
     "@dbos-inc/dbos-openapi": "^1.24.15",
     "@dbos-inc/eslint-plugin": "^3.3.3",
     "@types/jest": "^29.5.5",
-    "@types/koa": "2.15.0",
+    "@types/koa": "^2.15.0",
+    "@types/koa__router": "^12.0.4",
     "@types/koa-bodyparser": "4.3.12",
     "@types/supertest": "^2.0.14",
     "eslint": "^8.56.0",
@@ -23,9 +25,13 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^2.10.24",
+    "@dbos-inc/dbos-sdk": "^3.0.45-preview",
+    "@dbos-inc/knex-datasource": "^3.0.45-preview",
+    "@dbos-inc/koa-serve": "^3.0.45-preview",
+    "@koa/router": "^13.1.0",
     "@ladjs/koa-views": "^9.0.0",
     "ejs": "^3.1.10",
+    "koa": "^3.0.0",
     "ts-node": "^10.9.2"
   }
 }

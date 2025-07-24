@@ -1,19 +1,24 @@
-import { DBOS, parseConfigFile } from "@dbos-inc/dbos-sdk";
-import { BankEndpoints as _endpoints, BankAccountInfo, BankTransactionHistory } from "./operations";
+import { DBOS } from "@dbos-inc/dbos-sdk";
+import { BankEndpoints as _endpoints, BankAccountInfo, BankTransactionHistory, dkoa } from "./operations";
 import request from "supertest";
 import { AccountInfo, TransactionHistory } from "@prisma/client";
 import { convertTransactionHistory } from "./router";
+import Koa from 'koa';
+import Router from "@koa/router";
+import { PrismaDataSource } from "@dbos-inc/prisma-datasource";
+import { prismaClient } from "./resources";
 
 describe("bank-tests", () => {
+  const app = new Koa();
+  const router = new Router();
+
   beforeAll(async () => {
-    //testRuntime = await createTestingRuntime([BankEndpoints, BankAccountInfo, BankTransactionHistory], "dbos-test-config.yaml");
-    //export function parseConfigFile(cliOptions?: ParseOptions, useProxy: boolean = false): [DBOSConfig, DBOSRuntimeConfig] {
-    const [dbosConfig, rtConfig] = parseConfigFile({configfile: "dbos-test-config.yaml"});
-    DBOS.setConfig(dbosConfig, rtConfig);
+    DBOS.setConfig({name: 'dbos-bank-test'});
+    await PrismaDataSource.initializeDBOSSchema(prismaClient);
 
     await DBOS.launch();
-    await DBOS.launchAppHTTPServer();
-    await DBOS.queryUserDB(`delete from "AccountInfo" where "ownerName"=$1;`, ["alice"]);
+    dkoa.registerWithApp(app, router);
+    await prismaClient.$executeRawUnsafe(`delete from "AccountInfo" where "ownerName"=$1;`, "alice");
   });
 
   afterAll(async () => {
@@ -22,7 +27,7 @@ describe("bank-tests", () => {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   test("test-greeting", async () => {
-    const response = await request(DBOS.getHTTPHandlersCallback()).get("/api/greeting");
+    const response = await request(app.callback()).get("/api/greeting");
     expect(response.statusCode).toBe(401); // This is because we don't have a valid JWT token.
   });
 
@@ -34,7 +39,7 @@ describe("bank-tests", () => {
       });
     });
 
-    const res = await DBOS.queryUserDB(`select * from "AccountInfo" where "ownerName" = $1;`, ["alice"]) as AccountInfo[];
+    const res = (await prismaClient.$queryRawUnsafe(`select * from "AccountInfo" where "ownerName" = $1;`, "alice")) as AccountInfo[];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(res[0].ownerName).toBe("alice");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
