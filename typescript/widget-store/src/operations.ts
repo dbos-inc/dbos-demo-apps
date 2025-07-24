@@ -130,7 +130,7 @@ fastify.get('/orders', async () => {
 });
 
 fastify.post('/restock', async () => {
-  return await ShopUtilities.setInventory(12);
+  return await ShopUtilities.setInventory(100);
 });
 
 // Let's serve the app's frontend from an HTML file using Fastify.

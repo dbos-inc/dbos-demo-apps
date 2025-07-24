@@ -9,7 +9,7 @@ exports.seed = async function (knex) {
       product_id: 1,
       product: 'Premium Quality Widget',
       description: 'Enhance your productivity with our top-rated widgets!',
-      inventory: 12,
+      inventory: 100,
       price: 99.99,
     },
   ]);
