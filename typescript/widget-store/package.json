@@ -7,7 +7,7 @@
     "db:setup": "npx knex migrate:up && npx knex seed:run",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
-    "start": "node dist/operations.js",
+    "start": "node dist/main.js",
     "dev": "nodemon"
   },
   "devDependencies": {
