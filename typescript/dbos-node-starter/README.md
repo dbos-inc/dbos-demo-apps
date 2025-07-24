@@ -34,7 +34,7 @@ Once you have a setup or configured a Postgres database for DBOS, you can launch
 npm run start
 ```
 
-Alternatively, can run the application with `nodemon` to enable automatic restart when the application changes.
+Alternatively, you can run the application with `nodemon` to enable automatic restart when the application changes.
 
 ```shell
 npm run dev
