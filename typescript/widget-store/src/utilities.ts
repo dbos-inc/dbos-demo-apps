@@ -47,10 +47,11 @@ const config = {
       },
 };
 
-export const knexds = new KnexDataSource('app-db', config);
 
-// Here, let's write some database operations. Each of these functions performs a simple
-// CRUD operation. We use knexds.runTransaction to give them access to a Knex database connection.
+// Here, let's write some database operations using a Knex DataSource.
+// This lets us call them as steps in the durable checkout workflow.
+
+export const knexds = new KnexDataSource('app-db', config);
 
 export async function subtractInventory(): Promise<void> {
   return knexds.runTransaction(async () => {
