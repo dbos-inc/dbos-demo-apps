@@ -35,7 +35,7 @@ export async function resetDatabase() {
       directory: path.join(cwd, 'migrations'),
       tableName: 'knex_migrations',
     },
-  }
+  };
   let knexDB: Knex = knex(adminKnexConfig);
   try {
     await knexDB.raw(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`);

@@ -6,7 +6,18 @@
 
 import Fastify from 'fastify';
 import { DBOS } from '@dbos-inc/dbos-sdk';
-import { retrieveOrders, subtractInventory, createOrder, markOrderPaid, dispatchOrder, errorOrder, undoSubtractInventory, retrieveProduct, retrieveOrder, setInventory } from './utilities';
+import {
+  retrieveOrders,
+  subtractInventory,
+  createOrder,
+  markOrderPaid,
+  dispatchOrder,
+  errorOrder,
+  undoSubtractInventory,
+  retrieveProduct,
+  retrieveOrder,
+  setInventory,
+} from './utilities';
 import { Liquid } from 'liquidjs';
 import path from 'path';
 
@@ -72,7 +83,7 @@ const paymentWorkflow = DBOS.registerWorkflow(paymentWorkflowFunction);
 // The endpoint accepts an idempotency key so that even if the customer presses
 // "buy now" multiple times, only one checkout workflow is started.
 
-const fastify = Fastify({logger: true});
+const fastify = Fastify({ logger: true });
 
 fastify.post<{
   Params: { key: string };
@@ -158,7 +169,7 @@ async function main() {
   });
   DBOS.logRegisteredEndpoints();
   await DBOS.launch();
-  await fastify.listen({ port: PORT, host: "0.0.0.0" });
+  await fastify.listen({ port: PORT, host: '0.0.0.0' });
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 }
 

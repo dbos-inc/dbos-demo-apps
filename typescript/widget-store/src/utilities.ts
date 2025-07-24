@@ -36,14 +36,15 @@ export const PRODUCT_ID = 1;
 
 const config = {
   client: 'pg',
-  connection: process.env.DBOS_DATABASE_URL ? process.env.DBOS_DATABASE_URL :
-  {
-    host: process.env.PGHOST || 'localhost',
-    port: parseInt(process.env.PGPORT || '5432'),
-    database: process.env.PGDATABASE || 'widget_store_node',
-    user: process.env.PGUSER || 'postgres',
-    password: process.env.PGPASSWORD || 'dbos',
-  },
+  connection: process.env.DBOS_DATABASE_URL
+    ? process.env.DBOS_DATABASE_URL
+    : {
+        host: process.env.PGHOST || 'localhost',
+        port: parseInt(process.env.PGPORT || '5432'),
+        database: process.env.PGDATABASE || 'widget_store_node',
+        user: process.env.PGUSER || 'postgres',
+        password: process.env.PGPASSWORD || 'dbos',
+      },
 };
 
 export const knexds = new KnexDataSource('app-db', config);
@@ -53,7 +54,6 @@ export async function retrieveOrders() {
     return KnexDataSource.client<Order>('orders').select('*');
   });
 }
-
 
 // Here, let's write some database operations. Each of these functions performs a simple
 // CRUD operation. We use knexds.runTransaction to give them access to a Knex database connection.
