@@ -49,12 +49,6 @@ const config = {
 
 export const knexds = new KnexDataSource('app-db', config);
 
-export async function retrieveOrders() {
-  return knexds.runTransaction(async () => {
-    return KnexDataSource.client<Order>('orders').select('*');
-  }, {"name": "retrieveOrders"});
-}
-
 // Here, let's write some database operations. Each of these functions performs a simple
 // CRUD operation. We use knexds.runTransaction to give them access to a Knex database connection.
 
@@ -137,6 +131,12 @@ export async function retrieveOrder(order_id: number): Promise<Order> {
     }
     return item[0];
   }, {"name": "retrieveOrder"});
+}
+
+export async function retrieveOrders() {
+  return knexds.runTransaction(async () => {
+    return KnexDataSource.client<Order>('orders').select('*');
+  }, {"name": "retrieveOrders"});
 }
 
 export const dispatchOrder = DBOS.registerWorkflow(async (order_id: number) => {
