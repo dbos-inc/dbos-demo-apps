@@ -1,11 +1,13 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import Koa from 'koa';
-import type { Context } from 'koa';
+import Koa, { type Context } from 'koa';
 import logger from 'koa-morgan';
 import bodyParser from 'koa-bodyparser';
 import path from 'path';
 import Router from "@koa/router";
 import send from "koa-send";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Welcome to DBOS!
 // This is a template application built with DBOS and Koa.
@@ -28,7 +30,7 @@ export class Example {
   // DBOS workflows are resilient to any failure--if your program is crashed,
   // interrupted, or restarted while running this workflow, the workflow
   // automatically resumes from the last completed step.
-  
+
   // One interesting implementation detail: we use setEvent to publish the workflow's
   // status to the frontend after each step completes, so you can observe what your workflow
   // is doing in real time.
@@ -50,7 +52,7 @@ export class Example {
     await sleep(5000);
     console.log("Completed step 3!")
   }
-  
+
   @DBOS.workflow()
   static async workflow(): Promise<void> {
     await Example.stepOne();
@@ -64,19 +66,17 @@ export class Example {
 
 // This endpoint uses DBOS to idempotently launch a durable workflow
 router.get("/workflow/:taskid", async (ctx: Context) => {
-    const { taskid } = ctx.params;
-    await DBOS.startWorkflow(Example, { workflowID: taskid }).workflow();
-    ctx.status = 200;
-  }
-);
+  const { taskid } = ctx.params;
+  await DBOS.startWorkflow(Example, { workflowID: taskid }).workflow();
+  ctx.status = 200;
+});
 
 // This endpoint retrieves the status of a specific background task.
 router.get("/last_step/:taskid", async (ctx: Context) => {
-    const { taskid } = ctx.params;
-    const step = await DBOS.getEvent(taskid, stepsEvent, 0);
-    ctx.body = (String(step !== null ? step : 0));
-  }
-);
+  const { taskid } = ctx.params;
+  const step = await DBOS.getEvent(taskid, stepsEvent, 0);
+  ctx.body = (String(step !== null ? step : 0));
+});
 
 // This endpoint crashes the application. For demonstration purposes only :)
 router.post("/crash", (_ctx: Context): void => {
@@ -105,6 +105,7 @@ async function main() {
     "name": "dbos-node-starter",
   });
   await DBOS.launch();
+
   const PORT = parseInt(process.env.NODE_PORT || '3000');
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
