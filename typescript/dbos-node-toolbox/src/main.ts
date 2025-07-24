@@ -196,7 +196,7 @@ async function main() {
     "name": "dbos-node-toolbox",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
-  await DBOS.launch({ expressApp: app });
+  await DBOS.launch();
   const PORT = parseInt(process.env.NODE_PORT || '3000');
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);

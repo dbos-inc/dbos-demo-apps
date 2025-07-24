@@ -11,7 +11,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "3.0.45-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.53-preview",
     "@dbos-inc/knex-datasource": "3.0.45-preview",
     "express": "^4.21.2"
   }
