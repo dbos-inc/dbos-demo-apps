@@ -7,15 +7,11 @@ app.use(express.json());
 
 const queue = new WorkflowQueue("example_queue");
 
+const databaseUrl = process.env.DBOS_DATABASE_URL || 
+  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'dbos_node_toolbox'}`;
 const config = {
   client: 'pg',
-  connection: process.env.DBOS_DATABASE_URL || {
-    host: process.env.PGHOST || 'localhost',
-    port: parseInt(process.env.PGPORT || '5432'),
-    database: process.env.PGDATABASE || 'dbos_node_toolbox',
-    user: process.env.PGUSER || 'postgres',
-    password: process.env.PGPASSWORD || 'dbos',
-  },
+  connection: databaseUrl,
 };
 
 const knexds = new KnexDataSource('app-db', config);
@@ -193,10 +189,10 @@ app.get("/", (_, res) => {
 
 async function main() {
   DBOS.setConfig({
-    "name": "dbos-node-toolbox",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
+    name: "dbos-node-toolbox",
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
-  await DBOS.launch({ expressApp: app });
+  await DBOS.launch();
   const PORT = parseInt(process.env.NODE_PORT || '3000');
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);

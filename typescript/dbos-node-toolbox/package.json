@@ -2,17 +2,21 @@
   "name": "dbos-node-toolbox",
   "version": "0.0.1",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
     "dev": "nodemon",
-    "start": "node dist/main.js"
+    "prelaunch": "npm run build",
+    "launch": "npm run start"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0",
-    "typescript": "^5.4.5"
+    "nodemon": "^3.1.10",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "3.0.45-preview",
-    "@dbos-inc/knex-datasource": "3.0.45-preview",
-    "express": "^4.21.2"
+    "@dbos-inc/dbos-sdk": "3.0.51-preview",
+    "@dbos-inc/knex-datasource": "3.0.51-preview",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0"
   }
 }
