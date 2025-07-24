@@ -147,7 +147,7 @@ export const dispatchOrder = DBOS.registerWorkflow(async (order_id: number) => {
 }, {"name": "dispatchOrder"});
 
 export async function updateOrderProgress(order_id: number): Promise<void> {
-  return await knexds.runTransaction(async () => {
+  return knexds.runTransaction(async () => {
     const orders = await KnexDataSource.client<Order>('orders').where({
       order_id: order_id,
       order_status: OrderStatus.PAID,

@@ -167,7 +167,7 @@ async function main() {
     databaseUrl: process.env.DBOS_DATABASE_URL,
   });
   DBOS.logRegisteredEndpoints();
-  await DBOS.launch({"conductorKey": process.env.CONDUCTOR_KEY});
+  await DBOS.launch();
   await fastify.listen({ port: PORT, host: '0.0.0.0' });
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 }
