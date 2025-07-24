@@ -31,10 +31,11 @@ npx dbos postgres stop
 Once you have a setup or configured a Postgres database for DBOS, you can launch the application.
 
 ```shell
-npm run start
+npm run launch
 ```
 
-Alternatively, you can run the application with `nodemon` to enable automatic restart when the application changes.
+Alternatively, you can run the application with [`nodemon`](https://nodemon.io/)
+to enable automatic restart when the application changes.
 
 ```shell
 npm run dev
