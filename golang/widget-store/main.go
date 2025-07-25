@@ -17,7 +17,6 @@ import (
 var (
 	checkoutWF      = dbos.WithWorkflow(checkoutWorkflow)
 	dispatchOrderWF = dbos.WithWorkflow(dispatchOrderWorkflow)
-	tempSendWF      = dbos.WithWorkflow(tempSendWorkflow)
 )
 
 const WIDGET_ID = 1
@@ -319,11 +318,6 @@ func checkoutEndpoint(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, payment_id)
-}
-
-// TODO: You shouldn't need a workflow to run dbos.Send
-func tempSendWorkflow(ctx context.Context, input dbos.WorkflowSendInput) (string, error) {
-	return "", dbos.Send(ctx, input)
 }
 
 func paymentEndpoint(c *gin.Context) {
