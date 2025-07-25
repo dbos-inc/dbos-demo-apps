@@ -4,7 +4,7 @@
   "scripts": {
     "build": "tsc",
     "test": "PGDATABASE=widget_store_test jest --detectOpenHandles",
-    "db:setup": "npx knex migrate:up && npx knex seed:run",
+    "db:setup": "tsx setup-db.mts",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
     "start": "node dist/main.js",
@@ -29,6 +29,7 @@
     "fastify": "^5.2.2",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
     "uuid": "^9.0.1"
   }
 }

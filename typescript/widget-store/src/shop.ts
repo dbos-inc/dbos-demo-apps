@@ -36,7 +36,7 @@ export const PRODUCT_ID = 1;
 
 const databaseUrl =
   process.env.DBOS_DATABASE_URL ||
-  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'dbos_node_toolbox'}`;
+  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'widget_store_node'}`;
 const config = {
   client: 'pg',
   connection: databaseUrl,
