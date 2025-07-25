@@ -1,6 +1,9 @@
 import { DBOS, SchedulerMode, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 import { KnexDataSource } from "@dbos-inc/knex-datasource";
 import express from "express";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export const app = express();
 app.use(express.json());
