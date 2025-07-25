@@ -66,9 +66,8 @@ jobs:
           npm run test
         env:
           PGPASSWORD: bank
-          # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: localhost
-          # The default PostgreSQL port
-          POSTGRES_PORT: 5432
+          PGDATABASE: bank_a
+          PGUSER: bank_a
+          PGHOST: localhost
+          PGPORT: 5432
           BANK_PORT: 8081
-          CURRENT_BANK: bank_a

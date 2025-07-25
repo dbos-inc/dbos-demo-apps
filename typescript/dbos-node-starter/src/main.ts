@@ -1,15 +1,23 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import express from "express";
-import morgan from 'morgan';
-import path from "path";
+import Koa, { type Context } from 'koa';
+import logger from 'koa-morgan';
+import bodyParser from 'koa-bodyparser';
+import path from 'path';
+import Router from "@koa/router";
+import send from "koa-send";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Welcome to DBOS!
-// This is a template application built with DBOS and Express.
+// This is a template application built with DBOS and Koa.
 // It shows you how to use DBOS to build durable workflows that are resilient to any failure.
 
-export const app = express();
-app.use(express.json());
-app.use(morgan('tiny')); // Add request logging
+export const app = new Koa();
+app.use(bodyParser());
+app.use(logger('tiny')); // Add request logging
+
+const router = new Router();
 
 const stepsEvent = "steps_event";
 
@@ -22,7 +30,7 @@ export class Example {
   // DBOS workflows are resilient to any failure--if your program is crashed,
   // interrupted, or restarted while running this workflow, the workflow
   // automatically resumes from the last completed step.
-  
+
   // One interesting implementation detail: we use setEvent to publish the workflow's
   // status to the frontend after each step completes, so you can observe what your workflow
   // is doing in real time.
@@ -44,7 +52,7 @@ export class Example {
     await sleep(5000);
     console.log("Completed step 3!")
   }
-  
+
   @DBOS.workflow()
   static async workflow(): Promise<void> {
     await Example.stepOne();
@@ -57,45 +65,49 @@ export class Example {
 }
 
 // This endpoint uses DBOS to idempotently launch a durable workflow
-app.get("/workflow/:taskid", async (req, res) => {
-    const { taskid } = req.params;
-    await DBOS.startWorkflow(Example, { workflowID: taskid }).workflow();
-    res.status(200).send();
-  }
-);
+router.get("/workflow/:taskid", async (ctx: Context) => {
+  const { taskid } = ctx.params;
+  await DBOS.startWorkflow(Example, { workflowID: taskid }).workflow();
+  ctx.status = 200;
+});
 
 // This endpoint retrieves the status of a specific background task.
-app.get("/last_step/:taskid", async (req, res) => {
-    const { taskid } = req.params;
-    const step = await DBOS.getEvent(taskid, stepsEvent, 0);
-    res.send(String(step !== null ? step : 0));
-  }
-);
+router.get("/last_step/:taskid", async (ctx: Context) => {
+  const { taskid } = ctx.params;
+  const step = await DBOS.getEvent(taskid, stepsEvent, 0);
+  ctx.body = (String(step !== null ? step : 0));
+});
 
 // This endpoint crashes the application. For demonstration purposes only :)
-app.post("/crash", (_, _res): void => {
+router.post("/crash", (_ctx: Context): void => {
   process.exit(1);
 });
 
 // This code serves the HTML readme from the root path.
-app.get("/", (_, res) => {
+router.get("/", async (ctx: Context) => {
   const filePath = path.resolve(__dirname, "..", "html", "app.html");
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send("Internal Server Error");
-    }
-  });
+  try {
+    await send(ctx, filePath, { root: '/' }); // Adjust root as needed
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = 'Internal Server Error';
+  }
 });
+
+// Apply routes to app
+app.use(router.routes());
+app.use(router.allowedMethods());
 
 // Launch DBOS and start the Express.js server
 async function main() {
   DBOS.setConfig({
-    "name": "dbos-node-starter",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
+    name: "dbos-node-starter",
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
-  await DBOS.launch({ expressApp: app });
-  const PORT = 3000;
+  await DBOS.launch();
+
+  const PORT = parseInt(process.env.NODE_PORT || '3000');
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });

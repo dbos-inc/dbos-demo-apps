@@ -1,12 +1,10 @@
-const { parseConfigFile } = require('@dbos-inc/dbos-sdk/dist/src/dbos-runtime/config');
 const fs = require('node:fs');
 const path = require('node:path');
 
-// Load the configuration file
-const [dbosConfig, ] = parseConfigFile();
-
 // Write out the .env file
-const databaseURL = `postgresql://${dbosConfig.poolConfig.user}:${dbosConfig.poolConfig.password}@${dbosConfig.poolConfig.host}:${dbosConfig.poolConfig.port}/${dbosConfig.poolConfig.database}?schema=public`;
+const databaseURL = 
+  process.env['DBOS_DATABASE_URL'] ||
+  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'bank_backend'}`;
 
 try {
   fs.writeFileSync(path.join(process.cwd(), 'prisma', '.env'), `DATABASE_URL="${databaseURL}"`);

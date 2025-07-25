@@ -1,6 +1,6 @@
 {
   "name": "dbos-next-calendar",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "npx dbos migrate && nodemon",
@@ -10,12 +10,14 @@
     "lint": "next lint --fix"
   },
   "dependencies": {
-    "@dbos-inc/dbos-dbtriggers": "^2.2.10-preview.g90e74a1e32",
-    "@dbos-inc/dbos-email-ses": "^2.10.24",
-    "@dbos-inc/dbos-random": "^2.10.24",
-    "@dbos-inc/dbos-sdk": "^2.10.24",
+    "@aws-sdk/client-sesv2": "^3.830.0",
+    "@dbos-inc/dbos-sdk": "^3.0.45-preview",
+    "@dbos-inc/knex-datasource": "^3.0.45-preview",
+    "@dbos-inc/koa-serve": "^3.0.45-preview",
+    "@dbos-inc/pgnotifier-receiver": "^3.0.45-preview",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@koa/router": "^13.1.0",
     "@mui/icons-material": "^6.4.1",
     "@mui/material": "^6.4.1",
     "@mui/x-date-pickers": "^7.24.0",
@@ -24,8 +26,10 @@
     "dompurify": "^3.2.3",
     "fast-glob": "^3.3.3",
     "knex": "^3.1.0",
+    "koa": "^3.0.0",
     "module-alias": "^2.2.3",
     "next": "^15.2.4",
+    "pg": "^8.11.3",
     "react": "^19.0.0",
     "react-big-calendar": "^1.18.0",
     "react-dom": "^19.0.0",
@@ -35,11 +39,14 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^2.10.24",
+    "@dbos-inc/dbos-cloud": "^3.0.45-preview",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^29.5.14",
+    "@types/koa": "^2.15.0",
+    "@types/koa__router": "^12.0.4",
     "@types/module-alias": "^2.0.4",
     "@types/node": "^20.17.16",
+    "@types/pg": "^8.11.6",
     "@types/react": "^19",
     "@types/react-big-calendar": "^1.16.1",
     "@types/react-dom": "^19",

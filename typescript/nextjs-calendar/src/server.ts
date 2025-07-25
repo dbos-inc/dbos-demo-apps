@@ -4,11 +4,14 @@ import http, { IncomingMessage, ServerResponse } from 'http';
 import path from 'path';
 import fg from 'fast-glob';
 import { pathToFileURL } from 'url';
+import Koa from 'koa';
+import Router from '@koa/router';
 
 import { WebSocketServer, WebSocket } from 'ws';
 
 import "./module-aliases";
-import { DBOS, parseConfigFile } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
+import { dkoa } from './dbos/dbos_bored';
 
 // This is to handle files, in case entrypoints is not manually specified
 // We are looking for .js server code, in the 'dbos/' subdirectory.
@@ -45,21 +48,19 @@ const handle = app.getRequestHandler();
 
 
 async function main() {
-  const [cfg, rtcfg] = parseConfigFile();
-
   DBOS.logger.info('Loading server files...');
   const files = await loadAllDBOSServerFiles();
   DBOS.logger.info('  ...loaded.')
 
-  DBOS.setConfig(cfg, rtcfg);
   DBOS.logger.info('Launching...');
   await DBOS.launch();
   DBOS.logger.info('  ...launched.');
 
   // Do not launch the HTTP server but do arrange for services
-  DBOS.setUpHandlerCallback();
+  const kapp = new Koa();
+  const krouter = new Router();
+  dkoa.registerWithApp(kapp, krouter);
 
-  DBOS.logger.info(`Configuration given: ${JSON.stringify(rtcfg)}`);
   DBOS.logger.info(`Loaded: ${JSON.stringify(files)} `);
 
   DBOS.logger.info(`Doing Next App Prepare...`);
@@ -69,8 +70,8 @@ async function main() {
   // Create HTTP server
   const server = http.createServer((req, res) => {
     if (req.url?.startsWith('/dbos')) {
-      // Pass API routes to DBOS
-      DBOS.getHTTPHandlersCallback()!(req, res);
+      // Pass API routes to DBOS / Koa
+      kapp.callback()(req, res);
     }
     else {
       // Pass rest of the routes to Next.js

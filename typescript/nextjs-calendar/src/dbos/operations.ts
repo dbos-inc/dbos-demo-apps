@@ -2,15 +2,15 @@ import { DBOS, SchedulerMode } from "@dbos-inc/dbos-sdk";
 
 import { TaskOption } from "@/types/models";
 import { doTaskFetch, schedulableTasks } from "./tasks";
+import { TriggerOperation } from '@dbos-inc/pgnotifier-receiver';
 import { DBOSBored } from "./dbos_bored";
 export { DBOSBored };
-import { ScheduleDBOps } from "./dbtransactions";
+import { ScheduleDBOps, trig } from "./dbtransactions";
 export { ScheduleDBOps };
 import { getOccurrencesAt } from "../types/taskschedule";
 import { WebSocket } from "ws";
 
-import { DBOS_SES } from '@dbos-inc/dbos-email-ses';
-import { DBTrigger, TriggerOperation } from '@dbos-inc/dbos-dbtriggers';
+import { SESv2 } from '@aws-sdk/client-sesv2';
 
 globalThis.DBOSBored = DBOSBored;
 
@@ -29,7 +29,13 @@ if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.
     DBOS.logger.warn('`REPORT_EMAIL_TO_ADDRESS` and `REPORT_EMAIL_FROM_ADDRESS` are set, but `AWS_SECRET_ACCESS_KEY` is not.');
   }
   if (ok) {
-    globalThis.reportSes = new DBOS_SES('reportSES', {awscfgname: 'aws_config'});
+    globalThis.reportSes = new SESv2({
+      region: process.env['AWS_REGION'],
+      credentials: {
+        accessKeyId: process.env['AWS_ACCESS_KEY_ID']!,
+        secretAccessKey: process.env['AWS_SECRET_ACCESS_KEY']!,
+      },
+    });
   }
 }
 
@@ -46,14 +52,20 @@ export class SchedulerOps
     return doTaskFetch(task);
   }
 
-  // Note, while this is not a @DBOS.step, DBOS_SES.sendEmail is.
+  @DBOS.step()
   static async sendStatusEmail(subject: string, body: string) {
     if (!globalThis.reportSes) return;
     await globalThis.reportSes.sendEmail({
-      to: [process.env['REPORT_EMAIL_TO_ADDRESS']!],
-      from: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
-      subject: subject,
-      bodyText: body,
+      FromEmailAddress: process.env['REPORT_EMAIL_FROM_ADDRESS']!,
+      Destination: { ToAddresses: [process.env['REPORT_EMAIL_TO_ADDRESS']!] },
+      Content: {
+        Simple: {
+          Subject: { Data: subject },
+          Body: {
+            Text: { Data: body, Charset: 'utf-8' },
+          },
+        },
+      },
     });
   }
 
@@ -119,13 +131,13 @@ export class SchedulerOps
     });
   }
 
-  @DBTrigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: false})
+  @trig.trigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: false})
   static async scheduleListener(_operation: TriggerOperation, _key: string[], _record: unknown) {
     SchedulerOps.notifyListeners('schedule');
     return Promise.resolve();
   }
 
-  @DBTrigger({tableName: 'results', useDBNotifications: true, installDBTrigger: false})
+  @trig.trigger({tableName: 'results', useDBNotifications: true, installDBTrigger: false})
   static async resultListener(_operation: TriggerOperation, _key: string[], _record: unknown) {
     SchedulerOps.notifyListeners('result');
     return Promise.resolve();

@@ -1,10 +1,27 @@
 import { DBOS, SchedulerMode, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { KnexDataSource } from "@dbos-inc/knex-datasource";
 import express from "express";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export const app = express();
 app.use(express.json());
 
 const queue = new WorkflowQueue("example_queue");
+
+// Note, there is no requirement to use DBOS_DATABASE_URL with DBOS Data Sources if you're self hosting.
+// We are using DBOS_DATABASE_URL here so this demo application can run in DBOS Cloud.
+
+const databaseUrl = process.env.DBOS_DATABASE_URL || 
+  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'dbos_node_toolbox'}`;
+
+const config = {
+  client: 'pg',
+  connection: databaseUrl,
+};
+
+const knexds = new KnexDataSource('app-db', config);
 
 export class Toolbox {
 
@@ -13,18 +30,15 @@ export class Toolbox {
   //////////////////////////////////
 
   @DBOS.step()
-  static async stepOne() {
-    DBOS.logger.info("Step one completed!");
-  }
-
-  @DBOS.step()
   static async stepTwo() {
     DBOS.logger.info("Step two completed!");
   }
 
   @DBOS.workflow()
   static async exampleWorkflow() {
-    await Toolbox.stepOne();
+    await DBOS.runStep(async ()=>{
+      DBOS.logger.info("Step one completed!");
+    }, {name: 'stepOne'});
     await Toolbox.stepTwo();
   }
 
@@ -58,7 +72,7 @@ export class Toolbox {
 
   @DBOS.scheduled({ crontab: "*/15 * * * *", mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
   @DBOS.workflow()
-  static async runEvery15Min(scheduledTime: Date, startTime: Date) {
+  static async runEvery15Min(scheduledTime: Date, _startTime: Date) {
     DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
   }
 
@@ -66,14 +80,14 @@ export class Toolbox {
   //// Transactions
   //////////////////////////////////
 
-  @DBOS.transaction()
+  @knexds.transaction()
   static async insertRow() {
-    await DBOS.knexClient.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+    await KnexDataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
   }
 
-  @DBOS.transaction({ readOnly: true })
+  @knexds.transaction({ readOnly: true })
   static async countRows() {
-    const result = await DBOS.knexClient.raw('SELECT COUNT(*) as count FROM example_table');
+    const result = await KnexDataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
     const count = result.rows[0].count;
     DBOS.logger.info(`Row count: ${count}`);
   }
@@ -89,17 +103,17 @@ export class Toolbox {
 //// Express.js HTTP endpoints
 /////////////////////////////////////
 
-app.get("/workflow", async (req, res) => {
+app.get("/workflow", async (_req, res) => {
   await Toolbox.exampleWorkflow();
   res.send();
 });
 
-app.get("/queue", async (req, res) => {
+app.get("/queue", async (_req, res) => {
   await Toolbox.queueWorkflow();
   res.send();
 });
 
-app.get("/transaction", async (req, res) => {
+app.get("/transaction", async (_req, res) => {
   await Toolbox.transactionWorkflow();
   res.send();
 });
@@ -182,11 +196,11 @@ app.get("/", (_, res) => {
 
 async function main() {
   DBOS.setConfig({
-    "name": "dbos-node-toolbox",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
+    name: "dbos-node-toolbox",
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
-  await DBOS.launch({ expressApp: app });
-  const PORT = 3000;
+  await DBOS.launch();
+  const PORT = parseInt(process.env.NODE_PORT || '3000');
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });
