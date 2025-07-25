@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { agenticResearchWorkflow, ResearchResult } from './workflows';
+// Import modules to register DBOS steps and workflows
+import './agent';
+import './api'; 
+import './llm';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -124,6 +129,13 @@ export async function main() {
   const args = parseArgs();
 
   try {
+    // Initialize DBOS
+    DBOS.setConfig({
+      name: 'hacker-news-agent-node',
+      databaseUrl: process.env.DBOS_DATABASE_URL || 'postgresql://postgres:dbos@localhost:5432/hacker_news_agent_node'
+    });
+    await DBOS.launch();
+
     // Launch the agentic research workflow
     console.log('\n🤖 Starting Agentic Research Agent');
     console.log('The agent will autonomously plan and execute research...\n');
@@ -138,11 +150,11 @@ export async function main() {
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       console.log('\n🟡 Research interrupted by user');
-      process.exit(1);
     } else {
       console.error(`\n❌ Error during research: ${error}`);
-      process.exit(1);
     }
+    
+    process.exit(1);
   }
 }
 

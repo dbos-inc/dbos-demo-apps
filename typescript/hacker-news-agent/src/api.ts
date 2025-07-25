@@ -1,3 +1,5 @@
+import { DBOS } from '@dbos-inc/dbos-sdk';
+
 const HN_SEARCH_URL = 'https://hn.algolia.com/api/v1/search';
 const API_TIMEOUT = 30000;
 
@@ -19,7 +21,7 @@ export interface HackerNewsComment {
   story_id: string;
 }
 
-export async function searchHackerNewsStep(
+async function searchHackerNewsStepFunction(
   query: string,
   maxResults: number = 20
 ): Promise<HackerNewsStory[]> {
@@ -51,7 +53,7 @@ export async function searchHackerNewsStep(
   }
 }
 
-export async function getCommentsStep(
+async function getCommentsStepFunction(
   storyId: string,
   maxComments: number = 50
 ): Promise<HackerNewsComment[]> {
@@ -81,3 +83,7 @@ export async function getCommentsStep(
     return [];
   }
 }
+
+// Register DBOS steps
+export const searchHackerNewsStep = DBOS.registerStep(searchHackerNewsStepFunction, {name: 'searchHackerNews'});
+export const getCommentsStep = DBOS.registerStep(getCommentsStepFunction, {name: 'getComments'});

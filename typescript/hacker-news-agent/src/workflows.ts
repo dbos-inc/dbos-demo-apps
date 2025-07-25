@@ -1,3 +1,4 @@
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { evaluateResultsStep, generateFollowUpsStep, shouldContinueStep } from './agent';
 import { searchHackerNewsStep, getCommentsStep } from './api';
 import { synthesizeFindingsStep, Finding } from './llm';
@@ -30,7 +31,7 @@ function log(message: string) {
   console.log(`🤖 ${message}`);
 }
 
-export async function agenticResearchWorkflow(
+async function agenticResearchWorkflowFunction(
   topic: string,
   maxIterations: number
 ): Promise<ResearchResult> {
@@ -47,7 +48,7 @@ export async function agenticResearchWorkflow(
     log(`🔄 Starting iteration ${currentIteration}/${maxIterations}`);
 
     // Research the next query
-    const iterationResult = await researchQuery(topic, currentQuery, currentIteration);
+    const iterationResult = await researchQueryWorkflow(topic, currentQuery, currentIteration);
     researchHistory.push(iterationResult);
     allFindings.push(iterationResult.evaluation);
 
@@ -124,7 +125,7 @@ export async function agenticResearchWorkflow(
   };
 }
 
-export async function researchQuery(
+async function researchQueryWorkflowFunction(
   topic: string,
   query: string,
   iteration: number
@@ -184,3 +185,7 @@ export async function researchQuery(
     comments,
   };
 }
+
+// Register DBOS workflows
+export const agenticResearchWorkflow = DBOS.registerWorkflow(agenticResearchWorkflowFunction);
+export const researchQueryWorkflow = DBOS.registerWorkflow(researchQueryWorkflowFunction);

@@ -1,3 +1,4 @@
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import OpenAI from 'openai';
 import * as dotenv from 'dotenv';
 
@@ -16,7 +17,7 @@ export interface Message {
   content: string;
 }
 
-export async function callLLM(
+async function callLLMStepFunction(
   messages: Message[],
   model: string = DEFAULT_MODEL,
   temperature: number = DEFAULT_TEMPERATURE,
@@ -77,7 +78,7 @@ export interface SynthesisResult {
   error?: string;
 }
 
-export async function synthesizeFindingsStep(
+async function synthesizeFindingsStepFunction(
   topic: string,
   allFindings: Finding[]
 ): Promise<SynthesisResult> {
@@ -208,3 +209,7 @@ export async function synthesizeFindingsStep(
     };
   }
 }
+
+// Register DBOS steps
+export const callLLM = DBOS.registerStep(callLLMStepFunction, {name: 'callLLM'});
+export const synthesizeFindingsStep = DBOS.registerStep(synthesizeFindingsStepFunction, {name: 'synthesizeFindings'});
