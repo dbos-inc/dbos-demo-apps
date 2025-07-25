@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -9,7 +9,7 @@ const DEFAULT_TEMPERATURE = 0.1;
 const DEFAULT_MAX_TOKENS = 2000;
 
 export interface Message {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
@@ -17,7 +17,7 @@ export async function callLLM(
   messages: Message[],
   model: string = DEFAULT_MODEL,
   temperature: number = DEFAULT_TEMPERATURE,
-  maxTokens: number = DEFAULT_MAX_TOKENS
+  maxTokens: number = DEFAULT_MAX_TOKENS,
 ): Promise<string> {
   try {
     const response = await client.chat.completions.create({
@@ -26,8 +26,8 @@ export async function callLLM(
       temperature,
       max_tokens: maxTokens,
     });
-    
-    return response.choices[0]?.message?.content || '';
+
+    return response.choices[0]?.message?.content || "";
   } catch (error) {
     throw new Error(`LLM API call failed: ${error}`);
   }
@@ -35,17 +35,17 @@ export async function callLLM(
 
 export function cleanJsonResponse(response: string): string {
   let cleaned = response.trim();
-  
-  if (cleaned.startsWith('```json')) {
+
+  if (cleaned.startsWith("```json")) {
     cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith('```')) {
+  } else if (cleaned.startsWith("```")) {
     cleaned = cleaned.slice(3);
   }
-  
-  if (cleaned.endsWith('```')) {
+
+  if (cleaned.endsWith("```")) {
     cleaned = cleaned.slice(0, -3);
   }
-  
+
   return cleaned.trim();
 }
 
@@ -76,24 +76,24 @@ export interface SynthesisResult {
 
 export async function synthesizeFindings(
   topic: string,
-  allFindings: Finding[]
+  allFindings: Finding[],
 ): Promise<SynthesisResult> {
-  let findingsText = '';
+  let findingsText = "";
   const storyLinks: Story[] = [];
 
   allFindings.forEach((finding, i) => {
     findingsText += `\n=== Finding ${i + 1} ===\n`;
-    findingsText += `Query: ${finding.query || 'Unknown'}\n`;
-    findingsText += `Summary: ${finding.summary || 'No summary'}\n`;
+    findingsText += `Query: ${finding.query || "Unknown"}\n`;
+    findingsText += `Summary: ${finding.summary || "No summary"}\n`;
     findingsText += `Key Points: ${JSON.stringify(finding.key_points || [])}\n`;
     findingsText += `Insights: ${JSON.stringify(finding.insights || [])}\n`;
 
     if (finding.top_stories) {
-      finding.top_stories.forEach(story => {
+      finding.top_stories.forEach((story) => {
         storyLinks.push({
-          title: story.title || 'Unknown',
-          url: story.url || '',
-          hn_url: `https://news.ycombinator.com/item?id=${story.objectID || ''}`,
+          title: story.title || "Unknown",
+          url: story.url || "",
+          hn_url: `https://news.ycombinator.com/item?id=${story.objectID || ""}`,
           points: story.points || 0,
           num_comments: story.num_comments || 0,
         });
@@ -104,16 +104,16 @@ export async function synthesizeFindings(
   const storyCitations: Record<string, any> = {};
   let citationId = 1;
 
-  allFindings.forEach(finding => {
+  allFindings.forEach((finding) => {
     if (finding.top_stories) {
-      finding.top_stories.forEach(story => {
-        const storyId = story.objectID || '';
+      finding.top_stories.forEach((story) => {
+        const storyId = story.objectID || "";
         if (storyId && !storyCitations[storyId]) {
           storyCitations[storyId] = {
             id: citationId,
-            title: story.title || 'Unknown',
-            url: story.url || '',
-            hn_url: story.hn_url || '',
+            title: story.title || "Unknown",
+            url: story.url || "",
+            hn_url: story.hn_url || "",
             points: story.points || 0,
             comments: story.num_comments || 0,
           };
@@ -124,11 +124,12 @@ export async function synthesizeFindings(
   });
 
   const citationsText = Object.values(storyCitations)
-    .map(cite => 
-      `[${cite.id}] ${cite.title} (${cite.points} points, ${cite.comments} comments) - ${cite.hn_url}` +
-      (cite.url ? ` - ${cite.url}` : '')
+    .map(
+      (cite) =>
+        `[${cite.id}] ${cite.title} (${cite.points} points, ${cite.comments} comments) - ${cite.hn_url}` +
+        (cite.url ? ` - ${cite.url}` : ""),
     )
-    .join('\n');
+    .join("\n");
 
   const prompt = `
     You are a research analyst. Synthesize the following research findings into a comprehensive, detailed report about: ${topic}
@@ -187,20 +188,26 @@ export async function synthesizeFindings(
 
   const messages: Message[] = [
     {
-      role: 'system',
-      content: 'You are a research analyst. Provide comprehensive synthesis in JSON format.',
+      role: "system",
+      content:
+        "You are a research analyst. Provide comprehensive synthesis in JSON format.",
     },
-    { role: 'user', content: prompt },
+    { role: "user", content: prompt },
   ];
 
   try {
-    const response = await callLLM(messages, DEFAULT_MODEL, DEFAULT_TEMPERATURE, 3000);
+    const response = await callLLM(
+      messages,
+      DEFAULT_MODEL,
+      DEFAULT_TEMPERATURE,
+      3000,
+    );
     const cleanedResponse = cleanJsonResponse(response);
     const result = JSON.parse(cleanedResponse);
     return result;
   } catch (error) {
     return {
-      report: 'JSON parsing error, report could not be generated.',
+      report: "JSON parsing error, report could not be generated.",
       error: `JSON parsing failed, created basic synthesis. Error: ${error}`,
     };
   }

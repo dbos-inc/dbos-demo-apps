@@ -1,7 +1,7 @@
-import { DBOS } from '@dbos-inc/dbos-sdk';
-import { evaluateResults, generateFollowUps, shouldContinue } from './agent';
-import { searchHackerNews, getComments } from './api';
-import { synthesizeFindings, Finding } from './llm';
+import { DBOS } from "@dbos-inc/dbos-sdk";
+import { evaluateResults, generateFollowUps, shouldContinue } from "./agent";
+import { searchHackerNews, getComments } from "./api";
+import { synthesizeFindings, Finding } from "./llm";
 
 export interface IterationResult {
   iteration: number;
@@ -33,7 +33,7 @@ function log(message: string) {
 
 async function agenticResearchWorkflowFunction(
   topic: string,
-  maxIterations: number
+  maxIterations: number,
 ): Promise<ResearchResult> {
   log(`🎯 Starting agentic research for: ${topic}`);
 
@@ -48,64 +48,69 @@ async function agenticResearchWorkflowFunction(
     log(`🔄 Starting iteration ${currentIteration}/${maxIterations}`);
 
     // Research the next query
-    const iterationResult = await researchQueryWorkflow(topic, currentQuery, currentIteration);
+    const iterationResult = await researchQueryWorkflow(
+      topic,
+      currentQuery,
+      currentIteration,
+    );
     researchHistory.push(iterationResult);
     allFindings.push(iterationResult.evaluation);
 
     // Handle cases where no results are found
     const storiesFound = iterationResult.stories_found;
     if (storiesFound === 0) {
-      log(`⚠️  No stories found for '${currentQuery}', trying alternative approach...`);
+      log(
+        `⚠️  No stories found for '${currentQuery}', trying alternative approach...`,
+      );
 
       // Generate alternative queries when hitting dead ends
-      const alternativeQuery = await DBOS.runStep(() => generateFollowUps(
-        topic,
-        allFindings,
-        currentIteration
-      ), { name: 'generateFollowUps' });
+      const alternativeQuery = await DBOS.runStep(
+        () => generateFollowUps(topic, allFindings, currentIteration),
+        { name: "generateFollowUps" },
+      );
       if (alternativeQuery) {
         currentQuery = alternativeQuery;
         log(`🔄 Retrying with: '${currentQuery}'`);
         continue;
       } else {
-        log('❌ No alternative queries available, continuing...');
+        log("❌ No alternative queries available, continuing...");
       }
     }
 
     // Evaluate whether to continue research
-    log('🤔 Agent evaluating whether to continue research...');
-    const shouldContinueDecision = await DBOS.runStep(() => shouldContinue(
-      topic,
-      allFindings,
-      currentIteration,
-      maxIterations
-    ), { name: 'shouldContinue' });
+    log("🤔 Agent evaluating whether to continue research...");
+    const shouldContinueDecision = await DBOS.runStep(
+      () => shouldContinue(topic, allFindings, currentIteration, maxIterations),
+      { name: "shouldContinue" },
+    );
     if (!shouldContinueDecision) {
-      log('✅ Agent decided to conclude research');
+      log("✅ Agent decided to conclude research");
       break;
     }
 
     // Generate next research question based on findings
     if (currentIteration < maxIterations) {
-      log('💭 Agent generating next research question...');
-      const followUpQuery = await DBOS.runStep(() => generateFollowUps(
-        topic,
-        allFindings,
-        currentIteration
-      ), { name: 'generateFollowUps' });
+      log("💭 Agent generating next research question...");
+      const followUpQuery = await DBOS.runStep(
+        () => generateFollowUps(topic, allFindings, currentIteration),
+        { name: "generateFollowUps" },
+      );
       if (followUpQuery) {
         currentQuery = followUpQuery;
         log(`➡️  Next research focus: '${currentQuery}'`);
       } else {
-        log('💡 No new research directions found, concluding...');
+        log("💡 No new research directions found, concluding...");
         break;
       }
     }
   }
 
   // Final step: Synthesize all findings into comprehensive report
-  log('📋 Agent synthesizing final research report...');
-  const finalReport = await DBOS.runStep(() => synthesizeFindings(topic, allFindings), { name: 'synthesizeFindings' });
+  log("📋 Agent synthesizing final research report...");
+  const finalReport = await DBOS.runStep(
+    () => synthesizeFindings(topic, allFindings),
+    { name: "synthesizeFindings" },
+  );
 
   // Return complete research results
   return {
@@ -115,12 +120,20 @@ async function agenticResearchWorkflowFunction(
     research_history: researchHistory,
     final_report: finalReport,
     summary: {
-      total_stories: researchHistory.reduce((sum, r) => sum + r.stories_found, 0),
-      total_comments: researchHistory.reduce((sum, r) => sum + r.comments_analyzed, 0),
-      queries_executed: researchHistory.map(r => r.query),
-      avg_relevance: allFindings.length > 0
-        ? allFindings.reduce((sum, f) => sum + (f.relevance_score || 0), 0) / allFindings.length
-        : 0,
+      total_stories: researchHistory.reduce(
+        (sum, r) => sum + r.stories_found,
+        0,
+      ),
+      total_comments: researchHistory.reduce(
+        (sum, r) => sum + r.comments_analyzed,
+        0,
+      ),
+      queries_executed: researchHistory.map((r) => r.query),
+      avg_relevance:
+        allFindings.length > 0
+          ? allFindings.reduce((sum, f) => sum + (f.relevance_score || 0), 0) /
+            allFindings.length
+          : 0,
     },
   };
 }
@@ -128,23 +141,27 @@ async function agenticResearchWorkflowFunction(
 async function researchQueryWorkflowFunction(
   topic: string,
   query: string,
-  iteration: number
+  iteration: number,
 ): Promise<IterationResult> {
   log(`🔍 Searching for stories: '${query}'`);
 
   // Step 1: Search Hacker News for stories about the topic
-  const stories = await DBOS.runStep(() => searchHackerNews(query, 30), { name: 'searchHackerNews' });
+  const stories = await DBOS.runStep(() => searchHackerNews(query, 30), {
+    name: "searchHackerNews",
+  });
 
   if (stories.length > 0) {
     log(`📚 Found ${stories.length} stories, analyzing all stories...`);
     stories.forEach((story, i) => {
-      const title = (story.title || 'No title').slice(0, 80);
+      const title = (story.title || "No title").slice(0, 80);
       const points = story.points || 0;
       const numComments = story.num_comments || 0;
-      log(`  📖 Story ${i + 1}: ${title}... (${points} points, ${numComments} comments)`);
+      log(
+        `  📖 Story ${i + 1}: ${title}... (${points} points, ${numComments} comments)`,
+      );
     });
   } else {
-    log('❌ No stories found for this query');
+    log("❌ No stories found for this query");
   }
 
   // Step 2: Gather comments from all stories found
@@ -155,12 +172,17 @@ async function researchQueryWorkflowFunction(
     for (let i = 0; i < stories.length; i++) {
       const story = stories[i];
       const storyId = story.objectID;
-      const title = (story.title || 'Unknown').slice(0, 50);
+      const title = (story.title || "Unknown").slice(0, 50);
       const numComments = story.num_comments || 0;
 
       if (storyId && numComments > 0) {
-        log(`  💭 Reading comments from: ${title}... (${numComments} comments)`);
-        const storyComments = await DBOS.runStep(() => getComments(storyId, 10), { name: 'getComments' });
+        log(
+          `  💭 Reading comments from: ${title}... (${numComments} comments)`,
+        );
+        const storyComments = await DBOS.runStep(
+          () => getComments(storyId, 10),
+          { name: "getComments" },
+        );
         comments.push(...storyComments);
         log(`    ✓ Read ${storyComments.length} comments`);
       } else if (storyId) {
@@ -172,8 +194,13 @@ async function researchQueryWorkflowFunction(
   }
 
   // Step 3: Evaluate gathered data and return findings
-  log(`🤔 Analyzing findings from ${stories.length} stories and ${comments.length} comments...`);
-  const evaluation = await DBOS.runStep(() => evaluateResults(topic, query, stories, comments), { name: 'evaluateResults' });
+  log(
+    `🤔 Analyzing findings from ${stories.length} stories and ${comments.length} comments...`,
+  );
+  const evaluation = await DBOS.runStep(
+    () => evaluateResults(topic, query, stories, comments),
+    { name: "evaluateResults" },
+  );
 
   return {
     iteration,
@@ -187,5 +214,9 @@ async function researchQueryWorkflowFunction(
 }
 
 // Register DBOS workflows
-export const agenticResearchWorkflow = DBOS.registerWorkflow(agenticResearchWorkflowFunction);
-export const researchQueryWorkflow = DBOS.registerWorkflow(researchQueryWorkflowFunction);
+export const agenticResearchWorkflow = DBOS.registerWorkflow(
+  agenticResearchWorkflowFunction,
+);
+export const researchQueryWorkflow = DBOS.registerWorkflow(
+  researchQueryWorkflowFunction,
+);

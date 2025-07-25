@@ -1,4 +1,4 @@
-const HN_SEARCH_URL = 'https://hn.algolia.com/api/v1/search';
+const HN_SEARCH_URL = "https://hn.algolia.com/api/v1/search";
 const API_TIMEOUT = 30000;
 
 export interface HackerNewsStory {
@@ -21,12 +21,12 @@ export interface HackerNewsComment {
 
 export async function searchHackerNews(
   query: string,
-  maxResults: number = 20
+  maxResults: number = 20,
 ): Promise<HackerNewsStory[]> {
   const params = new URLSearchParams({
     query,
     hitsPerPage: maxResults.toString(),
-    tags: 'story',
+    tags: "story",
   });
 
   try {
@@ -46,14 +46,14 @@ export async function searchHackerNews(
     const data: any = await response.json();
     return data.hits || [];
   } catch (error) {
-    console.error('Error searching Hacker News:', error);
+    console.error("Error searching Hacker News:", error);
     return [];
   }
 }
 
 export async function getComments(
   storyId: string,
-  maxComments: number = 50
+  maxComments: number = 50,
 ): Promise<HackerNewsComment[]> {
   const params = new URLSearchParams({
     tags: `comment,story_${storyId}`,
@@ -77,8 +77,7 @@ export async function getComments(
     const data: any = await response.json();
     return data.hits || [];
   } catch (error) {
-    console.error('Error getting comments:', error);
+    console.error("Error getting comments:", error);
     return [];
   }
 }
-

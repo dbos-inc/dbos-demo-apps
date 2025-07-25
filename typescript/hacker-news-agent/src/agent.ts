@@ -1,4 +1,4 @@
-import { callLLM, cleanJsonResponse, Finding, Story } from './llm';
+import { callLLM, cleanJsonResponse, Finding, Story } from "./llm";
 
 export interface EvaluationResult {
   insights: string[];
@@ -13,19 +13,19 @@ export async function evaluateResults(
   topic: string,
   query: string,
   stories: any[],
-  comments?: any[]
+  comments?: any[],
 ): Promise<EvaluationResult> {
-  let storiesText = '';
+  let storiesText = "";
   const topStories: Story[] = [];
 
   // Evaluate only the top 10 most relevant stories
   stories.slice(0, 10).forEach((story, i) => {
-    const title = story.title || 'No title';
-    const url = story.url || 'No URL';
-    const hnUrl = `https://news.ycombinator.com/item?id=${story.objectID || ''}`;
+    const title = story.title || "No title";
+    const url = story.url || "No URL";
+    const hnUrl = `https://news.ycombinator.com/item?id=${story.objectID || ""}`;
     const points = story.points || 0;
     const numComments = story.num_comments || 0;
-    const author = story.author || 'Unknown';
+    const author = story.author || "Unknown";
 
     storiesText += `Story ${i + 1}:\n`;
     storiesText += `  Title: ${title}\n`;
@@ -41,19 +41,20 @@ export async function evaluateResults(
       points,
       num_comments: numComments,
       author,
-      objectID: story.objectID || '',
+      objectID: story.objectID || "",
     });
   });
 
-  let commentsText = '';
+  let commentsText = "";
   if (comments) {
     comments.slice(0, 20).forEach((comment, i) => {
-      const commentText = comment.comment_text || '';
+      const commentText = comment.comment_text || "";
       if (commentText) {
-        const author = comment.author || 'Unknown';
-        const excerpt = commentText.length > 400 
-          ? commentText.slice(0, 400) + '...'
-          : commentText;
+        const author = comment.author || "Unknown";
+        const excerpt =
+          commentText.length > 400
+            ? commentText.slice(0, 400) + "..."
+            : commentText;
 
         commentsText += `Comment ${i + 1}:\n`;
         commentsText += `  Author: ${author}\n`;
@@ -90,14 +91,15 @@ export async function evaluateResults(
 
   const messages = [
     {
-      role: 'system' as const,
-      content: 'You are a research evaluation agent. Analyze search results and provide structured insights in JSON format.',
+      role: "system" as const,
+      content:
+        "You are a research evaluation agent. Analyze search results and provide structured insights in JSON format.",
     },
-    { role: 'user' as const, content: prompt },
+    { role: "user" as const, content: prompt },
   ];
 
   try {
-    const response = await callLLM(messages, 'gpt-4o-mini', 0.1, 2000);
+    const response = await callLLM(messages, "gpt-4o-mini", 0.1, 2000);
     const cleanedResponse = cleanJsonResponse(response);
     const evaluation = JSON.parse(cleanedResponse);
     evaluation.query = query;
@@ -117,12 +119,12 @@ export async function evaluateResults(
 export async function generateFollowUps(
   topic: string,
   currentFindings: Finding[],
-  iteration: number
+  iteration: number,
 ): Promise<string | null> {
-  let findingsSummary = '';
-  currentFindings.forEach(finding => {
-    findingsSummary += `Query: ${finding.query || 'Unknown'}\n`;
-    findingsSummary += `Summary: ${finding.summary || 'No summary'}\n`;
+  let findingsSummary = "";
+  currentFindings.forEach((finding) => {
+    findingsSummary += `Query: ${finding.query || "Unknown"}\n`;
+    findingsSummary += `Summary: ${finding.summary || "No summary"}\n`;
     findingsSummary += `Key insights: ${JSON.stringify(finding.insights || [])}\n`;
     findingsSummary += `Unanswered questions: ${JSON.stringify(finding.unanswered_questions || [])}\n\n`;
   });
@@ -160,10 +162,11 @@ export async function generateFollowUps(
 
   const messages = [
     {
-      role: 'system' as const,
-      content: 'You are a research agent. Generate focused follow-up queries based on current findings. Return only JSON array.',
+      role: "system" as const,
+      content:
+        "You are a research agent. Generate focused follow-up queries based on current findings. Return only JSON array.",
     },
-    { role: 'user' as const, content: prompt },
+    { role: "user" as const, content: prompt },
   ];
 
   try {
@@ -180,23 +183,24 @@ export async function shouldContinue(
   topic: string,
   allFindings: Finding[],
   currentIteration: number,
-  maxIterations: number
+  maxIterations: number,
 ): Promise<boolean> {
   if (currentIteration >= maxIterations) {
     return false;
   }
 
-  let findingsSummary = '';
+  let findingsSummary = "";
   let totalRelevance = 0;
-  
-  allFindings.forEach(finding => {
-    findingsSummary += `Query: ${finding.query || 'Unknown'}\n`;
-    findingsSummary += `Summary: ${finding.summary || 'No summary'}\n`;
+
+  allFindings.forEach((finding) => {
+    findingsSummary += `Query: ${finding.query || "Unknown"}\n`;
+    findingsSummary += `Summary: ${finding.summary || "No summary"}\n`;
     findingsSummary += `Relevance: ${finding.relevance_score || 5}/10\n`;
     totalRelevance += finding.relevance_score || 5;
   });
 
-  const avgRelevance = allFindings.length > 0 ? totalRelevance / allFindings.length : 0;
+  const avgRelevance =
+    allFindings.length > 0 ? totalRelevance / allFindings.length : 0;
 
   const prompt = `
     You are a research agent investigating: ${topic}
@@ -225,10 +229,11 @@ export async function shouldContinue(
 
   const messages = [
     {
-      role: 'system' as const,
-      content: 'You are a research decision agent. Evaluate research completeness and decide whether to continue. Return JSON.',
+      role: "system" as const,
+      content:
+        "You are a research decision agent. Evaluate research completeness and decide whether to continue. Return JSON.",
     },
-    { role: 'user' as const, content: prompt },
+    { role: "user" as const, content: prompt },
   ];
 
   try {
@@ -240,4 +245,3 @@ export async function shouldContinue(
     return true;
   }
 }
-
