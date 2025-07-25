@@ -48,15 +48,6 @@ export async function resetDatabase() {
   knexDB = knex(knexConfig);
   try {
     await knexDB.migrate.latest();
-    await knexDB('products').insert([
-      {
-        product_id: PRODUCT_ID,
-        product: 'Premium Quality Widget',
-        description: 'Enhance your productivity with our top-rated widgets!',
-        inventory: 12,
-        price: 99.99,
-      },
-    ]);
   } finally {
     await knexDB.destroy();
   }
