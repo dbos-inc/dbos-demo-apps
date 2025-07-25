@@ -37,40 +37,43 @@ export const ORDER_ID_EVENT = 'order_url';
 // Within seconds, your app will recover to exactly the state it was in before the crash
 // and continue as if nothing happened.
 
-const checkoutWorkflow = DBOS.registerWorkflow(async () => {
-  // Attempt to reserve inventory, failing if no inventory remains
-  try {
-    await subtractInventory();
-  } catch (error) {
-    DBOS.logger.error(`Failed to update inventory: ${(error as Error).message}`);
-    await DBOS.setEvent(PAYMENT_ID_EVENT, null);
-    return;
-  }
+const checkoutWorkflow = DBOS.registerWorkflow(
+  async () => {
+    // Attempt to reserve inventory, failing if no inventory remains
+    try {
+      await subtractInventory();
+    } catch (error) {
+      DBOS.logger.error(`Failed to update inventory: ${(error as Error).message}`);
+      await DBOS.setEvent(PAYMENT_ID_EVENT, null);
+      return;
+    }
 
-  // Create a new order
-  const orderID = await createOrder();
+    // Create a new order
+    const orderID = await createOrder();
 
-  // Send a unique payment ID to the checkout endpoint so it can
-  // redirect the customer to the payments page
-  await DBOS.setEvent(PAYMENT_ID_EVENT, DBOS.workflowID);
-  const notification = await DBOS.recv<string>(PAYMENT_TOPIC, 120);
+    // Send a unique payment ID to the checkout endpoint so it can
+    // redirect the customer to the payments page
+    await DBOS.setEvent(PAYMENT_ID_EVENT, DBOS.workflowID);
+    const notification = await DBOS.recv<string>(PAYMENT_TOPIC, 120);
 
-  // If payment succeeded, mark the order as paid and start the order dispatch workflow.
-  // Otherwise, return reserved inventory and cancel the order.
-  if (notification && notification === 'paid') {
-    DBOS.logger.info(`Payment successful!`);
-    await markOrderPaid(orderID);
-    await DBOS.startWorkflow(dispatchOrder)(orderID);
-  } else {
-    DBOS.logger.warn(`Payment failed...`);
-    await errorOrder(orderID);
-    await undoSubtractInventory();
-  }
+    // If payment succeeded, mark the order as paid and start the order dispatch workflow.
+    // Otherwise, return reserved inventory and cancel the order.
+    if (notification && notification === 'paid') {
+      DBOS.logger.info(`Payment successful!`);
+      await markOrderPaid(orderID);
+      await DBOS.startWorkflow(dispatchOrder)(orderID);
+    } else {
+      DBOS.logger.warn(`Payment failed...`);
+      await errorOrder(orderID);
+      await undoSubtractInventory();
+    }
 
-  // Finally, send the order ID to the payment endpoint so it can redirect
-  // the customer to the order status page.
-  await DBOS.setEvent(ORDER_ID_EVENT, orderID);
-}, {"name": "checkoutWorkflow"});
+    // Finally, send the order ID to the payment endpoint so it can redirect
+    // the customer to the order status page.
+    await DBOS.setEvent(ORDER_ID_EVENT, orderID);
+  },
+  { name: 'checkoutWorkflow' },
+);
 
 // Now, let's use Fastify to write the HTTP endpoint for checkout.
 
