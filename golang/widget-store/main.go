@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/gob"
 	"net/http"
 	"os"
 	"strconv"
@@ -67,12 +66,12 @@ func main() {
 	})
 	logger.SetLevel(logrus.InfoLevel)
 
-	dbURL := os.Getenv("DBOS_DATABASE_URL")
+	dbURL := os.Getenv("DBOS_SYSTEM_DATABASE_URL")
 	if dbURL == "" {
-		logger.Fatal("DBOS_DATABASE_URL required")
+		logger.Fatal("DBOS_SYSTEM_DATABASE_URL required")
 	}
 
-	err := dbos.Initialize(dbos.Config{AppName: "widget_store_go", DatabaseURL: os.Getenv("DBOS_DATABASE_URL")})
+	err := dbos.Initialize(dbos.Config{AppName: "widget_store_go", DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL")})
 	if err != nil {
 		logger.WithError(err).Fatal("DBOS initialization failed")
 	}
@@ -109,7 +108,11 @@ func main() {
 }
 
 func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
-	workflowID, _ := dbos.GetWorkflowID(ctx)
+	workflowID, err := dbos.GetWorkflowID(ctx)
+	if err != nil {
+		logger.WithError(err).Error("workflow ID retrieval failed")
+		return "", err
+	}
 
 	// Create a new order
 	orderID, err := dbos.RunAsStep(ctx, createOrder, "")
@@ -123,7 +126,7 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 	if err != nil || !success {
 		logger.WithField("order", orderID).Warn("no inventory")
 		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
-		err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: PAYMENT_ID, Message: ""})
+		err = dbos.SetEvent[string](ctx, dbos.WorkflowSetEventInput[string]{Key: PAYMENT_ID, Message: ""})
 		return "", err
 	}
 
@@ -132,7 +135,7 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "wf_id": workflowID}).Error("workflow ID retrieval failed")
 		return "", err
 	}
-	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: PAYMENT_ID, Message: payment_id})
+	err = dbos.SetEvent[string](ctx, dbos.WorkflowSetEventInput[string]{Key: PAYMENT_ID, Message: payment_id})
 	if err != nil {
 		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "payment": payment_id}).Error("payment event creation failed")
 		return "", err
@@ -148,7 +151,7 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: PAID})
 		dispatchOrderWF(ctx, orderID)
 	}
-	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: ORDER_ID, Message: strconv.Itoa(orderID)})
+	err = dbos.SetEvent[string](ctx, dbos.WorkflowSetEventInput[string]{Key: ORDER_ID, Message: strconv.Itoa(orderID)})
 	if err != nil {
 		logger.WithError(err).WithField("order", orderID).Error("order event creation failed")
 		return "", err
@@ -266,8 +269,6 @@ func updateOrderStatus(ctx context.Context, input UpdateOrderStatusInput) (strin
 }
 
 func dispatchOrderWorkflow(ctx context.Context, orderID int) (string, error) {
-	var t time.Time
-	gob.Register(t) // TODO: Should be done automatically
 	for range 10 {
 		_, err := dbos.Sleep(ctx, time.Second)
 		if err != nil {
@@ -329,7 +330,7 @@ func paymentEndpoint(c *gin.Context) {
 	paymentID := c.Param("payment_id")
 	paymentStatus := c.Param("payment_status")
 
-	_, err := tempSendWF(c, dbos.WorkflowSendInput{DestinationID: paymentID, Topic: PAYMENT_STATUS, Message: paymentStatus})
+	err := dbos.Send[string](c, dbos.WorkflowSendInput[string]{DestinationID: paymentID, Topic: PAYMENT_STATUS, Message: paymentStatus})
 	if err != nil {
 		logger.WithError(err).WithFields(logrus.Fields{"payment": paymentID, "status": paymentStatus}).Error("payment notification failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process payment"})
