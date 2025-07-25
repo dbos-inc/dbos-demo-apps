@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { Command } from 'commander';
 import { DBOS } from '@dbos-inc/dbos-sdk';
 import { agenticResearchWorkflow, ResearchResult } from './workflows';
 // Import modules to register DBOS steps and workflows
@@ -10,56 +11,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-interface Args {
-  topic: string;
-  maxIterations: number;
-}
-
-function parseArgs(): Args {
-  const args = process.argv.slice(2);
-  
-  if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
-    console.log(`
-Usage: npm start <topic> [options]
-
-Arguments:
-  topic                 Topic to research on Hacker News
-
-Options:
-  --max-iterations NUM  Maximum research iterations (default: 8)
-  --help, -h           Show this help message
-
-Examples:
-  npm start "PostgreSQL performance"
-  npm start "React hooks" --max-iterations 5
-    `);
-    process.exit(0);
-  }
-
-  let topic = '';
-  let maxIterations = 8;
-  
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--max-iterations') {
-      const next = args[i + 1];
-      if (next && !isNaN(parseInt(next))) {
-        maxIterations = parseInt(next);
-        i++; // skip next arg
-      }
-    } else if (!args[i].startsWith('--')) {
-      if (!topic) {
-        topic = args[i];
-      }
-    }
-  }
-
-  if (!topic) {
-    console.error('❌ Error: Topic is required');
-    process.exit(1);
-  }
-
-  return { topic, maxIterations };
-}
+const program = new Command();
 
 function formatOutput(result: ResearchResult): void {
   console.log('\n🤖 Agent Reasoning Process');
@@ -117,7 +69,7 @@ function formatOutput(result: ResearchResult): void {
   console.log('Research completed by Hacker News Research Agent');
 }
 
-export async function main() {
+async function runResearch(topic: string, options: { maxIterations: number }) {
   // Validate required environment variables
   if (!process.env.OPENAI_API_KEY) {
     console.error('❌ Error: OPENAI_API_KEY environment variable not set');
@@ -125,8 +77,6 @@ export async function main() {
     console.error('  export OPENAI_API_KEY=\'your-api-key-here\'');
     process.exit(1);
   }
-
-  const args = parseArgs();
 
   try {
     // Initialize DBOS
@@ -140,7 +90,7 @@ export async function main() {
     console.log('\n🤖 Starting Agentic Research Agent');
     console.log('The agent will autonomously plan and execute research...\n');
 
-    const result = await agenticResearchWorkflow(args.topic, args.maxIterations);
+    const result = await agenticResearchWorkflow(topic, options.maxIterations);
 
     // Display the results
     formatOutput(result);
@@ -156,6 +106,25 @@ export async function main() {
     
     process.exit(1);
   }
+}
+
+export async function main() {
+  program
+    .name('hacker-news-agent')
+    .description('Autonomous AI research agent that explores topics on Hacker News')
+    .version('1.0.0')
+    .argument('<topic>', 'Topic to research on Hacker News')
+    .option('-i, --max-iterations <number>', 'Maximum research iterations', '8')
+    .action(async (topic: string, options) => {
+      const maxIterations = parseInt(options.maxIterations, 10);
+      if (isNaN(maxIterations) || maxIterations < 1) {
+        console.error('❌ Error: max-iterations must be a positive number');
+        process.exit(1);
+      }
+      await runResearch(topic, { maxIterations });
+    });
+
+  program.parse();
 }
 
 // Handle Ctrl+C gracefully

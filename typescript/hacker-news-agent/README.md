@@ -45,12 +45,22 @@ npm run build
 
 ### Basic Research
 ```bash
-npm start "PostgreSQL performance"
+node dist/index.js "PostgreSQL performance"
 ```
 
 ### Custom Iterations
 ```bash
-npm start "React hooks" --max-iterations 5
+node dist/index.js "React hooks" --max-iterations 5
+```
+
+### Alternative: Using npm start (requires -- to pass arguments)
+```bash
+npm start -- "React hooks" --max-iterations 5
+```
+
+### Help
+```bash
+node dist/index.js --help
 ```
 
 ## Example Output
@@ -115,23 +125,23 @@ PostgreSQL performance optimization involves multiple layers...
 
 ### Technology Research
 ```bash
-npm start "GraphQL vs REST API"
-npm start "Kubernetes deployment strategies"
-npm start "TypeScript performance tips"
+node dist/index.js "GraphQL vs REST API"
+node dist/index.js "Kubernetes deployment strategies"
+node dist/index.js "TypeScript performance tips"
 ```
 
 ### Tool Comparisons
 ```bash
-npm start "Docker vs Podman"
-npm start "Redis vs Memcached"
-npm start "MySQL vs PostgreSQL"
+node dist/index.js "Docker vs Podman"
+node dist/index.js "Redis vs Memcached"
+node dist/index.js "MySQL vs PostgreSQL"
 ```
 
 ### Best Practices
 ```bash
-npm start "Node.js security best practices"
-npm start "React testing strategies"
-npm start "Database indexing techniques"
+node dist/index.js "Node.js security best practices"
+node dist/index.js "React testing strategies"
+node dist/index.js "Database indexing techniques"
 ```
 
 ## Development
@@ -150,7 +160,7 @@ src/
 ### Running in Development
 ```bash
 npm run build
-npm start "your topic"
+node dist/index.js "your topic"
 ```
 
 ### Building
