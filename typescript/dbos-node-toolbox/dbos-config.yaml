@@ -10,4 +10,4 @@ runtimeConfig:
     - npm run start
 database:
   migrate:
-    - npx knex migrate:latest
+    - npm run db:setup

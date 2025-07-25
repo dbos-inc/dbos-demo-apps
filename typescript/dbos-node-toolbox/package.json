@@ -6,7 +6,8 @@
     "start": "node dist/main.js",
     "dev": "nodemon",
     "prelaunch": "npm run build",
-    "launch": "npm run start"
+    "launch": "npm run start",
+    "db:setup": "tsx setup-db.mts"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

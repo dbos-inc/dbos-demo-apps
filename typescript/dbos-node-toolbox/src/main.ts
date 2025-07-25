@@ -7,8 +7,12 @@ app.use(express.json());
 
 const queue = new WorkflowQueue("example_queue");
 
+// Note, there is no requirement to use DBOS_DATABASE_URL with DBOS Data Sources if you're self hosting.
+// We are using DBOS_DATABASE_URL here so this demo application can run in DBOS Cloud.
+
 const databaseUrl = process.env.DBOS_DATABASE_URL || 
   `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'dbos_node_toolbox'}`;
+
 const config = {
   client: 'pg',
   connection: databaseUrl,
