@@ -57,7 +57,11 @@ func main() {
 		panic("DBOS_DATABASE_URL environment variable is required")
 	}
 
-	err := dbos.Launch()
+	err := dbos.Initialize(dbos.Config{AppName: "widget_store_go", DatabaseURL: os.Getenv("DBOS_DATABASE_URL")})
+	if err != nil {
+		panic(err)
+	}
+	err = dbos.Launch()
 	if err != nil {
 		panic(err)
 	}
