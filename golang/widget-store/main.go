@@ -16,6 +16,7 @@ import (
 
 var (
 	checkoutWF = dbos.WithWorkflow(checkoutWorkflow)
+	tempSendWF = dbos.WithWorkflow(tempSendWorkflow)
 )
 
 const WIDGET_ID = 1
@@ -87,6 +88,7 @@ func main() {
 	r.GET("/order/:id", getOrder)
 	r.POST("/restock", restock)
 	r.POST("/checkout/:idempotency_key", checkoutEndpoint)
+	r.POST("/payment_webhook/:payment_id/:payment_status", paymentEndpoint)
 
 	r.Run(":8080")
 }
@@ -267,4 +269,24 @@ func checkoutEndpoint(c *gin.Context) {
 		return
 	}
 	c.String(http.StatusOK, payment_id)
+}
+
+func tempSendWorkflow(ctx context.Context, input dbos.WorkflowSendInput) (string, error) {
+	return "", dbos.Send(ctx, input)
+}
+
+func paymentEndpoint(c *gin.Context) {
+	paymentID := c.Param("payment_id")
+	paymentStatus := c.Param("payment_status")
+	_, err := tempSendWF(c, dbos.WorkflowSendInput{DestinationID: paymentID, Topic: PAYMENT_STATUS, Message: paymentStatus})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	orderID, err := dbos.GetEvent[string](c, dbos.WorkflowGetEventInput{TargetWorkflowID: paymentID, Key: ORDER_ID, Timeout: 60 * time.Second})
+	if err != nil || orderID == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "payment failed to process"})
+		return
+	}
+	c.String(http.StatusOK, orderID)
 }
