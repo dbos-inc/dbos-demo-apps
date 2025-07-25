@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,8 +16,9 @@ import (
 )
 
 var (
-	checkoutWF = dbos.WithWorkflow(checkoutWorkflow)
-	tempSendWF = dbos.WithWorkflow(tempSendWorkflow)
+	checkoutWF      = dbos.WithWorkflow(checkoutWorkflow)
+	dispatchOrderWF = dbos.WithWorkflow(dispatchOrderWorkflow)
+	tempSendWF      = dbos.WithWorkflow(tempSendWorkflow)
 )
 
 const WIDGET_ID = 1
@@ -126,6 +128,7 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 	} else {
 		fmt.Printf("Payment successful for order %d", orderID)
 		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: PAID})
+		dispatchOrderWF(ctx, orderID)
 	}
 	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: ORDER_ID, Message: fmt.Sprint(orderID)})
 	if err != nil {
@@ -236,6 +239,24 @@ func updateOrderStatus(ctx context.Context, input UpdateOrderStatusInput) (strin
 		"UPDATE orders SET order_status = $1 WHERE order_id = $2",
 		int(input.OrderStatus), input.OrderID)
 	return "", err
+}
+
+func dispatchOrderWorkflow(ctx context.Context, orderID int) (string, error) {
+	var t time.Time
+	gob.Register(t) // TODO: Should be done automatically
+	for range 10 {
+		_, err := dbos.Sleep(ctx, time.Second)
+		if err != nil {
+			fmt.Print(err)
+			return "", err
+		}
+		_, err = dbos.RunAsStep(ctx, updateOrderProgress, orderID)
+		if err != nil {
+			fmt.Print(err)
+			return "", err
+		}
+	}
+	return "", nil
 }
 
 func updateOrderProgress(ctx context.Context, orderID int) (int, error) {
