@@ -271,6 +271,7 @@ func checkoutEndpoint(c *gin.Context) {
 	c.String(http.StatusOK, payment_id)
 }
 
+// TODO: You shouldn't need a workflow to run dbos.Send
 func tempSendWorkflow(ctx context.Context, input dbos.WorkflowSendInput) (string, error) {
 	return "", dbos.Send(ctx, input)
 }
