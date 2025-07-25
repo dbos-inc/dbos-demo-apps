@@ -96,7 +96,7 @@ async function runResearch(topic: string, options: { maxIterations: number }) {
     formatOutput(result);
 
     console.log('\n✅ Research completed successfully!');
-
+    await DBOS.shutdown()
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       console.log('\n🟡 Research interrupted by user');
