@@ -1,4 +1,3 @@
-import { DBOS } from '@dbos-inc/dbos-sdk';
 import { callLLM, cleanJsonResponse, Finding, Story } from './llm';
 
 export interface EvaluationResult {
@@ -10,15 +9,12 @@ export interface EvaluationResult {
   top_stories?: Story[];
 }
 
-async function evaluateResultsStepFunction(
+export async function evaluateResults(
   topic: string,
   query: string,
   stories: any[],
   comments?: any[]
 ): Promise<EvaluationResult> {
-  const contentSummary = `Found ${stories.length} stories` + 
-    (comments ? ` and ${comments.length} comments` : '');
-
   let storiesText = '';
   const topStories: Story[] = [];
 
@@ -118,7 +114,7 @@ async function evaluateResultsStepFunction(
   }
 }
 
-async function generateFollowUpsStepFunction(
+export async function generateFollowUps(
   topic: string,
   currentFindings: Finding[],
   iteration: number
@@ -180,7 +176,7 @@ async function generateFollowUpsStepFunction(
   }
 }
 
-async function shouldContinueStepFunction(
+export async function shouldContinue(
   topic: string,
   allFindings: Finding[],
   currentIteration: number,
@@ -245,7 +241,3 @@ async function shouldContinueStepFunction(
   }
 }
 
-// Register DBOS steps
-export const evaluateResultsStep = DBOS.registerStep(evaluateResultsStepFunction, {name: 'evaluateResults'});
-export const generateFollowUpsStep = DBOS.registerStep(generateFollowUpsStepFunction, {name: 'generateFollowUps'});
-export const shouldContinueStep = DBOS.registerStep(shouldContinueStepFunction, {name: 'shouldContinue'});

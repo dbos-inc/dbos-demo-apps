@@ -1,7 +1,7 @@
 import { DBOS } from '@dbos-inc/dbos-sdk';
-import { evaluateResultsStep, generateFollowUpsStep, shouldContinueStep } from './agent';
-import { searchHackerNewsStep, getCommentsStep } from './api';
-import { synthesizeFindingsStep, Finding } from './llm';
+import { evaluateResults, generateFollowUps, shouldContinue } from './agent';
+import { searchHackerNews, getComments } from './api';
+import { synthesizeFindings, Finding } from './llm';
 
 export interface IterationResult {
   iteration: number;
@@ -58,11 +58,11 @@ async function agenticResearchWorkflowFunction(
       log(`⚠️  No stories found for '${currentQuery}', trying alternative approach...`);
 
       // Generate alternative queries when hitting dead ends
-      const alternativeQuery = await generateFollowUpsStep(
+      const alternativeQuery = await DBOS.runStep(() => generateFollowUps(
         topic,
         allFindings,
         currentIteration
-      );
+      ), { name: 'generateFollowUps' });
       if (alternativeQuery) {
         currentQuery = alternativeQuery;
         log(`🔄 Retrying with: '${currentQuery}'`);
@@ -74,13 +74,13 @@ async function agenticResearchWorkflowFunction(
 
     // Evaluate whether to continue research
     log('🤔 Agent evaluating whether to continue research...');
-    const shouldContinue = await shouldContinueStep(
+    const shouldContinueDecision = await DBOS.runStep(() => shouldContinue(
       topic,
       allFindings,
       currentIteration,
       maxIterations
-    );
-    if (!shouldContinue) {
+    ), { name: 'shouldContinue' });
+    if (!shouldContinueDecision) {
       log('✅ Agent decided to conclude research');
       break;
     }
@@ -88,11 +88,11 @@ async function agenticResearchWorkflowFunction(
     // Generate next research question based on findings
     if (currentIteration < maxIterations) {
       log('💭 Agent generating next research question...');
-      const followUpQuery = await generateFollowUpsStep(
+      const followUpQuery = await DBOS.runStep(() => generateFollowUps(
         topic,
         allFindings,
         currentIteration
-      );
+      ), { name: 'generateFollowUps' });
       if (followUpQuery) {
         currentQuery = followUpQuery;
         log(`➡️  Next research focus: '${currentQuery}'`);
@@ -105,7 +105,7 @@ async function agenticResearchWorkflowFunction(
 
   // Final step: Synthesize all findings into comprehensive report
   log('📋 Agent synthesizing final research report...');
-  const finalReport = await synthesizeFindingsStep(topic, allFindings);
+  const finalReport = await DBOS.runStep(() => synthesizeFindings(topic, allFindings), { name: 'synthesizeFindings' });
 
   // Return complete research results
   return {
@@ -133,7 +133,7 @@ async function researchQueryWorkflowFunction(
   log(`🔍 Searching for stories: '${query}'`);
 
   // Step 1: Search Hacker News for stories about the topic
-  const stories = await searchHackerNewsStep(query, 30);
+  const stories = await DBOS.runStep(() => searchHackerNews(query, 30), { name: 'searchHackerNews' });
 
   if (stories.length > 0) {
     log(`📚 Found ${stories.length} stories, analyzing all stories...`);
@@ -160,7 +160,7 @@ async function researchQueryWorkflowFunction(
 
       if (storyId && numComments > 0) {
         log(`  💭 Reading comments from: ${title}... (${numComments} comments)`);
-        const storyComments = await getCommentsStep(storyId, 10);
+        const storyComments = await DBOS.runStep(() => getComments(storyId, 10), { name: 'getComments' });
         comments.push(...storyComments);
         log(`    ✓ Read ${storyComments.length} comments`);
       } else if (storyId) {
@@ -173,7 +173,7 @@ async function researchQueryWorkflowFunction(
 
   // Step 3: Evaluate gathered data and return findings
   log(`🤔 Analyzing findings from ${stories.length} stories and ${comments.length} comments...`);
-  const evaluation = await evaluateResultsStep(topic, query, stories, comments);
+  const evaluation = await DBOS.runStep(() => evaluateResults(topic, query, stories, comments), { name: 'evaluateResults' });
 
   return {
     iteration,

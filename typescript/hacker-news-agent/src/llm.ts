@@ -1,8 +1,4 @@
-import { DBOS } from '@dbos-inc/dbos-sdk';
 import OpenAI from 'openai';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,7 +13,7 @@ export interface Message {
   content: string;
 }
 
-async function callLLMStepFunction(
+export async function callLLM(
   messages: Message[],
   model: string = DEFAULT_MODEL,
   temperature: number = DEFAULT_TEMPERATURE,
@@ -78,7 +74,7 @@ export interface SynthesisResult {
   error?: string;
 }
 
-async function synthesizeFindingsStepFunction(
+export async function synthesizeFindings(
   topic: string,
   allFindings: Finding[]
 ): Promise<SynthesisResult> {
@@ -209,7 +205,3 @@ async function synthesizeFindingsStepFunction(
     };
   }
 }
-
-// Register DBOS steps
-export const callLLM = DBOS.registerStep(callLLMStepFunction, {name: 'callLLM'});
-export const synthesizeFindingsStep = DBOS.registerStep(synthesizeFindingsStepFunction, {name: 'synthesizeFindings'});

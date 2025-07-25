@@ -3,14 +3,7 @@
 import { Command } from 'commander';
 import { DBOS } from '@dbos-inc/dbos-sdk';
 import { agenticResearchWorkflow, ResearchResult } from './workflows';
-// Import modules to register DBOS steps and workflows
-import './agent';
-import './api'; 
-import './llm';
-import * as dotenv from 'dotenv';
 import { randomUUID } from 'crypto';
-
-dotenv.config();
 
 const program = new Command();
 
