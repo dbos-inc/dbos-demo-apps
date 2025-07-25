@@ -1,0 +1,20 @@
+{
+  "name": "hacker-news-agent",
+  "version": "1.0.0",
+  "description": "TypeScript port of Hacker News research agent",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@dbos-inc/dbos-sdk": "^3.0.56-preview",
+    "openai": "^4.67.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.1",
+    "typescript": "^5.5.4",
+    "ts-node": "^10.9.2"
+  }
+}
