@@ -23,7 +23,7 @@ If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment var
 3. Run database migrations:
 
 ```shell
-npx dbos migrate
+npm run db:setup
 ```
 
 4. Start your app:
