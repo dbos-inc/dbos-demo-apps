@@ -116,7 +116,7 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 		return "", err
 	}
 
-	payment_status, err := dbos.Recv[string](ctx, dbos.WorkflowRecvInput{Topic: PAYMENT_STATUS})
+	payment_status, err := dbos.Recv[string](ctx, dbos.WorkflowRecvInput{Topic: PAYMENT_STATUS, Timeout: 60 * time.Second})
 	if err != nil || payment_status != "paid" {
 		fmt.Printf("Payment failed for order %d", orderID)
 		dbos.RunAsStep(ctx, undoReserveInventory, "")
@@ -125,7 +125,7 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 		fmt.Printf("Payment successful for order %d", orderID)
 		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: PAID})
 	}
-	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: ORDER_ID, Message: string(orderID)})
+	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: ORDER_ID, Message: fmt.Sprint(orderID)})
 	if err != nil {
 		return "", err
 	}
@@ -261,6 +261,10 @@ func checkoutEndpoint(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.String(http.StatusOK, "")
+	payment_id, err := dbos.GetEvent[string](c, dbos.WorkflowGetEventInput{TargetWorkflowID: idempotencyKey, Key: PAYMENT_ID, Timeout: 60 * time.Second})
+	if err != nil || payment_id == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "checkout failed"})
+		return
+	}
+	c.String(http.StatusOK, payment_id)
 }
