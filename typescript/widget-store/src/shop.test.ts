@@ -1,4 +1,4 @@
-import { ShopUtilities, OrderStatus, PRODUCT_ID } from './utilities';
+import { createOrder, retrieveOrder, OrderStatus, PRODUCT_ID } from './shop';
 import knex, { Knex } from 'knex';
 import path from 'path';
 
@@ -35,7 +35,7 @@ export async function resetDatabase() {
       directory: path.join(cwd, 'migrations'),
       tableName: 'knex_migrations',
     },
-  }
+  };
   let knexDB: Knex = knex(adminKnexConfig);
   try {
     await knexDB.raw(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`);
@@ -48,15 +48,6 @@ export async function resetDatabase() {
   knexDB = knex(knexConfig);
   try {
     await knexDB.migrate.latest();
-    await knexDB('products').insert([
-      {
-        product_id: PRODUCT_ID,
-        product: 'Premium Quality Widget',
-        description: 'Enhance your productivity with our top-rated widgets!',
-        inventory: 12,
-        price: 99.99,
-      },
-    ]);
   } finally {
     await knexDB.destroy();
   }
@@ -79,8 +70,8 @@ describe('Widget store utilities', () => {
   });
 
   it('Creates an order', async () => {
-    const orderId = await ShopUtilities.createOrder();
-    const retrievedOrder = await ShopUtilities.retrieveOrder(orderId);
+    const orderId = await createOrder();
+    const retrievedOrder = await retrieveOrder(orderId);
     expect(retrievedOrder).toMatchObject({
       order_id: orderId,
       order_status: OrderStatus.PENDING,
