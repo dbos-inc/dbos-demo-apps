@@ -8,6 +8,7 @@ import './agent';
 import './api'; 
 import './llm';
 import * as dotenv from 'dotenv';
+import { randomUUID } from 'crypto';
 
 dotenv.config();
 
@@ -69,7 +70,7 @@ function formatOutput(result: ResearchResult): void {
   console.log('Research completed by Hacker News Research Agent');
 }
 
-async function runResearch(topic: string, options: { maxIterations: number }) {
+async function runResearch(topic: string, options: { maxIterations: number, workflowId?: string }) {
   // Validate required environment variables
   if (!process.env.OPENAI_API_KEY) {
     console.error('❌ Error: OPENAI_API_KEY environment variable not set');
@@ -90,7 +91,33 @@ async function runResearch(topic: string, options: { maxIterations: number }) {
     console.log('\n🤖 Starting Agentic Research Agent');
     console.log('The agent will autonomously plan and execute research...\n');
 
-    const result = await agenticResearchWorkflow(topic, options.maxIterations);
+    // Resume if a workflow ID is provided, else generate a new one
+    let workflowId: string;
+    let handle: any;
+    
+    if (options.workflowId) {
+      workflowId = options.workflowId;
+      console.log(`📋 Resuming workflow ID: ${workflowId}`);
+      
+      try {
+        handle = await DBOS.retrieveWorkflow(workflowId);
+        if (!handle) {
+          console.error(`❌ Error: Workflow ID ${workflowId} not found`);
+          process.exit(1);
+        }
+      } catch (error) {
+        console.error(`❌ Error retrieving workflow ${workflowId}: ${error}`);
+        process.exit(1);
+      }
+    } else {
+      workflowId = randomUUID();
+      console.log(`📋 Workflow ID: ${workflowId}`);
+      console.log(`Use --workflow-id ${workflowId} to resume if interrupted\n`);
+      
+      handle = await DBOS.startWorkflow(agenticResearchWorkflow, { workflowID: workflowId })(topic, options.maxIterations);
+    }
+
+    const result = await handle.getResult();
 
     // Display the results
     formatOutput(result);
@@ -115,13 +142,14 @@ export async function main() {
     .version('1.0.0')
     .argument('<topic>', 'Topic to research on Hacker News')
     .option('-i, --max-iterations <number>', 'Maximum research iterations', '8')
+    .option('--workflow-id <id>', 'Workflow ID to resume a previous research session')
     .action(async (topic: string, options) => {
       const maxIterations = parseInt(options.maxIterations, 10);
       if (isNaN(maxIterations) || maxIterations < 1) {
         console.error('❌ Error: max-iterations must be a positive number');
         process.exit(1);
       }
-      await runResearch(topic, { maxIterations });
+      await runResearch(topic, { maxIterations, workflowId: options.workflowId });
     });
 
   program.parse();
