@@ -74,18 +74,18 @@ func main() {
 
 	err := dbos.Initialize(dbos.Config{AppName: "widget_store_go", DatabaseURL: os.Getenv("DBOS_DATABASE_URL")})
 	if err != nil {
-		logger.WithError(err).Fatal("DBOS init failed")
+		logger.WithError(err).Fatal("DBOS initialization failed")
 	}
 
 	err = dbos.Launch()
 	if err != nil {
-		logger.WithError(err).Fatal("DBOS launch failed")
+		logger.WithError(err).Fatal("DBOS service start failed")
 	}
 	defer dbos.Shutdown()
 
 	db, err = pgxpool.New(context.Background(), dbURL)
 	if err != nil {
-		logger.WithError(err).Fatal("DB connection failed")
+		logger.WithError(err).Fatal("database connection failed")
 	}
 	defer db.Close()
 
@@ -104,7 +104,7 @@ func main() {
 	r.POST("/crash_application", crashApplication)
 
 	if err := r.Run(":8080"); err != nil {
-		logger.WithError(err).Fatal("HTTP server failed")
+		logger.WithError(err).Fatal("HTTP server start failed")
 	}
 }
 
@@ -114,7 +114,7 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 	// Create a new order
 	orderID, err := dbos.RunAsStep(ctx, createOrder, "")
 	if err != nil {
-		logger.WithError(err).WithField("wf_id", workflowID).Error("order create fail")
+		logger.WithError(err).WithField("wf_id", workflowID).Error("order creation failed")
 		return "", err
 	}
 
@@ -129,12 +129,12 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 
 	payment_id, err := dbos.GetWorkflowID(ctx)
 	if err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "wf_id": workflowID}).Error("workflow ID fail")
+		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "wf_id": workflowID}).Error("workflow ID retrieval failed")
 		return "", err
 	}
 	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: PAYMENT_ID, Message: payment_id})
 	if err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "payment": payment_id}).Error("event set fail")
+		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "payment": payment_id}).Error("payment event creation failed")
 		return "", err
 	}
 
@@ -150,7 +150,7 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 	}
 	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: ORDER_ID, Message: strconv.Itoa(orderID)})
 	if err != nil {
-		logger.WithError(err).WithField("order", orderID).Error("order event fail")
+		logger.WithError(err).WithField("order", orderID).Error("order event creation failed")
 		return "", err
 	}
 	return "", nil
@@ -163,7 +163,7 @@ func getProduct(c *gin.Context) {
 		Scan(&product.ProductID, &product.Product, &product.Description, &product.Inventory, &product.Price)
 
 	if err != nil {
-		logger.WithError(err).Error("product fetch fail")
+		logger.WithError(err).Error("product query failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch product"})
 		return
 	}
@@ -174,7 +174,7 @@ func getOrders(c *gin.Context) {
 	rows, err := db.Query(context.Background(),
 		"SELECT order_id, order_status, last_update_time, progress_remaining FROM orders")
 	if err != nil {
-		logger.WithError(err).Error("orders query fail")
+		logger.WithError(err).Error("orders database query failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 		return
 	}
@@ -185,7 +185,7 @@ func getOrders(c *gin.Context) {
 		var order Order
 		err := rows.Scan(&order.OrderID, &order.OrderStatus, &order.LastUpdateTime, &order.ProgressRemaining)
 		if err != nil {
-			logger.WithError(err).Error("order scan fail")
+			logger.WithError(err).Error("order data parsing failed")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process orders"})
 			return
 		}
@@ -214,7 +214,7 @@ func getOrder(c *gin.Context) {
 			logger.WithField("order", id).Warn("order not found")
 			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		} else {
-			logger.WithError(err).WithField("order", id).Error("order query fail")
+			logger.WithError(err).WithField("order", id).Error("order database query failed")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch order"})
 		}
 		return
@@ -225,7 +225,7 @@ func getOrder(c *gin.Context) {
 func restock(c *gin.Context) {
 	_, err := db.Exec(context.Background(), "UPDATE products SET inventory = 100")
 	if err != nil {
-		logger.WithError(err).Error("restock fail")
+		logger.WithError(err).Error("inventory update failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to restock inventory"})
 		return
 	}
@@ -271,12 +271,12 @@ func dispatchOrderWorkflow(ctx context.Context, orderID int) (string, error) {
 	for range 10 {
 		_, err := dbos.Sleep(ctx, time.Second)
 		if err != nil {
-			logger.WithError(err).WithField("order", orderID).Error("sleep fail")
+			logger.WithError(err).WithField("order", orderID).Error("dispatch delay failed")
 			return "", err
 		}
 		_, err = dbos.RunAsStep(ctx, updateOrderProgress, orderID)
 		if err != nil {
-			logger.WithError(err).WithField("order", orderID).Error("progress fail")
+			logger.WithError(err).WithField("order", orderID).Error("progress tracking failed")
 			return "", err
 		}
 	}
@@ -305,14 +305,14 @@ func checkoutEndpoint(c *gin.Context) {
 	// Start the checkout workflow with the idempotency key
 	_, err := checkoutWF(context.Background(), "", dbos.WithWorkflowID(idempotencyKey))
 	if err != nil {
-		logger.WithError(err).WithField("key", idempotencyKey).Error("checkout start fail")
+		logger.WithError(err).WithField("key", idempotencyKey).Error("checkout workflow start failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Checkout failed to start"})
 		return
 	}
 
 	payment_id, err := dbos.GetEvent[string](c, dbos.WorkflowGetEventInput{TargetWorkflowID: idempotencyKey, Key: PAYMENT_ID, Timeout: 60 * time.Second})
 	if err != nil || payment_id == "" {
-		logger.WithField("key", idempotencyKey).Error("payment ID not found")
+		logger.WithField("key", idempotencyKey).Error("payment ID retrieval failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Checkout failed"})
 		return
 	}
@@ -331,14 +331,14 @@ func paymentEndpoint(c *gin.Context) {
 
 	_, err := tempSendWF(c, dbos.WorkflowSendInput{DestinationID: paymentID, Topic: PAYMENT_STATUS, Message: paymentStatus})
 	if err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{"payment": paymentID, "status": paymentStatus}).Error("send fail")
+		logger.WithError(err).WithFields(logrus.Fields{"payment": paymentID, "status": paymentStatus}).Error("payment notification failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process payment"})
 		return
 	}
 
 	orderID, err := dbos.GetEvent[string](c, dbos.WorkflowGetEventInput{TargetWorkflowID: paymentID, Key: ORDER_ID, Timeout: 60 * time.Second})
 	if err != nil || orderID == "" {
-		logger.WithField("payment", paymentID).Error("order ID not found")
+		logger.WithField("payment", paymentID).Error("order ID retrieval failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Payment failed to process"})
 		return
 	}
@@ -347,11 +347,11 @@ func paymentEndpoint(c *gin.Context) {
 }
 
 func crashApplication(c *gin.Context) {
-	logger.Warn("crash requested")
+	logger.Warn("application crash requested")
 	c.JSON(http.StatusOK, gin.H{"message": "Crashing application..."})
 	// Give time for response to be sent
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		logger.Fatal("intentional crash")
+		logger.Fatal("intentional crash for demo")
 	}()
 }
