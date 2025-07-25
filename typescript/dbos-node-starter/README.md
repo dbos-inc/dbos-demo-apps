@@ -2,36 +2,49 @@
 
 This is a template app built with DBOS and Koa.
 
-### Developing Locally
+## Running Locally
 
-First, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
-
-Then, install dependencies, build your app, and set up its database tables:
+First, install the application dependencies.
 
 ```shell
 npm install
-npm run build
-npx dbos migrate
 ```
 
-Then, start it:
+Next, we need to setup a Postgres database.
+DBOS stores application execution history in Postgres.
+
+If you have a Postgres database, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to the connection string for that database.
+You can set this environment variable directly or you can put it in an `.env` file in the root of this project.
+The template app includes an `.env.example` file with a dummy connection string you can use as a reference.
+
+If you don't have a Postgres server, you can start one locally using Docker.
+The DBOS SDK includes a utility to start and stop a local Postgres Docker container.
 
 ```shell
-npm run start
+npx dbos postgres start
+npx dbos postgres stop
 ```
 
-Alternatively, run it in dev mode using `nodemon`:
+> Note, DBOS will automatically connect to Postgres running on localhost if `DBOS_SYSTEM_DATABASE_URL` is not specified.
+> If you use a local Postgres Docker container, you do not need to set the `DBOS_SYSTEM_DATABASE_URL` environment variable.
+
+Once you have a setup or configured a Postgres database for DBOS, you can launch the application.
 
 ```shell
-npm install
+npm run launch
+```
+
+Alternatively, you can run the application with [`nodemon`](https://nodemon.io/)
+to enable automatic restart when the application changes.
+
+```shell
 npm run dev
 ```
 
-Visit [`http://localhost:3000`](http://localhost:3000) to see your app.
+Once the app is running, visit [`http://localhost:3000`](http://localhost:3000) to see your app.
 Then, edit `src/main.ts` to start building!
 
-<details>
-<summary><strong>Deploying via the DBOS Cloud CLI</strong></summary>
+## Deploying to DBOS Cloud
 
 You can also deploy this app to DBOS Cloud via the Cloud CLI.
 Install it globally with this command:

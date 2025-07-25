@@ -1,23 +1,30 @@
 {
   "name": "dbos-node-starter",
   "version": "0.0.1",
+  "//": [
+    "DBOS Cloud runs the `build` and `start` scripts and prunes devDependencies before running `start`.",
+    "The `launch` script is used to build and run the application locally in a single command."
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
     "dev": "nodemon",
-    "start": "node dist/main.js"
+    "prelaunch": "npm run build",
+    "launch": "npm run start"
   },
   "devDependencies": {
+    "@types/koa": "^2.15.0",
     "@types/koa__router": "^12.0.4",
     "@types/koa-bodyparser": "^4.3.12",
     "@types/koa-morgan": "^1.0.8",
     "@types/koa-send": "^4.1.6",
-    "nodemon": "^3.1.0",
-    "typescript": "^5.4.5"
+    "nodemon": "^3.1.10",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.0.45-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.51-preview",
     "@koa/router": "^13.1.1",
-    "@types/koa": "^2.15.0",
+    "dotenv": "^17.2.0",
     "koa": "^3.0.0",
     "koa-bodyparser": "^4.4.1",
     "koa-morgan": "^1.0.1",
