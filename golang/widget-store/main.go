@@ -91,6 +91,7 @@ func main() {
 	r.POST("/restock", restock)
 	r.POST("/checkout/:idempotency_key", checkoutEndpoint)
 	r.POST("/payment_webhook/:payment_id/:payment_status", paymentEndpoint)
+	r.POST("/crash_application", crashApplication)
 
 	r.Run(":8080")
 }
@@ -311,4 +312,9 @@ func paymentEndpoint(c *gin.Context) {
 		return
 	}
 	c.String(http.StatusOK, orderID)
+}
+
+func crashApplication(c *gin.Context) {
+	fmt.Println("Crashing the application...")
+	os.Exit(1)
 }
