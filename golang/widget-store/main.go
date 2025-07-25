@@ -19,6 +19,9 @@ var (
 )
 
 const WIDGET_ID = 1
+const PAYMENT_STATUS = "payment_status"
+const PAYMENT_ID = "payment_id"
+const ORDER_ID = "order_id"
 
 type OrderStatus int
 
@@ -100,6 +103,30 @@ func checkoutWorkflow(ctx context.Context, _ string) (string, error) {
 	if err != nil || !success {
 		fmt.Printf("Failed to reserve inventory for order %d", orderID)
 		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
+		err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: PAYMENT_ID, Message: ""})
+		return "", err
+	}
+
+	payment_id, err := dbos.GetWorkflowID(ctx)
+	if err != nil {
+		return "", err
+	}
+	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: PAYMENT_ID, Message: payment_id})
+	if err != nil {
+		return "", err
+	}
+
+	payment_status, err := dbos.Recv[string](ctx, dbos.WorkflowRecvInput{Topic: PAYMENT_STATUS})
+	if err != nil || payment_status != "paid" {
+		fmt.Printf("Payment failed for order %d", orderID)
+		dbos.RunAsStep(ctx, undoReserveInventory, "")
+		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
+	} else {
+		fmt.Printf("Payment successful for order %d", orderID)
+		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: PAID})
+	}
+	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput{Key: ORDER_ID, Message: string(orderID)})
+	if err != nil {
 		return "", err
 	}
 	return "", nil
