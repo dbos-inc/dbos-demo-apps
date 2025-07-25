@@ -2,7 +2,7 @@
 
 This is a template app built with DBOS and Koa.
 
-## Developing Locally
+## Running Locally
 
 First, install the application dependencies.
 
@@ -44,8 +44,7 @@ npm run dev
 Once the app is running, visit [`http://localhost:3000`](http://localhost:3000) to see your app.
 Then, edit `src/main.ts` to start building!
 
-<details>
-<summary><strong>Deploying via the DBOS Cloud CLI</strong></summary>
+## Deploying to DBOS Cloud
 
 You can also deploy this app to DBOS Cloud via the Cloud CLI.
 Install it globally with this command:
