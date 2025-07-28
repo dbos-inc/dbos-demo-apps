@@ -15,6 +15,15 @@ exports.up = async function (knex) {
     table.foreign('product_id').references('products.product_id');
     table.integer('progress_remaining').notNullable().defaultTo(10);
   });
+  await knex('products').insert([
+    {
+      product_id: 1,
+      product: 'Premium Quality Widget',
+      description: 'Enhance your productivity with our top-rated widgets!',
+      inventory: 100,
+      price: 99.99,
+    },
+  ]);
 };
 
 exports.down = async function (knex) {
