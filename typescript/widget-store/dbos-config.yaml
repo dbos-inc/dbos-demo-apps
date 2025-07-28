@@ -6,7 +6,7 @@
 name: 'widget-store-node'
 language: 'node'
 database:
-  migrate: ['npx knex migrate:latest', 'npx knex seed:run']
+  migrate: ['npm run db:setup']
 runtimeConfig:
   start:
     - 'npm run start'
