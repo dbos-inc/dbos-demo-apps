@@ -1,5 +1,4 @@
 const HN_SEARCH_URL = "https://hn.algolia.com/api/v1/search";
-const API_TIMEOUT = 30000;
 
 export interface HackerNewsStory {
   objectID: string;
@@ -19,65 +18,37 @@ export interface HackerNewsComment {
   story_id: string;
 }
 
-export async function searchHackerNews(
-  query: string,
-  maxResults: number = 20,
-): Promise<HackerNewsStory[]> {
-  const params = new URLSearchParams({
-    query,
-    hitsPerPage: maxResults.toString(),
-    tags: "story",
-  });
-
+export const searchHackerNews = async (query: string, maxResults = 20): Promise<HackerNewsStory[]> => {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-
-    const response = await fetch(`${HN_SEARCH_URL}?${params}`, {
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data: any = await response.json();
-    return data.hits || [];
+    const response = await fetch(`${HN_SEARCH_URL}?${new URLSearchParams({
+      query,
+      hitsPerPage: maxResults.toString(),
+      tags: "story",
+    })}`, { signal: AbortSignal.timeout(30000) });
+    
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    
+    const data = await response.json() as { hits: HackerNewsStory[] };
+    return data.hits ?? [];
   } catch (error) {
     console.error("Error searching Hacker News:", error);
     return [];
   }
-}
+};
 
-export async function getComments(
-  storyId: string,
-  maxComments: number = 50,
-): Promise<HackerNewsComment[]> {
-  const params = new URLSearchParams({
-    tags: `comment,story_${storyId}`,
-    hitsPerPage: maxComments.toString(),
-  });
-
+export const getComments = async (storyId: string, maxComments = 50): Promise<HackerNewsComment[]> => {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-
-    const response = await fetch(`${HN_SEARCH_URL}?${params}`, {
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data: any = await response.json();
-    return data.hits || [];
+    const response = await fetch(`${HN_SEARCH_URL}?${new URLSearchParams({
+      tags: `comment,story_${storyId}`,
+      hitsPerPage: maxComments.toString(),
+    })}`, { signal: AbortSignal.timeout(30000) });
+    
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    
+    const data = await response.json() as { hits: HackerNewsComment[] };
+    return data.hits ?? [];
   } catch (error) {
     console.error("Error getting comments:", error);
     return [];
   }
-}
+};

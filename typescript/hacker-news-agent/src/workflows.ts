@@ -213,7 +213,9 @@ async function researchQueryWorkflowFunction(
 // Register DBOS workflows
 export const agenticResearchWorkflow = DBOS.registerWorkflow(
   agenticResearchWorkflowFunction,
+  {"name": "agenticResearchWorkflow"}
 );
 export const researchQueryWorkflow = DBOS.registerWorkflow(
   researchQueryWorkflowFunction,
+  {"name": "researchQueryWorkflow"}
 );
