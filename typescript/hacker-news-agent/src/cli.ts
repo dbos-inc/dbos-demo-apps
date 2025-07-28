@@ -85,7 +85,7 @@ async function runResearch(
         process.env.DBOS_DATABASE_URL ||
         "postgresql://postgres:dbos@localhost:5432/hacker_news_agent_node",
     });
-    await DBOS.launch({"conductorKey": process.env.CONDUCTOR_KEY});
+    await DBOS.launch({ conductorKey: process.env.CONDUCTOR_KEY });
 
     // Launch the agentic research workflow
     console.log("\n🤖 Starting Agentic Research Agent");

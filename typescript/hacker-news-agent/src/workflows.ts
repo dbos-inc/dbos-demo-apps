@@ -27,7 +27,6 @@ export interface ResearchResult {
   };
 }
 
-
 async function agenticResearchWorkflowFunction(
   topic: string,
   maxIterations: number,
@@ -213,9 +212,9 @@ async function researchQueryWorkflowFunction(
 // Register DBOS workflows
 export const agenticResearchWorkflow = DBOS.registerWorkflow(
   agenticResearchWorkflowFunction,
-  {"name": "agenticResearchWorkflow"}
+  { name: "agenticResearchWorkflow" },
 );
 export const researchQueryWorkflow = DBOS.registerWorkflow(
   researchQueryWorkflowFunction,
-  {"name": "researchQueryWorkflow"}
+  { name: "researchQueryWorkflow" },
 );
