@@ -27,14 +27,16 @@ const knexds = new KnexDataSource('app-db', config);
 //// Workflows and steps
 //////////////////////////////////
 
+async function stepOne() {
+  DBOS.logger.info("Step one completed!");
+}
+
 async function stepTwo() {
   DBOS.logger.info("Step two completed!");
 }
 
 async function exampleWorkflowFunc() {
-  await DBOS.runStep(async ()=>{
-    DBOS.logger.info("Step one completed!");
-  }, {name: 'stepOne'});
+  await DBOS.runStep(() => stepOne(), {name: 'stepOne'});
   await DBOS.runStep(() => stepTwo(), {name: 'stepTwo'});
 }
 
