@@ -16,7 +16,7 @@ npm run build
 export OPENAI_API_KEY='your-api-key-here'
 ```
 
-3. Start Postgres (if you already use Postgres, instead set the `DBOS_DATABASE_URL` environment variable to your database connection string):
+3. Start Postgres (if you already use Postgres, instead set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your database connection string):
 ```bash
 npx dbos postgres start
 ```

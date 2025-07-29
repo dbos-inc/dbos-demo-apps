@@ -82,8 +82,8 @@ async function runResearch(
     DBOS.setConfig({
       name: "hacker-news-agent-node",
       databaseUrl:
-        process.env.DBOS_DATABASE_URL ||
-        "postgresql://postgres:dbos@localhost:5432/hacker_news_agent_node",
+        process.env.DBOS_SYSTEM_DATABASE_URL ||
+        "postgresql://postgres:dbos@localhost:5432/hacker_news_agent_node_dbos_sys",
     });
     await DBOS.launch({ conductorKey: process.env.CONDUCTOR_KEY });
 
