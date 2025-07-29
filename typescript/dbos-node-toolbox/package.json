@@ -15,7 +15,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "3.0.51-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.56-preview",
     "@dbos-inc/knex-datasource": "3.0.51-preview",
     "dotenv": "^17.2.1",
     "express": "^5.1.0"
