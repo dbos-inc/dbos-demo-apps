@@ -50,11 +50,11 @@ export const knexds = new KnexDataSource('app-db', config);
 export async function subtractInventory(): Promise<void> {
   return knexds.runTransaction(
     async () => {
-      const numAffected = await KnexDataSource.client<Product>('products')
+      const numAffected = await knexds.client<Product>('products')
         .where('product_id', PRODUCT_ID)
         .andWhere('inventory', '>=', 1)
         .update({
-          inventory: KnexDataSource.client.raw('inventory - ?', 1),
+          inventory: knexds.client.raw('inventory - ?', 1),
         });
       if (numAffected <= 0) {
         throw new Error('Insufficient Inventory');
@@ -67,9 +67,9 @@ export async function subtractInventory(): Promise<void> {
 export async function undoSubtractInventory(): Promise<void> {
   return knexds.runTransaction(
     async () => {
-      await KnexDataSource.client<Product>('products')
+      await knexds.client<Product>('products')
         .where({ product_id: PRODUCT_ID })
-        .update({ inventory: KnexDataSource.client.raw('inventory + ?', 1) });
+        .update({ inventory: knexds.client.raw('inventory + ?', 1) });
     },
     { name: 'undoSubtractInventory' },
   );
@@ -78,7 +78,7 @@ export async function undoSubtractInventory(): Promise<void> {
 export async function setInventory(inventory: number): Promise<void> {
   return knexds.runTransaction(
     async () => {
-      await KnexDataSource.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
+      await knexds.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
     },
     { name: 'setInventory' },
   );
@@ -87,7 +87,7 @@ export async function setInventory(inventory: number): Promise<void> {
 export async function retrieveProduct(): Promise<Product> {
   return knexds.runTransaction(
     async () => {
-      const item = await KnexDataSource.client<Product>('products').select('*').where({ product_id: PRODUCT_ID });
+      const item = await knexds.client<Product>('products').select('*').where({ product_id: PRODUCT_ID });
       if (!item.length) {
         throw new Error(`Product ${PRODUCT_ID} not found`);
       }
@@ -100,11 +100,11 @@ export async function retrieveProduct(): Promise<Product> {
 export async function createOrder(): Promise<number> {
   return knexds.runTransaction(
     async () => {
-      const orders = await KnexDataSource.client<Order>('orders')
+      const orders = await knexds.client<Order>('orders')
         .insert({
           order_status: OrderStatus.PENDING,
           product_id: PRODUCT_ID,
-          last_update_time: KnexDataSource.client.fn.now(),
+          last_update_time: knexds.client.fn.now(),
           progress_remaining: 10,
         })
         .returning('order_id');
@@ -118,9 +118,9 @@ export async function createOrder(): Promise<number> {
 export async function markOrderPaid(order_id: number): Promise<void> {
   return knexds.runTransaction(
     async () => {
-      await KnexDataSource.client<Order>('orders').where({ order_id: order_id }).update({
+      await knexds.client<Order>('orders').where({ order_id: order_id }).update({
         order_status: OrderStatus.PAID,
-        last_update_time: KnexDataSource.client.fn.now(),
+        last_update_time: knexds.client.fn.now(),
       });
     },
     { name: 'markOrderPaid' },
@@ -130,9 +130,9 @@ export async function markOrderPaid(order_id: number): Promise<void> {
 export async function errorOrder(order_id: number): Promise<void> {
   return knexds.runTransaction(
     async () => {
-      await KnexDataSource.client<Order>('orders').where({ order_id: order_id }).update({
+      await knexds.client<Order>('orders').where({ order_id: order_id }).update({
         order_status: OrderStatus.CANCELLED,
-        last_update_time: KnexDataSource.client.fn.now(),
+        last_update_time: knexds.client.fn.now(),
       });
     },
     { name: 'errorOrder' },
@@ -142,7 +142,7 @@ export async function errorOrder(order_id: number): Promise<void> {
 export async function retrieveOrder(order_id: number): Promise<Order> {
   return knexds.runTransaction(
     async () => {
-      const item = await KnexDataSource.client<Order>('orders').select('*').where({ order_id: order_id });
+      const item = await knexds.client<Order>('orders').select('*').where({ order_id: order_id });
       if (!item.length) {
         throw new Error(`Order ${order_id} not found`);
       }
@@ -155,7 +155,7 @@ export async function retrieveOrder(order_id: number): Promise<Order> {
 export async function retrieveOrders() {
   return knexds.runTransaction(
     async () => {
-      return KnexDataSource.client<Order>('orders').select('*');
+      return knexds.client<Order>('orders').select('*');
     },
     { name: 'retrieveOrders' },
   );
@@ -174,7 +174,7 @@ export const dispatchOrder = DBOS.registerWorkflow(
 export async function updateOrderProgress(order_id: number): Promise<void> {
   return knexds.runTransaction(
     async () => {
-      const orders = await KnexDataSource.client<Order>('orders').where({
+      const orders = await knexds.client<Order>('orders').where({
         order_id: order_id,
         order_status: OrderStatus.PAID,
       });
@@ -184,11 +184,11 @@ export async function updateOrderProgress(order_id: number): Promise<void> {
 
       const order = orders[0];
       if (order.progress_remaining > 1) {
-        await KnexDataSource.client<Order>('orders')
+        await knexds.client<Order>('orders')
           .where({ order_id: order_id })
           .update({ progress_remaining: order.progress_remaining - 1 });
       } else {
-        await KnexDataSource.client<Order>('orders').where({ order_id: order_id }).update({
+        await knexds.client<Order>('orders').where({ order_id: order_id }).update({
           order_status: OrderStatus.DISPATCHED,
           progress_remaining: 0,
         });

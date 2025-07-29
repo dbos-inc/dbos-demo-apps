@@ -192,23 +192,9 @@ DBOS Task Scheduler stores its schedule and results data in a Postgres database 
 
 Note that the transaction function is decorated with [`@<data source>.transaction`](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial).  The `ScheduleRecord` has been defined in `src/types/models.ts` and is applied to the query for type checking.
 
-The database schema, which defines the `schedule` table, can be found in `migrations/20250122121006_create_calendar_tables/.js`:
-```javascript
-exports.up = function(knex) {
-  return knex.schema
-    .createTable('schedule', (table) => {
-      table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));  // Use UUID as primary key
-      table.string('task').notNullable();  // Task ID
-      table.datetime('start_time').notNullable();  // Scheduled time
-      table.datetime('end_time').notNullable();  // Scheduled time
-      table.string('repeat').notNullable();  // Repetition options
-      table.timestamps(true, true);  // Adds created_at and updated_at timestamps
-    })
-    //...
-};
-```
+The database schema uses typical knex migrations and can be found in `migrations/20250122121006_create_calendar_tables/.js`:
 
-These migrations will be run by `npx dbos migrate`, because Knex migrations are indicated in `dbos-config.yaml`:
+In DBOS Cloud, these migrations will be applied because Knex migrations are indicated in `dbos-config.yaml`:
 
 ```yaml
   migrate:
@@ -217,7 +203,7 @@ These migrations will be run by `npx dbos migrate`, because Knex migrations are 
 
 ### Sending Email with Amazon SES
 
-The optional sending of task results emails is done using Amazon SES.
+The sending of emails is done using Amazon SES, based on environment variables.
 
 All that is necessary, as shown in `src/dbos/operations.ts`, is to configure the email instance (using environment variables):
 ```typescript
@@ -446,7 +432,7 @@ To allow server actions to work in DBOS Cloud, the following was added:
 ```
 
 ### `dbos-config.yaml`
-[`dbos-config.yaml`](https://docs.dbos.dev/typescript/reference/configuration) sets up important operational aspects, such as the database migration scripts and the environment variables for sending email.
+[`dbos-config.yaml`](https://docs.dbos.dev/typescript/reference/configuration) sets up the start command and migrations for DBOS Cloud.
 
 ### `knexfile.ts`
 This file is used to establish a database connection for running migrations.

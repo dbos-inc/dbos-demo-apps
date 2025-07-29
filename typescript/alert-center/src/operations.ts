@@ -72,7 +72,7 @@ export interface AlertEmployeeInfo
 
 export class AlertCenter {
 
-  //This is invoked when a new alert message arrives using the @KafkaConsume decorator
+  //This is invoked when a new alert message arrives using the @consumer decorator
   @DBOS.workflow()
   @kafkaReceiver.consumer(respondTopic)
   static async inboundAlertWorkflow(_topic: string, _partition: number, message: KafkaMessage) {
@@ -146,22 +146,18 @@ export class AlertCenter {
   static async sendAlert(message: string) {
     const max_id = await RespondUtilities.getMaxId();
     await DBOS.runStep(async () => {
-      await producer.send(
-        {
-          topic: respondTopic,
-          messages: [{
-            value: JSON.stringify({
-              alerts: [
-                { 
-                  alert_id: max_id+1,
-                  alert_status: AlertStatus.ACTIVE,
-                  message: message
-                }
-              ]
-            })
-          }]
-        }
-      );
+      await producer.send({
+        topic: respondTopic,
+        messages: [{
+          value: JSON.stringify({
+            alerts: [{ 
+              alert_id: max_id+1,
+              alert_status: AlertStatus.ACTIVE,
+              message: message
+            }]
+          })
+        }]
+      });
     });
   }
 }
