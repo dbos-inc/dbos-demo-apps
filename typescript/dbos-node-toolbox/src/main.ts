@@ -1,6 +1,6 @@
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
-import { KnexDataSource } from "@dbos-inc/knex-datasource";
-import express from "express";
+import { DBOS, WorkflowQueue } from '@dbos-inc/dbos-sdk';
+import { KnexDataSource } from '@dbos-inc/knex-datasource';
+import express from 'express';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -8,17 +8,16 @@ dotenv.config();
 export const app = express();
 app.use(express.json());
 
-const queue = new WorkflowQueue("example_queue");
+const queue = new WorkflowQueue('example_queue');
 
 // Note, there is no requirement to use DBOS_DATABASE_URL with DBOS Data Sources if you're self hosting.
 // We are using DBOS_DATABASE_URL here so this demo application can run in DBOS Cloud.
 
-const databaseUrl = process.env.DBOS_DATABASE_URL || 
-  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'dbos_node_toolbox'}`;
-
 const config = {
   client: 'pg',
-  connection: databaseUrl,
+  connection:
+    process.env.DBOS_DATABASE_URL ||
+    `postgresql://postgres:${process.env.PGPASSWORD || 'dbos'}@localhost:5432/dbos_node_toolbox`,
 };
 
 const knexds = new KnexDataSource('app-db', config);
@@ -28,16 +27,16 @@ const knexds = new KnexDataSource('app-db', config);
 //////////////////////////////////
 
 async function stepOne() {
-  DBOS.logger.info("Step one completed!");
+  DBOS.logger.info('Step one completed!');
 }
 
 async function stepTwo() {
-  DBOS.logger.info("Step two completed!");
+  DBOS.logger.info('Step two completed!');
 }
 
 async function exampleWorkflowFunc() {
-  await DBOS.runStep(() => stepOne(), {name: 'stepOne'});
-  await DBOS.runStep(() => stepTwo(), {name: 'stepTwo'});
+  await DBOS.runStep(() => stepOne(), { name: 'stepOne' });
+  await DBOS.runStep(() => stepTwo(), { name: 'stepTwo' });
 }
 
 const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunc);
@@ -48,34 +47,33 @@ const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunc);
 
 async function taskFunction(n: number) {
   await DBOS.sleep(5000);
-  DBOS.logger.info(`Task ${n} completed!`)
+  DBOS.logger.info(`Task ${n} completed!`);
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, { name: 'taskWorkflow' });
 
 async function queueFunction() {
-  DBOS.logger.info("Enqueueing tasks!")
-  const handles = []
+  DBOS.logger.info('Enqueueing tasks!');
+  const handles = [];
   for (let i = 0; i < 10; i++) {
-    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(i))
+    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(i));
   }
-  const results = []
+  const results = [];
   for (const h of handles) {
-    results.push(await h.getResult())
+    results.push(await h.getResult());
   }
-  DBOS.logger.info(`Successfully completed ${results.length} tasks`)
+  DBOS.logger.info(`Successfully completed ${results.length} tasks`);
 }
-const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "queueWorkflow"})
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, { name: 'queueWorkflow' });
 
 //////////////////////////////////
 //// Scheduled workflows
 //////////////////////////////////
 
 async function runEvery15Min(scheduledTime: Date, _startTime: Date) {
-  DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
+  DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`);
 }
 const scheduledWorkflow = DBOS.registerWorkflow(runEvery15Min);
-DBOS.registerScheduled(scheduledWorkflow, { crontab: "*/15 * * * *" });
-
+DBOS.registerScheduled(scheduledWorkflow, { crontab: '*/15 * * * *' });
 
 //////////////////////////////////
 //// Transactions
@@ -92,26 +90,26 @@ async function countRows() {
 }
 
 async function transactionWorkflowFunc() {
-  await knexds.runTransaction(() => insertRow(), { name: "insertRow" });
-  await knexds.runTransaction(() => countRows(), { name: "countRows", readOnly: true });
+  await knexds.runTransaction(() => insertRow(), { name: 'insertRow' });
+  await knexds.runTransaction(() => countRows(), { name: 'countRows', readOnly: true });
 }
-const transactionWorkflow = DBOS.registerWorkflow(transactionWorkflowFunc, { name: "transactionWorkflow" });
+const transactionWorkflow = DBOS.registerWorkflow(transactionWorkflowFunc, { name: 'transactionWorkflow' });
 
 /////////////////////////////////////
 //// Express.js HTTP endpoints
 /////////////////////////////////////
 
-app.get("/workflow", async (_req, res) => {
+app.get('/workflow', async (_req, res) => {
   await exampleWorkflow();
   res.send();
 });
 
-app.get("/queue", async (_req, res) => {
+app.get('/queue', async (_req, res) => {
   await queueWorkflow();
   res.send();
 });
 
-app.get("/transaction", async (_req, res) => {
+app.get('/transaction', async (_req, res) => {
   await transactionWorkflow();
   res.send();
 });
@@ -120,7 +118,7 @@ app.get("/transaction", async (_req, res) => {
 //// Readme
 /////////////////////////////////////
 
-app.get("/", (_, res) => {
+app.get('/', (_, res) => {
   const readme = `
     <!DOCTYPE html>
     <html lang="en">
@@ -184,8 +182,8 @@ app.get("/", (_, res) => {
             </div>
         </div>
     </body>
-    </html>`
-  res.send(readme)
+    </html>`;
+  res.send(readme);
 });
 
 /////////////////////////////////////
@@ -194,7 +192,7 @@ app.get("/", (_, res) => {
 
 async function main() {
   DBOS.setConfig({
-    name: "dbos-node-toolbox",
+    name: 'dbos-node-toolbox',
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
