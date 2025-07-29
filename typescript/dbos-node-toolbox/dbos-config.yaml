@@ -5,6 +5,7 @@
 
 name: dbos-node-toolbox
 language: node
+system_database_url: ${DBOS_SYSTEM_DATABASE_URL}
 runtimeConfig:
   start:
     - npm run start
