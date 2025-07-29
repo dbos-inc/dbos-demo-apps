@@ -5,6 +5,7 @@
 
 name: 'widget-store-node'
 language: 'node'
+system_database_url: ${DBOS_SYSTEM_DATABASE_URL}
 database:
   migrate: ['npm run db:setup']
 runtimeConfig:

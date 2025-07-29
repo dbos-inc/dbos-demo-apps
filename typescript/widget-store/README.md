@@ -18,7 +18,7 @@ npm run build
 npx dbos postgres start
 ```
 
-If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string either directly or using a `.env` file (this template contains a `.env.example` file you can use as a reference).
+If you already use Postgres, you can set the `DBOS_DATABASE_URL` (for application data) and `DBOS_SYSTEM_DATABASE_URL` (for DBOS system data) environment variables to your connection string either directly or using a `.env` file (this template contains a `.env.example` file you can use as a reference).
 
 3. Run database migrations:
 

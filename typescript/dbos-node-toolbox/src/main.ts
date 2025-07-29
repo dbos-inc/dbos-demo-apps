@@ -1,6 +1,6 @@
-import { DBOS, SchedulerMode, WorkflowQueue } from "@dbos-inc/dbos-sdk";
-import { KnexDataSource } from "@dbos-inc/knex-datasource";
-import express from "express";
+import { DBOS, WorkflowQueue } from '@dbos-inc/dbos-sdk';
+import { KnexDataSource } from '@dbos-inc/knex-datasource';
+import express from 'express';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -8,113 +8,109 @@ dotenv.config();
 export const app = express();
 app.use(express.json());
 
-const queue = new WorkflowQueue("example_queue");
+const queue = new WorkflowQueue('example_queue');
 
 // Note, there is no requirement to use DBOS_DATABASE_URL with DBOS Data Sources if you're self hosting.
 // We are using DBOS_DATABASE_URL here so this demo application can run in DBOS Cloud.
 
-const databaseUrl = process.env.DBOS_DATABASE_URL || 
-  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'dbos_node_toolbox'}`;
-
 const config = {
   client: 'pg',
-  connection: databaseUrl,
+  connection:
+    process.env.DBOS_DATABASE_URL ||
+    `postgresql://postgres:${process.env.PGPASSWORD || 'dbos'}@localhost:5432/dbos_node_toolbox`,
 };
 
 const knexds = new KnexDataSource('app-db', config);
 
-export class Toolbox {
+//////////////////////////////////
+//// Workflows and steps
+//////////////////////////////////
 
-  //////////////////////////////////
-  //// Workflows and steps
-  //////////////////////////////////
-
-  @DBOS.step()
-  static async stepTwo() {
-    DBOS.logger.info("Step two completed!");
-  }
-
-  @DBOS.workflow()
-  static async exampleWorkflow() {
-    await DBOS.runStep(async ()=>{
-      DBOS.logger.info("Step one completed!");
-    }, {name: 'stepOne'});
-    await Toolbox.stepTwo();
-  }
-
-  //////////////////////////////////
-  //// Queues
-  //////////////////////////////////
-
-  @DBOS.workflow()
-  static async taskWorkflow(n: number) {
-    await DBOS.sleep(5000);
-    DBOS.logger.info(`Task ${n} completed!`)
-  }
-
-  @DBOS.workflow()
-  static async queueWorkflow() {
-    DBOS.logger.info("Enqueueing tasks!")
-    const handles = []
-    for (let i = 0; i < 10; i++) {
-      handles.push(await DBOS.startWorkflow(Toolbox, { queueName: queue.name }).taskWorkflow(i))
-    }
-    const results = []
-    for (const h of handles) {
-      results.push(await h.getResult())
-    }
-    DBOS.logger.info(`Successfully completed ${results.length} tasks`)
-  }
-
-  //////////////////////////////////
-  //// Scheduled workflows
-  //////////////////////////////////
-
-  @DBOS.scheduled({ crontab: "*/15 * * * *", mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
-  @DBOS.workflow()
-  static async runEvery15Min(scheduledTime: Date, _startTime: Date) {
-    DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
-  }
-
-  //////////////////////////////////
-  //// Transactions
-  //////////////////////////////////
-
-  @knexds.transaction()
-  static async insertRow() {
-    await KnexDataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
-  }
-
-  @knexds.transaction({ readOnly: true })
-  static async countRows() {
-    const result = await KnexDataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
-    const count = result.rows[0].count;
-    DBOS.logger.info(`Row count: ${count}`);
-  }
-
-  @DBOS.workflow()
-  static async transactionWorkflow() {
-    await Toolbox.insertRow()
-    await Toolbox.countRows()
-  }
+async function stepOne() {
+  DBOS.logger.info('Step one completed!');
 }
+
+async function stepTwo() {
+  DBOS.logger.info('Step two completed!');
+}
+
+async function exampleWorkflowFunc() {
+  await DBOS.runStep(() => stepOne(), { name: 'stepOne' });
+  await DBOS.runStep(() => stepTwo(), { name: 'stepTwo' });
+}
+
+const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunc);
+
+//////////////////////////////////
+//// Queues
+//////////////////////////////////
+
+async function taskFunction(n: number) {
+  await DBOS.sleep(5000);
+  DBOS.logger.info(`Task ${n} completed!`);
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, { name: 'taskWorkflow' });
+
+async function queueFunction() {
+  DBOS.logger.info('Enqueueing tasks!');
+  const handles = [];
+  for (let i = 0; i < 10; i++) {
+    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(i));
+  }
+  const results = [];
+  for (const h of handles) {
+    results.push(await h.getResult());
+  }
+  DBOS.logger.info(`Successfully completed ${results.length} tasks`);
+}
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, { name: 'queueWorkflow' });
+
+//////////////////////////////////
+//// Scheduled workflows
+//////////////////////////////////
+
+async function runEvery15Min(scheduledTime: Date, _startTime: Date) {
+  DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`);
+}
+const scheduledWorkflow = DBOS.registerWorkflow(runEvery15Min);
+DBOS.registerScheduled(scheduledWorkflow, { crontab: '*/15 * * * *' });
+
+//////////////////////////////////
+//// Transactions
+//////////////////////////////////
+
+async function insertRow() {
+  await knexds.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+}
+
+async function countRows() {
+  const result = await knexds.client.raw('SELECT COUNT(*) as count FROM example_table');
+  const count = result.rows[0].count;
+  DBOS.logger.info(`Row count: ${count}`);
+}
+
+async function transactionWorkflowFunc() {
+  await knexds.runTransaction(() => insertRow(), { name: 'insertRow' });
+  await knexds.runTransaction(() => countRows(), { name: 'countRows', readOnly: true });
+}
+const transactionWorkflow = DBOS.registerWorkflow(transactionWorkflowFunc, { name: 'transactionWorkflow' });
 
 /////////////////////////////////////
 //// Express.js HTTP endpoints
 /////////////////////////////////////
 
-app.get("/workflow", async (_req, res) => {
-  await Toolbox.exampleWorkflow();
+app.get('/workflow', async (_req, res) => {
+  await exampleWorkflow();
   res.send();
 });
 
-app.get("/queue", async (_req, res) => {
-  await Toolbox.queueWorkflow();
+app.get('/queue', async (_req, res) => {
+  await queueWorkflow();
   res.send();
 });
 
-app.get("/transaction", async (_req, res) => {
-  await Toolbox.transactionWorkflow();
+app.get('/transaction', async (_req, res) => {
+  await transactionWorkflow();
   res.send();
 });
 
@@ -122,7 +118,7 @@ app.get("/transaction", async (_req, res) => {
 //// Readme
 /////////////////////////////////////
 
-app.get("/", (_, res) => {
+app.get('/', (_, res) => {
   const readme = `
     <!DOCTYPE html>
     <html lang="en">
@@ -186,8 +182,8 @@ app.get("/", (_, res) => {
             </div>
         </div>
     </body>
-    </html>`
-  res.send(readme)
+    </html>`;
+  res.send(readme);
 });
 
 /////////////////////////////////////
@@ -196,7 +192,7 @@ app.get("/", (_, res) => {
 
 async function main() {
   DBOS.setConfig({
-    name: "dbos-node-toolbox",
+    name: 'dbos-node-toolbox',
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
