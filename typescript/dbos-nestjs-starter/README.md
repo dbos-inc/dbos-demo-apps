@@ -128,7 +128,7 @@ export class AppService extends ConfiguredInstance {
       length: 2,
       style: "capital",
     });
-    return await KnexDataSource.client<GreetingRecord>("dbos_greetings").insert(
+    return await appds.client<GreetingRecord>("dbos_greetings").insert(
       { greeting_name: randomName, greeting_note_content: "Hello World!" },
       ["greeting_name", "greeting_note_content"],
     );
