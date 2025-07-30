@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -34,37 +35,34 @@ func checkoutWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 		dbos.RunAsStep(ctx, func(ctx context.Context, input UpdateOrderStatusInput) (string, error) {
 			return updateOrderStatus(ctx, db, input)
 		}, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
-		err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput[string]{Key: PAYMENT_ID, Message: ""})
+		err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput[string]{Key: workflowID, Message: ""})
 		return "", err
 	}
 
-	payment_id, err := ctx.GetWorkflowID()
+	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput[string]{Key: workflowID, Message: workflowID})
 	if err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "wf_id": workflowID}).Error("workflow ID retrieval failed")
-		return "", err
-	}
-	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput[string]{Key: PAYMENT_ID, Message: payment_id})
-	if err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "payment": payment_id}).Error("payment event creation failed")
+		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "payment": workflowID}).Error("payment event creation failed")
 		return "", err
 	}
 
 	payment_status, err := dbos.Recv[string](ctx, dbos.WorkflowRecvInput{Topic: PAYMENT_STATUS, Timeout: 60 * time.Second})
 	if err != nil || payment_status != "paid" {
-		logger.WithFields(logrus.Fields{"order": orderID, "payment": payment_id, "status": payment_status}).Warn("payment failed")
+		logger.WithFields(logrus.Fields{"order": orderID, "payment": workflowID, "status": payment_status}).Warn("payment failed")
 		dbos.RunAsStep(ctx, func(ctx context.Context, input string) (string, error) {
 			return undoReserveInventory(ctx, db, input)
 		}, "")
 		dbos.RunAsStep(ctx, func(ctx context.Context, input UpdateOrderStatusInput) (string, error) {
+			fmt.Println("input", input)
 			return updateOrderStatus(ctx, db, input)
 		}, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
 	} else {
-		logger.WithFields(logrus.Fields{"order": orderID, "payment": payment_id}).Info("payment success")
+		logger.WithFields(logrus.Fields{"order": orderID, "payment": workflowID}).Info("payment success")
 		dbos.RunAsStep(ctx, func(ctx context.Context, input UpdateOrderStatusInput) (string, error) {
 			return updateOrderStatus(ctx, db, input)
 		}, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: PAID})
 		dispatchOrderWF(ctx, orderID)
 	}
+
 	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInput[string]{Key: ORDER_ID, Message: strconv.Itoa(orderID)})
 	if err != nil {
 		logger.WithError(err).WithField("order", orderID).Error("order event creation failed")

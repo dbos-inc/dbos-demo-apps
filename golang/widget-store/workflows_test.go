@@ -1,0 +1,79 @@
+package main
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/sirupsen/logrus"
+
+	"widget-store/mocks"
+
+	"github.com/stretchr/testify/mock"
+)
+
+func TestCheckoutWorkflow(t *testing.T) {
+	testDatabaseURL := "postgres://postgres:dbos@localhost:5432/widget_store_test"
+	d, err := pgxpool.New(context.Background(), testDatabaseURL)
+	if err != nil {
+		logger.WithError(err).Fatal("database connection failed")
+	}
+	db = d
+	defer db.Close()
+
+	logger = logrus.New()
+	logger.SetFormatter(&logrus.JSONFormatter{
+		TimestampFormat: time.RFC3339,
+	})
+	logger.SetLevel(logrus.InfoLevel)
+
+	dbosContextMock := mocks.NewMockDBOSContext(t)
+	/*
+		 mocking registerWorkflow accounts to doing the wrap (because the mock must register the wrapped function)
+		checkoutWF := dbos.GenericWrappedWorkflowFunc[string, string](func(ctx dbos.DBOSContext, workflowInput string, opts ...dbos.WorkflowOption) (dbos.WorkflowHandle[string], error) {
+			return dbos.RunAsWorkflow(ctx, checkoutWorkflow, workflowInput, opts...)
+		})
+	*/
+
+	// Test running the wrapped workflow
+	t.Run("Payment fails", func(t *testing.T) {
+		wfID := "test-workflow-id"
+
+		// Set expectations on what DBOS stuff that happens within the workflow
+		dbosContextMock.On("GetWorkflowID").Return(wfID, nil)
+		dbosContextMock.On("RunAsStep", mock.Anything, "", mock.Anything).Return(1, nil).Once()                                                          // createOrder
+		dbosContextMock.On("RunAsStep", mock.Anything, "", mock.Anything).Return(true, nil).Once()                                                       // reserveInventory
+		dbosContextMock.On("SetEvent", mock.Anything).Return(nil).Once()                                                                                 // Set payment event
+		dbosContextMock.On("Recv", mock.Anything).Return("failed", nil).Once()                                                                           // payment status
+		dbosContextMock.On("RunAsStep", mock.Anything, "", mock.Anything).Return("", nil).Once()                                                         // undoReserveInventory
+		dbosContextMock.On("RunAsStep", mock.Anything, UpdateOrderStatusInput{OrderID: 1, OrderStatus: CANCELLED}, mock.Anything).Return("", nil).Once() // updateOrderStatus to CANCELLED
+		dbosContextMock.On("SetEvent", mock.Anything).Return(nil).Once()                                                                                 // Set workflow event
+
+		res, err := checkoutWorkflow(dbosContextMock, "")
+		if err != nil {
+			t.Fatalf("checkout workflow failed: %v", err)
+		}
+		if res != "" {
+			t.Fatalf("expected empty result, got %s", res)
+		}
+
+		/* In code that calls top-level workflows, we won't get a handler. Child workflows would
+		handle, err := checkoutWorkflow(dbosContextMock, "")
+		if err != nil {
+			t.Fatalf("checkout workflow failed: %v", err)
+		}
+
+		res, err := handle.GetResult()
+		if err != nil {
+			t.Fatalf("failed to get workflow result: %v", err)
+		}
+		if res != "" {
+			t.Fatalf("expected empty result, got %s", res)
+		}
+		*/
+		dbosContextMock.AssertExpectations(t)
+	})
+
+	// Test running the workflow function directly
+}
