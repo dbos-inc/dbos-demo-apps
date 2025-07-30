@@ -14,7 +14,7 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
   // Pass the nest router to DBOS so it can attach OTel tracing middlewares
-  await DBOS.launch({ nestApp: app });
+  await DBOS.launch();
   // Nest must be set to listen on 3000 and external networks to run on DBOS Cloud
   //  For local development, set the NODE_PORT environment variable.
   await app.listen(PORT, "0.0.0.0");
