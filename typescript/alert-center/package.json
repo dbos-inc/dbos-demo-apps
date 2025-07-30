@@ -24,7 +24,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "3.0.45-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.63",
     "@dbos-inc/kafkajs-receive": "3.0.45-preview",
     "@dbos-inc/knex-datasource": "3.0.45-preview",
     "@dbos-inc/koa-serve": "3.0.45-preview",
