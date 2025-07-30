@@ -11,16 +11,16 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.0.45-preview",
-    "@dbos-inc/knex-datasource": "^3.0.45-preview",
-    "@dbos-inc/koa-serve": "^3.0.45-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.63",
+    "@dbos-inc/knex-datasource": "^3.0.63",
+    "@dbos-inc/koa-serve": "^3.0.63",
     "@koa/router": "^13.1.0",
     "bcrypt": "^6.0.0",
     "koa": "^3.0.0",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "3.0.45-preview",
+    "@dbos-inc/dbos-cloud": "3.0.63",
     "@dbos-inc/dbos-openapi": "^1.24.15",
     "@dbos-inc/eslint-plugin": "^3.3.4",
     "@types/bcrypt": "^5.0.2",
