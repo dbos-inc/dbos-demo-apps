@@ -97,11 +97,11 @@ func restock(c *gin.Context, db *pgxpool.Pool, logger *logrus.Logger) {
 
 // XXX can we fold our context inside the gin context?
 // and more generally, how do funky contexts play together
-func checkoutEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *logrus.Logger, checkoutWF dbos.GenericWrappedWorkflowFunc[string, string]) {
+func checkoutEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *logrus.Logger) {
 	idempotencyKey := c.Param("idempotency_key")
 
 	// Start the checkout workflow with the idempotency key
-	_, err := checkoutWF(dbosCtx, "", dbos.WithWorkflowID(idempotencyKey))
+	h, err := dbos.RunAsWorkflow(dbosCtx, "checkoutWorkflow", checkoutWorkflow, "", dbos.WithWorkflowID(idempotencyKey))
 	if err != nil {
 		logger.WithError(err).WithField("key", idempotencyKey).Error("checkout workflow start failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Checkout failed to start"})

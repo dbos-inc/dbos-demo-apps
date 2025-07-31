@@ -12,9 +12,8 @@ import (
 )
 
 var (
-	db              *pgxpool.Pool
-	logger          *logrus.Logger
-	dispatchOrderWF dbos.GenericWrappedWorkflowFunc[int, string]
+	db     *pgxpool.Pool
+	logger *logrus.Logger
 )
 
 func main() {
@@ -36,8 +35,8 @@ func main() {
 	if err != nil {
 		logger.WithError(err).Fatal("DBOS initialization failed")
 	}
-	checkoutWF := dbos.RegisterWorkflow(dbosContext, checkoutWorkflow)
-	dispatchOrderWF = dbos.RegisterWorkflow(dbosContext, dispatchOrderWorkflow)
+	dbos.RegisterWorkflow(dbosContext, "checkoutWorkflow", checkoutWorkflow)
+	dbos.RegisterWorkflow(dbosContext, "dispatchOrderWorkflow", dispatchOrderWorkflow)
 
 	err = dbosContext.Launch()
 	if err != nil {
@@ -61,7 +60,7 @@ func main() {
 	r.GET("/orders", func(c *gin.Context) { getOrders(c, db, logger) })
 	r.GET("/order/:id", func(c *gin.Context) { getOrder(c, db, logger) })
 	r.POST("/restock", func(c *gin.Context) { restock(c, db, logger) })
-	r.POST("/checkout/:idempotency_key", func(c *gin.Context) { checkoutEndpoint(c, dbosContext, logger, checkoutWF) })
+	r.POST("/checkout/:idempotency_key", func(c *gin.Context) { checkoutEndpoint(c, dbosContext, logger) })
 	r.POST("/payment_webhook/:payment_id/:payment_status", func(c *gin.Context) { paymentEndpoint(c, dbosContext, logger) })
 	r.POST("/crash_application", func(c *gin.Context) { crashApplication(c, logger) })
 
