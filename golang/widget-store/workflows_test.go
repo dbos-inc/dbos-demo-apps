@@ -36,13 +36,13 @@ func TestCheckoutWorkflow(t *testing.T) {
 
 		// Set expectations on what DBOS stuff that happens within the workflow
 		dbosContextMock.On("GetWorkflowID").Return(wfID, nil)
-		dbosContextMock.On("RunAsStep", mock.Anything, mock.Anything, "").Return(1, nil).Once()                                                          // createOrder
-		dbosContextMock.On("RunAsStep", mock.Anything, mock.Anything, "").Return(true, nil).Once()                                                       // reserveInventory
-		dbosContextMock.On("SetEvent", mock.Anything).Return(nil).Once()                                                                                 // Set payment event
-		dbosContextMock.On("Recv", mock.Anything).Return("failed", nil).Once()                                                                           // payment status
-		dbosContextMock.On("RunAsStep", mock.Anything, mock.Anything, "").Return("", nil).Once()                                                         // undoReserveInventory
-		dbosContextMock.On("RunAsStep", mock.Anything, mock.Anything, UpdateOrderStatusInput{OrderID: 1, OrderStatus: CANCELLED}).Return("", nil).Once() // updateOrderStatus to CANCELLED
-		dbosContextMock.On("SetEvent", mock.Anything).Return(nil).Once()                                                                                 // Set workflow event
+		dbosContextMock.On("RunAsStep", mock.Anything, "createOrder", mock.Anything, "").Return(1, nil).Once()
+		dbosContextMock.On("RunAsStep", mock.Anything, "reserveInventory", mock.Anything, "").Return(true, nil).Once()
+		dbosContextMock.On("SetEvent", mock.Anything, mock.Anything).Return(nil).Once()
+		dbosContextMock.On("Recv", mock.Anything, mock.Anything).Return("failed", nil).Once()
+		dbosContextMock.On("RunAsStep", mock.Anything, "undoReserveInventory", mock.Anything, "").Return("", nil).Once()
+		dbosContextMock.On("RunAsStep", mock.Anything, "updateOrderStatus", mock.Anything, UpdateOrderStatusInput{OrderID: 1, OrderStatus: CANCELLED}).Return("", nil).Once()
+		dbosContextMock.On("SetEvent", mock.Anything, mock.Anything).Return(nil).Once()
 
 		res, err := checkoutWorkflow(dbosContextMock, "")
 		if err != nil {
@@ -54,6 +54,4 @@ func TestCheckoutWorkflow(t *testing.T) {
 
 		dbosContextMock.AssertExpectations(t)
 	})
-
-	// Test running the workflow function directly
 }
