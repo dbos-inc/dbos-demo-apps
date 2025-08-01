@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Database operations for inventory management
-func reserveInventory(ctx context.Context, db *pgxpool.Pool, _ string) (bool, error) {
+func reserveInventory(ctx context.Context, _ string) (bool, error) {
 	result, err := db.Exec(ctx,
 		"UPDATE products SET inventory = inventory - 1 WHERE product_id = $1 AND inventory > 0",
 		WIDGET_ID)
@@ -17,7 +15,7 @@ func reserveInventory(ctx context.Context, db *pgxpool.Pool, _ string) (bool, er
 	return result.RowsAffected() > 0, nil
 }
 
-func undoReserveInventory(ctx context.Context, db *pgxpool.Pool, _ string) (string, error) {
+func undoReserveInventory(ctx context.Context, _ string) (string, error) {
 	_, err := db.Exec(ctx,
 		"UPDATE products SET inventory = inventory + 1 WHERE product_id = $1",
 		WIDGET_ID)
@@ -25,7 +23,7 @@ func undoReserveInventory(ctx context.Context, db *pgxpool.Pool, _ string) (stri
 }
 
 // Database operations for order management
-func createOrder(ctx context.Context, db *pgxpool.Pool, _ string) (int, error) {
+func createOrder(ctx context.Context, _ string) (int, error) {
 	var orderID int
 	err := db.QueryRow(ctx,
 		"INSERT INTO orders (order_status) VALUES ($1) RETURNING order_id",
@@ -33,14 +31,14 @@ func createOrder(ctx context.Context, db *pgxpool.Pool, _ string) (int, error) {
 	return orderID, err
 }
 
-func updateOrderStatus(ctx context.Context, db *pgxpool.Pool, input UpdateOrderStatusInput) (string, error) {
+func updateOrderStatus(ctx context.Context, input UpdateOrderStatusInput) (string, error) {
 	_, err := db.Exec(ctx,
 		"UPDATE orders SET order_status = $1 WHERE order_id = $2",
 		int(input.OrderStatus), input.OrderID)
 	return "", err
 }
 
-func updateOrderProgress(ctx context.Context, db *pgxpool.Pool, orderID int) (int, error) {
+func updateOrderProgress(ctx context.Context, orderID int) (int, error) {
 	var progressRemaining int
 	err := db.QueryRow(ctx,
 		"UPDATE orders SET progress_remaining = progress_remaining - 1 WHERE order_id = $1 RETURNING progress_remaining",
@@ -50,7 +48,7 @@ func updateOrderProgress(ctx context.Context, db *pgxpool.Pool, orderID int) (in
 		return 0, err
 	}
 	if progressRemaining == 0 {
-		_, err = updateOrderStatus(ctx, db, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: DISPATCHED})
+		_, err = updateOrderStatus(ctx, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: DISPATCHED})
 	}
 
 	return progressRemaining, err

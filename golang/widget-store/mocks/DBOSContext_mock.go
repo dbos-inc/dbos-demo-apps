@@ -546,116 +546,6 @@ func (_c *MockDBOSContext_Recv_Call) RunAndReturn(run func(dBOSContext dbos.DBOS
 	return _c
 }
 
-// RegisterScheduledWorkflow provides a mock function for the type MockDBOSContext
-func (_mock *MockDBOSContext) RegisterScheduledWorkflow(workflowName string, fn dbos.WrappedWorkflowFunc, cronSchedule string, maxRetries int) {
-	_mock.Called(workflowName, fn, cronSchedule, maxRetries)
-	return
-}
-
-// MockDBOSContext_RegisterScheduledWorkflow_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RegisterScheduledWorkflow'
-type MockDBOSContext_RegisterScheduledWorkflow_Call struct {
-	*mock.Call
-}
-
-// RegisterScheduledWorkflow is a helper method to define mock.On call
-//   - workflowName string
-//   - fn dbos.WrappedWorkflowFunc
-//   - cronSchedule string
-//   - maxRetries int
-func (_e *MockDBOSContext_Expecter) RegisterScheduledWorkflow(workflowName interface{}, fn interface{}, cronSchedule interface{}, maxRetries interface{}) *MockDBOSContext_RegisterScheduledWorkflow_Call {
-	return &MockDBOSContext_RegisterScheduledWorkflow_Call{Call: _e.mock.On("RegisterScheduledWorkflow", workflowName, fn, cronSchedule, maxRetries)}
-}
-
-func (_c *MockDBOSContext_RegisterScheduledWorkflow_Call) Run(run func(workflowName string, fn dbos.WrappedWorkflowFunc, cronSchedule string, maxRetries int)) *MockDBOSContext_RegisterScheduledWorkflow_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
-		if args[0] != nil {
-			arg0 = args[0].(string)
-		}
-		var arg1 dbos.WrappedWorkflowFunc
-		if args[1] != nil {
-			arg1 = args[1].(dbos.WrappedWorkflowFunc)
-		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
-		var arg3 int
-		if args[3] != nil {
-			arg3 = args[3].(int)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-			arg3,
-		)
-	})
-	return _c
-}
-
-func (_c *MockDBOSContext_RegisterScheduledWorkflow_Call) Return() *MockDBOSContext_RegisterScheduledWorkflow_Call {
-	_c.Call.Return()
-	return _c
-}
-
-func (_c *MockDBOSContext_RegisterScheduledWorkflow_Call) RunAndReturn(run func(workflowName string, fn dbos.WrappedWorkflowFunc, cronSchedule string, maxRetries int)) *MockDBOSContext_RegisterScheduledWorkflow_Call {
-	_c.Run(run)
-	return _c
-}
-
-// RegisterWorkflow provides a mock function for the type MockDBOSContext
-func (_mock *MockDBOSContext) RegisterWorkflow(workflowName string, fn dbos.WrappedWorkflowFunc, maxRetries int) {
-	_mock.Called(workflowName, fn, maxRetries)
-	return
-}
-
-// MockDBOSContext_RegisterWorkflow_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RegisterWorkflow'
-type MockDBOSContext_RegisterWorkflow_Call struct {
-	*mock.Call
-}
-
-// RegisterWorkflow is a helper method to define mock.On call
-//   - workflowName string
-//   - fn dbos.WrappedWorkflowFunc
-//   - maxRetries int
-func (_e *MockDBOSContext_Expecter) RegisterWorkflow(workflowName interface{}, fn interface{}, maxRetries interface{}) *MockDBOSContext_RegisterWorkflow_Call {
-	return &MockDBOSContext_RegisterWorkflow_Call{Call: _e.mock.On("RegisterWorkflow", workflowName, fn, maxRetries)}
-}
-
-func (_c *MockDBOSContext_RegisterWorkflow_Call) Run(run func(workflowName string, fn dbos.WrappedWorkflowFunc, maxRetries int)) *MockDBOSContext_RegisterWorkflow_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
-		if args[0] != nil {
-			arg0 = args[0].(string)
-		}
-		var arg1 dbos.WrappedWorkflowFunc
-		if args[1] != nil {
-			arg1 = args[1].(dbos.WrappedWorkflowFunc)
-		}
-		var arg2 int
-		if args[2] != nil {
-			arg2 = args[2].(int)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
-	})
-	return _c
-}
-
-func (_c *MockDBOSContext_RegisterWorkflow_Call) Return() *MockDBOSContext_RegisterWorkflow_Call {
-	_c.Call.Return()
-	return _c
-}
-
-func (_c *MockDBOSContext_RegisterWorkflow_Call) RunAndReturn(run func(workflowName string, fn dbos.WrappedWorkflowFunc, maxRetries int)) *MockDBOSContext_RegisterWorkflow_Call {
-	_c.Run(run)
-	return _c
-}
-
 // RetrieveWorkflow provides a mock function for the type MockDBOSContext
 func (_mock *MockDBOSContext) RetrieveWorkflow(dBOSContext dbos.DBOSContext, workflowID string) (dbos.WorkflowHandle[any], error) {
 	ret := _mock.Called(dBOSContext, workflowID)
@@ -725,14 +615,8 @@ func (_c *MockDBOSContext_RetrieveWorkflow_Call) RunAndReturn(run func(dBOSConte
 }
 
 // RunAsStep provides a mock function for the type MockDBOSContext
-func (_mock *MockDBOSContext) RunAsStep(dBOSContext dbos.DBOSContext, stepName string, fn dbos.StepFunc, input any, opts ...dbos.StepOption) (any, error) {
-	var tmpRet mock.Arguments
-	if len(opts) > 0 {
-		tmpRet = _mock.Called(dBOSContext, stepName, fn, input, opts)
-	} else {
-		tmpRet = _mock.Called(dBOSContext, stepName, fn, input)
-	}
-	ret := tmpRet
+func (_mock *MockDBOSContext) RunAsStep(dBOSContext dbos.DBOSContext, fn dbos.StepFunc, input any) (any, error) {
+	ret := _mock.Called(dBOSContext, fn, input)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RunAsStep")
@@ -740,18 +624,18 @@ func (_mock *MockDBOSContext) RunAsStep(dBOSContext dbos.DBOSContext, stepName s
 
 	var r0 any
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, dbos.StepFunc, any, ...dbos.StepOption) (any, error)); ok {
-		return returnFunc(dBOSContext, stepName, fn, input, opts...)
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.StepFunc, any) (any, error)); ok {
+		return returnFunc(dBOSContext, fn, input)
 	}
-	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, dbos.StepFunc, any, ...dbos.StepOption) any); ok {
-		r0 = returnFunc(dBOSContext, stepName, fn, input, opts...)
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.StepFunc, any) any); ok {
+		r0 = returnFunc(dBOSContext, fn, input)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(any)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, string, dbos.StepFunc, any, ...dbos.StepOption) error); ok {
-		r1 = returnFunc(dBOSContext, stepName, fn, input, opts...)
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, dbos.StepFunc, any) error); ok {
+		r1 = returnFunc(dBOSContext, fn, input)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -765,45 +649,30 @@ type MockDBOSContext_RunAsStep_Call struct {
 
 // RunAsStep is a helper method to define mock.On call
 //   - dBOSContext dbos.DBOSContext
-//   - stepName string
 //   - fn dbos.StepFunc
 //   - input any
-//   - opts ...dbos.StepOption
-func (_e *MockDBOSContext_Expecter) RunAsStep(dBOSContext interface{}, stepName interface{}, fn interface{}, input interface{}, opts ...interface{}) *MockDBOSContext_RunAsStep_Call {
-	return &MockDBOSContext_RunAsStep_Call{Call: _e.mock.On("RunAsStep",
-		append([]interface{}{dBOSContext, stepName, fn, input}, opts...)...)}
+func (_e *MockDBOSContext_Expecter) RunAsStep(dBOSContext interface{}, fn interface{}, input interface{}) *MockDBOSContext_RunAsStep_Call {
+	return &MockDBOSContext_RunAsStep_Call{Call: _e.mock.On("RunAsStep", dBOSContext, fn, input)}
 }
 
-func (_c *MockDBOSContext_RunAsStep_Call) Run(run func(dBOSContext dbos.DBOSContext, stepName string, fn dbos.StepFunc, input any, opts ...dbos.StepOption)) *MockDBOSContext_RunAsStep_Call {
+func (_c *MockDBOSContext_RunAsStep_Call) Run(run func(dBOSContext dbos.DBOSContext, fn dbos.StepFunc, input any)) *MockDBOSContext_RunAsStep_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 dbos.DBOSContext
 		if args[0] != nil {
 			arg0 = args[0].(dbos.DBOSContext)
 		}
-		var arg1 string
+		var arg1 dbos.StepFunc
 		if args[1] != nil {
-			arg1 = args[1].(string)
+			arg1 = args[1].(dbos.StepFunc)
 		}
-		var arg2 dbos.StepFunc
+		var arg2 any
 		if args[2] != nil {
-			arg2 = args[2].(dbos.StepFunc)
+			arg2 = args[2].(any)
 		}
-		var arg3 any
-		if args[3] != nil {
-			arg3 = args[3].(any)
-		}
-		var arg4 []dbos.StepOption
-		var variadicArgs []dbos.StepOption
-		if len(args) > 4 {
-			variadicArgs = args[4].([]dbos.StepOption)
-		}
-		arg4 = variadicArgs
 		run(
 			arg0,
 			arg1,
 			arg2,
-			arg3,
-			arg4...,
 		)
 	})
 	return _c
@@ -814,18 +683,18 @@ func (_c *MockDBOSContext_RunAsStep_Call) Return(v any, err error) *MockDBOSCont
 	return _c
 }
 
-func (_c *MockDBOSContext_RunAsStep_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, stepName string, fn dbos.StepFunc, input any, opts ...dbos.StepOption) (any, error)) *MockDBOSContext_RunAsStep_Call {
+func (_c *MockDBOSContext_RunAsStep_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, fn dbos.StepFunc, input any) (any, error)) *MockDBOSContext_RunAsStep_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // RunAsWorkflow provides a mock function for the type MockDBOSContext
-func (_mock *MockDBOSContext) RunAsWorkflow(dBOSContext dbos.DBOSContext, workflowName string, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error) {
+func (_mock *MockDBOSContext) RunAsWorkflow(dBOSContext dbos.DBOSContext, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error) {
 	var tmpRet mock.Arguments
 	if len(opts) > 0 {
-		tmpRet = _mock.Called(dBOSContext, workflowName, fn, input, opts)
+		tmpRet = _mock.Called(dBOSContext, fn, input, opts)
 	} else {
-		tmpRet = _mock.Called(dBOSContext, workflowName, fn, input)
+		tmpRet = _mock.Called(dBOSContext, fn, input)
 	}
 	ret := tmpRet
 
@@ -835,18 +704,18 @@ func (_mock *MockDBOSContext) RunAsWorkflow(dBOSContext dbos.DBOSContext, workfl
 
 	var r0 dbos.WorkflowHandle[any]
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, dbos.WorkflowFunc, any, ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error)); ok {
-		return returnFunc(dBOSContext, workflowName, fn, input, opts...)
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.WorkflowFunc, any, ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error)); ok {
+		return returnFunc(dBOSContext, fn, input, opts...)
 	}
-	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, dbos.WorkflowFunc, any, ...dbos.WorkflowOption) dbos.WorkflowHandle[any]); ok {
-		r0 = returnFunc(dBOSContext, workflowName, fn, input, opts...)
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.WorkflowFunc, any, ...dbos.WorkflowOption) dbos.WorkflowHandle[any]); ok {
+		r0 = returnFunc(dBOSContext, fn, input, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(dbos.WorkflowHandle[any])
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, string, dbos.WorkflowFunc, any, ...dbos.WorkflowOption) error); ok {
-		r1 = returnFunc(dBOSContext, workflowName, fn, input, opts...)
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, dbos.WorkflowFunc, any, ...dbos.WorkflowOption) error); ok {
+		r1 = returnFunc(dBOSContext, fn, input, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -860,45 +729,39 @@ type MockDBOSContext_RunAsWorkflow_Call struct {
 
 // RunAsWorkflow is a helper method to define mock.On call
 //   - dBOSContext dbos.DBOSContext
-//   - workflowName string
 //   - fn dbos.WorkflowFunc
 //   - input any
 //   - opts ...dbos.WorkflowOption
-func (_e *MockDBOSContext_Expecter) RunAsWorkflow(dBOSContext interface{}, workflowName interface{}, fn interface{}, input interface{}, opts ...interface{}) *MockDBOSContext_RunAsWorkflow_Call {
+func (_e *MockDBOSContext_Expecter) RunAsWorkflow(dBOSContext interface{}, fn interface{}, input interface{}, opts ...interface{}) *MockDBOSContext_RunAsWorkflow_Call {
 	return &MockDBOSContext_RunAsWorkflow_Call{Call: _e.mock.On("RunAsWorkflow",
-		append([]interface{}{dBOSContext, workflowName, fn, input}, opts...)...)}
+		append([]interface{}{dBOSContext, fn, input}, opts...)...)}
 }
 
-func (_c *MockDBOSContext_RunAsWorkflow_Call) Run(run func(dBOSContext dbos.DBOSContext, workflowName string, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption)) *MockDBOSContext_RunAsWorkflow_Call {
+func (_c *MockDBOSContext_RunAsWorkflow_Call) Run(run func(dBOSContext dbos.DBOSContext, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption)) *MockDBOSContext_RunAsWorkflow_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 dbos.DBOSContext
 		if args[0] != nil {
 			arg0 = args[0].(dbos.DBOSContext)
 		}
-		var arg1 string
+		var arg1 dbos.WorkflowFunc
 		if args[1] != nil {
-			arg1 = args[1].(string)
+			arg1 = args[1].(dbos.WorkflowFunc)
 		}
-		var arg2 dbos.WorkflowFunc
+		var arg2 any
 		if args[2] != nil {
-			arg2 = args[2].(dbos.WorkflowFunc)
+			arg2 = args[2].(any)
 		}
-		var arg3 any
-		if args[3] != nil {
-			arg3 = args[3].(any)
-		}
-		var arg4 []dbos.WorkflowOption
+		var arg3 []dbos.WorkflowOption
 		var variadicArgs []dbos.WorkflowOption
-		if len(args) > 4 {
-			variadicArgs = args[4].([]dbos.WorkflowOption)
+		if len(args) > 3 {
+			variadicArgs = args[3].([]dbos.WorkflowOption)
 		}
-		arg4 = variadicArgs
+		arg3 = variadicArgs
 		run(
 			arg0,
 			arg1,
 			arg2,
-			arg3,
-			arg4...,
+			arg3...,
 		)
 	})
 	return _c
@@ -909,7 +772,7 @@ func (_c *MockDBOSContext_RunAsWorkflow_Call) Return(workflowHandle dbos.Workflo
 	return _c
 }
 
-func (_c *MockDBOSContext_RunAsWorkflow_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, workflowName string, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error)) *MockDBOSContext_RunAsWorkflow_Call {
+func (_c *MockDBOSContext_RunAsWorkflow_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error)) *MockDBOSContext_RunAsWorkflow_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -15,4 +15,3 @@ packages:
   github.com/dbos-inc/dbos-transact-go/dbos:
     interfaces:
       DBOSContext:
-      WorkflowHandle:

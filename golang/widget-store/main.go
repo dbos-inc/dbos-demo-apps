@@ -35,8 +35,8 @@ func main() {
 	if err != nil {
 		logger.WithError(err).Fatal("DBOS initialization failed")
 	}
-	dbos.RegisterWorkflow(dbosContext, "checkoutWorkflow", checkoutWorkflow)
-	dbos.RegisterWorkflow(dbosContext, "dispatchOrderWorkflow", dispatchOrderWorkflow)
+	dbos.RegisterWorkflow(dbosContext, checkoutWorkflow)
+	dbos.RegisterWorkflow(dbosContext, dispatchOrderWorkflow)
 
 	err = dbosContext.Launch()
 	if err != nil {

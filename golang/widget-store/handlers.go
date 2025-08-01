@@ -101,7 +101,7 @@ func checkoutEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *logrus.L
 	idempotencyKey := c.Param("idempotency_key")
 
 	// Start the checkout workflow with the idempotency key
-	h, err := dbos.RunAsWorkflow(dbosCtx, "checkoutWorkflow", checkoutWorkflow, "", dbos.WithWorkflowID(idempotencyKey))
+	_, err := dbos.RunAsWorkflow(dbosCtx, checkoutWorkflow, "", dbos.WithWorkflowID(idempotencyKey))
 	if err != nil {
 		logger.WithError(err).WithField("key", idempotencyKey).Error("checkout workflow start failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Checkout failed to start"})
