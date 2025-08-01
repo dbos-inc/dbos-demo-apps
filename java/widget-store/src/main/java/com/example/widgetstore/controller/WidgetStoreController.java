@@ -3,6 +3,7 @@ package com.example.widgetstore.controller;
 import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
 import com.example.widgetstore.service.WidgetStoreService;
+import com.example.widgetstore.workflow.CheckoutWorkflowService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +19,12 @@ public class WidgetStoreController {
     private static final Logger logger = LoggerFactory.getLogger(WidgetStoreController.class);
 
     private final WidgetStoreService widgetStoreService;
+    private final CheckoutWorkflowService checkoutWorkflowService;
 
     @Autowired
-    public WidgetStoreController(WidgetStoreService widgetStoreService) {
+    public WidgetStoreController(WidgetStoreService widgetStoreService, CheckoutWorkflowService checkoutWorkflowService) {
         this.widgetStoreService = widgetStoreService;
+        this.checkoutWorkflowService = checkoutWorkflowService;
     }
 
     @GetMapping("/product")
@@ -74,20 +77,15 @@ public class WidgetStoreController {
         }
     }
 
-    // DBOS workflow stub endpoints
+    // DBOS workflow endpoints
     @PostMapping("/checkout/{key}")
     public ResponseEntity<String> checkout(@PathVariable String key) {
         logger.info("Checkout requested with key: " + key);
         
         try {
-            // Attempt to subtract inventory
-            widgetStoreService.subtractInventory();
-            
-            // Create a new order
-            Integer orderId = widgetStoreService.createOrder();
-            
-            // Return the key as payment ID for the frontend to use
-            return ResponseEntity.ok(key);
+            // Execute the checkout workflow using DBOS
+            String result = checkoutWorkflowService.checkoutWorkflow(key);
+            return ResponseEntity.ok(result);
             
         } catch (RuntimeException e) {
             logger.error("Checkout failed: " + e.getMessage());
