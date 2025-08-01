@@ -4,6 +4,7 @@ import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
 import com.example.widgetstore.service.WidgetStoreService;
 
+import dev.dbos.transact.DBOS;
 import dev.dbos.transact.context.SetWorkflowID;
 
 import org.slf4j.Logger;
@@ -11,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static com.example.widgetstore.constants.Constants.PAYMENT_ID;
 
 import java.util.List;
 
@@ -22,6 +25,9 @@ public class WidgetStoreController {
 
     @Autowired
     private WidgetStoreService widgetStoreService;
+
+    @Autowired
+    private DBOS dbos;
 
     @GetMapping("/product")
     public ResponseEntity<ProductDto> getProduct() {
@@ -82,9 +88,9 @@ public class WidgetStoreController {
             // Execute the checkout workflow using DBOS
             try (SetWorkflowID id = new SetWorkflowID(key)) {
                 logger.info("Calling checkoutWorkflow on service: {}", widgetStoreService.getClass().getName());
-                String result = widgetStoreService.checkoutWorkflow(key);
-                logger.info("Workflow completed with result: {}", result);
-                return ResponseEntity.ok(result);
+                widgetStoreService.checkoutWorkflow(key);
+                String paymentID = (String) dbos.getEvent(key, PAYMENT_ID, 60);
+                return ResponseEntity.ok(paymentID);
             }
             
         } catch (RuntimeException e) {

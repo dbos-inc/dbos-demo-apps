@@ -1,15 +1,19 @@
 package com.example.widgetstore.service;
 
+import com.example.widgetstore.controller.WidgetStoreController;
 import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
 import com.example.widgetstore.generated.tables.pojos.Orders;
 import com.example.widgetstore.generated.tables.pojos.Products;
 import com.example.widgetstore.model.OrderStatus;
 
+import dev.dbos.transact.DBOS;
 import dev.dbos.transact.workflow.Step;
 import dev.dbos.transact.workflow.Workflow;
 
 import org.jooq.DSLContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -17,15 +21,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.example.widgetstore.generated.Tables.*;
+import static com.example.widgetstore.constants.Constants.*;
 
 @Transactional
 public class WidgetStoreServiceImpl implements WidgetStoreService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(WidgetStoreServiceImpl.class);
 
+    private final DBOS dbos;
     private final DSLContext dsl;
-    private static final int PRODUCT_ID = 1;
 
-    public WidgetStoreServiceImpl(DSLContext dsl) {
+    public WidgetStoreServiceImpl(DBOS dbos, DSLContext dsl) {
         this.dsl = dsl;
+        this.dbos = dbos;
     }
 
     private WidgetStoreService service;
@@ -59,7 +67,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
                 .execute();
     }
 
-    @Step()
+    @Step(name = "subtractInventory")
     public void subtractInventory() throws RuntimeException {
         int updated = dsl.update(PRODUCTS)
                 .set(PRODUCTS.INVENTORY, PRODUCTS.INVENTORY.minus(1))
@@ -79,7 +87,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
                 .execute();
     }
 
-    @Step()
+    @Step(name = "createOrder")
     public Integer createOrder() {
         return dsl.insertInto(ORDERS)
                 .set(ORDERS.ORDER_STATUS, OrderStatus.PENDING.getValue())
@@ -143,12 +151,23 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
     @Workflow(name = "checkoutWorkflow")
     public String checkoutWorkflow(String key) {
-        // Step 1: Create order first
         Integer orderId = service.createOrder();
-        
-        // Step 2: Subtract inventory
         service.subtractInventory();
+
+        dbos.setEvent(PAYMENT_ID, key);
+
+        String payment_status = (String) dbos.recv(PAYMENT_STATUS, 60);
+
+        if (payment_status == "paid") {
+            logger.info("Payment successful for order {}", orderId);
+            service.markOrderPaid(orderId);
+        } else {
+            logger.info("Payment failed for order {}", orderId);
+            service.errorOrder(orderId);
+            service.undoSubtractInventory();
+        }
         
+        dbos.setEvent(ORDER_ID, String.valueOf(orderId));
         return key;
     }
 }
