@@ -3,7 +3,9 @@ package com.example.widgetstore.controller;
 import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
 import com.example.widgetstore.service.WidgetStoreService;
-import com.example.widgetstore.workflow.CheckoutWorkflowService;
+
+import dev.dbos.transact.context.SetWorkflowID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +20,8 @@ public class WidgetStoreController {
 
     private static final Logger logger = LoggerFactory.getLogger(WidgetStoreController.class);
 
-    private final WidgetStoreService widgetStoreService;
-    private final CheckoutWorkflowService checkoutWorkflowService;
-
     @Autowired
-    public WidgetStoreController(WidgetStoreService widgetStoreService, CheckoutWorkflowService checkoutWorkflowService) {
-        this.widgetStoreService = widgetStoreService;
-        this.checkoutWorkflowService = checkoutWorkflowService;
-    }
+    private WidgetStoreService widgetStoreService;
 
     @GetMapping("/product")
     public ResponseEntity<ProductDto> getProduct() {
@@ -84,8 +80,12 @@ public class WidgetStoreController {
         
         try {
             // Execute the checkout workflow using DBOS
-            String result = checkoutWorkflowService.checkoutWorkflow(key);
-            return ResponseEntity.ok(result);
+            try (SetWorkflowID id = new SetWorkflowID(key)) {
+                logger.info("Calling checkoutWorkflow on service: {}", widgetStoreService.getClass().getName());
+                String result = widgetStoreService.checkoutWorkflow(key);
+                logger.info("Workflow completed with result: {}", result);
+                return ResponseEntity.ok(result);
+            }
             
         } catch (RuntimeException e) {
             logger.error("Checkout failed: " + e.getMessage());
@@ -99,7 +99,7 @@ public class WidgetStoreController {
         
         try {
             // For demo purposes, we'll create a new order and update it based on payment status
-            Integer orderId = widgetStoreService.createOrder();
+            Integer orderId = 1;
             
             if ("paid".equals(status)) {
                 widgetStoreService.markOrderPaid(orderId);

@@ -1,27 +1,25 @@
 package com.example.widgetstore.config;
 
 import com.example.widgetstore.service.WidgetStoreService;
-import com.example.widgetstore.workflow.CheckoutWorkflowService;
-import com.example.widgetstore.workflow.CheckoutWorkflowServiceImpl;
+import com.example.widgetstore.service.WidgetStoreServiceImpl;
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.config.DBOSConfig;
+import org.jooq.DSLContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class DBOSConfigInitializer {
 
     @Bean
-    public CheckoutWorkflowService checkoutWorkflowService(DBOS dbos, WidgetStoreService widgetStoreService) {
-        CheckoutWorkflowServiceImpl impl = new CheckoutWorkflowServiceImpl();
-        impl.setWidgetStoreService(widgetStoreService);
-        
-        CheckoutWorkflowService proxy = dbos.<CheckoutWorkflowService>Workflow()
-                .interfaceClass(CheckoutWorkflowService.class)
-                .implementation(impl)
+    @Primary
+    public WidgetStoreService widgetStoreServiceProxy(DBOS dbos, DSLContext dslContext) {
+        WidgetStoreService proxy = dbos.<WidgetStoreService>Workflow()
+                .interfaceClass(WidgetStoreService.class)
+                .implementation(new WidgetStoreServiceImpl(dslContext))
                 .build();
-
-        proxy.setCheckoutWorkflowService(proxy);
+        proxy.setWidgetStoreService(proxy);
         return proxy;
     }
 
