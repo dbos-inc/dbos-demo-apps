@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.830.0",
-    "@dbos-inc/dbos-sdk": "^3.0.45-preview",
-    "@dbos-inc/knex-datasource": "^3.0.45-preview",
-    "@dbos-inc/koa-serve": "^3.0.45-preview",
-    "@dbos-inc/pgnotifier-receiver": "^3.0.45-preview",
+    "@dbos-inc/dbos-sdk": "^3.0.63",
+    "@dbos-inc/knex-datasource": "^3.0.63",
+    "@dbos-inc/koa-serve": "^3.0.63",
+    "@dbos-inc/pgnotifier-receiver": "^3.0.63",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@koa/router": "^13.1.0",
@@ -39,7 +39,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^3.0.45-preview",
+    "@dbos-inc/dbos-cloud": "^3.0.63",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^29.5.14",
     "@types/koa": "^2.15.0",

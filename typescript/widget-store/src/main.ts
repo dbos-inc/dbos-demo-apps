@@ -166,8 +166,8 @@ fastify.post('/crash_application', () => {
 async function main() {
   const PORT = parseInt(process.env.NODE_PORT || '3000');
   DBOS.setConfig({
-    "name": 'widget-store-node',
-    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
+    name: 'widget-store-node',
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   DBOS.logRegisteredEndpoints();
   await DBOS.launch();
