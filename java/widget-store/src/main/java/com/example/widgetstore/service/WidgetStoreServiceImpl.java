@@ -154,7 +154,13 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
     @Workflow(name = "checkoutWorkflow")
     public String checkoutWorkflow(String key) {
         Integer orderId = service.createOrder();
-        service.subtractInventory();
+        try {
+            service.subtractInventory();
+        } catch (RuntimeException e) {
+            logger.error("Failed to reserve inventory for order {}", orderId);
+            service.errorOrder(orderId);
+            dbos.setEvent(PAYMENT_ID, null);
+        }
 
         dbos.setEvent(PAYMENT_ID, key);
 

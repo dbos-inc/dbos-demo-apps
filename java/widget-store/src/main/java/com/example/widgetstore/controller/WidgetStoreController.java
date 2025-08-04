@@ -97,6 +97,9 @@ public class WidgetStoreController {
                 widgetStoreService.checkoutWorkflow(key);
             }
             String paymentID = (String) dbos.getEvent(key, PAYMENT_ID, 60);
+            if (paymentID == null) {
+                return ResponseEntity.internalServerError().body("Item not available");
+            }
             return ResponseEntity.ok(paymentID);
             
         } catch (RuntimeException e) {
