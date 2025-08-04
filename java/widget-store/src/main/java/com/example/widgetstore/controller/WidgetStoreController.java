@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.example.widgetstore.constants.Constants.ORDER_ID;
 import static com.example.widgetstore.constants.Constants.PAYMENT_ID;
+import static com.example.widgetstore.constants.Constants.PAYMENT_STATUS;
+
 import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
 import com.example.widgetstore.service.WidgetStoreService;
@@ -107,20 +110,9 @@ public class WidgetStoreController {
         logger.info("Payment webhook called with key: " + key + ", status: " + status);
         
         try {
-            // For demo purposes, we'll create a new order and update it based on payment status
-            Integer orderId = 1;
-            
-            if ("paid".equals(status)) {
-                widgetStoreService.markOrderPaid(orderId);
-                logger.info("Payment successful for order: " + orderId);
-            } else {
-                widgetStoreService.errorOrder(orderId);
-                widgetStoreService.undoSubtractInventory();
-                logger.warn("Payment failed for order: " + orderId);
-            }
-            
-            return ResponseEntity.ok(orderId.toString());
-            
+            widgetStoreService.tempSendWorkflow(key, status, PAYMENT_STATUS);
+            String orderId = (String) dbos.getEvent(key, ORDER_ID, 60);
+            return ResponseEntity.ok(orderId);
         } catch (Exception e) {
             logger.error("Payment webhook processing failed", e);
             return ResponseEntity.internalServerError().body("Error processing payment");

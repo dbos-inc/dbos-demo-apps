@@ -160,7 +160,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
         String payment_status = (String) dbos.recv(PAYMENT_STATUS, 60);
 
-        if (payment_status == "paid") {
+        if (payment_status.equals("paid")) {
             logger.info("Payment successful for order {}", orderId);
             service.markOrderPaid(orderId);
         } else {
@@ -171,5 +171,10 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
         
         dbos.setEvent(ORDER_ID, String.valueOf(orderId));
         return key;
+    }
+
+    @Workflow(name = "tempSendWorkflow")
+    public void tempSendWorkflow(String destinationId, Object message, String topic) {
+        dbos.send(destinationId, message, topic);
     }
 }
