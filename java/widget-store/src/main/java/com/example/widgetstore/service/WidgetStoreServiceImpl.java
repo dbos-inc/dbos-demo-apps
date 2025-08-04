@@ -163,6 +163,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
         if (payment_status.equals("paid")) {
             logger.info("Payment successful for order {}", orderId);
             service.markOrderPaid(orderId);
+            service.dispatchOrderWorkflow(orderId);
         } else {
             logger.info("Payment failed for order {}", orderId);
             service.errorOrder(orderId);
@@ -176,5 +177,32 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
     @Workflow(name = "tempSendWorkflow")
     public void tempSendWorkflow(String destinationId, Object message, String topic) {
         dbos.send(destinationId, message, topic);
+    }
+
+    @Workflow(name = "dispatchOrderWorkflow")
+    public void dispatchOrderWorkflow(Integer orderId) {
+        for (int i = 0; i < 10; i++) {
+            dbos.sleep(1);
+            service.updateOrderProgress(orderId);
+        }
+    }
+
+    @Step(name = "updateOrderProgress")
+    public void updateOrderProgress(Integer orderId) {
+        Integer progressRemaining = dsl.update(ORDERS)
+                .set(ORDERS.PROGRESS_REMAINING, ORDERS.PROGRESS_REMAINING.minus(1))
+                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
+                .where(ORDERS.ORDER_ID.eq(orderId))
+                .returningResult(ORDERS.PROGRESS_REMAINING)
+                .fetchOne()
+                .get(ORDERS.PROGRESS_REMAINING);
+
+        if (progressRemaining == 0) {
+            dsl.update(ORDERS)
+                    .set(ORDERS.ORDER_STATUS, OrderStatus.DISPATCHED.getValue())
+                    .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
+                    .where(ORDERS.ORDER_ID.eq(orderId))
+                    .execute();
+        }
     }
 }

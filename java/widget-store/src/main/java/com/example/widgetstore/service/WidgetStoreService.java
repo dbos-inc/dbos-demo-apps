@@ -27,4 +27,6 @@ public interface WidgetStoreService {
     // Workflow methods
     String checkoutWorkflow(String key);
     void tempSendWorkflow(String destinationId, Object message, String topic);
+    void dispatchOrderWorkflow(Integer orderId);
+    void updateOrderProgress(Integer orderId);
 }
