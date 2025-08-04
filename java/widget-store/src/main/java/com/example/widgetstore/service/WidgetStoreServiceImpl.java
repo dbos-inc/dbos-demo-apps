@@ -1,8 +1,22 @@
 package com.example.widgetstore.service;
 
-import com.example.widgetstore.controller.WidgetStoreController;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.jooq.DSLContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
+
+import static com.example.widgetstore.constants.Constants.ORDER_ID;
+import static com.example.widgetstore.constants.Constants.PAYMENT_ID;
+import static com.example.widgetstore.constants.Constants.PAYMENT_STATUS;
+import static com.example.widgetstore.constants.Constants.PRODUCT_ID;
 import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
+import static com.example.widgetstore.generated.Tables.ORDERS;
+import static com.example.widgetstore.generated.Tables.PRODUCTS;
 import com.example.widgetstore.generated.tables.pojos.Orders;
 import com.example.widgetstore.generated.tables.pojos.Products;
 import com.example.widgetstore.model.OrderStatus;
@@ -10,18 +24,6 @@ import com.example.widgetstore.model.OrderStatus;
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.workflow.Step;
 import dev.dbos.transact.workflow.Workflow;
-
-import org.jooq.DSLContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static com.example.widgetstore.generated.Tables.*;
-import static com.example.widgetstore.constants.Constants.*;
 
 @Transactional
 public class WidgetStoreServiceImpl implements WidgetStoreService {

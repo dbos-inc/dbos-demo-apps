@@ -1,21 +1,24 @@
 package com.example.widgetstore.controller;
 
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import static com.example.widgetstore.constants.Constants.PAYMENT_ID;
 import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
 import com.example.widgetstore.service.WidgetStoreService;
 
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.context.SetWorkflowID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import static com.example.widgetstore.constants.Constants.PAYMENT_ID;
-
-import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -89,9 +92,9 @@ public class WidgetStoreController {
             try (SetWorkflowID id = new SetWorkflowID(key)) {
                 logger.info("Calling checkoutWorkflow on service: {}", widgetStoreService.getClass().getName());
                 widgetStoreService.checkoutWorkflow(key);
-                String paymentID = (String) dbos.getEvent(key, PAYMENT_ID, 60);
-                return ResponseEntity.ok(paymentID);
             }
+            String paymentID = (String) dbos.getEvent(key, PAYMENT_ID, 60);
+            return ResponseEntity.ok(paymentID);
             
         } catch (RuntimeException e) {
             logger.error("Checkout failed: " + e.getMessage());
