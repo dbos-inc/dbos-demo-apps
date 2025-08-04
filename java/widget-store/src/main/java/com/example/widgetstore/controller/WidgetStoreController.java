@@ -126,7 +126,7 @@ public class WidgetStoreController {
     @PostMapping("/crash_application")
     public ResponseEntity<Void> crashApplication() {
         logger.warn("Crash endpoint called - terminating application");
-        System.exit(1);
+        Runtime.getRuntime().halt(0);
         return ResponseEntity.ok().build();
     }
 }
