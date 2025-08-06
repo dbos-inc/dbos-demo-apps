@@ -49,7 +49,7 @@ func stepTwo(ctx context.Context, _ string) (string, error) {
 /*****************************/
 
 func QueuedStepWorkflow(ctx dbos.DBOSContext, i int) (int, error) {
-	time.Sleep(5 * time.Second)
+	ctx.Sleep(5 * time.Second)
 	fmt.Printf("Step %d completed!\n", i)
 	return i, nil
 }
