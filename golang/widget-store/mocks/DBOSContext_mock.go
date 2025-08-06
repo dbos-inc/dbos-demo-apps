@@ -38,6 +38,39 @@ func (_m *MockDBOSContext) EXPECT() *MockDBOSContext_Expecter {
 	return &MockDBOSContext_Expecter{mock: &_m.Mock}
 }
 
+// Cancel provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) Cancel() {
+	_mock.Called()
+	return
+}
+
+// MockDBOSContext_Cancel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Cancel'
+type MockDBOSContext_Cancel_Call struct {
+	*mock.Call
+}
+
+// Cancel is a helper method to define mock.On call
+func (_e *MockDBOSContext_Expecter) Cancel() *MockDBOSContext_Cancel_Call {
+	return &MockDBOSContext_Cancel_Call{Call: _e.mock.On("Cancel")}
+}
+
+func (_c *MockDBOSContext_Cancel_Call) Run(run func()) *MockDBOSContext_Cancel_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_Cancel_Call) Return() *MockDBOSContext_Cancel_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *MockDBOSContext_Cancel_Call) RunAndReturn(run func()) *MockDBOSContext_Cancel_Call {
+	_c.Run(run)
+	return _c
+}
+
 // Deadline provides a mock function for the type MockDBOSContext
 func (_mock *MockDBOSContext) Deadline() (time.Time, bool) {
 	ret := _mock.Called()
@@ -888,39 +921,6 @@ func (_c *MockDBOSContext_SetEvent_Call) Return(err error) *MockDBOSContext_SetE
 
 func (_c *MockDBOSContext_SetEvent_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, input dbos.WorkflowSetEventInput) error) *MockDBOSContext_SetEvent_Call {
 	_c.Call.Return(run)
-	return _c
-}
-
-// Shutdown provides a mock function for the type MockDBOSContext
-func (_mock *MockDBOSContext) Shutdown() {
-	_mock.Called()
-	return
-}
-
-// MockDBOSContext_Shutdown_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Shutdown'
-type MockDBOSContext_Shutdown_Call struct {
-	*mock.Call
-}
-
-// Shutdown is a helper method to define mock.On call
-func (_e *MockDBOSContext_Expecter) Shutdown() *MockDBOSContext_Shutdown_Call {
-	return &MockDBOSContext_Shutdown_Call{Call: _e.mock.On("Shutdown")}
-}
-
-func (_c *MockDBOSContext_Shutdown_Call) Run(run func()) *MockDBOSContext_Shutdown_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockDBOSContext_Shutdown_Call) Return() *MockDBOSContext_Shutdown_Call {
-	_c.Call.Return()
-	return _c
-}
-
-func (_c *MockDBOSContext_Shutdown_Call) RunAndReturn(run func()) *MockDBOSContext_Shutdown_Call {
-	_c.Run(run)
 	return _c
 }
 

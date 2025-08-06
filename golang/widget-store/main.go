@@ -42,7 +42,7 @@ func main() {
 	if err != nil {
 		logger.WithError(err).Fatal("DBOS service start failed")
 	}
-	defer dbosContext.Shutdown()
+	defer dbosContext.Cancel()
 
 	db, err = pgxpool.New(context.Background(), dbURL)
 	if err != nil {
