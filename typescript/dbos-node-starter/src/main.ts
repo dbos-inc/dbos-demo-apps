@@ -25,49 +25,45 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export class Example {
-  // Here is the code for a durable workflow with three steps.
-  // DBOS workflows are resilient to any failure--if your program is crashed,
-  // interrupted, or restarted while running this workflow, the workflow
-  // automatically resumes from the last completed step.
+// Here is the code for a durable workflow with three steps.
+// DBOS workflows are resilient to any failure--if your program is crashed,
+// interrupted, or restarted while running this workflow, the workflow
+// automatically resumes from the last completed step.
 
-  // One interesting implementation detail: we use setEvent to publish the workflow's
-  // status to the frontend after each step completes, so you can observe what your workflow
-  // is doing in real time.
+// One interesting implementation detail: we use setEvent to publish the workflow's
+// status to the frontend after each step completes, so you can observe what your workflow
+// is doing in real time.
 
-  @DBOS.step()
-  static async stepOne() {
-    await sleep(5000);
-    console.log("Completed step 1!")
-  }
-
-  @DBOS.step()
-  static async stepTwo() {
-    await sleep(5000);
-    console.log("Completed step 2!")
-  }
-
-  @DBOS.step()
-  static async stepThree() {
-    await sleep(5000);
-    console.log("Completed step 3!")
-  }
-
-  @DBOS.workflow()
-  static async workflow(): Promise<void> {
-    await Example.stepOne();
-    await DBOS.setEvent(stepsEvent, 1);
-    await Example.stepTwo();
-    await DBOS.setEvent(stepsEvent, 2);
-    await Example.stepThree();
-    await DBOS.setEvent(stepsEvent, 3);
-  }
+async function stepOne() {
+  await sleep(5000);
+  console.log("Completed step 1!");
 }
+
+async function stepTwo() {
+  await sleep(5000);
+  console.log("Completed step 2!");
+}
+
+async function stepThree() {
+  await sleep(5000);
+  console.log("Completed step 3!");
+}
+
+async function exampleWorkflow() {
+  await DBOS.runStep(stepOne);
+  await DBOS.setEvent(stepsEvent, 1);
+  await DBOS.runStep(stepTwo);
+  await DBOS.setEvent(stepsEvent, 2);
+  await DBOS.runStep(stepThree);
+  await DBOS.setEvent(stepsEvent, 3);
+}
+
+const registeredWorkflow = DBOS.registerWorkflow(exampleWorkflow);
 
 // This endpoint uses DBOS to idempotently launch a durable workflow
 router.get("/workflow/:taskid", async (ctx: Context) => {
   const { taskid } = ctx.params;
-  await DBOS.startWorkflow(Example, { workflowID: taskid }).workflow();
+  await DBOS.startWorkflow(registeredWorkflow, { workflowID: taskid })();
   ctx.status = 200;
 });
 
