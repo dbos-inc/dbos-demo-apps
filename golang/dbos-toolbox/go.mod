@@ -4,11 +4,7 @@ go 1.23.0
 
 toolchain go1.23.10
 
-require (
-	github.com/dbos-inc/dbos-transact-go v0.1.0
-	github.com/jackc/pgx/v5 v5.7.5
-	gopkg.in/yaml.v3 v3.0.1
-)
+require github.com/dbos-inc/dbos-transact-go v0.1.0
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.18.3 // indirect
@@ -18,6 +14,7 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgx/v5 v5.7.5 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
