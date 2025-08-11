@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -17,17 +18,23 @@ func checkoutWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 	}
 
 	// Create a new order
-	orderID, err := dbos.RunAsStep(ctx, createOrder, "")
+	orderID, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (int, error) {
+		return createOrder(stepCtx)
+	})
 	if err != nil {
 		logger.WithError(err).WithField("wf_id", workflowID).Error("order creation failed")
 		return "", err
 	}
 
 	// Attempt to reserve inventory, cancelling the order if no inventory remains
-	success, err := dbos.RunAsStep(ctx, reserveInventory, "")
+	success, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (bool, error) {
+		return reserveInventory(stepCtx)
+	})
 	if err != nil || !success {
 		logger.WithField("order", orderID).Warn("no inventory")
-		dbos.RunAsStep[UpdateOrderStatusInput, string](ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
+		dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+			return updateOrderStatus(stepCtx, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
+		})
 		err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInputGeneric[string]{Key: PAYMENT_ID, Message: ""})
 		return "", err
 	}
@@ -41,11 +48,17 @@ func checkoutWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 	payment_status, err := dbos.Recv[string](ctx, dbos.WorkflowRecvInput{Topic: PAYMENT_STATUS, Timeout: 60 * time.Second})
 	if err != nil || payment_status != "paid" {
 		logger.WithFields(logrus.Fields{"order": orderID, "payment": workflowID, "status": payment_status}).Warn("payment failed")
-		dbos.RunAsStep(ctx, undoReserveInventory, "")
-		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
+		dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+			return undoReserveInventory(stepCtx)
+		})
+		dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+			return updateOrderStatus(stepCtx, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
+		})
 	} else {
 		logger.WithFields(logrus.Fields{"order": orderID, "payment": workflowID}).Info("payment success")
-		dbos.RunAsStep(ctx, updateOrderStatus, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: PAID})
+		dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+			return updateOrderStatus(stepCtx, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: PAID})
+		})
 		fmt.Println("calling dispatchOrderWorkflow")
 		dbos.RunAsWorkflow(ctx, dispatchOrderWorkflow, orderID)
 	}
@@ -66,7 +79,9 @@ func dispatchOrderWorkflow(ctx dbos.DBOSContext, orderID int) (string, error) {
 			logger.WithError(err).WithField("order", orderID).Error("dispatch delay failed")
 			return "", err
 		}
-		_, err = dbos.RunAsStep(ctx, updateOrderProgress, orderID)
+		_, err = dbos.RunAsStep(ctx, func(stepCtx context.Context) (int, error) {
+			return updateOrderProgress(stepCtx, orderID)
+		})
 		if err != nil {
 			logger.WithError(err).WithField("order", orderID).Error("progress tracking failed")
 			return "", err
