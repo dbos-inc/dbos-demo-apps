@@ -648,8 +648,8 @@ func (_c *MockDBOSContext_RetrieveWorkflow_Call) RunAndReturn(run func(dBOSConte
 }
 
 // RunAsStep provides a mock function for the type MockDBOSContext
-func (_mock *MockDBOSContext) RunAsStep(dBOSContext dbos.DBOSContext, fn dbos.StepFunc, input any) (any, error) {
-	ret := _mock.Called(dBOSContext, fn, input)
+func (_mock *MockDBOSContext) RunAsStep(dBOSContext dbos.DBOSContext, fn dbos.StepFunc) (any, error) {
+	ret := _mock.Called(dBOSContext, fn)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RunAsStep")
@@ -657,18 +657,18 @@ func (_mock *MockDBOSContext) RunAsStep(dBOSContext dbos.DBOSContext, fn dbos.St
 
 	var r0 any
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.StepFunc, any) (any, error)); ok {
-		return returnFunc(dBOSContext, fn, input)
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.StepFunc) (any, error)); ok {
+		return returnFunc(dBOSContext, fn)
 	}
-	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.StepFunc, any) any); ok {
-		r0 = returnFunc(dBOSContext, fn, input)
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.StepFunc) any); ok {
+		r0 = returnFunc(dBOSContext, fn)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(any)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, dbos.StepFunc, any) error); ok {
-		r1 = returnFunc(dBOSContext, fn, input)
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, dbos.StepFunc) error); ok {
+		r1 = returnFunc(dBOSContext, fn)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -683,12 +683,11 @@ type MockDBOSContext_RunAsStep_Call struct {
 // RunAsStep is a helper method to define mock.On call
 //   - dBOSContext dbos.DBOSContext
 //   - fn dbos.StepFunc
-//   - input any
-func (_e *MockDBOSContext_Expecter) RunAsStep(dBOSContext interface{}, fn interface{}, input interface{}) *MockDBOSContext_RunAsStep_Call {
-	return &MockDBOSContext_RunAsStep_Call{Call: _e.mock.On("RunAsStep", dBOSContext, fn, input)}
+func (_e *MockDBOSContext_Expecter) RunAsStep(dBOSContext interface{}, fn interface{}) *MockDBOSContext_RunAsStep_Call {
+	return &MockDBOSContext_RunAsStep_Call{Call: _e.mock.On("RunAsStep", dBOSContext, fn)}
 }
 
-func (_c *MockDBOSContext_RunAsStep_Call) Run(run func(dBOSContext dbos.DBOSContext, fn dbos.StepFunc, input any)) *MockDBOSContext_RunAsStep_Call {
+func (_c *MockDBOSContext_RunAsStep_Call) Run(run func(dBOSContext dbos.DBOSContext, fn dbos.StepFunc)) *MockDBOSContext_RunAsStep_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 dbos.DBOSContext
 		if args[0] != nil {
@@ -698,14 +697,9 @@ func (_c *MockDBOSContext_RunAsStep_Call) Run(run func(dBOSContext dbos.DBOSCont
 		if args[1] != nil {
 			arg1 = args[1].(dbos.StepFunc)
 		}
-		var arg2 any
-		if args[2] != nil {
-			arg2 = args[2].(any)
-		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -716,7 +710,7 @@ func (_c *MockDBOSContext_RunAsStep_Call) Return(v any, err error) *MockDBOSCont
 	return _c
 }
 
-func (_c *MockDBOSContext_RunAsStep_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, fn dbos.StepFunc, input any) (any, error)) *MockDBOSContext_RunAsStep_Call {
+func (_c *MockDBOSContext_RunAsStep_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, fn dbos.StepFunc) (any, error)) *MockDBOSContext_RunAsStep_Call {
 	_c.Call.Return(run)
 	return _c
 }
