@@ -5,7 +5,7 @@ import (
 )
 
 // Database operations for inventory management
-func reserveInventory(ctx context.Context, _ string) (bool, error) {
+func reserveInventory(ctx context.Context) (bool, error) {
 	result, err := db.Exec(ctx,
 		"UPDATE products SET inventory = inventory - 1 WHERE product_id = $1 AND inventory > 0",
 		WIDGET_ID)
@@ -15,7 +15,7 @@ func reserveInventory(ctx context.Context, _ string) (bool, error) {
 	return result.RowsAffected() > 0, nil
 }
 
-func undoReserveInventory(ctx context.Context, _ string) (string, error) {
+func undoReserveInventory(ctx context.Context) (string, error) {
 	_, err := db.Exec(ctx,
 		"UPDATE products SET inventory = inventory + 1 WHERE product_id = $1",
 		WIDGET_ID)
@@ -23,7 +23,7 @@ func undoReserveInventory(ctx context.Context, _ string) (string, error) {
 }
 
 // Database operations for order management
-func createOrder(ctx context.Context, _ string) (int, error) {
+func createOrder(ctx context.Context) (int, error) {
 	var orderID int
 	err := db.QueryRow(ctx,
 		"INSERT INTO orders (order_status) VALUES ($1) RETURNING order_id",
