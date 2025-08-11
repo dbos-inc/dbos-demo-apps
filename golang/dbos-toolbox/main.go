@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/dbos-inc/dbos-transact-go/dbos"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Configuration structure
@@ -19,7 +18,6 @@ type Config struct {
 }
 
 // Global variables
-var db *pgxpool.Pool
 var dbosCtx dbos.DBOSContext
 
 /*****************************/
@@ -27,19 +25,23 @@ var dbosCtx dbos.DBOSContext
 /*****************************/
 
 func ExampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
-	_, err := dbos.RunAsStep(ctx, stepOne, "")
+	_, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+		return stepOne(stepCtx)
+	})
 	if err != nil {
 		return "", err
 	}
-	return dbos.RunAsStep(ctx, stepTwo, "")
+	return dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+		return stepTwo(stepCtx)
+	})
 }
 
-func stepOne(ctx context.Context, _ string) (string, error) {
+func stepOne(ctx context.Context) (string, error) {
 	fmt.Println("Step one completed!")
 	return "Step 1 completed", nil
 }
 
-func stepTwo(ctx context.Context, _ string) (string, error) {
+func stepTwo(ctx context.Context) (string, error) {
 	fmt.Println("Step two completed!")
 	return "Step 2 completed - Workflow finished successfully", nil
 }
