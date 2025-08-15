@@ -35,11 +35,11 @@ func checkoutWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 		dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
 			return updateOrderStatus(stepCtx, UpdateOrderStatusInput{OrderID: orderID, OrderStatus: CANCELLED})
 		})
-		err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInputGeneric[string]{Key: PAYMENT_ID, Message: ""})
+		err = dbos.SetEvent(ctx, dbos.GenericWorkflowSetEventInput[string]{Key: PAYMENT_ID, Message: ""})
 		return "", err
 	}
 
-	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInputGeneric[string]{Key: PAYMENT_ID, Message: workflowID})
+	err = dbos.SetEvent(ctx, dbos.GenericWorkflowSetEventInput[string]{Key: PAYMENT_ID, Message: workflowID})
 	if err != nil {
 		logger.WithError(err).WithFields(logrus.Fields{"order": orderID, "payment": workflowID}).Error("payment event creation failed")
 		return "", err
@@ -63,7 +63,7 @@ func checkoutWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 		dbos.RunAsWorkflow(ctx, dispatchOrderWorkflow, orderID)
 	}
 
-	err = dbos.SetEvent(ctx, dbos.WorkflowSetEventInputGeneric[string]{Key: ORDER_ID, Message: strconv.Itoa(orderID)})
+	err = dbos.SetEvent(ctx, dbos.GenericWorkflowSetEventInput[string]{Key: ORDER_ID, Message: strconv.Itoa(orderID)})
 	if err != nil {
 		logger.WithError(err).WithField("order", orderID).Error("order event creation failed")
 		return "", err

@@ -18,12 +18,13 @@ go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@lat
 
 2. Set database URL:
 ```bash
-export DBOS_DATABASE_URL="postgres://postgres:dbos@localhost:5432/widget_store_go"
+createdb -h localhost -U postgres widget_store_go
+export DBOS_SYSTEM_DATABASE_URL="postgres://postgres:dbos@localhost:5432/widget_store_go"
 ```
 
 3. Run migration:
 ```bash
-migrate -path ./migrations -database $DBOS_DATABASE_URL up
+migrate -path ./migrations -database $DBOS_SYSTEM_DATABASE_URL up
 ```
 
 ## Running the App

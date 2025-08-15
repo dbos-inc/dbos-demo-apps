@@ -122,7 +122,7 @@ func paymentEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *logrus.Lo
 	paymentID := c.Param("payment_id")
 	paymentStatus := c.Param("payment_status")
 
-	err := dbos.Send[string](dbosCtx, dbos.WorkflowSendInput[string]{DestinationID: paymentID, Topic: PAYMENT_STATUS, Message: paymentStatus})
+	err := dbos.Send[string](dbosCtx, dbos.GenericWorkflowSendInput[string]{DestinationID: paymentID, Topic: PAYMENT_STATUS, Message: paymentStatus})
 	if err != nil {
 		logger.WithError(err).WithFields(logrus.Fields{"payment": paymentID, "status": paymentStatus}).Error("payment notification failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process payment"})

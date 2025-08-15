@@ -3,7 +3,7 @@ module widget-store
 go 1.23.2
 
 require (
-	github.com/dbos-inc/dbos-transact-go v0.0.0-20250725003851-7c7dc42a2de3
+	github.com/dbos-inc/dbos-transact-go v1.0.0-alpha4
 	github.com/gin-gonic/gin v1.10.1
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/sirupsen/logrus v1.9.3
@@ -52,5 +52,3 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/dbos-inc/dbos-transact-go => /Users/max/codeZ/dbos-transact-golang

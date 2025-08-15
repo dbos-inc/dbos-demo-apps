@@ -2,11 +2,11 @@
 
 # Build the application
 build:
-	go build -o widget-store main.go
+	go build -o widget-store .
 
 # Run the application
 run:
-	go run main.go
+	go run .
 
 # Clean build artifacts
 clean:
