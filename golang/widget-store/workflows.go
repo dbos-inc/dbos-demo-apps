@@ -74,7 +74,7 @@ func checkoutWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 func dispatchOrderWorkflow(ctx dbos.DBOSContext, orderID int) (string, error) {
 	fmt.Println("Dispatching order", orderID)
 	for range 10 {
-		_, err := ctx.Sleep(time.Second)
+		_, err := dbos.Sleep(ctx, time.Second)
 		if err != nil {
 			logger.WithError(err).WithField("order", orderID).Error("dispatch delay failed")
 			return "", err
