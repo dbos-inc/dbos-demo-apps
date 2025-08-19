@@ -3,7 +3,7 @@ module widget-store
 go 1.23.2
 
 require (
-	github.com/dbos-inc/dbos-transact-go v1.0.0-alpha4
+	github.com/dbos-inc/dbos-transact-go v0.5.1-alpha
 	github.com/gin-gonic/gin v1.10.1
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/sirupsen/logrus v1.9.3
