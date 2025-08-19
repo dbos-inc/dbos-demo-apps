@@ -108,7 +108,7 @@ func checkoutEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *logrus.L
 		return
 	}
 
-	payment_id, err := dbos.GetEvent[string](dbosCtx, dbos.WorkflowGetEventInput{TargetWorkflowID: idempotencyKey, Key: PAYMENT_ID, Timeout: 60 * time.Second})
+	payment_id, err := dbos.GetEvent[string](dbosCtx, idempotencyKey, PAYMENT_ID, 60 * time.Second)
 	if err != nil || payment_id == "" {
 		logger.WithField("key", idempotencyKey).Error("payment ID retrieval failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Checkout failed"})
@@ -122,14 +122,14 @@ func paymentEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *logrus.Lo
 	paymentID := c.Param("payment_id")
 	paymentStatus := c.Param("payment_status")
 
-	err := dbos.Send[string](dbosCtx, dbos.GenericWorkflowSendInput[string]{DestinationID: paymentID, Topic: PAYMENT_STATUS, Message: paymentStatus})
+	err := dbos.Send(dbosCtx, paymentID, paymentStatus, PAYMENT_STATUS)
 	if err != nil {
 		logger.WithError(err).WithFields(logrus.Fields{"payment": paymentID, "status": paymentStatus}).Error("payment notification failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process payment"})
 		return
 	}
 
-	orderID, err := dbos.GetEvent[string](dbosCtx, dbos.WorkflowGetEventInput{TargetWorkflowID: paymentID, Key: ORDER_ID, Timeout: 60 * time.Second})
+	orderID, err := dbos.GetEvent[string](dbosCtx, paymentID, ORDER_ID, 60 * time.Second)
 	if err != nil || orderID == "" {
 		logger.WithField("payment", paymentID).Error("order ID retrieval failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Payment failed to process"})
