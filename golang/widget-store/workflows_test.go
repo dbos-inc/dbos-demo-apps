@@ -41,13 +41,13 @@ func TestCheckoutWorkflow(t *testing.T) {
 		orderID := 1
 
 		dbosCtx.On("GetWorkflowID").Return(wfID, nil)
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(orderID, nil).Once()
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(true, nil).Once()
-		dbosCtx.On("SetEvent", dbosCtx, mock.Anything).Return(nil).Once()
-		dbosCtx.On("Recv", dbosCtx, mock.Anything).Return("failed", nil).Once()
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return("", nil).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(orderID, nil).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(true, nil).Once()
+		dbosCtx.On("SetEvent", dbosCtx, mock.Anything, mock.Anything).Return(nil).Once()
+		dbosCtx.On("Recv", dbosCtx, mock.Anything, mock.Anything).Return("failed", nil).Once()
 		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return("", nil).Once()
-		dbosCtx.On("SetEvent", dbosCtx, mock.Anything).Return(nil).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return("", nil).Once()
+		dbosCtx.On("SetEvent", dbosCtx, mock.Anything, mock.Anything).Return(nil).Once()
 
 		result, err := checkoutWorkflow(dbosCtx, "")
 		assert.NoError(t, err)
@@ -74,7 +74,7 @@ func TestCheckoutWorkflow(t *testing.T) {
 		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return("", nil).Once()
 
 		// SetEvent for empty payment
-		dbosCtx.On("SetEvent", dbosCtx, mock.Anything).Return(nil).Once()
+		dbosCtx.On("SetEvent", dbosCtx, mock.Anything, mock.Anything).Return(nil).Once()
 
 		result, err := checkoutWorkflow(dbosCtx, "")
 		assert.NoError(t, err) // Inventory failure doesn't return error, just logs warning
@@ -90,21 +90,21 @@ func TestCheckoutWorkflow(t *testing.T) {
 		dbosCtx.On("GetWorkflowID").Return(wfID, nil)
 
 		// createOrder and reserveInventory succeed
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(orderID, nil).Once()
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(true, nil).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(orderID, nil).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(true, nil).Once()
 
 		// SetEvent for payment
-		dbosCtx.On("SetEvent", dbosCtx, mock.Anything).Return(nil).Once()
+		dbosCtx.On("SetEvent", dbosCtx, mock.Anything, mock.Anything).Return(nil).Once()
 
 		// Recv times out
-		dbosCtx.On("Recv", dbosCtx, mock.Anything).Return("", errors.New("timeout")).Once()
+		dbosCtx.On("Recv", dbosCtx, mock.Anything, mock.Anything).Return("", errors.New("timeout")).Once()
 
 		// Undo reservation and cancel order
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return("", nil).Once() // undoReserveInventory
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return("", nil).Once() // updateOrderStatus CANCELLED
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return("", nil).Once() // undoReserveInventory
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return("", nil).Once() // updateOrderStatus CANCELLED
 
 		// SetEvent for order
-		dbosCtx.On("SetEvent", dbosCtx, mock.Anything).Return(nil).Once()
+		dbosCtx.On("SetEvent", dbosCtx, mock.Anything, mock.Anything).Return(nil).Once()
 
 		result, err := checkoutWorkflow(dbosCtx, "")
 		assert.NoError(t, err)
@@ -120,21 +120,21 @@ func TestCheckoutWorkflow(t *testing.T) {
 		dbosCtx.On("GetWorkflowID").Return(wfID, nil)
 
 		// createOrder and reserveInventory succeed
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(orderID, nil).Once()
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(true, nil).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(orderID, nil).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(true, nil).Once()
 
 		// SetEvent for payment
-		dbosCtx.On("SetEvent", dbosCtx, mock.Anything).Return(nil).Once()
+		dbosCtx.On("SetEvent", dbosCtx, mock.Anything, mock.Anything).Return(nil).Once()
 
 		// Recv payment status - failed
-		dbosCtx.On("Recv", dbosCtx, mock.Anything).Return("failed", nil).Once()
+		dbosCtx.On("Recv", dbosCtx, mock.Anything, mock.Anything).Return("failed", nil).Once()
 
 		// Undo reservation and cancel order
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return("", nil).Once() // undoReserveInventory
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return("", nil).Once() // updateOrderStatus CANCELLED
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return("", nil).Once() // undoReserveInventory
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return("", nil).Once() // updateOrderStatus CANCELLED
 
 		// SetEvent for order
-		dbosCtx.On("SetEvent", dbosCtx, mock.Anything).Return(nil).Once()
+		dbosCtx.On("SetEvent", dbosCtx, mock.Anything, mock.Anything).Return(nil).Once()
 
 		result, err := checkoutWorkflow(dbosCtx, "")
 		assert.NoError(t, err)
@@ -149,7 +149,7 @@ func TestCheckoutWorkflow(t *testing.T) {
 		dbosCtx.On("GetWorkflowID").Return(wfID, nil)
 
 		// createOrder step fails
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(0, errors.New("database error")).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(0, errors.New("database error")).Once()
 
 		result, err := checkoutWorkflow(dbosCtx, "")
 		assert.Error(t, err)
@@ -181,8 +181,8 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 
 		// Mock 10 iterations of sleep and progress updates
 		for i := 0; i < 10; i++ {
-			dbosCtx.On("Sleep", time.Second).Return(time.Second, nil).Once()
-			dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(10-i-1, nil).Once() // Progress decreasing
+			dbosCtx.On("Sleep", dbosCtx, time.Second).Return(time.Second, nil).Once()
+			dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(10-i-1, nil).Once() // Progress decreasing
 		}
 
 		result, err := dispatchOrderWorkflow(dbosCtx, orderID)
@@ -196,7 +196,7 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 		orderID := 2
 
 		// First sleep fails
-		dbosCtx.On("Sleep", time.Second).Return(time.Duration(0), errors.New("sleep error")).Once()
+		dbosCtx.On("Sleep", dbosCtx, time.Second).Return(time.Duration(0), errors.New("sleep error")).Once()
 
 		result, err := dispatchOrderWorkflow(dbosCtx, orderID)
 		assert.Error(t, err)
@@ -210,8 +210,8 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 		orderID := 3
 
 		// First sleep succeeds, but progress update fails
-		dbosCtx.On("Sleep", time.Second).Return(time.Second, nil).Once()
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(0, errors.New("database update error")).Once()
+		dbosCtx.On("Sleep", dbosCtx, time.Second).Return(time.Second, nil).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(0, errors.New("database update error")).Once()
 
 		result, err := dispatchOrderWorkflow(dbosCtx, orderID)
 		assert.Error(t, err)
@@ -226,13 +226,13 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 
 		// Successfully complete 5 iterations, fail on 6th
 		for i := 0; i < 5; i++ {
-			dbosCtx.On("Sleep", time.Second).Return(time.Second, nil).Once()
-			dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(10-i-1, nil).Once()
+			dbosCtx.On("Sleep", dbosCtx, time.Second).Return(time.Second, nil).Once()
+			dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(10-i-1, nil).Once()
 		}
 
 		// 6th iteration - sleep succeeds but step fails
-		dbosCtx.On("Sleep", time.Second).Return(time.Second, nil).Once()
-		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(0, errors.New("mid-execution error")).Once()
+		dbosCtx.On("Sleep", dbosCtx, time.Second).Return(time.Second, nil).Once()
+		dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(0, errors.New("mid-execution error")).Once()
 
 		result, err := dispatchOrderWorkflow(dbosCtx, orderID)
 		assert.Error(t, err)
@@ -247,8 +247,8 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 
 		// Test with a different orderID to ensure it's passed correctly
 		for i := 0; i < 10; i++ {
-			dbosCtx.On("Sleep", time.Second).Return(time.Second, nil).Once()
-			dbosCtx.On("RunAsStep", dbosCtx, mock.Anything).Return(5-i%6, nil).Once() // Different progress pattern
+			dbosCtx.On("Sleep", dbosCtx, time.Second).Return(time.Second, nil).Once()
+			dbosCtx.On("RunAsStep", dbosCtx, mock.Anything, mock.Anything).Return(5-i%6, nil).Once() // Different progress pattern
 		}
 
 		result, err := dispatchOrderWorkflow(dbosCtx, orderID)
