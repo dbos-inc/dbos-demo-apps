@@ -21,7 +21,7 @@ import com.example.widgetstore.generated.tables.pojos.Orders;
 import com.example.widgetstore.generated.tables.pojos.Products;
 import com.example.widgetstore.model.OrderStatus;
 
-import dev.dbos.transact.DBOS;
+import dev.dbos.transact.context.DBOSContext;
 import dev.dbos.transact.workflow.Step;
 import dev.dbos.transact.workflow.Workflow;
 
@@ -30,12 +30,10 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
     
     private static final Logger logger = LoggerFactory.getLogger(WidgetStoreServiceImpl.class);
 
-    private final DBOS dbos;
     private final DSLContext dsl;
 
-    public WidgetStoreServiceImpl(DBOS dbos, DSLContext dsl) {
+    public WidgetStoreServiceImpl(DSLContext dsl) {
         this.dsl = dsl;
-        this.dbos = dbos;
     }
 
     private WidgetStoreService service;
@@ -153,6 +151,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
     @Workflow(name = "checkoutWorkflow")
     public String checkoutWorkflow(String key) {
+        var dbos = DBOSContext.dbosInstance().get();
         Integer orderId = service.createOrder();
         try {
             service.subtractInventory();
@@ -182,11 +181,13 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
     @Workflow(name = "tempSendWorkflow")
     public void tempSendWorkflow(String destinationId, Object message, String topic) {
+        var dbos = DBOSContext.dbosInstance().get();
         dbos.send(destinationId, message, topic);
     }
 
     @Workflow(name = "dispatchOrderWorkflow")
     public void dispatchOrderWorkflow(Integer orderId) {
+        var dbos = DBOSContext.dbosInstance().get();
         for (int i = 0; i < 10; i++) {
             dbos.sleep(1);
             service.updateOrderProgress(orderId);

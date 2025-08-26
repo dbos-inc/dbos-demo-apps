@@ -17,7 +17,7 @@ public class DBOSConfigInitializer {
     public WidgetStoreService widgetStoreServiceProxy(DBOS dbos, DSLContext dslContext) {
         WidgetStoreService proxy = dbos.<WidgetStoreService>Workflow()
                 .interfaceClass(WidgetStoreService.class)
-                .implementation(new WidgetStoreServiceImpl(dbos, dslContext))
+                .implementation(new WidgetStoreServiceImpl(dslContext))
                 .async()
                 .build();
         proxy.setWidgetStoreService(proxy);
