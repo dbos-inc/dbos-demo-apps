@@ -7,7 +7,7 @@ package mocks
 import (
 	"time"
 
-	"github.com/dbos-inc/dbos-transact-go/dbos"
+	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -36,39 +36,6 @@ type MockDBOSContext_Expecter struct {
 
 func (_m *MockDBOSContext) EXPECT() *MockDBOSContext_Expecter {
 	return &MockDBOSContext_Expecter{mock: &_m.Mock}
-}
-
-// Cancel provides a mock function for the type MockDBOSContext
-func (_mock *MockDBOSContext) Cancel() {
-	_mock.Called()
-	return
-}
-
-// MockDBOSContext_Cancel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Cancel'
-type MockDBOSContext_Cancel_Call struct {
-	*mock.Call
-}
-
-// Cancel is a helper method to define mock.On call
-func (_e *MockDBOSContext_Expecter) Cancel() *MockDBOSContext_Cancel_Call {
-	return &MockDBOSContext_Cancel_Call{Call: _e.mock.On("Cancel")}
-}
-
-func (_c *MockDBOSContext_Cancel_Call) Run(run func()) *MockDBOSContext_Cancel_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockDBOSContext_Cancel_Call) Return() *MockDBOSContext_Cancel_Call {
-	_c.Call.Return()
-	return _c
-}
-
-func (_c *MockDBOSContext_Cancel_Call) RunAndReturn(run func()) *MockDBOSContext_Cancel_Call {
-	_c.Run(run)
-	return _c
 }
 
 // CancelWorkflow provides a mock function for the type MockDBOSContext
@@ -1166,8 +1133,8 @@ func (_c *MockDBOSContext_RunAsStep_Call) RunAndReturn(run func(dBOSContext dbos
 	return _c
 }
 
-// RunAsWorkflow provides a mock function for the type MockDBOSContext
-func (_mock *MockDBOSContext) RunAsWorkflow(dBOSContext dbos.DBOSContext, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error) {
+// RunWorkflow provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) RunWorkflow(dBOSContext dbos.DBOSContext, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error) {
 	var tmpRet mock.Arguments
 	if len(opts) > 0 {
 		tmpRet = _mock.Called(dBOSContext, fn, input, opts)
@@ -1177,7 +1144,7 @@ func (_mock *MockDBOSContext) RunAsWorkflow(dBOSContext dbos.DBOSContext, fn dbo
 	ret := tmpRet
 
 	if len(ret) == 0 {
-		panic("no return value specified for RunAsWorkflow")
+		panic("no return value specified for RunWorkflow")
 	}
 
 	var r0 dbos.WorkflowHandle[any]
@@ -1200,22 +1167,22 @@ func (_mock *MockDBOSContext) RunAsWorkflow(dBOSContext dbos.DBOSContext, fn dbo
 	return r0, r1
 }
 
-// MockDBOSContext_RunAsWorkflow_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RunAsWorkflow'
-type MockDBOSContext_RunAsWorkflow_Call struct {
+// MockDBOSContext_RunWorkflow_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RunWorkflow'
+type MockDBOSContext_RunWorkflow_Call struct {
 	*mock.Call
 }
 
-// RunAsWorkflow is a helper method to define mock.On call
+// RunWorkflow is a helper method to define mock.On call
 //   - dBOSContext dbos.DBOSContext
 //   - fn dbos.WorkflowFunc
 //   - input any
 //   - opts ...dbos.WorkflowOption
-func (_e *MockDBOSContext_Expecter) RunAsWorkflow(dBOSContext interface{}, fn interface{}, input interface{}, opts ...interface{}) *MockDBOSContext_RunAsWorkflow_Call {
-	return &MockDBOSContext_RunAsWorkflow_Call{Call: _e.mock.On("RunAsWorkflow",
+func (_e *MockDBOSContext_Expecter) RunWorkflow(dBOSContext interface{}, fn interface{}, input interface{}, opts ...interface{}) *MockDBOSContext_RunWorkflow_Call {
+	return &MockDBOSContext_RunWorkflow_Call{Call: _e.mock.On("RunWorkflow",
 		append([]interface{}{dBOSContext, fn, input}, opts...)...)}
 }
 
-func (_c *MockDBOSContext_RunAsWorkflow_Call) Run(run func(dBOSContext dbos.DBOSContext, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption)) *MockDBOSContext_RunAsWorkflow_Call {
+func (_c *MockDBOSContext_RunWorkflow_Call) Run(run func(dBOSContext dbos.DBOSContext, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption)) *MockDBOSContext_RunWorkflow_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 dbos.DBOSContext
 		if args[0] != nil {
@@ -1245,12 +1212,12 @@ func (_c *MockDBOSContext_RunAsWorkflow_Call) Run(run func(dBOSContext dbos.DBOS
 	return _c
 }
 
-func (_c *MockDBOSContext_RunAsWorkflow_Call) Return(workflowHandle dbos.WorkflowHandle[any], err error) *MockDBOSContext_RunAsWorkflow_Call {
+func (_c *MockDBOSContext_RunWorkflow_Call) Return(workflowHandle dbos.WorkflowHandle[any], err error) *MockDBOSContext_RunWorkflow_Call {
 	_c.Call.Return(workflowHandle, err)
 	return _c
 }
 
-func (_c *MockDBOSContext_RunAsWorkflow_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error)) *MockDBOSContext_RunAsWorkflow_Call {
+func (_c *MockDBOSContext_RunWorkflow_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption) (dbos.WorkflowHandle[any], error)) *MockDBOSContext_RunWorkflow_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1384,6 +1351,46 @@ func (_c *MockDBOSContext_SetEvent_Call) Return(err error) *MockDBOSContext_SetE
 
 func (_c *MockDBOSContext_SetEvent_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, key string, message any) error) *MockDBOSContext_SetEvent_Call {
 	_c.Call.Return(run)
+	return _c
+}
+
+// Shutdown provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) Shutdown(timeout time.Duration) {
+	_mock.Called(timeout)
+	return
+}
+
+// MockDBOSContext_Shutdown_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Shutdown'
+type MockDBOSContext_Shutdown_Call struct {
+	*mock.Call
+}
+
+// Shutdown is a helper method to define mock.On call
+//   - timeout time.Duration
+func (_e *MockDBOSContext_Expecter) Shutdown(timeout interface{}) *MockDBOSContext_Shutdown_Call {
+	return &MockDBOSContext_Shutdown_Call{Call: _e.mock.On("Shutdown", timeout)}
+}
+
+func (_c *MockDBOSContext_Shutdown_Call) Run(run func(timeout time.Duration)) *MockDBOSContext_Shutdown_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 time.Duration
+		if args[0] != nil {
+			arg0 = args[0].(time.Duration)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_Shutdown_Call) Return() *MockDBOSContext_Shutdown_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *MockDBOSContext_Shutdown_Call) RunAndReturn(run func(timeout time.Duration)) *MockDBOSContext_Shutdown_Call {
+	_c.Run(run)
 	return _c
 }
 

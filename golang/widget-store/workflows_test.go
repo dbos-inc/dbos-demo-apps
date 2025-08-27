@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"widget-store/mocks"
@@ -19,15 +20,14 @@ func setupTestDB(t *testing.T) {
 	testDatabaseURL := "postgres://postgres:dbos@localhost:5432/widget_store_test"
 	d, err := pgxpool.New(context.Background(), testDatabaseURL)
 	if err != nil {
-		logger.WithError(err).Fatal("database connection failed")
+		logger.Error("database connection failed", "error", err)
+		os.Exit(1)
 	}
 	db = d
 
-	logger = logrus.New()
-	logger.SetFormatter(&logrus.JSONFormatter{
-		TimestampFormat: time.RFC3339,
-	})
-	logger.SetLevel(logrus.InfoLevel)
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
 }
 
 func TestCheckoutWorkflow(t *testing.T) {
