@@ -2,51 +2,56 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"time"
 
-	"github.com/dbos-inc/dbos-transact-go/dbos"
+	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/sirupsen/logrus"
 )
 
 var (
 	db     *pgxpool.Pool
-	logger *logrus.Logger
+	logger *slog.Logger
 )
 
 func main() {
-	logger = logrus.New()
-	logger.SetFormatter(&logrus.JSONFormatter{
-		TimestampFormat: time.RFC3339,
-	})
-	logger.SetLevel(logrus.InfoLevel)
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
 
 	dbURL := os.Getenv("DBOS_SYSTEM_DATABASE_URL")
 	if dbURL == "" {
-		logger.Fatal("DBOS_SYSTEM_DATABASE_URL required")
+		logger.Error("DBOS_SYSTEM_DATABASE_URL required")
+		os.Exit(1)
 	}
 
 	dbosContext, err := dbos.NewDBOSContext(dbos.Config{
-		AppName:     "widget_store_go",
-		DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+		AppName:         "gogogo",
+		DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+		AdminServer:     true,
+		Logger:          logger,
+		ConductorAPIKey: os.Getenv("DBOS_CONDUCTOR_API_KEY"),
 	})
 	if err != nil {
-		logger.WithError(err).Fatal("DBOS initialization failed")
+		logger.Error("DBOS initialization failed", "error", err)
+		os.Exit(1)
 	}
 	dbos.RegisterWorkflow(dbosContext, checkoutWorkflow)
 	dbos.RegisterWorkflow(dbosContext, dispatchOrderWorkflow)
 
 	err = dbosContext.Launch()
 	if err != nil {
-		logger.WithError(err).Fatal("DBOS service start failed")
+		logger.Error("DBOS service start failed", "error", err)
+		os.Exit(1)
 	}
-	defer dbosContext.Cancel()
+	defer dbosContext.Shutdown(10 * time.Second)
 
 	db, err = pgxpool.New(context.Background(), dbURL)
 	if err != nil {
-		logger.WithError(err).Fatal("database connection failed")
+		logger.Error("database connection failed", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -65,6 +70,7 @@ func main() {
 	r.POST("/crash_application", func(c *gin.Context) { crashApplication(c, logger) })
 
 	if err := r.Run(":8080"); err != nil {
-		logger.WithError(err).Fatal("HTTP server start failed")
+		logger.Error("HTTP server start failed", "error", err)
+		os.Exit(1)
 	}
 }

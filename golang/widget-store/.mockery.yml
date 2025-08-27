@@ -12,6 +12,6 @@ require-template-schema-exists: true
 template: testify
 template-schema: '{{.Template}}.schema.json'
 packages:
-  github.com/dbos-inc/dbos-transact-go/dbos:
+  github.com/dbos-inc/dbos-transact-golang/dbos:
     interfaces:
       DBOSContext:
