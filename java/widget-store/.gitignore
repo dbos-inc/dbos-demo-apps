@@ -1,0 +1,9 @@
+.gradle
+build/
+bin/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store

@@ -1,0 +1,107 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.2'
+    id 'io.spring.dependency-management' version '1.1.6'
+    id 'nu.studer.jooq' version '9.0'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main/java', 'build/generated-src/jooq/main'
+        }
+    }
+}
+
+dependencies {
+    // DBOS
+    implementation 'dev.dbos:transact:0.5.+'
+    
+    // Spring Boot starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // Database
+    implementation 'org.postgresql:postgresql'
+    
+    // jOOQ
+    jooqGenerator 'org.postgresql:postgresql'
+    
+    // Development tools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+
+// jOOQ configuration
+jooq {
+    version = dependencyManagement.importedProperties['jooq.version']
+    edition = nu.studer.gradle.jooq.JooqEdition.OSS
+    
+    configurations {
+        main {
+            generateSchemaSourceOnCompilation = true
+            
+            generationTool {
+                logging = org.jooq.meta.jaxb.Logging.WARN
+                
+                jdbc {
+                    driver = 'org.postgresql.Driver'
+                    url = project.findProperty('jooq.url') ?: 'jdbc:postgresql://localhost:5432/widget_store_java'
+                    user = project.findProperty('jooq.user') ?: 'postgres'
+                    password = project.findProperty('jooq.password') ?: 'dbos'
+                }
+                
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+                    
+                    database {
+                        name = 'org.jooq.meta.postgres.PostgresDatabase'
+                        inputSchema = 'public'
+                    }
+                    
+                    target {
+                        packageName = 'com.example.widgetstore.generated'
+                        directory = 'build/generated-src/jooq/main'
+                    }
+                    
+                    generate {
+                        pojos = true
+                        daos = true
+                        validationAnnotations = true
+                        springAnnotations = true
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+springBoot {
+    mainClass = 'com.example.widgetstore.WidgetStoreApplication'
+}
