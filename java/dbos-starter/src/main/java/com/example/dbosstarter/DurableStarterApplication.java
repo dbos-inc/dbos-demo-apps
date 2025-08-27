@@ -1,13 +1,13 @@
-package com.example.DbosStarter;
+package com.example.dbosstarter;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DbosStarterApplication {
+public class DurableStarterApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DbosStarterApplication.class, args);
+		SpringApplication.run(DurableStarterApplication.class, args);
 	}
 
 }

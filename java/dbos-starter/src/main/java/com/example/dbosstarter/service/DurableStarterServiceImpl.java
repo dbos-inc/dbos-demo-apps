@@ -1,4 +1,4 @@
-package com.example.DbosStarter.service;
+package com.example.dbosstarter.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,14 +7,14 @@ import dev.dbos.transact.context.DBOSContext;
 import dev.dbos.transact.workflow.Step;
 import dev.dbos.transact.workflow.Workflow;
 
-public class DbosStarterServiceImpl implements DbosStarterService {
+public class DurableStarterServiceImpl implements DurableStarterService {
 
-    private DbosStarterService self;
+    private DurableStarterService self;
     private static final String stepsEvent = "steps_event";
-    private static final Logger logger = LoggerFactory.getLogger(DbosStarterServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(DurableStarterServiceImpl.class);
 
     @Override
-    public void setDbosStarterService(DbosStarterService self) {
+    public void setDbosStarterService(DurableStarterService self) {
         this.self = self;
     }
 
