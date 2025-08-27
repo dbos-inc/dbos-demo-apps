@@ -51,7 +51,7 @@ func stepTwo(ctx context.Context) (string, error) {
 /*****************************/
 
 func QueuedStepWorkflow(ctx dbos.DBOSContext, i int) (int, error) {
-	ctx.Sleep(5 * time.Second)
+	dbos.Sleep(ctx, 5*time.Second)
 	fmt.Printf("Step %d completed!\n", i)
 	return i, nil
 }
@@ -60,7 +60,7 @@ func QueueWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 	fmt.Println("Enqueueing steps")
 	handles := make([]dbos.WorkflowHandle[int], 10)
 	for i := range 10 {
-		handle, err := dbos.RunAsWorkflow(ctx, QueuedStepWorkflow, i, dbos.WithQueue("example-queue"))
+		handle, err := dbos.RunWorkflow(ctx, QueuedStepWorkflow, i, dbos.WithQueue("example-queue"))
 		if err != nil {
 			return "", fmt.Errorf("failed to enqueue step %d: %w", i, err)
 		}
@@ -93,6 +93,7 @@ func main() {
 	dbosCtx, err = dbos.NewDBOSContext(dbos.Config{
 		DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AppName:     "dbos-toolbox",
+		AdminServer: true,
 	})
 	if err != nil {
 		panic(err)
@@ -112,7 +113,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer dbosCtx.Cancel()
+	defer dbosCtx.Shutdown(10 * time.Second)
 
 	// HTTP Handlers
 	http.HandleFunc("/", homepageHandler)
@@ -132,7 +133,7 @@ func main() {
 /*****************************/
 
 func workflowHandler(w http.ResponseWriter, r *http.Request) {
-	handle, err := dbos.RunAsWorkflow(dbosCtx, ExampleWorkflow, "")
+	handle, err := dbos.RunWorkflow(dbosCtx, ExampleWorkflow, "")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error: %s", err), http.StatusInternalServerError)
 		return
@@ -146,7 +147,7 @@ func workflowHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func queueHandler(w http.ResponseWriter, r *http.Request) {
-	handle, err := dbos.RunAsWorkflow(dbosCtx, QueueWorkflow, "")
+	handle, err := dbos.RunWorkflow(dbosCtx, QueueWorkflow, "")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error: %s", err), http.StatusInternalServerError)
 		return
