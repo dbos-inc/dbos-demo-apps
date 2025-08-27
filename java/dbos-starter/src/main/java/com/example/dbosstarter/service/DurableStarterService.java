@@ -2,7 +2,9 @@ package com.example.dbosstarter.service;
 
 public interface DurableStarterService {
 
-    void setDbosStarterService(DurableStarterService service);
+    public static final String STEPS_EVENT = "steps_event";
+
+    void setDurableStarterService(DurableStarterService service);
 
     void exampleWorkflow();
 
