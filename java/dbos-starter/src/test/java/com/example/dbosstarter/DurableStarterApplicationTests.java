@@ -1,10 +1,10 @@
-package com.example.DbosStarter;
+package com.example.dbosstarter;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DbosStarterApplicationTests {
+class DurableStarterApplicationTests {
 
 	@Test
 	void contextLoads() {
