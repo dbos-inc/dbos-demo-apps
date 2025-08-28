@@ -12,9 +12,6 @@ dependencies = [
     "python-dotenv>=1.0.0",
 ]
 
-[project.scripts]
-hn-agent = "hacker_news_agent.cli:main"
-
 [tool.uv]
 dev-dependencies = [
     "pytest>=7.0.0",
