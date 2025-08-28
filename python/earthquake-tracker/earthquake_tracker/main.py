@@ -17,9 +17,13 @@ from sqlalchemy.dialects.postgresql import insert
 
 from .schema import earthquake_tracker
 
+application_database_url = os.environ.get('DBOS_DATABASE_URL')
+if not application_database_url:
+    raise Exception("DBOS_DATABASE_URL not set")
+
 config: DBOSConfig = {
     "name": "earthquake-tracker",
-    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+    "application_database_url": application_database_url,
 }
 DBOS(config=config)
 

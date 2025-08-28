@@ -38,7 +38,9 @@ st.markdown(
 
 
 def load_data():
-    database_url = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/earthquake_tracker?connect_timeout=5")
+    database_url = os.environ.get('DBOS_DATABASE_URL')
+    if not database_url:
+        raise Exception("DBOS_DATABASE_URL not set")
     engine = create_engine(database_url)
     query = (
         select(earthquake_tracker)
