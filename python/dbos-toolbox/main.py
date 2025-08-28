@@ -11,7 +11,7 @@ app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-toolbox",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-    "application_database_url": os.environ.get("DBOS_DATABASE_URL"), # This is only needed if you are using transactions
+    "application_database_url": os.environ.get("DBOS_DATABASE_URL"), # This is only needed if using "@DBOS.transaction"
 }
 DBOS(fastapi=app, config=config)
 
