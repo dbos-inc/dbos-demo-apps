@@ -1,17 +1,17 @@
 import os
 import time
 
+import sqlalchemy as sa
 import uvicorn
 from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-from schema import example_table
-
 app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-toolbox",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "application_database_url": os.environ.get("DBOS_DATABASE_URL"), # This is only needed if you are using transactions
 }
 DBOS(fastapi=app, config=config)
 
@@ -79,21 +79,15 @@ def run_every_15min(scheduled_time, actual_time):
 
 
 @DBOS.transaction()
-def insert_row():
-    DBOS.sql_session.execute(example_table.insert().values(name="dbos"))
-
-
-@DBOS.transaction()
-def count_rows():
-    count = DBOS.sql_session.execute(example_table.select()).rowcount
-    DBOS.logger.info(f"Row count: {count}")
+def select_one():
+    DBOS.sql_session.execute(sa.text("SELECT 1"))
 
 
 @app.get("/transaction")
 @DBOS.workflow()
 def transaction_workflow():
-    insert_row()
-    count_rows()
+    select_one()
+    DBOS.logger.info("Transaction succeeded")
 
 
 ##################################
