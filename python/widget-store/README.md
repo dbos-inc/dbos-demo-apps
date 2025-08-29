@@ -19,7 +19,13 @@ pip install dbos
 dbos postgres start
 ```
 
-If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Set the `DBOS_DATABASE_URL` environment variable to connect to this database:
+
+```shell
+export DBOS_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/widget_store"
+```
+
+If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your own connection string.
 
 3. Run database migrations:
 

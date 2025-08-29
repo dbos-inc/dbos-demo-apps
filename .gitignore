@@ -140,3 +140,6 @@ dist
 # Editor temp/recovery files
 *.swp
 *.swo
+
+# SQLite
+*.sqlite
