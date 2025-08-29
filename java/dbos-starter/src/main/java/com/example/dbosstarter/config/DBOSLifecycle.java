@@ -4,6 +4,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import dev.dbos.transact.DBOS;
@@ -18,7 +19,7 @@ public class DBOSLifecycle implements ApplicationListener<ApplicationEvent>  {
     }
 
     @Override
-    public void onApplicationEvent(ApplicationEvent event) {
+    public void onApplicationEvent(@NonNull ApplicationEvent event) {
         if (event instanceof ApplicationReadyEvent) {
             dbos.launch();
         } else if (event instanceof ContextClosedEvent) {
