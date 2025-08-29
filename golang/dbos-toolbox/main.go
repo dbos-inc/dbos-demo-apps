@@ -120,9 +120,8 @@ func main() {
 	http.HandleFunc("/workflow", workflowHandler)
 	http.HandleFunc("/queue", queueHandler)
 
-	// Start the server on port 8000 to match Python version
-	fmt.Println("Server starting on http://localhost:8000")
-	err = http.ListenAndServe(":8000", nil)
+	fmt.Println("Server starting on http://localhost:8080")
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		fmt.Printf("Error starting server: %s\n", err)
 	}
