@@ -2,7 +2,7 @@
 
 DBOS powered utility for performant, durable and observable transfers between S3 buckets.
 
-Created in collaboration with Bristol Myers Squibb. Read our joint manuscript about this app here:
+Created in collaboration with Bristol Myers Squibb. Read our joint manuscript here:
 https://www.biorxiv.org/content/10.1101/2025.06.13.657723v1
 
 ## Running the app on your system
@@ -18,12 +18,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Set up Postgres
-If you have Docker on your machine, this is the easiest path:
-```bash
-dbos postgres start
-```
-Alternatively, if you have a Postgres DB somewhere, set the variable `DBOS_DATABASE_URL` appropriately. See https://docs.dbos.dev/python/programming-guide
+### 2. Optional: Set up Postgres
+
+By default, the app will use SQLite. To use Postgres instead, set the variable `DBOS_SYSTEM_DATABASE_URL` appropriately. See https://docs.dbos.dev/python/programming-guide
 
 ### 3. Start the App
 Export the AWS credentials and launch like so
@@ -36,7 +33,7 @@ dbos start
 ```
 
 ### 4. Run a Transfer
-In another window, edit the file `start_transfer_example.py` and replace `YOUR_BUCKET_HERE` with the bucket to write to (using the creds exported above). It's currently configured to read from the public Google Genomics bucket, so you don't need to change `src_` settings for a test. 
+In the file `start_transfer_example.py` replace `YOUR_BUCKET_HERE` with the bucket to write to (using the creds exported above). The file is configured to read from the public Google Genomics bucket, so you don't need to change `src_` values for a test. 
 
 Then run
 ```bash
@@ -98,7 +95,6 @@ dbos-cloud app env create -s AWS_SECRET_ACCESS_KEY -v "AWS_SECRET_ACCESS_KEY"
 dbos-cloud app env create -s AWS_DEFAULT_REGION -v "us-east-1" #substitute for your case
 dbos-cloud app deploy
 ```
-If you need to provide other environment variables, add them to the `env` section of `dbos-config.yaml`. 
 
 This starts a Postgres server for you in the cloud, uploads your app and returns a URL. You can now use this URL as the base in `start_transfer_example.py` to start transfers.
 
@@ -108,4 +104,4 @@ You can use the [Dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-das
 
 You can upgrade to DBOS Pro at https://console.dbos.dev. This will make transfers auto-scale to multiple workers and increase speed by over 4x. You can further tune the performance by starting a [linking a larger Postgres database](https://docs.dbos.dev/production/dbos-cloud/cloud-cli#dbos-cloud-db-link) and increasing your [per-vm RAM](https://docs.dbos.dev/production/dbos-cloud/cloud-cli#dbos-cloud-db-link).
 
-See also https://docs.dbos.dev/
+For more, see https://docs.dbos.dev/
