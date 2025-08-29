@@ -8,13 +8,7 @@ language: python
 runtimeConfig:
   start:
     - "fastapi run app/main.py"
-database:
-  hostname: localhost
-  port: 5432
-  username: postgres
-  password: ${PGPASSWORD}
-  migrate:
-    - echo "no migration"
+system_database_url: ${DBOS_SYSTEM_DATABASE_URL}
 telemetry:
   logs:
     logLevel: INFO

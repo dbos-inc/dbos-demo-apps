@@ -1,22 +1,19 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
 import boto3
 from boto3.s3.transfer import TransferConfig
 from botocore.config import Config
 from dbos import DBOS, DBOSConfig, Queue
 import time
 from typing import List, Optional
-import threading
 import os
 from dataclasses import dataclass
 from enum import Enum
 from pydantic import BaseModel
-from sqlalchemy import text
 
 app = FastAPI()
 config: DBOSConfig = {
-    "name": "dbos-",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "name": "s3mirror",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 
