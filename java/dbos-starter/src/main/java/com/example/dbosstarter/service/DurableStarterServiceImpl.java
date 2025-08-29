@@ -11,7 +11,7 @@ public class DurableStarterServiceImpl implements DurableStarterService {
 
     private static final Logger logger = LoggerFactory.getLogger(DurableStarterServiceImpl.class);
 
-    private DurableStarterService self;
+    DurableStarterService self;
 
     public void setDurableStarterService(DurableStarterService service) {
         this.self = service;
