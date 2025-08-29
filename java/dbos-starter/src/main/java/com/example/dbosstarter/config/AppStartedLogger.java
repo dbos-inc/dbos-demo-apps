@@ -1,4 +1,4 @@
-package com.example.dbosstarter.service;
+package com.example.dbosstarter.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,5 +23,4 @@ public class AppStartedLogger implements ApplicationListener<WebServerInitialize
         int port = event.getWebServer().getPort();
         logger.info("{} started at http://localhost:{}", appName, port);
     }
-
 }
