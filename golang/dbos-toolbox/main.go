@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dbos-inc/dbos-transact-go/dbos"
+	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
 // Configuration structure
