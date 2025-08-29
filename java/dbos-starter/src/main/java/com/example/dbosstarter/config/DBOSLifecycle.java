@@ -23,7 +23,7 @@ public class DBOSLifecycle implements ApplicationListener<ApplicationEvent>  {
         if (event instanceof ApplicationReadyEvent) {
             dbos.launch();
         } else if (event instanceof ContextClosedEvent) {
-            dbos.shutdown(); // cleanup resources
+            dbos.shutdown();
         }
     }
 }
