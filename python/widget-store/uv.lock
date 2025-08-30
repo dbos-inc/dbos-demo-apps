@@ -294,7 +294,7 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "1.7.0"
+version = "1.13.0a6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -316,9 +316,9 @@ dependencies = [
     { name = "typing-extensions", marker = "python_full_version < '3.10'" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/10/4503d5604643760b0109e644ac69f389d7fab119191fa3790fe53a3d76f9/dbos-1.7.0.tar.gz", hash = "sha256:7f5150f0265cdd5674218b68e9fa3555c52b07c4c4c2578dea110a1f183be8d4", size = 190686 }
+sdist = { url = "https://files.pythonhosted.org/packages/b1/5c/594dc4405d8570d14fe3e4c9a7d57569e17daaa251426be6693c511a5d53/dbos-1.13.0a6.tar.gz", hash = "sha256:462e195434879350f0c802dc647c0dc379afd111214637e01debd701dc7b0279", size = 209055 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/cf/b157e0b9513a9b83bcb49cbf4cbdec32982d1e94f1568164a22b5b1fe0ff/dbos-1.7.0-py3-none-any.whl", hash = "sha256:1c0dd24d9c8a2f794828b387a209cb2a6a8d264f42ec53a7505223ab794521fa", size = 133901 },
+    { url = "https://files.pythonhosted.org/packages/40/2c/796e5eb3e220e60a82ed5de34216f503da253e2d4bb0db9afd1be4a1070b/dbos-1.13.0a6-py3-none-any.whl", hash = "sha256:1d1abb59aa3986ceb340b8c403bf845b70bb11a36d5c10cd62b265966ba2306c", size = 146452 },
 ]
 
 [[package]]
@@ -1991,7 +1991,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "dbos", specifier = ">=1.7.0" }]
+requires-dist = [{ name = "dbos", specifier = ">=1.13.0a6" }]
 
 [[package]]
 name = "zipp"

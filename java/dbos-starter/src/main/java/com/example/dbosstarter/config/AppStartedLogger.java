@@ -1,10 +1,11 @@
-package com.example.dbosstarter.service;
+package com.example.dbosstarter.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,9 +20,8 @@ public class AppStartedLogger implements ApplicationListener<WebServerInitialize
     }
 
     @Override
-    public void onApplicationEvent(WebServerInitializedEvent event) {
+    public void onApplicationEvent(@NonNull WebServerInitializedEvent event) {
         int port = event.getWebServer().getPort();
-        logger.info("{} started at http://localhost:{}", appName, port);
+        logger.info("🚀 {} Server is running on http://localhost:{}", appName, port);
     }
-
 }

@@ -4,41 +4,40 @@ This app uses DBOS to stream earthquake data from the USGS into Postgres then di
 
 Check out the source code for the data ingestion in `earthquake_tracker/main.py` and the Streamlit visualization in `earthquake_tracker/streamlit.py`.
 
-### Deploying to the Cloud
+## Setup
 
-To deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then, run this command to deploy your app:
-
-```shell
-dbos-cloud app deploy
-```
-
-This command outputs a URL--visit it to see some earthquakes!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
-
-### Running Locally
-
-To run this app locally, you need a Postgres database.
-If you have Docker, you can start one with:
-
-```shell
-export PGPASSWORD=dbos
-python3 start_postgres_docker.py
-```
-
-Then run:
+1. Install dependencies and activate your virtual environment
 
 ```shell
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install dbos
+```
+
+2. Start Postgres in a local Docker container:
+
+```bash
+dbos postgres start
+```
+
+Set the `DBOS_DATABASE_URL` environment variable to connect to this database:
+
+```shell
+export DBOS_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/earthquake_tracker"
+```
+
+If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your own connection string.
+
+3. Run database migrations:
+
+```shell
 dbos migrate
+```
+
+4. Start your app:
+
+```shell
 dbos start
 ```
 
-Visit [`http://localhost:8000`](http://localhost:8000) to see some earthquakes!
+Visit [`http://localhost:8000`](http://localhost:8000) to see your app!

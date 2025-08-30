@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 @Configuration
-public class DBOSConfigInitializer {
+public class WidgetStoreConfig {
 
     @Bean
     @Primary
@@ -24,9 +24,9 @@ public class DBOSConfigInitializer {
         return proxy;
     }
 
-    @Bean
-    public DBOS initDBOS() {
-        DBOSConfig config = new DBOSConfig.Builder()
+    @Bean 
+    DBOSConfig dbosConfig() {
+        return new DBOSConfig.Builder()
                 .name("widget-store")
                 .dbHost("localhost")
                 .dbPort(5432)
@@ -35,9 +35,10 @@ public class DBOSConfigInitializer {
                 .sysDbName("widget_store_java")
                 .runAdminServer()
                 .build();
+    }
 
-        DBOS dbos = DBOS.initialize(config);
-        dbos.launch();
-        return dbos;
+    @Bean
+    public DBOS dbos(DBOSConfig config) {
+        return DBOS.initialize(config);
     }
 }

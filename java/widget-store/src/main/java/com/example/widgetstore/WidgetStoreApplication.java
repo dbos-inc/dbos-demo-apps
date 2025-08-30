@@ -8,6 +8,5 @@ public class WidgetStoreApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(WidgetStoreApplication.class, args);
-        System.out.println("🚀 Server is running on http://localhost:3000");
     }
 }

@@ -15,7 +15,9 @@ if config.config_file_name is not None:
 
 
 # Programmatically set the sqlalchemy.url field to the DBOS application database URL
-conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/document_detective?connect_timeout=5")
+conn_string = os.environ.get("DBOS_DATABASE_URL")
+if not conn_string:
+    raise Exception("DBOS_DATABASE_URL not set")
 config.set_main_option("sqlalchemy.url", conn_string)
 
 
