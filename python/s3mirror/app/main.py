@@ -3,11 +3,9 @@ import boto3
 from boto3.s3.transfer import TransferConfig
 from botocore.config import Config
 from dbos import DBOS, DBOSConfig, Queue
-import time
 from typing import List, Optional
 import os
 from dataclasses import dataclass
-from enum import Enum
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -57,27 +55,17 @@ class BucketPaths:
     dst_bucket: str
     dst_prefix: str
 
-class TransferStatus(Enum):
-    QUEUED = 0
-    TRANSFERRING = 1
-    SUCCESS = 2
-    ERROR = 3
-
 @dataclass
 class FileTransferTask:
-    idx:        int
-    key:        str
-    size:       float
-    status:     TransferStatus
-    t_start:    float = 0
-    t_end:      float = 0
-    error_text: str   = ""
+    idx:         int
+    key:         str
+    size:        float
+    workflow_id: str
 
 @DBOS.step(retries_allowed=True, max_attempts=3)
 def s3_transfer_file(buckets: BucketPaths, task: FileTransferTask):
-    # Transfer the file
+    DBOS.span.set_attribute("s3mirror_key", task.key)
     DBOS.logger.info(f"{DBOS.workflow_id} starting transfer {task.idx}: {task.key}")
-    t_start = time.time()
     s3.copy(
         CopySource= {
             'Bucket': buckets.src_bucket,
@@ -91,14 +79,7 @@ def s3_transfer_file(buckets: BucketPaths, task: FileTransferTask):
             multipart_chunksize=FILE_CHUNK_SIZE_BYTES
         )
     )
-    t_end = time.time()
-    elapsed = (t_end-t_start)
-    DBOS.logger.info(f"{DBOS.workflow_id} finished transfer {task.idx}: {task.key} in {elapsed:.1f} seconds")
-    task.status = TransferStatus.SUCCESS
-    task.t_start = t_start
-    task.t_end = t_end
-    return task
-
+    DBOS.logger.info(f"{DBOS.workflow_id} finished transfer {task.idx}: {task.key}")
 
 ## The main transfer job logic
 transfer_queue = Queue("transfer_queue", concurrency = MAX_FILES_AT_A_TIME, worker_concurrency = MAX_FILES_PER_WORKER)
@@ -106,31 +87,12 @@ transfer_queue = Queue("transfer_queue", concurrency = MAX_FILES_AT_A_TIME, work
 @DBOS.workflow()
 def transfer_job(buckets: BucketPaths, tasks: List[FileTransferTask]):
     DBOS.logger.info(f"{DBOS.workflow_id} starting {len(tasks)} transfers from {buckets.src_bucket}/{buckets.src_prefix} to {buckets.dst_bucket}/{buckets.dst_prefix}")
-    DBOS.set_event('tasks', tasks)
     # For each task, start a workflow on the queue
-    handles = [ transfer_queue.enqueue(s3_transfer_file, task = task, buckets = buckets) for task in tasks ]
-    # Babysit them until all finish. 
-    # Note: much of this loop can be removed and transfer_status can be rewritten to use the new DBOS.list_workflows instead
-    while not all( [ task.status in [ TransferStatus.SUCCESS, TransferStatus.ERROR ] for task in tasks ] ):
-        DBOS.sleep(1)
-        for i, (task, handle) in enumerate(zip(tasks, handles)):
-            workflow_status = handle.get_status().status
-            if workflow_status in ["SUCCESS", "ERROR", "RETRIES_EXCEEDED"]:
-                try:
-                    tasks[i] = handle.get_result()
-                except Exception as exn:
-                    tasks[i].status = TransferStatus.ERROR
-                    tasks[i].error_text = str(exn)    
-            elif workflow_status == "ENQUEUED":
-                tasks[i].status = TransferStatus.QUEUED
-            elif workflow_status == "PENDING":
-                tasks[i].status = TransferStatus.TRANSFERRING           
-            elif workflow_status == "CANCELLED":
-                tasks[i].status = TransferStatus.ERROR
-                tasks[i].error_text = "Transfer cancelled"
-        # Update for the status page
-        DBOS.set_event('tasks', tasks)
-    DBOS.logger.info(f"{DBOS.workflow_id} all files finished")
+    for task in tasks:
+         handle = transfer_queue.enqueue(s3_transfer_file, task = task, buckets = buckets)
+         task.workflow_id = handle.workflow_id
+    # Store the description and ID of each transfer in the workflow context
+    DBOS.set_event('tasks', tasks)
 
 ## The API Endpoints
 class TransferSchema(BaseModel):
@@ -168,8 +130,9 @@ def start_transfer(transfer_spec: TransferSchema):
     # Create tasks and pass them to a transfer job
     tasks = []
     for i, (key, size) in enumerate(zip(keys, sizes)):
-        tasks.append(FileTransferTask(idx = i, key = key, size = size, status = TransferStatus.QUEUED))
+        tasks.append(FileTransferTask(idx = i, key = key, size = size, workflow_id = None))
     handle = DBOS.start_workflow(transfer_job, buckets, tasks)
+    DBOS.logger.info(f"Started transfer {handle.workflow_id}")
     return handle.workflow_id
 
 @app.get("/transfer_status/{transfer_id}")
@@ -178,28 +141,26 @@ def transfer_status(transfer_id: str):
     if tasks is None:
         raise HTTPException(status_code=404, detail="Transfer not found")
     filewise_status = []
-    n_transferred = n_error = total_size = 0
+    n_transferred = n_error = transferred_size = 0
+    t_start = t_end = None
     for task in tasks:
+        workflow_summary = DBOS.list_workflows(workflow_ids=[task.workflow_id])[0]
         filewise_status.append({
             'file':   task.key,
             'size':   task.size,
-            'status': task.status.name,
-            'tstart': task.t_start,
-            'tend':   task.t_end,
-            'error':  task.error_text
+            'status': workflow_summary.status,
+            'tstart': workflow_summary.created_at,
+            'tend':   (workflow_summary.updated_at if workflow_summary.status == "SUCCESS" else None),
+            'error':  str(workflow_summary.error)
         })
-        if task.status == TransferStatus.SUCCESS:
-            total_size += task.size
+        if workflow_summary.status == "SUCCESS":
+            t_start = workflow_summary.created_at if t_start is None else min(t_start, workflow_summary.created_at)
+            t_end = workflow_summary.updated_at if t_end is None else max(t_end, workflow_summary.updated_at)
             n_transferred += 1
-        elif task.status == TransferStatus.ERROR:
-            n_error += 1    
-    try:
-        t_start = min([ task.t_start for task in tasks if task.status == TransferStatus.SUCCESS ])
-        t_end   = max([ task.t_end for task in tasks if task.status == TransferStatus.SUCCESS ])
-        transfer_rate = total_size / (t_end - t_start) if n_transferred > 0 else 0
-    except Exception as e:
-        # In case there's a divide by 0 somehow
-        transfer_rate = None
+            transferred_size += task.size
+        elif workflow_summary.status == "ERROR":
+            n_error += 1
+    transfer_rate = transferred_size * 1000.0 / (t_end - t_start) if transferred_size > 0 and (t_start != t_end) else 0
     return {
         'files': len(tasks),
         'transferred': n_transferred,
@@ -214,9 +175,8 @@ def cancel(transfer_id: str):
     tasks = DBOS.get_event(transfer_id, 'tasks', timeout_seconds=0)
     if tasks is None:
         raise HTTPException(status_code=404, detail="Transfer not found")
-    workflows = DBOS.list_workflows(workflow_id_prefix=transfer_id)
-    for workflow in workflows:
-        DBOS.cancel_workflow(workflow.workflow_id)
+    for task in tasks:
+        DBOS.cancel_workflow(task.workflow_id)
 
 # Finally, this endpoint crashes your app. For demonstration purposes only. :)
 @app.post("/crash_application")
