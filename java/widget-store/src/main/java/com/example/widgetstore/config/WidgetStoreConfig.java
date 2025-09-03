@@ -4,6 +4,9 @@ import com.example.widgetstore.service.WidgetStoreService;
 import com.example.widgetstore.service.WidgetStoreServiceImpl;
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.config.DBOSConfig;
+
+import java.util.Objects;
+
 import org.jooq.DSLContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,8 +33,8 @@ public class WidgetStoreConfig {
                 .name("widget-store")
                 .dbHost("localhost")
                 .dbPort(5432)
-                .dbUser("postgres")
-                .dbPassword("dbos")
+                .dbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
+                .dbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
                 .sysDbName("widget_store_java")
                 .runAdminServer()
                 .build();
