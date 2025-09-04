@@ -29,6 +29,11 @@ public class DBOSLifecycle  {
     @EventListener
     public void onContextClosed(ContextClosedEvent event) {
         logger.debug("onContextClosed - dbos.shutdown()");
-        dbos.shutdown();
+        try {
+            dbos.shutdown();
+        }
+        catch (Exception e) {
+            logger.debug("onContextClosed - dbos.shutdown() exception", e);
+        }
     }
 }

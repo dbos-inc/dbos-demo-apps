@@ -63,13 +63,13 @@ jooq {
             generateSchemaSourceOnCompilation = true
             
             generationTool {
-                logging = org.jooq.meta.jaxb.Logging.WARN
+                logging = org.jooq.meta.jaxb.Logging.DEBUG
                 
                 jdbc {
                     driver = 'org.postgresql.Driver'
                     url = project.findProperty('jooq.url') ?: 'jdbc:postgresql://localhost:5432/widget_store_java'
-                    user = project.findProperty('jooq.user') ?: 'postgres'
-                    password = project.findProperty('jooq.password') ?: 'dbos'
+                    user = project.findProperty('jooq.user') ?: System.getenv('PGUSER') ?: 'postgres'
+                    password = project.findProperty('jooq.password') ?: System.getenv('PGPASSWORD') ?: 'dbos'
                 }
                 
                 generator {
