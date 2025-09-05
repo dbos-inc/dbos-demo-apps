@@ -12,7 +12,7 @@ go mod tidy
 
 ### Database Migration
 
-1. Install the DBOS Go CLI and start Postgrse in a local Docker container:
+1. Install the DBOS Go CLI and start Postgres in a local Docker container:
 
 ```bash
 go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
