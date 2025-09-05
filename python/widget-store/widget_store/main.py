@@ -18,7 +18,7 @@ from .schema import OrderStatus, orders, products
 app = FastAPI()
 config: DBOSConfig = {
     "name": "widget-store",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 

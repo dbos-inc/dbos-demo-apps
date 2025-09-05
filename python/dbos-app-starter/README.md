@@ -12,15 +12,7 @@ source .venv/bin/activate
 pip install dbos
 ```
 
-2. Start Postgres in a local Docker container:
-
-```bash
-dbos postgres start
-```
-
-If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
-
-3. Start your app:
+2. Start your app:
 
 ```shell
 python3 app/main.py

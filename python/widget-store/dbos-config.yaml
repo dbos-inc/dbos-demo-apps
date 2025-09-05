@@ -2,6 +2,7 @@
 
 name: widget-store
 language: python
+database_url: ${DBOS_DATABASE_URL}
 runtimeConfig:
   start:
     - python3 -m widget_store.main
@@ -9,6 +10,3 @@ database:
   migrate:
     - alembic upgrade head
     - python3 -m migrations.reset_database
-telemetry:
-  logs:
-    logLevel: INFO

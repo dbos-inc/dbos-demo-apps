@@ -16,11 +16,6 @@ source .venv/bin/activate
 export OPENAI_API_KEY='your-api-key-here'
 ```
 
-3. Start PostgreSQL (required for DBOS):
-```bash
-dbos postgres start
-```
-
 ## Usage
 
 ```bash

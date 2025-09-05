@@ -5,4 +5,4 @@
 
 name: hacker-news-agent
 language: python
-database_url: ${DBOS_DATABASE_URL}
+system_database_url: ${DBOS_SYSTEM_DATABASE_URL}

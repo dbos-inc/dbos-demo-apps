@@ -96,7 +96,7 @@ def main():
     try:
         config: DBOSConfig = {
             "name": "hacker-news-agent",
-            "database_url": os.environ.get("DBOS_DATABASE_URL"),
+            "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
         }
         DBOS(config=config, conductor_key=os.environ.get("CONDUCTOR_KEY"))
         DBOS.launch()

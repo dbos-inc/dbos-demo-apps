@@ -4,7 +4,7 @@ import os
 from llama_index.vector_stores.postgres import PGVectorStore
 from sqlalchemy.engine.url import make_url
 
-db = make_url(os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/document_detective?connect_timeout=5"))
+db = make_url(os.environ.get("DBOS_DATABASE_URL"))
 vector_store = PGVectorStore.from_params(
     database=db.database,
     host=db.host,
