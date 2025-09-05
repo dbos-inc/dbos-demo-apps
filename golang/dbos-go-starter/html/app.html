@@ -135,7 +135,7 @@
       <p class="mb-4">DBOS helps you build applications that are <strong>resilient to any failure</strong>.</p>
 
       <p class="mb-4">
-        Simply add DBOS to your existing TypeScript program by registering ordinary functions as workflows and steps. These <b>durably execute</b> your program, persisting its state to a Postgres database. If your
+        Simply add DBOS to your existing Go program by registering ordinary functions as workflows and steps. These <b>durably execute</b> your program, persisting its state to a Postgres database. If your
         program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
       </p>
       <p class="mb-4">
@@ -148,9 +148,9 @@
     <div class="max-w-3xl mx-auto mb-8">
       <div class="flex gap-16 items-center justify-center">
         <!-- Code section -->
-        <div class="w-[400px]">
+        <div class="w-[500px]">
           <div class="rounded-lg shadow-lg overflow-hidden">
-            <pre class="code-block"><div class="step-1"><span class="code-line"><span class="keyword">async</span> <span  class="keyword">function</span> <span class="function">stepOne</span><span class="punctuation">()</span> {</span><span class="code-line function-block">  <span class="keyword">await</span> <span  class="function">sleep</span><span class="punctuation">(</span>5000<span class="punctuation">)</span>;</span><span  class="code-line function-block">  <span class="function">console.log</span><span class="punctuation">(</span><span   class="string">"Completed step 1!"</span><span class="punctuation">)</span></span><span  class="code-line">}</span></div><div> </div><div class="step-2"><span class="code-line"><span  class="keyword">async</span> <span class="keyword">function</span> <span class="function">stepTwo</span><span class="punctuation">()</span> {</span><span class="code-line function-block">  <span class="keyword">await</span> <span class="function">sleep</span><span class="punctuation">(</span>5000<span  class="punctuation">)</span>;</span><span class="code-line function-block">  <span  class="function">console.log</span><span class="punctuation">(</span><span class="string">"Completed step 2!"</span><span class="punctuation">)</span></span><span class="code-line">}</span></div><div> </div><div class="step-3"><span class="code-line"><span  class="keyword">async</span> <span class="keyword">function</span> <span class="function">stepThree</span><span class="punctuation">()</span> {</span><span class="code-line function-block">  <span class="keyword">await</span> <span class="function">sleep</span><span class="punctuation">(</span>5000<span  class="punctuation">)</span>;</span><span class="code-line function-block">  <span  class="function">console.log</span><span class="punctuation">(</span><span class="string">"Completed step 3!"</span><span class="punctuation">)</span></span><span class="code-line">}</span></div><div> </div><span  class="code-line"><span class="keyword">async</span> <span class="keyword">function</span> <span  class="function">workflow</span><span class="punctuation">()</span> {</span><span class="code-line  function-block workflow-step-1">  <span class="keyword">await</span> <span  class="function">DBOS.runStep</span><span class="punctuation">(</span><span class="function">stepOne</span><span  class="punctuation">)</span>;</span><span class="code-line function-block workflow-step-2">  <span  class="keyword">await</span> <span class="function">DBOS.runStep</span><span class="punctuation">(</span><span  class="function">stepTwo</span><span class="punctuation">)</span>;</span><span class="code-line function-block  workflow-step-3">  <span class="keyword">await</span> <span class="function">DBOS.runStep</span><span  class="punctuation">(</span><span class="function">stepThree</span><span class="punctuation">)</span>;</span><span  class="code-line">}</span><div> </div><span class="code-line"><span class="keyword">const</span> <span class="function">wf</span> <span class="punctuation">=</span> <span class="function">DBOS.registerWorkflow</span><span class="punctuation">(</span><span class="function">workflow</span><span class="punctuation">)</span>;</span></pre>
+            <pre class="code-block"><div class="step-1"><span class="code-line"><span class="keyword">func</span> <span class="function">stepOne</span><span class="punctuation">(</span>ctx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">  time.<span class="function">Sleep</span><span class="punctuation">(</span>5 <span class="punctuation">*</span> time.Second<span class="punctuation">)</span></span><span class="code-line function-block">  fmt.<span class="function">Println</span><span class="punctuation">(</span><span class="string">"Step one completed!"</span><span class="punctuation">)</span></span><span class="code-line function-block">  <span class="keyword">return</span> <span class="string">"Step 1 completed"</span><span class="punctuation">,</span> <span class="keyword">nil</span></span><span class="code-line"><span class="punctuation">}</span></span></div><div> </div><div class="step-2"><span class="code-line"><span class="keyword">func</span> <span class="function">stepTwo</span><span class="punctuation">(</span>ctx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">  time.<span class="function">Sleep</span><span class="punctuation">(</span>5 <span class="punctuation">*</span> time.Second<span class="punctuation">)</span></span><span class="code-line function-block">  fmt.<span class="function">Println</span><span class="punctuation">(</span><span class="string">"Step two completed!"</span><span class="punctuation">)</span></span><span class="code-line function-block">  <span class="keyword">return</span> <span class="string">"Step 2 completed"</span><span class="punctuation">,</span> <span class="keyword">nil</span></span><span class="code-line"><span class="punctuation">}</span></span></div><div> </div><div class="step-3"><span class="code-line"><span class="keyword">func</span> <span class="function">stepThree</span><span class="punctuation">(</span>ctx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">  time.<span class="function">Sleep</span><span class="punctuation">(</span>5 <span class="punctuation">*</span> time.Second<span class="punctuation">)</span></span><span class="code-line function-block">  fmt.<span class="function">Println</span><span class="punctuation">(</span><span class="string">"Step three completed!"</span><span class="punctuation">)</span></span><span class="code-line function-block">  <span class="keyword">return</span> <span class="string">"Step 3 completed"</span><span class="punctuation">,</span> <span class="keyword">nil</span></span><span class="code-line"><span class="punctuation">}</span></span></div><div> </div><span class="code-line"><span class="keyword">func</span> <span class="function">ExampleWorkflow</span><span class="punctuation">(</span>ctx dbos.DBOSContext<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block workflow-step-1">  dbos.<span class="function">RunAsStep</span><span class="punctuation">(</span>ctx<span class="punctuation">,</span></span><span class="code-line function-block">    <span class="keyword">func</span><span class="punctuation">(</span>stepCtx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">      <span class="keyword">return</span> <span class="function">stepOne</span><span class="punctuation">(</span>stepCtx<span class="punctuation">)</span></span><span class="code-line function-block">    <span class="punctuation">})</span></span><span class="code-line function-block workflow-step-2">  dbos.<span class="function">RunAsStep</span><span class="punctuation">(</span>ctx<span class="punctuation">,</span></span><span class="code-line function-block">    <span class="keyword">func</span><span class="punctuation">(</span>stepCtx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">      <span class="keyword">return</span> <span class="function">stepTwo</span><span class="punctuation">(</span>stepCtx<span class="punctuation">)</span></span><span class="code-line function-block">    <span class="punctuation">})</span></span><span class="code-line function-block workflow-step-3">  dbos.<span class="function">RunAsStep</span><span class="punctuation">(</span>ctx<span class="punctuation">,</span></span><span class="code-line function-block">    <span class="keyword">func</span><span class="punctuation">(</span>stepCtx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">      <span class="keyword">return</span> <span class="function">stepThree</span><span class="punctuation">(</span>stepCtx<span class="punctuation">)</span></span><span class="code-line function-block">    <span class="punctuation">})</span></span><span class="code-line"><span class="punctuation">}</span></span></pre>
           </div>
         </div>
 
@@ -189,42 +189,15 @@
       <p class="mb-4">
         To see it's really working, check your app's logs. When you crash your app, its process is forcibly exited.
         When the process restarts, it recovers any active workflows from their last completed step
-        <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">(Recovering 1 workflows from...)</code>,
+        <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">(Recovered pending workflows...)</code>,
         then runs the recovered workflows <code
           class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700"
-          >(Completed step...)</code
+          >(Step completed...)</code
         >.
       </p>
-      <p class="mb-4">To build your own crashproof application:</p>
-      <ul class="space-y-3 mb-4">
-        <li class="flex items-start">
-          <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-            <span class="text-blue-600 text-sm">1</span>
-          </span>
-          <code class="bg-gray-100 px-2 py-0.5 rounded">npx @dbos-inc/create@latest --template dbos-node-starter</code>
-        </li>
-        <li class="flex items-start">
-          <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-            <span class="text-blue-600 text-sm">2</span>
-          </span>
-          <code class="bg-gray-100 px-2 py-0.5 rounded">cd dbos-node-starter</code>
-        </li>
-        <li class="flex items-start">
-          <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-            <span class="text-blue-600 text-sm">3</span>
-          </span>
-          <code class="bg-gray-100 px-2 py-0.5 rounded">npm run build</code>
-        </li>
-        <li class="flex items-start">
-          <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-            <span class="text-blue-600 text-sm">4</span>
-          </span>
-          Edit <code class="bg-gray-100 px-2 py-0.5 rounded">src/main.ts</code> to start building!
-        </li>
-      </ul>
       <p class="mb-4">
         Check out the
-        <a href="https://docs.dbos.dev/typescript/programming-guide" target="_blank" class="text-blue-600 hover:underline"
+        <a href="https://docs.dbos.dev/golang/programming-guide" target="_blank" class="text-blue-600 hover:underline"
           >programming guide</a
         >
         to learn how to build with DBOS!
