@@ -719,6 +719,74 @@ func (_c *MockDBOSContext_GetWorkflowID_Call) RunAndReturn(run func() (string, e
 	return _c
 }
 
+// GetWorkflowSteps provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) GetWorkflowSteps(dBOSContext dbos.DBOSContext, workflowID string) ([]dbos.StepInfo, error) {
+	ret := _mock.Called(dBOSContext, workflowID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetWorkflowSteps")
+	}
+
+	var r0 []dbos.StepInfo
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string) ([]dbos.StepInfo, error)); ok {
+		return returnFunc(dBOSContext, workflowID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string) []dbos.StepInfo); ok {
+		r0 = returnFunc(dBOSContext, workflowID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dbos.StepInfo)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, string) error); ok {
+		r1 = returnFunc(dBOSContext, workflowID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDBOSContext_GetWorkflowSteps_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetWorkflowSteps'
+type MockDBOSContext_GetWorkflowSteps_Call struct {
+	*mock.Call
+}
+
+// GetWorkflowSteps is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - workflowID string
+func (_e *MockDBOSContext_Expecter) GetWorkflowSteps(dBOSContext interface{}, workflowID interface{}) *MockDBOSContext_GetWorkflowSteps_Call {
+	return &MockDBOSContext_GetWorkflowSteps_Call{Call: _e.mock.On("GetWorkflowSteps", dBOSContext, workflowID)}
+}
+
+func (_c *MockDBOSContext_GetWorkflowSteps_Call) Run(run func(dBOSContext dbos.DBOSContext, workflowID string)) *MockDBOSContext_GetWorkflowSteps_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_GetWorkflowSteps_Call) Return(stepInfos []dbos.StepInfo, err error) *MockDBOSContext_GetWorkflowSteps_Call {
+	_c.Call.Return(stepInfos, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_GetWorkflowSteps_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, workflowID string) ([]dbos.StepInfo, error)) *MockDBOSContext_GetWorkflowSteps_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Launch provides a mock function for the type MockDBOSContext
 func (_mock *MockDBOSContext) Launch() error {
 	ret := _mock.Called()
