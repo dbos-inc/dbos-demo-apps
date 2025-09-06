@@ -1,4 +1,4 @@
-# DBOS Go Toolbox
+# DBOS Go Starter
 
 This example app demonstrates the durability of DBOS workflows.
 
