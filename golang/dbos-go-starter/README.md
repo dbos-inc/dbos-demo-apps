@@ -1,7 +1,6 @@
 # DBOS Go Toolbox
 
-This app contains example code for many DBOS features, including workflows, steps, queues, and scheduled workflows.
-You can use it as a template when starting a new DBOS app&mdash;start by editing `main.go`.
+This example app demonstrates the durability of DBOS workflows.
 
 To learn more about how to program with DBOS, check out the [DBOS programming guide](https://docs.dbos.dev/golang/programming-guide).
 
@@ -21,7 +20,7 @@ dbos postgres start
 
 3. Set the `DBOS_SYSTEM_DATABASE_URL` environment variable to point to it.
 ```bash
-export DBOS_SYSTEM_DATABASE_URL="postgres://postgres:dbos@localhost:5432/dbos_go_toolbox"
+export DBOS_SYSTEM_DATABASE_URL="postgres://postgres:dbos@localhost:5432/dbos_go_starter"
 ```
 
 ## Running the App
