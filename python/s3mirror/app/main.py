@@ -59,7 +59,7 @@ class FileTransferTask:
     size:        float
     workflow_id: str
 
-s3 = boto3.client('s3', config=Config(max_pool_connections=MAX_FILES_PER_WORKER * MAX_CONCURRENT_REQUESTS_PER_FILE))
+s3 = boto3.client('s3', config = Config(max_pool_connections = MAX_FILES_PER_WORKER * MAX_CONCURRENT_REQUESTS_PER_FILE))
 
 @DBOS.step(retries_allowed=True, max_attempts=3)
 def s3_transfer_file(buckets: BucketPaths, task: FileTransferTask):
