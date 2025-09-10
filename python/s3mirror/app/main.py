@@ -25,9 +25,6 @@ MAX_FILES_PER_WORKER = 3
 MAX_CONCURRENT_REQUESTS_PER_FILE = 100
 FILE_CHUNK_SIZE_BYTES = 16*1024*1024
 
-## S3 Client
-s3 = boto3.client('s3', config=Config(max_pool_connections=MAX_FILES_PER_WORKER * MAX_CONCURRENT_REQUESTS_PER_FILE))
-
 @DBOS.step(retries_allowed=True, max_attempts=3)
 def s3_list_bucket(bucket: str, prefix: str):
     # List with prefix and pagination
@@ -62,10 +59,10 @@ class FileTransferTask:
     size:        float
     workflow_id: str
 
+s3 = boto3.client('s3', config=Config(max_pool_connections=MAX_FILES_PER_WORKER * MAX_CONCURRENT_REQUESTS_PER_FILE))
+
 @DBOS.step(retries_allowed=True, max_attempts=3)
 def s3_transfer_file(buckets: BucketPaths, task: FileTransferTask):
-    DBOS.span.set_attribute("s3mirror_key", task.key)
-    DBOS.logger.info(f"{DBOS.workflow_id} starting transfer {task.idx}: {task.key}")
     s3.copy(
         CopySource= {
             'Bucket': buckets.src_bucket,
@@ -85,13 +82,13 @@ transfer_queue = Queue("transfer_queue", concurrency = MAX_FILES_AT_A_TIME, work
 
 @DBOS.workflow()
 def transfer_job(buckets: BucketPaths, tasks: List[FileTransferTask]):
-    DBOS.logger.info(f"{DBOS.workflow_id} starting {len(tasks)} transfers from {buckets.src_bucket}/{buckets.src_prefix} to {buckets.dst_bucket}/{buckets.dst_prefix}")
+    DBOS.logger.info(f"{DBOS.workflow_id} starting {len(tasks)} transfers")
     for task in tasks:
          handle = transfer_queue.enqueue(s3_transfer_file, task = task, buckets = buckets)
          task.workflow_id = handle.workflow_id
     DBOS.set_event('tasks', tasks)
 
-## The API Endpoints
+
 class TransferSchema(BaseModel):
     src_bucket: str
     src_prefix: str
