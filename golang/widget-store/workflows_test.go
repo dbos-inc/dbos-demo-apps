@@ -172,7 +172,7 @@ func TestCheckoutWorkflow(t *testing.T) {
 }
 
 func TestDispatchOrderWorkflow(t *testing.T) {
-	setupTestDB(t)
+	setupTestDB()
 	defer db.Close()
 
 	t.Run("Happy path - successful dispatch", func(t *testing.T) {
