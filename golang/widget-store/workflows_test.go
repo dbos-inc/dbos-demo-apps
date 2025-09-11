@@ -31,7 +31,7 @@ func setupTestDB() {
 }
 
 func TestCheckoutWorkflow(t *testing.T) {
-	setupTestDB(t)
+	setupTestDB()
 	defer db.Close()
 
 	t.Run("Payment success without dispatch", func(t *testing.T) {
