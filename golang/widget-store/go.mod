@@ -3,7 +3,7 @@ module widget-store
 go 1.23.2
 
 require (
-	github.com/dbos-inc/dbos-transact-golang v0.5.5-beta
+	github.com/dbos-inc/dbos-transact-golang v0.5.5-beta.0.20250911181830-7741ebeaea84
 	github.com/gin-gonic/gin v1.10.1
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/stretchr/testify v1.10.0

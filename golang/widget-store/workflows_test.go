@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func setupTestDB(t *testing.T) {
+func setupTestDB() {
 	testDatabaseURL := "postgres://postgres:dbos@localhost:5432/widget_store_test"
 	d, err := pgxpool.New(context.Background(), testDatabaseURL)
 	if err != nil {

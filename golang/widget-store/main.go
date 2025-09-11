@@ -27,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbosContext, err := dbos.NewDBOSContext(dbos.Config{
+	dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
 		AppName:         "gogogo",
 		DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AdminServer:     true,
