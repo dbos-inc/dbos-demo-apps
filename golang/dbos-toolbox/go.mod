@@ -4,7 +4,7 @@ go 1.23.0
 
 toolchain go1.23.10
 
-require github.com/dbos-inc/dbos-transact-golang v0.5.5-beta
+require github.com/dbos-inc/dbos-transact-golang v0.5.5-beta.0.20250911181830-7741ebeaea84
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.18.3 // indirect

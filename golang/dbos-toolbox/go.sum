@@ -9,6 +9,8 @@ github.com/dbos-inc/dbos-transact-golang v0.5.4-beta h1:X5egwRpcScp5Rbnu3W2fwM3I
 github.com/dbos-inc/dbos-transact-golang v0.5.4-beta/go.mod h1:EeGG6YrGaM4kEVQUdEnolRJAZ+izTq9TuNyoIEs+T5A=
 github.com/dbos-inc/dbos-transact-golang v0.5.5-beta h1:mppRd8TmkAnBKs+yGWZ2KFpqG6bO0UFbH92od/ILVSk=
 github.com/dbos-inc/dbos-transact-golang v0.5.5-beta/go.mod h1:/vujZM3WtZoZSJd/cFd02M8ndDLuGaODR6vCcnxCwQY=
+github.com/dbos-inc/dbos-transact-golang v0.5.5-beta.0.20250911181830-7741ebeaea84 h1:AD1jzJz1d2k7kChYy7oyW38r0Yxb53sSQAIBtdmGfIM=
+github.com/dbos-inc/dbos-transact-golang v0.5.5-beta.0.20250911181830-7741ebeaea84/go.mod h1:aIL1pB+wY2l5ooIRZLnx0LTQk9u2VNGfzvJqVPomXtY=
 github.com/dhui/dktest v0.4.5 h1:uUfYBIVREmj/Rw6MvgmqNAYzTiKOHJak+enB5Di73MM=
 github.com/dhui/dktest v0.4.5/go.mod h1:tmcyeHDKagvlDrz7gDKq4UAJOLIfVZYkfD5OnHDwcCo=
 github.com/distribution/reference v0.6.0 h1:0IXCQ5g4/QMHHkarYzh5l+u8T3t73zM5QvfrDyIgxBk=

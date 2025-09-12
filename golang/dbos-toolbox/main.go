@@ -57,7 +57,6 @@ func QueuedStepWorkflow(ctx dbos.DBOSContext, i int) (int, error) {
 }
 
 func QueueWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
-	fmt.Println("Enqueueing steps")
 	handles := make([]dbos.WorkflowHandle[int], 10)
 	for i := range 10 {
 		handle, err := dbos.RunWorkflow(ctx, QueuedStepWorkflow, i, dbos.WithQueue("example-queue"))
@@ -90,7 +89,7 @@ func ScheduledWorkflow(ctx dbos.DBOSContext, scheduledTime time.Time) (string, e
 func main() {
 	// Create DBOS context
 	var err error
-	dbosCtx, err = dbos.NewDBOSContext(dbos.Config{
+	dbosCtx, err = dbos.NewDBOSContext(context.Background(), dbos.Config{
 		DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AppName:     "dbos-toolbox",
 		AdminServer: true,
