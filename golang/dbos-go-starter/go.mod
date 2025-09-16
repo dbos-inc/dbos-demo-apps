@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.10
 
 require (
-	github.com/dbos-inc/dbos-transact-golang v0.5.5-beta
+	github.com/dbos-inc/dbos-transact-golang v0.5.6-beta
 	github.com/gin-gonic/gin v1.10.1
 )
 
