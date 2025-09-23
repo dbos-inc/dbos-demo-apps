@@ -1,3 +1,5 @@
-dbos==1.13.0
+dbos[otel]==1.15.0a7
 streamlit>=1.41.1
 plotly>=6.0.0
+fastapi[standard]
+alembic
