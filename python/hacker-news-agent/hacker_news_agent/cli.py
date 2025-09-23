@@ -97,8 +97,9 @@ def main():
         config: DBOSConfig = {
             "name": "hacker-news-agent",
             "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+            "conductor_key": os.environ.get("CONDUCTOR_KEY")
         }
-        DBOS(config=config, conductor_key=os.environ.get("CONDUCTOR_KEY"))
+        DBOS(config=config)
         DBOS.launch()
     except Exception as e:
         console.print(f"[bold red]❌ Error initializing DBOS: {e}[/bold red]")
