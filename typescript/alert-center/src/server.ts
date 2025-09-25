@@ -9,7 +9,6 @@ const PORT = parseInt(process.env.NODE_PORT ?? '3000');
 async function main() {
   DBOS.setConfig({
     "name": "alert-center",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
   });
 
   await setUpKafka();

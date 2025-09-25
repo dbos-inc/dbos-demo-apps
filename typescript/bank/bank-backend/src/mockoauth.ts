@@ -1,9 +1,8 @@
 import jwt from 'jsonwebtoken';
 
-import { DBOSResponseError } from '@dbos-inc/dbos-sdk';
 import KoaViews from '@ladjs/koa-views';
 import { dkoa } from './resources';
-import { DBOSKoa, DefaultArgValidate } from '@dbos-inc/koa-serve';
+import { DBOSKoa, DefaultArgValidate, DBOSResponseError } from '@dbos-inc/koa-serve';
 
 const JWT_SECRET = process.env['MOCK_OAUTH_SECRET'] || 'your-secret-goes-here';
 

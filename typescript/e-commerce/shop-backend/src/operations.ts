@@ -1,5 +1,5 @@
-import { DBOS, DBOSResponseError } from '@dbos-inc/dbos-sdk';
-import { DBOSKoa, DefaultArgValidate } from '@dbos-inc/koa-serve';
+import { DBOS } from '@dbos-inc/dbos-sdk';
+import { DBOSKoa, DefaultArgValidate, DBOSResponseError } from '@dbos-inc/koa-serve';
 import bcrypt from 'bcrypt';
 import { Request } from 'koa';
 

@@ -1,13 +1,12 @@
-import {
-  DBOS, DBOSResponseError
-} from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 import KoaViews from '@ladjs/koa-views';
 
 import {
   ArgOptional,
   ArgRequired,
-  DBOSKoa
+  DBOSKoa,
+  DBOSResponseError,
 } from '@dbos-inc/koa-serve';
 
 export const dkoa = new DBOSKoa();
