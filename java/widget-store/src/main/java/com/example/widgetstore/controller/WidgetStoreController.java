@@ -21,7 +21,7 @@ import com.example.widgetstore.dto.ProductDto;
 import com.example.widgetstore.service.WidgetStoreService;
 
 import dev.dbos.transact.DBOS;
-import dev.dbos.transact.context.SetWorkflowID;
+import dev.dbos.transact.StartWorkflowOptions;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -92,10 +92,10 @@ public class WidgetStoreController {
         
         try {
             // Execute the checkout workflow using DBOS
-            try (SetWorkflowID id = new SetWorkflowID(key)) {
-                logger.info("Calling checkoutWorkflow on service: {}", widgetStoreService.getClass().getName());
-                widgetStoreService.checkoutWorkflow(key);
-            }
+            logger.info("Calling checkoutWorkflow on service: {}", widgetStoreService.getClass().getName());
+            var options = new StartWorkflowOptions(key);
+            dbos.startWorkflow(() -> widgetStoreService.checkoutWorkflow(key), options);
+
             String paymentID = (String) dbos.getEvent(key, PAYMENT_ID, 60);
             if (paymentID == null) {
                 return ResponseEntity.internalServerError().body("Item not available");
@@ -113,7 +113,7 @@ public class WidgetStoreController {
         logger.info("Payment webhook called with key: " + key + ", status: " + status);
         
         try {
-            widgetStoreService.tempSendWorkflow(key, status, PAYMENT_STATUS);
+            dbos.startWorkflow(() -> widgetStoreService.tempSendWorkflow(key, status, PAYMENT_STATUS));
             String orderId = (String) dbos.getEvent(key, ORDER_ID, 60);
             return ResponseEntity.ok(orderId);
         } catch (Exception e) {

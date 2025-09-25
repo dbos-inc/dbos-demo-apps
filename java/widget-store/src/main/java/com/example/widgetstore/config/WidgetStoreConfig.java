@@ -21,7 +21,6 @@ public class WidgetStoreConfig {
         WidgetStoreService proxy = dbos.<WidgetStoreService>Workflow()
                 .interfaceClass(WidgetStoreService.class)
                 .implementation(new WidgetStoreServiceImpl(dslContext))
-                .async()
                 .build();
         proxy.setWidgetStoreService(proxy);
         return proxy;
