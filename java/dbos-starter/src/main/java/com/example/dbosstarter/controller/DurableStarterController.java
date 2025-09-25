@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.dbosstarter.service.DurableStarterService;
 
 import dev.dbos.transact.DBOS;
-import dev.dbos.transact.context.SetWorkflowID;
+import dev.dbos.transact.StartWorkflowOptions;
 
 import static com.example.dbosstarter.service.DurableStarterService.STEPS_EVENT;
 
@@ -31,10 +31,8 @@ public class DurableStarterController {
 
     @GetMapping("/workflow/{taskId}")
     public ResponseEntity<Void> startWorkflow(@PathVariable String taskId) {
-        try (var id = new SetWorkflowID(taskId)) {
-            dbos.startWorkflow(() -> { service.exampleWorkflow(); return null; });
-            return ResponseEntity.ok().build();
-        }
+        dbos.startWorkflow(() -> service.exampleWorkflow(), new StartWorkflowOptions(taskId));
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/last_step/{taskId}")

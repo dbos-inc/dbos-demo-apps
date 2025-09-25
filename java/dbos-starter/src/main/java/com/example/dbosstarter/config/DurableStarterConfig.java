@@ -19,7 +19,6 @@ public class DurableStarterConfig {
         var proxy = dbos.<DurableStarterService>Workflow()
             .interfaceClass(DurableStarterService.class)
             .implementation(new DurableStarterServiceImpl())
-            .async()
             .build();
         proxy.setDurableStarterService(proxy);
         return proxy;
