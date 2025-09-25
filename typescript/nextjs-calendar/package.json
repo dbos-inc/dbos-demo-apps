@@ -7,6 +7,7 @@
     "build": "tsc && next build",
     "start": "NODE_ENV=production node dist/src/server.js",
     "test": "npx dbos migrate && jest --detectOpenHandles",
+    "db:setup": "tsx setup-db.mts",
     "lint": "next lint --fix"
   },
   "dependencies": {
@@ -34,7 +35,7 @@
     "react-big-calendar": "^1.18.0",
     "react-dom": "^19.0.0",
     "ts-jest": "^29.3.1",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
     "uuid": "^11.0.5",
     "ws": "^8.18.0"
   },

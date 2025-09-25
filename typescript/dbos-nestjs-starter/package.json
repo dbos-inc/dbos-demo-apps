@@ -7,6 +7,7 @@
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
     "dev": "nodemon",
+    "db:setup": "tsx setup-db.mts",
     "start": "nest start"
   },
   "devDependencies": {
@@ -34,7 +35,7 @@
     "@nestjs/platform-express": "^11.0.9",
     "@nestjs/platform-fastify": "^11.0.9",
     "knex": "3.1.0",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
     "unique-names-generator": "^4.7.1"
   }
 }

@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // We are using DBOS_DATABASE_URL here so this demo application can run in DBOS Cloud.
 
 const databaseUrl = process.env.DBOS_DATABASE_URL || 
-  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'alert_center'}`;
+  `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'dbos_next_calendar'}`;
 
 async function checkDB(knexDB: knex.Knex, dbName: string) {
   const results = await knexDB.raw('SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = ?) as "exists"', [dbName]);
