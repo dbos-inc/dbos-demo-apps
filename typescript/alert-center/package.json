@@ -4,7 +4,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "test": "PGDATABASE=alert_center_test jest --detectOpenHandles",
-    "db:setup": "npx knex migrate:up",
+    "db:setup": "tsx setup-db.mts",
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
     "start": "node dist/server.js",
@@ -32,6 +32,6 @@
     "kafkajs": "^2.2.4",
     "koa": "^3.0.0",
     "liquidjs": "^10.10.1",
-    "ts-node": "^10.9.2"
+    "tsx": "^4.20.5"
   }
 }

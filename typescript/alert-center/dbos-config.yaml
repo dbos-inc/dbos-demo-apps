@@ -8,4 +8,4 @@ runtimeConfig:
   start:
     - npm run start
 database:
-  migrate: ['npx knex migrate:latest']
+  migrate: ['npm run db:setup']
