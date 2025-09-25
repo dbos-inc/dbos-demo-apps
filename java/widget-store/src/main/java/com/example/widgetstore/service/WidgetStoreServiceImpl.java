@@ -165,10 +165,10 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
         String payment_status = (String) dbos.recv(PAYMENT_STATUS, 60);
 
-        if (payment_status.equals("paid")) {
+        if (payment_status != null && payment_status.equals("paid")) {
             logger.info("Payment successful for order {}", orderId);
             service.markOrderPaid(orderId);
-            service.dispatchOrderWorkflow(orderId);
+            dbos.startWorkflow(() -> service.dispatchOrderWorkflow(orderId));
         } else {
             logger.info("Payment failed for order {}", orderId);
             service.errorOrder(orderId);
