@@ -1,1 +1,2 @@
-dbos==1.14.0
+dbos[otel]==2.0.0
+fastapi[standard]
