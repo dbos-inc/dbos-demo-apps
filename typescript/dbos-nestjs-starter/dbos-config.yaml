@@ -6,7 +6,7 @@ language: node
 name: dbos-nest-starter
 database:
   migrate:
-    - npx knex migrate:latest
+    - npm run db:setup
 runtimeConfig:
   start:
     - npx nest start

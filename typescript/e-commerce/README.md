@@ -293,45 +293,6 @@ static async paymentWebhook(): Promise<void> {
 }
 ```
 
-## OpenAPI-based DBOS clients
-
-The `@dbos-inc/dbos-openapi` package provides an `generate` command that generates an [OpenAPI 3.0.3](https://www.openapis.org/)
-definition for a DBOS project.
-This specification can be used to automatically generate strongly typed client code to invoke DBOS HTTP endpoints.
-The E-Commerce app demonstrates this approach.
-
-> Note: Typically, assets such as the generated OpenAPI definition and client code would be generated during the build process instead of checked into the source code repository.
-> For these demo apps, we have added the generated files to this repository in order to minimize the effort for developers trying out the demo.
-> This section describes the steps we went through to produce the OpenAPI definition and the client code.
-
-### Generate OpenAPI Definition
-
-Both the shop and payment backend projects are DBOS projects that have `src/operations.ts` as their operations entrypoint file.
-To generate an OpenAPI definition for a DBOS project, run the `dbos-openapi generate` command from a terminal like this:
-
-``` shell
-# run this in the <root>/e-commerce/payment-backend and <root>/e-commerce/shop-backend folders
-npx dbos-openapi generate src/operations.ts
-```
-
-This will generate the OpenAPI definition file for the project and save it to the `src/openapi.yaml` path.
-
-### Generate Client Code
-
-The shop backend folder contains a `create-openapi-client.sh` script that executes the OpenAPI Generator Docker image
-against the generated OpenAPI definition file (specifying the appropriate generator) and moves the generated code into the
-appropriate frontend project.
-
-There are a variety of tools from different vendors to generate client code from an OpenAPI definition
-such as [Swagger CodeGen](https://swagger.io/tools/swagger-codegen/) and [Microsoft Kiota](https://learn.microsoft.com/en-us/openapi/kiota/overview).
-For this demo, we used [OpenAPI Generator](https://openapi-generator.tech/).
-OpenAPI Generator provides a variety of generators targeting different languages and runtimes.
-We used [typescript-fetch](https://openapi-generator.tech/docs/generators/typescript-fetch) for shop
-and [typescript-node](https://openapi-generator.tech/docs/generators/typescript-node) for payment.
-
-Installing the [OpenAPI Generator CLI](https://openapi-generator.tech/docs/installation) requires Java runtime support.
-They also provide a [Docker image](https://openapi-generator.tech/docs/installation#docker) that acts as a standalone executable.
-
 ## Unit Testing in DBOS
 
 The e-commerce example application demonstrates a number of techniques for testing DBOS application logic before deployment.
