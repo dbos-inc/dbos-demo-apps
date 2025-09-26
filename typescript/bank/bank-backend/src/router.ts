@@ -1,8 +1,8 @@
 import { TransactionHistory } from "@prisma/client";
 import { BankTransactionHistory } from "./workflows/txnhistory.workflows";
-import { DBOS, DBOSResponseError } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import { bankAuthMiddleware, koaLogger, bankJwt } from "./middleware";
-import { DBOSKoa } from "@dbos-inc/koa-serve";
+import { DBOSKoa, DBOSResponseError } from "@dbos-inc/koa-serve";
 import { dkoa } from "./resources";
 
 const bankname = `DBOS Bank - ${process.env.CURRENT_BANK}`;
