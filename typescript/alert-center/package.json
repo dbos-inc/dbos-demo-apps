@@ -27,6 +27,7 @@
     "@dbos-inc/kafkajs-receive": "^3.6.8-preview",
     "@dbos-inc/knex-datasource": "^3.6.8-preview",
     "@dbos-inc/koa-serve": "^3.6.8-preview",
+    "@dbos-inc/otel": "^3.6.8-preview",
     "@koa/router": "^13.1.0",
     "kafkajs": "^2.2.4",
     "koa": "^3.0.0",
