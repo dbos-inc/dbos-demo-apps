@@ -11,6 +11,8 @@ describe("operations", () => {
 
   beforeAll(async () => {
     process.env.PAYMENT_HOST = 'http://localhost:8086';
+    
+    DBOS.setConfig({"name": "shop-backend", "enableOTLP": true, "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL});
     await DBOS.launch();
     dkoa.registerWithApp(koa, router);
 
