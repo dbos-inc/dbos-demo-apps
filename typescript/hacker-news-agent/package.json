@@ -11,7 +11,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.4.12",
+    "@dbos-inc/dbos-sdk": "^3.6.8-preview",
     "commander": "^12.1.0",
     "openai": "^4.67.1"
   },

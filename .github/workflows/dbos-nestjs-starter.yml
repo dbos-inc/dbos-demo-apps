@@ -1,5 +1,4 @@
 name: CI for Nest.js starter
-
 on:
   push:
     branches: [ "main" ]
@@ -16,16 +15,13 @@ on:
       - 'typescript/dbos-nestjs-starter/**'
       - '.github/workflows/dbos-nestjs-starter.yml'
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
         node-version: ['20', '22', '23']
-
     services:
       # Postgres service container
       postgres:
@@ -42,12 +38,16 @@ jobs:
         ports:
           # Maps tcp port 5432 on service container to the host
           - 5432:5432
-
     steps:
       - name: 'Setup postgres config'
         run: |
           docker exec ${{ job.services.postgres.id }} sh -c 'echo "wal_level=logical" >> /var/lib/postgresql/data/postgresql.conf'
           docker restart ${{ job.services.postgres.id }}
+      - name: 'Create database'
+        run: |
+          PGPASSWORD=dbos createdb -h localhost -U postgres dbos_nest_starter
+        env:
+          PGPASSWORD: dbos
       - uses: actions/checkout@v4.1.1
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3

@@ -10,13 +10,15 @@
     "db:setup": "tsx setup-db.mts"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "nodemon": "^3.1.10",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.4.12",
-    "@dbos-inc/knex-datasource": "^3.4.12",
+    "@dbos-inc/dbos-sdk": "^3.6.8-preview",
+    "@dbos-inc/knex-datasource": "^3.6.8-preview",
+    "@dbos-inc/otel": "^3.6.8-preview",
     "dotenv": "^17.2.1",
     "express": "^5.1.0"
   }

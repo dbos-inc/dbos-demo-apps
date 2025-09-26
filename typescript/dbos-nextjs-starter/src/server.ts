@@ -1,4 +1,3 @@
-import 'reflect-metadata';  // ✅ This must be the first import
 import next from 'next';
 import http, { IncomingMessage, ServerResponse } from 'http';
 

@@ -11,7 +11,9 @@ To run this app locally, install dependencies and start your app:
 
 ```shell
 npm install
-npx dbos start
+psql -U postgres -h localhost -c "CREATE DATABASE dbos_nest_starter"
+npx knex migrate:latest
+npm run start
 ```
 
 You may need to set your database environment variables (such as `DBOS_DATABASE_URL`, or `PGPASSWORD` et al).

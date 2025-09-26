@@ -13,6 +13,7 @@ describe("tasks", () => {
     app = new Koa;
     router = new Router();
     dkoa.registerWithApp(app, router);
+    DBOS.setConfig({"name": "nextjs-calendar", "enableOTLP": true})
     await DBOS.launch();
   });
 

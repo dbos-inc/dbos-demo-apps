@@ -53,6 +53,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+      - name: 'Create database'
+        run: |
+          PGPASSWORD=dbos createdb -h localhost -U postgres alert_center
+        env:
+          PGPASSWORD: dbos
       - name: Compile and Test
         working-directory: typescript/alert-center/
         run: |
