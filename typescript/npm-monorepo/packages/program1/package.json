@@ -7,13 +7,14 @@
     "start": "npx dbos start"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^3.0.63",
+    "@types/express": "^5.0.3",
     "nodemon": "^3.1.0",
     "typescript": "^5.4.5"
   },
   "dependencies": {
     "@clerk/backend": "latest",
-    "@dbos-inc/dbos-sdk": "^3.0.63",
+    "@dbos-inc/dbos-sdk": "^3.6.8-preview",
+    "@dbos-inc/otel": "^3.6.8-preview",
     "express": "^4.21.2"
   }
 }
