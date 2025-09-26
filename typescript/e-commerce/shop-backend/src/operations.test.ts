@@ -12,6 +12,7 @@ describe("operations", () => {
   const router = new Router();
 
   beforeAll(async () => {
+    DBOS.setConfig({"name": "shop-backend", "enableOTLP": true})
     await DBOS.launch();
     dkoa.registerWithApp(koa, router);
   });
