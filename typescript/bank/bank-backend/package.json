@@ -14,9 +14,9 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.6.8-preview",
+    "@dbos-inc/dbos-sdk": "^3.6.10-preview",
     "@dbos-inc/koa-serve": "^3.6.8-preview",
-    "@dbos-inc/otel": "^3.6.8-preview",
+    "@dbos-inc/otel": "^3.6.10-preview",
     "@dbos-inc/prisma-datasource": "^3.6.8-preview",
     "@koa/bodyparser": "^5.0.0",
     "@koa/cors": "^5.0.0",

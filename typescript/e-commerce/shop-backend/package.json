@@ -11,10 +11,10 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.6.8-preview",
+    "@dbos-inc/dbos-sdk": "^3.6.10-preview",
     "@dbos-inc/knex-datasource": "^3.6.8-preview",
     "@dbos-inc/koa-serve": "^3.6.8-preview",
-    "@dbos-inc/otel": "^3.6.8-preview",
+    "@dbos-inc/otel": "^3.6.10-preview",
     "@koa/router": "^13.1.0",
     "bcrypt": "^6.0.0",
     "koa": "^3.0.0",

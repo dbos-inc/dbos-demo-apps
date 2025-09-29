@@ -25,9 +25,9 @@
     "typescript-eslint": "^8.24.0"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.6.8-preview",
+    "@dbos-inc/dbos-sdk": "^3.6.10-preview",
     "@dbos-inc/knex-datasource": "^3.6.8-preview",
-    "@dbos-inc/otel": "^3.6.8-preview",
+    "@dbos-inc/otel": "^3.6.10-preview",
     "@nestjs/cli": "^11.0.2",
     "@nestjs/common": "^11.0.9",
     "@nestjs/core": "^11.0.9",
