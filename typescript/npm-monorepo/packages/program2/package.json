@@ -12,8 +12,8 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.6.10-preview",
-    "@dbos-inc/otel": "^3.6.10-preview",
+    "@dbos-inc/dbos-sdk": "^4.0.2",
+    "@dbos-inc/otel": "^4.0.2",
     "express": "^4.21.2"
   }
 }

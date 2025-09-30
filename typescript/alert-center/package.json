@@ -23,11 +23,11 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.6.10-preview",
-    "@dbos-inc/kafkajs-receive": "^3.6.8-preview",
-    "@dbos-inc/knex-datasource": "^3.6.8-preview",
-    "@dbos-inc/koa-serve": "^3.6.8-preview",
-    "@dbos-inc/otel": "^3.6.10-preview",
+    "@dbos-inc/dbos-sdk": "^4.0.2",
+    "@dbos-inc/kafkajs-receive": "^4.0.2",
+    "@dbos-inc/knex-datasource": "^4.0.2",
+    "@dbos-inc/koa-serve": "^4.0.2",
+    "@dbos-inc/otel": "^4.0.2",
     "@koa/router": "^13.1.0",
     "kafkajs": "^2.2.4",
     "koa": "^3.0.0",
