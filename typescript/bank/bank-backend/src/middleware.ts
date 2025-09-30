@@ -1,7 +1,6 @@
-import { DBOSResponseError } from "@dbos-inc/dbos-sdk";
 import jwt from "koa-jwt";
 import logger from "koa-logger";
-import { DBOSKoaAuthContext } from '@dbos-inc/koa-serve';
+import { DBOSKoaAuthContext, DBOSResponseError } from '@dbos-inc/koa-serve';
 
 // If we put these middleware functions in router.ts, txnhistory and accountinfo classes will get undefined middlewares due to circular dependencies.
 

@@ -6,6 +6,7 @@ import Router from '@koa/router';
 const PORT = parseInt(process.env.SHOP_PORT ?? '3000');
 
 async function main() {
+  DBOS.setConfig({"name": "shop-backend", "enableOTLP": true, "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL});
   await DBOS.launch();
   DBOS.logRegisteredEndpoints();
 

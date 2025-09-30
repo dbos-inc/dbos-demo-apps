@@ -21,7 +21,7 @@ export KAFKA_BROKER="localhost:9092"
 # Export your password or other Postgres settings to allow database creation and migration
 export PGPASSWORD="..." 
 # Alternatively, for just running the app, export the URL to the app database
-# export DBOS_DATABASE_URL="postgresql://postgres:dbos@localhost:5432/alert_center"
+# export DBOS_SYSTEM_DATABASE_URL="postgresql://postgres:dbos@localhost:5432/alert_center"
 npm install
 npm run build
 npx dbos migrate

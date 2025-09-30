@@ -10,7 +10,6 @@
     "start": "nest start"
   },
   "devDependencies": {
-    "@dbos-inc/dbos-cloud": "^3.0.63",
     "@dbos-inc/eslint-plugin": "^3.4.1",
     "@nestjs/testing": "^11.0.12",
     "@types/jest": "^29.5.14",
@@ -26,8 +25,9 @@
     "typescript-eslint": "^8.24.0"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.3.10",
-    "@dbos-inc/knex-datasource": "^3.0.63",
+    "@dbos-inc/dbos-sdk": "^4.0.2",
+    "@dbos-inc/knex-datasource": "^4.0.2",
+    "@dbos-inc/otel": "^4.0.2",
     "@nestjs/cli": "^11.0.2",
     "@nestjs/common": "^11.0.9",
     "@nestjs/core": "^11.0.9",

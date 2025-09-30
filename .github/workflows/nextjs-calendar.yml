@@ -53,6 +53,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+      - name: 'Create database'
+        run: |
+          PGPASSWORD=dbos createdb -h localhost -U postgres dbos_next_calendar
+        env:
+          PGPASSWORD: dbos
       - name: Compile and Test
         working-directory: typescript/nextjs-calendar/
         run: |

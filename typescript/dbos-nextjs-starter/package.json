@@ -9,7 +9,8 @@
     "lint": "next lint --fix"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^3.0.63",
+    "@dbos-inc/dbos-sdk": "^4.0.2",
+    "@dbos-inc/otel": "^4.0.2",
     "module-alias": "^2.2.3",
     "next": "^15.2.4",
     "react": "^19.0.0",
