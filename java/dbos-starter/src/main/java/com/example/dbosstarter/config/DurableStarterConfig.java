@@ -1,5 +1,7 @@
 package com.example.dbosstarter.config;
 
+import java.util.Objects;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -24,19 +26,19 @@ public class DurableStarterConfig {
         return proxy;
     }
 
-    @Bean DBOSConfig dbosConfig() {
-        return new DBOSConfig.Builder()
-                .name("dbos-starter")
-                .dbHost("localhost")
-                .dbPort(5432)
-                .dbUser("postgres")
-                .sysDbName("dbos_starter_java")
-                .runAdminServer()
-                .build();
-    }
-
     @Bean
     public DBOS dbos(DBOSConfig config) {
         return DBOS.initialize(config);
     }
+
+    @Bean 
+    DBOSConfig dbosConfig() {
+        return new DBOSConfig.Builder()
+                .appName("dbos-starter")
+                .databaseUrl("jdbc:postgresql://localhost:5432/dbos_starter_java")
+                .dbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
+                .dbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
+                .build();
+    }
+
 }

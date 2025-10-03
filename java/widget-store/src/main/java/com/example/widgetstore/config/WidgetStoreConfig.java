@@ -29,12 +29,10 @@ public class WidgetStoreConfig {
     @Bean 
     DBOSConfig dbosConfig() {
         return new DBOSConfig.Builder()
-                .name("widget-store")
-                .dbHost("localhost")
-                .dbPort(5432)
+                .appName("widget-store")
+                .databaseUrl("jdbc:postgresql://localhost:5432/widget_store_java")
                 .dbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
                 .dbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-                .sysDbName("widget_store_java")
                 .runAdminServer()
                 .build();
     }
