@@ -17,7 +17,7 @@ public class DurableStarterServiceImpl implements DurableStarterService {
         this.self = service;
     }
 
-    @Workflow(name = "exampleWorkflow")
+    @Workflow
     public void exampleWorkflow() {
         var dbos = DBOSContext.dbosInstance().get();
 
@@ -29,7 +29,7 @@ public class DurableStarterServiceImpl implements DurableStarterService {
         dbos.setEvent(STEPS_EVENT, 3);
     }
 
-    @Step(name = "stepOne")
+    @Step
     public void stepOne() {
         try {
             Thread.sleep(5000);
@@ -40,7 +40,7 @@ public class DurableStarterServiceImpl implements DurableStarterService {
         logger.info("Completed step 1!");
     }
 
-    @Step(name = "stepTwo")
+    @Step
     public void stepTwo() {
         try {
             Thread.sleep(5000);
@@ -51,7 +51,7 @@ public class DurableStarterServiceImpl implements DurableStarterService {
         logger.info("Completed step 2!");
     }
 
-    @Step(name = "stepThree")
+    @Step
     public void stepThree() {
         try {
             Thread.sleep(5000);

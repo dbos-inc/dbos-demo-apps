@@ -67,7 +67,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
                 .execute();
     }
 
-    @Step(name = "subtractInventory")
+    @Step
     public void subtractInventory() throws RuntimeException {
         int updated = dsl.update(PRODUCTS)
                 .set(PRODUCTS.INVENTORY, PRODUCTS.INVENTORY.minus(1))
@@ -87,7 +87,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
                 .execute();
     }
 
-    @Step(name = "createOrder")
+    @Step
     public Integer createOrder() {
         return dsl.insertInto(ORDERS)
                 .set(ORDERS.ORDER_STATUS, OrderStatus.PENDING.getValue())
@@ -149,7 +149,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
                 .execute();
     }
 
-    @Workflow(name = "checkoutWorkflow")
+    @Workflow
     public String checkoutWorkflow(String key) {
         var dbos = DBOSContext.dbosInstance().get();
         Integer orderId = service.createOrder();
@@ -179,13 +179,13 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
         return key;
     }
 
-    @Workflow(name = "tempSendWorkflow")
+    @Workflow
     public void tempSendWorkflow(String destinationId, Object message, String topic) {
         var dbos = DBOSContext.dbosInstance().get();
         dbos.send(destinationId, message, topic);
     }
 
-    @Workflow(name = "dispatchOrderWorkflow")
+    @Workflow
     public void dispatchOrderWorkflow(Integer orderId) {
         var dbos = DBOSContext.dbosInstance().get();
         for (int i = 0; i < 10; i++) {
@@ -194,7 +194,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
         }
     }
 
-    @Step(name = "updateOrderProgress")
+    @Step
     public void updateOrderProgress(Integer orderId) {
         Integer progressRemaining = dsl.update(ORDERS)
                 .set(ORDERS.PROGRESS_REMAINING, ORDERS.PROGRESS_REMAINING.minus(1))
