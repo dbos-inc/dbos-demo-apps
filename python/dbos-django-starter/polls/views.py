@@ -8,18 +8,17 @@ def index(request):
 def callWorkflow(request, a, b):
     return JsonResponse(workflow(a, b))
 
-@DBOS.workflow()
-def workflow(a, b):
-    res1 = transaction(a)
-    res2 = step(b)
-    result = res1 + res2
-    return {"result": result}
-    
-@DBOS.transaction()
-def transaction(var):
-    rows = DBOS.sql_session.execute(sa.text("SELECT 1")).fetchall()
-    return var + str(rows[0][0])
 
 @DBOS.step()
-def step(var):
-    return var
+def step_one(a):
+    print("Step one completed!", a)
+
+@DBOS.step()
+def step_two(b):
+    print("Step two completed!", b)
+
+@DBOS.workflow()
+def workflow(a, b):
+    step_one(a)
+    step_two(b)
+    return {"result": "success"}
