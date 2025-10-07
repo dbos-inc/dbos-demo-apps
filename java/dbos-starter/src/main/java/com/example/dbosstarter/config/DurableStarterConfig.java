@@ -31,14 +31,19 @@ public class DurableStarterConfig {
         return DBOS.initialize(config);
     }
 
-    @Bean 
+    @Bean
     DBOSConfig dbosConfig() {
+        String databaseUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
+        if (databaseUrl == null || databaseUrl.isEmpty()) {
+            databaseUrl = "jdbc:postgresql://localhost:5432/dbos_starter_java";
+        }
         return new DBOSConfig.Builder()
                 .appName("dbos-starter")
-                .databaseUrl("jdbc:postgresql://localhost:5432/dbos_starter_java")
+                .databaseUrl(databaseUrl)
                 .dbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
                 .dbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
+                .runAdminServer()
+                .adminServerPort(3001)
                 .build();
     }
-
 }
