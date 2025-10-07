@@ -18,19 +18,21 @@ public class WidgetStoreConfig {
     @Bean
     @Primary
     public WidgetStoreService widgetStoreServiceProxy(DBOS dbos, DSLContext dslContext) {
-        WidgetStoreService proxy = dbos.<WidgetStoreService>Workflow()
-                .interfaceClass(WidgetStoreService.class)
-                .implementation(new WidgetStoreServiceImpl(dslContext))
-                .build();
-        proxy.setWidgetStoreService(proxy);
+        var impl = new WidgetStoreServiceImpl(dslContext);
+	    var proxy = dbos.registerWorkflows(WidgetStoreService.class, impl);
+        impl.setWidgetStoreService(proxy);
         return proxy;
     }
 
-    @Bean 
+    @Bean
     DBOSConfig dbosConfig() {
+        String databaseUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
+        if (databaseUrl == null || databaseUrl.isEmpty()) {
+            databaseUrl = "jdbc:postgresql://localhost:5432/widget_store_java";
+        }
         return new DBOSConfig.Builder()
                 .appName("widget-store")
-                .databaseUrl("jdbc:postgresql://localhost:5432/widget_store_java")
+                .databaseUrl(databaseUrl)
                 .dbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
                 .dbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
                 .runAdminServer()
