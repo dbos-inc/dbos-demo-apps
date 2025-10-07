@@ -18,11 +18,8 @@ public class DurableStarterConfig {
     @Primary
     @Bean
     public DurableStarterService durableStarterService(DBOS dbos) {
-        var proxy = dbos.<DurableStarterService>Workflow()
-            .interfaceClass(DurableStarterService.class)
-            .implementation(new DurableStarterServiceImpl())
-            .build();
-        proxy.setDurableStarterService(proxy);
+	var impl = new DurableStarterServiceImpl();
+	var proxy = dbos.registerWorkflows(DurableStarterService.class, impl);
         return proxy;
     }
 
