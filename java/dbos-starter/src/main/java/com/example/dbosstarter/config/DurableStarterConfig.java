@@ -20,6 +20,7 @@ public class DurableStarterConfig {
     public DurableStarterService durableStarterService(DBOS dbos) {
 	var impl = new DurableStarterServiceImpl();
 	var proxy = dbos.registerWorkflows(DurableStarterService.class, impl);
+	impl.setDurableStarterService(proxy);
         return proxy;
     }
 
