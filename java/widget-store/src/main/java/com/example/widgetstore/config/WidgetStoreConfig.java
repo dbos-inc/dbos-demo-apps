@@ -28,7 +28,7 @@ public class WidgetStoreConfig {
     DBOSConfig dbosConfig() {
         String databaseUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
         if (databaseUrl == null || databaseUrl.isEmpty()) {
-            databaseUrl = "jdbc:postgresql://localhost:5432/dbos_starter_java";
+            databaseUrl = "jdbc:postgresql://localhost:5432/widget_store_java";
         }
         return new DBOSConfig.Builder()
                 .appName("widget-store")
