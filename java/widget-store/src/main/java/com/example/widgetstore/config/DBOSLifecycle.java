@@ -14,23 +14,23 @@ public class DBOSLifecycle  {
         
     private static final Logger logger = LoggerFactory.getLogger(DBOSLifecycle.class);
 
-    private final DBOS dbos;
+    private final DBOS.Instance dbos;
 
-    public DBOSLifecycle(DBOS dbos) {
+    public DBOSLifecycle(DBOS.Instance dbos) {
         this.dbos = dbos;
     }
 
     @EventListener
     public void onApplicationReady(ApplicationReadyEvent event) {
         logger.debug("onApplicationReady - dbos.launch()");
-        dbos.launch();
+        DBOS.launch();
     }
 
     @EventListener
     public void onContextClosed(ContextClosedEvent event) {
         logger.debug("onContextClosed - dbos.shutdown()");
         try {
-            dbos.shutdown();
+            DBOS.shutdown();
         }
         catch (Exception e) {
             logger.debug("onContextClosed - dbos.shutdown() exception", e);

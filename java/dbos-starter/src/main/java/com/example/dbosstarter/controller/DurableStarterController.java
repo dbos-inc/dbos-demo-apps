@@ -17,6 +17,8 @@ import dev.dbos.transact.StartWorkflowOptions;
 
 import static com.example.dbosstarter.service.DurableStarterService.STEPS_EVENT;
 
+import java.time.Duration;
+
 @RestController
 @CrossOrigin(origins = "*")
 public class DurableStarterController {
@@ -26,18 +28,15 @@ public class DurableStarterController {
     @Autowired
     private DurableStarterService service;
 
-    @Autowired
-    private DBOS dbos;
-
     @GetMapping("/workflow/{taskId}")
     public ResponseEntity<Void> startWorkflow(@PathVariable String taskId) {
-        dbos.startWorkflow(() -> service.exampleWorkflow(), new StartWorkflowOptions(taskId));
+        DBOS.startWorkflow(() -> service.exampleWorkflow(), new StartWorkflowOptions(taskId));
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/last_step/{taskId}")
     public ResponseEntity<String> lastStep(@PathVariable String taskId) {
-        var step = (Integer) dbos.getEvent(taskId, STEPS_EVENT, 0.0f);
+        var step = (Integer) DBOS.getEvent(taskId, STEPS_EVENT, Duration.ofSeconds(0));
         return ResponseEntity.ok(String.valueOf(step != null ? step : 0));
     }
 

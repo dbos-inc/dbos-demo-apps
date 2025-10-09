@@ -1,5 +1,6 @@
 package com.example.widgetstore.service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ import com.example.widgetstore.generated.tables.pojos.Orders;
 import com.example.widgetstore.generated.tables.pojos.Products;
 import com.example.widgetstore.model.OrderStatus;
 
+import dev.dbos.transact.DBOS;
 import dev.dbos.transact.context.DBOSContext;
 import dev.dbos.transact.workflow.Step;
 import dev.dbos.transact.workflow.Workflow;
@@ -151,45 +153,42 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
     @Workflow
     public String checkoutWorkflow(String key) {
-        var dbos = DBOSContext.dbosInstance().get();
         Integer orderId = service.createOrder();
         try {
             service.subtractInventory();
         } catch (RuntimeException e) {
             logger.error("Failed to reserve inventory for order {}", orderId);
             service.errorOrder(orderId);
-            dbos.setEvent(PAYMENT_ID, null);
+            DBOS.setEvent(PAYMENT_ID, null);
         }
 
-        dbos.setEvent(PAYMENT_ID, key);
+        DBOS.setEvent(PAYMENT_ID, key);
 
-        String payment_status = (String) dbos.recv(PAYMENT_STATUS, 60);
+        String payment_status = (String) DBOS.recv(PAYMENT_STATUS, Duration.ofSeconds(60));
 
         if (payment_status != null && payment_status.equals("paid")) {
             logger.info("Payment successful for order {}", orderId);
             service.markOrderPaid(orderId);
-            dbos.startWorkflow(() -> service.dispatchOrderWorkflow(orderId));
+            DBOS.startWorkflow(() -> service.dispatchOrderWorkflow(orderId));
         } else {
             logger.info("Payment failed for order {}", orderId);
             service.errorOrder(orderId);
             service.undoSubtractInventory();
         }
         
-        dbos.setEvent(ORDER_ID, String.valueOf(orderId));
+        DBOS.setEvent(ORDER_ID, String.valueOf(orderId));
         return key;
     }
 
     @Workflow
     public void tempSendWorkflow(String destinationId, Object message, String topic) {
-        var dbos = DBOSContext.dbosInstance().get();
-        dbos.send(destinationId, message, topic);
+        DBOS.send(destinationId, message, topic);
     }
 
     @Workflow
     public void dispatchOrderWorkflow(Integer orderId) {
-        var dbos = DBOSContext.dbosInstance().get();
         for (int i = 0; i < 10; i++) {
-            dbos.sleep(1);
+            DBOS.sleep(Duration.ofSeconds(1));
             service.updateOrderProgress(orderId);
         }
     }

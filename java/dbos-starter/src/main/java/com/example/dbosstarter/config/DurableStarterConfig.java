@@ -17,16 +17,18 @@ public class DurableStarterConfig {
 
     @Primary
     @Bean
-    public DurableStarterService durableStarterService(DBOS dbos) {
-	var impl = new DurableStarterServiceImpl();
-	var proxy = dbos.registerWorkflows(DurableStarterService.class, impl);
-	impl.setDurableStarterService(proxy);
+    public DurableStarterService durableStarterService() {
+	    var impl = new DurableStarterServiceImpl();
+	    var proxy = DBOS.registerWorkflows(
+            DurableStarterService.class,
+            impl);
+	    impl.setDurableStarterService(proxy);
         return proxy;
     }
 
     @Bean
-    public DBOS dbos(DBOSConfig config) {
-        return DBOS.initialize(config);
+    public DBOS.Instance dbos(DBOSConfig config) {
+        return DBOS.configure(config);
     }
 
     @Bean

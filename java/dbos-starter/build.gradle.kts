@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-	implementation("dev.dbos:transact:0.5.+")
+	implementation("dev.dbos:transact:0.6.+")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

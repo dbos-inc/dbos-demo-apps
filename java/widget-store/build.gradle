@@ -29,7 +29,7 @@ sourceSets {
 
 dependencies {
     // DBOS
-    implementation 'dev.dbos:transact:0.5.+'
+    implementation 'dev.dbos:transact:0.6.+'
     
     // Spring Boot starters
     implementation 'org.springframework.boot:spring-boot-starter-web'
