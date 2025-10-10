@@ -29,8 +29,6 @@ public class DBOSLifecycle implements SmartLifecycle {
         log.info("Shut Down DBOS");
         try {
             DBOS.shutdown();
-        } catch (Exception e) {
-            log.warn("DBOS shutdown error", e);
         } finally {
             running = false;
         }
