@@ -179,11 +179,10 @@
 <span class="line"><span style="color:#D73A49">public</span><span style="color:#D73A49"> class</span><span style="color:#6F42C1"> DurableConfig</span><span style="color:#24292E"> {</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#24292E">  @</span><span style="color:#D73A49">Bean</span></span>
-<span class="line"><span style="color:#D73A49">  public</span><span style="color:#24292E"> DurableService </span><span style="color:#6F42C1">durableSvc</span><span style="color:#24292E">(DBOS </span><span style="color:#E36209">dbos</span><span style="color:#24292E">) {</span></span>
-<span class="line"><span style="color:#D73A49">    var</span><span style="color:#24292E"> proxy </span><span style="color:#D73A49">=</span><span style="color:#24292E"> dbos.</span><span style="color:#D73A49">&#x3C;</span><span style="color:#24292E">DurableService</span><span style="color:#D73A49">></span><span style="color:#6F42C1">Workflow</span><span style="color:#24292E">()</span></span>
-<span class="line"><span style="color:#24292E">        .</span><span style="color:#6F42C1">interfaceClass</span><span style="color:#24292E">(DurableService.class)</span></span>
-<span class="line"><span style="color:#24292E">        .</span><span style="color:#6F42C1">implementation</span><span style="color:#24292E">(</span><span style="color:#D73A49">new</span><span style="color:#6F42C1"> DurableServiceImpl</span><span style="color:#24292E">())</span></span>
-<span class="line"><span style="color:#24292E">        .</span><span style="color:#6F42C1">build</span><span style="color:#24292E">();</span></span>
+<span class="line"><span style="color:#D73A49">  public</span><span style="color:#24292E"> DurableService </span><span style="color:#6F42C1">durableSvc</span><span style="color:#24292E">() {</span></span>
+<span class="line"><span style="color:#D73A49">    var</span><span style="color:#24292E"> proxy </span><span style="color:#D73A49">=</span><span style="color:#24292E"> DBOS.</span><span style="color:#6F42C1">registerWorkflows</span><span style="color:#24292E">(</span></span>
+<span class="line"><span style="color:#24292E">        DurableService.class,</span></span>
+<span class="line"><span style="color:#24292E">        new</span><span style="color:#6F42C1"> DurableServiceImpl</span><span style="color:#24292E">());</span></span>
 <span class="line"><span style="color:#24292E">    proxy.</span><span style="color:#6F42C1">setDurableService</span><span style="color:#24292E">(proxy);</span></span>
 <span class="line"><span style="color:#D73A49">    return</span><span style="color:#24292E"> proxy;</span></span>
 <span class="line"><span style="color:#24292E">  }</span></span>

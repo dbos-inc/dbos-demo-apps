@@ -1,5 +1,6 @@
 package com.example.widgetstore.controller;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -31,9 +32,6 @@ public class WidgetStoreController {
 
     @Autowired
     private WidgetStoreService widgetStoreService;
-
-    @Autowired
-    private DBOS dbos;
 
     @GetMapping("/product")
     public ResponseEntity<ProductDto> getProduct() {
@@ -94,9 +92,9 @@ public class WidgetStoreController {
             // Execute the checkout workflow using DBOS
             logger.info("Calling checkoutWorkflow on service: {}", widgetStoreService.getClass().getName());
             var options = new StartWorkflowOptions(key);
-            dbos.startWorkflow(() -> widgetStoreService.checkoutWorkflow(key), options);
+            DBOS.startWorkflow(() -> widgetStoreService.checkoutWorkflow(key), options);
 
-            String paymentID = (String) dbos.getEvent(key, PAYMENT_ID, 60);
+            String paymentID = (String) DBOS.getEvent(key, PAYMENT_ID, Duration.ofSeconds(60));
             if (paymentID == null) {
                 return ResponseEntity.internalServerError().body("Item not available");
             }
@@ -113,8 +111,8 @@ public class WidgetStoreController {
         logger.info("Payment webhook called with key: " + key + ", status: " + status);
         
         try {
-            dbos.startWorkflow(() -> widgetStoreService.tempSendWorkflow(key, status, PAYMENT_STATUS));
-            String orderId = (String) dbos.getEvent(key, ORDER_ID, 60);
+            DBOS.startWorkflow(() -> widgetStoreService.tempSendWorkflow(key, status, PAYMENT_STATUS));
+            String orderId = (String) DBOS.getEvent(key, ORDER_ID, Duration.ofSeconds(60));
             return ResponseEntity.ok(orderId);
         } catch (Exception e) {
             logger.error("Payment webhook processing failed", e);

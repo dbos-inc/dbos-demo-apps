@@ -17,9 +17,9 @@ public class WidgetStoreConfig {
 
     @Bean
     @Primary
-    public WidgetStoreService widgetStoreServiceProxy(DBOS dbos, DSLContext dslContext) {
+    public WidgetStoreService widgetStoreServiceProxy(DSLContext dslContext) {
         var impl = new WidgetStoreServiceImpl(dslContext);
-	    var proxy = dbos.registerWorkflows(WidgetStoreService.class, impl);
+	    var proxy = DBOS.registerWorkflows(WidgetStoreService.class, impl);
         impl.setWidgetStoreService(proxy);
         return proxy;
     }
@@ -40,7 +40,7 @@ public class WidgetStoreConfig {
     }
 
     @Bean
-    public DBOS dbos(DBOSConfig config) {
-        return DBOS.initialize(config);
+    public DBOS.Instance dbos(DBOSConfig config) {
+        return DBOS.configure(config);
     }
 }

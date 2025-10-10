@@ -1,39 +1,43 @@
 package com.example.dbosstarter.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import dev.dbos.transact.DBOS;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Component
-public class DBOSLifecycle  {
-        
-    private static final Logger logger = LoggerFactory.getLogger(DBOSLifecycle.class);
+@Lazy(false)
+public class DBOSLifecycle implements SmartLifecycle {
 
-    private final DBOS dbos;
+    private static final Logger log = LoggerFactory.getLogger(DBOSLifecycle.class);
+    private volatile boolean running = false;
 
-    public DBOSLifecycle(DBOS dbos) {
-        this.dbos = dbos;
+    @Override
+    public void start() {
+        log.info("Launch DBOS");
+        DBOS.launch();
+        running = true;
     }
 
-    @EventListener
-    public void onApplicationReady(ApplicationReadyEvent event) {
-        logger.debug("onApplicationReady - dbos.launch()");
-        dbos.launch();
-    }
-
-    @EventListener
-    public void onContextClosed(ContextClosedEvent event) {
-        logger.debug("onContextClosed - dbos.shutdown()");
+    @Override
+    public void stop() {
+        log.info("Shut Down DBOS");
         try {
-            dbos.shutdown();
-        }
-        catch (Exception e) {
-            logger.debug("onContextClosed - dbos.shutdown() threw exception", e);
+            DBOS.shutdown();
+        } finally {
+            running = false;
         }
     }
+
+    @Override public boolean isRunning() { return running; }
+
+    @Override public boolean isAutoStartup() { return true; }
+
+    // Start BEFORE the web server (default is 0). Lower = earlier.
+    @Override public int getPhase() { return -1; }
 }
