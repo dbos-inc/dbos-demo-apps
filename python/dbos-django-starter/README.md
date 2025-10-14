@@ -26,7 +26,7 @@ Set the `DBOS_SYSTEM_DATABASE_URL` environment variable to connect to this datab
 export DBOS_SYSTEM_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/djangodbos"
 ```
 
-2. Start your app:
+3. Start your app:
 
 ```shell
 uv run python manage.py runserver --noreload
