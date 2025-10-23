@@ -1,6 +1,6 @@
 # Document Detective
 
-In this example, we'll use DBOS to build a reliable and scalable data processing pipeline. We'll show how DBOS can help you process many items concurrently and seamlessly recover from failures. Specifically, we'll build a pipeline that indexes PDF documents for RAG, though you can use a similar design pattern to build almost any data pipeline.
+In this example, we'll use DBOS to build a reliable and scalable data processing pipeline. We'll show how DBOS can help you horizontally scale an application to process many items concurrently and seamlessly recover from failures. Specifically, we'll build a pipeline that indexes PDF documents for RAG, though you can use a similar design pattern to build almost any data pipeline.
 
 ## Creating an OpenAI Account
 
