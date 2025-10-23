@@ -1,51 +1,37 @@
 import { createOrder, retrieveOrder, OrderStatus, PRODUCT_ID } from '../src/shop';
 import knex, { Knex } from 'knex';
 import path from 'path';
+import { Client } from 'pg';
 
 import { DBOS, DBOSConfig } from '@dbos-inc/dbos-sdk';
 
-const config = {
-  client: 'pg',
-  connection: {
-    host: process.env.PGHOST || 'localhost',
-    port: parseInt(process.env.PGPORT || '5432'),
-    database: process.env.PGDATABASE || 'widget_store_test',
-    user: process.env.PGUSER || 'postgres',
-    password: process.env.PGPASSWORD || 'dbos',
-  },
-};
+export async function resetDatabase(databaseUrl: string) {
+  const dbName = new URL(databaseUrl).pathname.slice(1);
+  const postgresDatabaseUrl = new URL(databaseUrl);
+  postgresDatabaseUrl.pathname = '/postgres';
 
-const sysDbName = 'widget_store_test_dbos_sys';
-const appDbName = config.connection.database;
+  const client = new Client({ connectionString: postgresDatabaseUrl.toString() });
+  await client.connect();
+  try {
+    await client.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
+    await client.query(`CREATE DATABASE ${dbName}`);
+  } finally {
+    await client.end();
+  }
+}
 
-export async function resetDatabase() {
+export async function migrateShopDatabase(databaseUrl: string) {
   const cwd = process.cwd();
 
-  const adminKnexConfig = {
+  const knexConfig: Knex.Config = {
     client: 'pg',
-    connection: {
-      ...config.connection,
-      database: 'postgres',
-    },
-  };
-
-  const knexConfig = {
-    ...config,
+    connection: databaseUrl,
     migrations: {
       directory: path.join(cwd, 'migrations'),
       tableName: 'knex_migrations',
     },
   };
-  let knexDB: Knex = knex(adminKnexConfig);
-  try {
-    await knexDB.raw(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${appDbName}'`);
-    await knexDB.raw(`DROP DATABASE IF EXISTS ${appDbName}`);
-    await knexDB.raw(`DROP DATABASE IF EXISTS ${sysDbName}`);
-    await knexDB.raw(`CREATE DATABASE ${appDbName}`);
-  } finally {
-    await knexDB.destroy();
-  }
-  knexDB = knex(knexConfig);
+  const knexDB = knex(knexConfig);
   try {
     await knexDB.migrate.latest();
   } finally {
@@ -55,12 +41,20 @@ export async function resetDatabase() {
 
 describe('Widget store utilities', () => {
   beforeEach(async () => {
+    const databaseUrl = process.env.DBOS_DATABASE_URL;
+    if (!databaseUrl) {
+      throw Error("DBOS_DATABASE_URL must be set to run this test")
+    }
+
+    await DBOS.shutdown();
+    await resetDatabase(databaseUrl);
+    await migrateShopDatabase(databaseUrl);
+
     const dbosTestConfig: DBOSConfig = {
-      systemDatabaseUrl: `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'dbos'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${sysDbName}`,
+      name: "widget-store-test",
+      systemDatabaseUrl: databaseUrl,
     };
     DBOS.setConfig(dbosTestConfig);
-    await resetDatabase();
-    await DBOS.shutdown();
     await DBOS.launch();
   }, 10000);
 
