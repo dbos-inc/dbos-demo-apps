@@ -41,15 +41,18 @@ export async function migrateShopDatabase(databaseUrl: string) {
 
 describe('Widget store utilities', () => {
   beforeEach(async () => {
+    // An integration test requires a Postgres connection
     const databaseUrl = process.env.DBOS_DATABASE_URL;
     if (!databaseUrl) {
       throw Error("DBOS_DATABASE_URL must be set to run this test")
     }
 
+    // Shut down DBOS (in case a previous test launched it) and reset the database.
     await DBOS.shutdown();
     await resetDatabase(databaseUrl);
     await migrateShopDatabase(databaseUrl);
 
+    // Configure and launch DBOS
     const dbosTestConfig: DBOSConfig = {
       name: "widget-store-test",
       systemDatabaseUrl: databaseUrl,
