@@ -100,13 +100,15 @@ def index_document(document_url: HttpUrl) -> int:
                 r.raise_for_status()
                 for page in r.iter_content(chunk_size=8192):
                     temp_file.write(page)
-            temp_file.seek(0)
-            reader = PDFReader()
         # Parse the document into pages
+        reader = PDFReader()
         pages = reader.load_data(temp_file_path)
     # Insert each page into the vector index
     for page in pages:
-        index.insert(page)
+        try:
+            index.insert(page)
+        except Exception as e:
+            print("Error inserting page:", page, e)
     return len(pages)
 
 
