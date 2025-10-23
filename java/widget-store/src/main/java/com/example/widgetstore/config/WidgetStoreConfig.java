@@ -30,13 +30,11 @@ public class WidgetStoreConfig {
         if (databaseUrl == null || databaseUrl.isEmpty()) {
             databaseUrl = "jdbc:postgresql://localhost:5432/widget_store_java";
         }
-        return new DBOSConfig.Builder()
-                .appName("widget-store")
-                .databaseUrl(databaseUrl)
-                .dbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
-                .dbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-                .runAdminServer()
-                .build();
+        return DBOSConfig.defaults("widget-store")
+                .withDatabaseUrl(databaseUrl)
+                .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
+                .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
+                .withAdminServer(true);
     }
 
     @Bean
