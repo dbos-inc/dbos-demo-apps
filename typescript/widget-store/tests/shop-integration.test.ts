@@ -5,6 +5,7 @@ import { Client } from 'pg';
 
 import { DBOS, DBOSConfig } from '@dbos-inc/dbos-sdk';
 
+// Reset the Postgres database used by these tests
 export async function resetDatabase(databaseUrl: string) {
   const dbName = new URL(databaseUrl).pathname.slice(1);
   const postgresDatabaseUrl = new URL(databaseUrl);
@@ -20,6 +21,7 @@ export async function resetDatabase(databaseUrl: string) {
   }
 }
 
+// Recreate the database tables used by the application being tested
 export async function migrateShopDatabase(databaseUrl: string) {
   const cwd = process.cwd();
 
