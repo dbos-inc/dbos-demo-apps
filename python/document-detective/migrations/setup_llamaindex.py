@@ -1,6 +1,7 @@
 # A script to set up the vector store schema in the app's database
 
 import os
+
 from llama_index.vector_stores.postgres import PGVectorStore
 from sqlalchemy.engine.url import make_url
 

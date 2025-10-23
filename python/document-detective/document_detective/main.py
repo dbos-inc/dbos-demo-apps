@@ -19,7 +19,7 @@ from sqlalchemy import make_url
 
 from .schema import chat_history
 
-application_database_url = os.environ.get('DBOS_DATABASE_URL')
+application_database_url = os.environ.get("DBOS_DATABASE_URL")
 if not application_database_url:
     raise Exception("DBOS_DATABASE_URL not set")
 
@@ -192,6 +192,7 @@ def frontend():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return HTMLResponse(html)
+
 
 if __name__ == "__main__":
     DBOS.launch()
