@@ -58,16 +58,16 @@ index, chat_engine = configure_index()
 
 # We'll build a concurrent, reliable data ingestion pipeline using DBOS workflows and queues.
 # This workflow takes in a batch of document URLs and enqueues
-# them for ingestion. It then waits for them all to complete and counts how
-# many total documents and pages were ingested. If it's ever interrupted or restarted,
-# it recovers the ingestion of each document from the last completed step, guaranteeing
-# that every document gets ingested and none are lost.
+# them for indexing. It then waits for them all to complete and counts how
+# many total documents and pages were indexed. If it's ever interrupted or restarted,
+# it recovers the indexing of each document from the last completed step, guaranteeing
+# that every document gets indexed and none are lost.
 
 queue = Queue("indexing_queue")
 
 
 @DBOS.workflow()
-def indexing_workflow(urls: List[HttpUrl]):
+def index_documents(urls: List[HttpUrl]):
     handles: List[WorkflowHandle] = []
     for url in urls:
         handle = queue.enqueue(index_document, url)
@@ -141,7 +141,7 @@ class URLList(BaseModel):
 
 @app.post("/index")
 async def index_endpoint(urls: URLList):
-    DBOS.start_workflow(indexing_workflow, urls.urls)
+    DBOS.start_workflow(index_documents, urls.urls)
 
 
 # Now, let's chat! We'll build a simple chat interface that stores history in memory.
