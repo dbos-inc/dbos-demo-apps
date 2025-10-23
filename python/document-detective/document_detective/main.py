@@ -69,9 +69,11 @@ queue = Queue("indexing_queue")
 @DBOS.workflow()
 def index_documents(urls: List[HttpUrl]):
     handles: List[WorkflowHandle] = []
+    # Enqueue each document for indexing
     for url in urls:
         handle = queue.enqueue(index_document, url)
         handles.append(handle)
+    # Wait for all documents to finish indexing, count the total number of indexed pages
     indexed_pages = 0
     for handle in handles:
         indexed_pages += handle.get_result()
