@@ -38,26 +38,26 @@ describe('checkout workflow unit tests', () => {
 
   describe('successful checkout flow', () => {
     it('should complete checkout when inventory is available and payment succeeds', async () => {
-      const mockOrderID = 'order-456';
+      const mockOrderID = 456;
 
       // Mock successful inventory subtraction
-      (subtractInventory as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(subtractInventory).mockResolvedValue(undefined);
 
       // Mock order creation
-      (createOrder as jest.Mock).mockResolvedValue(mockOrderID);
+      jest.mocked(createOrder).mockResolvedValue(mockOrderID);
 
       // Mock payment notification as successful
-      (DBOS.recv as jest.Mock).mockResolvedValue('paid');
+      jest.mocked(DBOS.recv).mockResolvedValue('paid');
 
       // Mock marking order as paid
-      (markOrderPaid as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(markOrderPaid).mockResolvedValue(undefined);
 
       // Mock startWorkflow to return a function
       const mockWorkflowFunction = jest.fn().mockResolvedValue(undefined);
-      (DBOS.startWorkflow as jest.Mock).mockReturnValue(mockWorkflowFunction);
+      jest.mocked(DBOS.startWorkflow).mockReturnValue(mockWorkflowFunction);
 
       // Mock setEvent
-      (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(DBOS.setEvent).mockResolvedValue(undefined);
 
       // Execute the workflow
       await checkoutWorkflow();
@@ -95,10 +95,10 @@ describe('checkout workflow unit tests', () => {
       const inventoryError = new Error('Insufficient inventory');
 
       // Mock inventory subtraction to fail
-      (subtractInventory as jest.Mock).mockRejectedValue(inventoryError);
+      jest.mocked(subtractInventory).mockRejectedValue(inventoryError);
 
       // Mock setEvent
-      (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(DBOS.setEvent).mockResolvedValue(undefined);
 
       // Execute the workflow
       await checkoutWorkflow();
@@ -119,23 +119,23 @@ describe('checkout workflow unit tests', () => {
 
   describe('payment failure', () => {
     it('should handle payment failure by cancelling order and returning inventory', async () => {
-      const mockOrderID = 'order-789';
+      const mockOrderID = 789;
 
       // Mock successful inventory subtraction
-      (subtractInventory as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(subtractInventory).mockResolvedValue(undefined);
 
       // Mock order creation
-      (createOrder as jest.Mock).mockResolvedValue(mockOrderID);
+      jest.mocked(createOrder).mockResolvedValue(mockOrderID);
 
       // Mock payment notification as failed
-      (DBOS.recv as jest.Mock).mockResolvedValue('failed');
+      jest.mocked(DBOS.recv).mockResolvedValue('failed');
 
       // Mock error handling functions
-      (errorOrder as jest.Mock).mockResolvedValue(undefined);
-      (undoSubtractInventory as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(errorOrder).mockResolvedValue(undefined);
+      jest.mocked(undoSubtractInventory).mockResolvedValue(undefined);
 
       // Mock setEvent
-      (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(DBOS.setEvent).mockResolvedValue(undefined);
 
       // Execute the workflow
       await checkoutWorkflow();
@@ -167,23 +167,23 @@ describe('checkout workflow unit tests', () => {
     });
 
     it('should handle payment timeout (null notification)', async () => {
-      const mockOrderID = 'order-timeout-123';
+      const mockOrderID = 123;
 
       // Mock successful inventory subtraction
-      (subtractInventory as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(subtractInventory).mockResolvedValue(undefined);
 
       // Mock order creation
-      (createOrder as jest.Mock).mockResolvedValue(mockOrderID);
+      jest.mocked(createOrder).mockResolvedValue(mockOrderID);
 
       // Mock payment notification as timeout (null)
-      (DBOS.recv as jest.Mock).mockResolvedValue(null);
+      jest.mocked(DBOS.recv).mockResolvedValue(null);
 
       // Mock error handling functions
-      (errorOrder as jest.Mock).mockResolvedValue(undefined);
-      (undoSubtractInventory as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(errorOrder).mockResolvedValue(undefined);
+      jest.mocked(undoSubtractInventory).mockResolvedValue(undefined);
 
       // Mock setEvent
-      (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(DBOS.setEvent).mockResolvedValue(undefined);
 
       // Execute the workflow
       await checkoutWorkflow();
