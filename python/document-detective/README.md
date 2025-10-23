@@ -1,12 +1,11 @@
 # Document Detective
 
-In this app, we use DBOS and LlamaIndex to build and serverlessly deploy a chatbot agent that can index PDF documents and answer questions about them.
+In this example, we'll use DBOS to build a reliable and scalable data processing pipeline. We'll show how DBOS can help you process many items concurrently and seamlessly recover from failures. Specifically, we'll build a pipeline that indexes PDF documents for RAG, though you can use a similar design pattern to build almost any data pipeline.
 
 ## Creating an OpenAI Account
 
 To run this app, you need an OpenAI developer account.
 Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview).
-This bot uses `gpt-3.5-turbo` for text generation.
 Make sure you have some credits (~$1) to use it.
 
 Set your API key as an environment variable:
