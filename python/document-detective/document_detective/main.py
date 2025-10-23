@@ -7,9 +7,8 @@ import uvicorn
 from dbos import DBOS, DBOSConfig, Queue, WorkflowHandle
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from llama_index.core import Settings, StorageContext, VectorStoreIndex
+from llama_index.core import Document, Settings, StorageContext, VectorStoreIndex
 from llama_index.readers.file import PDFReader
-from llama_index.core import Document
 from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy import make_url
