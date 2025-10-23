@@ -17,18 +17,16 @@ export OPENAI_API_KEY=<your_openai_key>
 
 ## Setup
 
-1. Install dependencies and activate your virtual environment:
+1. Install dependencies:
 
 ```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 ```
 
 2. Start Postgres in a local Docker container:
 
 ```bash
-dbos postgres start
+uv run dbos postgres start
 ```
 
 Set the `DBOS_DATABASE_URL` environment variable to connect to this database:
@@ -41,13 +39,13 @@ If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment var
 3. Run database migrations:
 
 ```shell
-dbos migrate
+uv run dbos migrate
 ```
 
 4. Start your app!
 
 ```shell
-python3 -m document_detective.main
+uv run python3 -m document_detective.main
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your chat agent!
