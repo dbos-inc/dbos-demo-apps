@@ -22,7 +22,7 @@ jest.mock('../src/shop', () => ({
 // Mock DBOS
 jest.mock('@dbos-inc/dbos-sdk', () => ({
   DBOS: {
-    // IMPORTANT: Mock registerWorkflow to return the workflow function
+    // IMPORTANT: Mock DBOS.registerWorkflow to return the workflow function
     registerWorkflow: jest.fn((fn) => fn),
     setEvent: jest.fn(),
     recv: jest.fn(),
