@@ -1,4 +1,4 @@
-import { checkoutWorkflowFunction, PAYMENT_TOPIC, PAYMENT_ID_EVENT, ORDER_ID_EVENT } from '../src/main';
+import { checkoutWorkflow, PAYMENT_TOPIC, PAYMENT_ID_EVENT, ORDER_ID_EVENT } from '../src/main';
 import { DBOS } from '@dbos-inc/dbos-sdk';
 import {
   subtractInventory,
@@ -22,7 +22,7 @@ jest.mock('../src/shop', () => ({
 // Mock DBOS
 jest.mock('@dbos-inc/dbos-sdk', () => ({
   DBOS: {
-    registerWorkflow: jest.fn(),
+    registerWorkflow: jest.fn((fn) => fn),
     setEvent: jest.fn(),
     recv: jest.fn(),
     startWorkflow: jest.fn(),
@@ -59,7 +59,7 @@ describe('checkout workflow unit tests', () => {
       (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
 
       // Execute the workflow
-      await checkoutWorkflowFunction();
+      await checkoutWorkflow();
 
       // Verify inventory was subtracted
       expect(subtractInventory).toHaveBeenCalledTimes(1);
@@ -100,7 +100,7 @@ describe('checkout workflow unit tests', () => {
       (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
 
       // Execute the workflow
-      await checkoutWorkflowFunction();
+      await checkoutWorkflow();
 
       // Verify inventory subtraction was attempted
       expect(subtractInventory).toHaveBeenCalledTimes(1);
@@ -137,7 +137,7 @@ describe('checkout workflow unit tests', () => {
       (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
 
       // Execute the workflow
-      await checkoutWorkflowFunction();
+      await checkoutWorkflow();
 
       // Verify inventory was subtracted
       expect(subtractInventory).toHaveBeenCalledTimes(1);
@@ -185,7 +185,7 @@ describe('checkout workflow unit tests', () => {
       (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
 
       // Execute the workflow
-      await checkoutWorkflowFunction();
+      await checkoutWorkflow();
 
       // Verify payment failure handling was triggered
       expect(errorOrder).toHaveBeenCalledWith(mockOrderID);
