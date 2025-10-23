@@ -17,8 +17,6 @@ from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy import make_url
 
-from .schema import chat_history
-
 database_url = os.environ.get("DBOS_SYSTEM_DATABASE_URL")
 if not database_url:
     raise Exception("DBOS_SYSTEM_DATABASE_URL not set")
