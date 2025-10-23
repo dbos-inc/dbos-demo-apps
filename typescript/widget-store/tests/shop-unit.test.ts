@@ -30,7 +30,7 @@ jest.mock('@dbos-inc/dbos-sdk', () => ({
   },
 }));
 
-describe('checkoutWorkflowFunction', () => {
+describe('checkout workflow unit tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });

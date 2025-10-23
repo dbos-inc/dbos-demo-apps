@@ -39,7 +39,7 @@ export async function migrateShopDatabase(databaseUrl: string) {
   }
 }
 
-describe('Widget store utilities', () => {
+describe('shop integration tests', () => {
   beforeEach(async () => {
     // An integration test requires a Postgres connection
     const databaseUrl = process.env.DBOS_DATABASE_URL;
