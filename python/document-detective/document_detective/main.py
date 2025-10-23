@@ -1,7 +1,3 @@
-# In this app, we use DBOS and LlamaIndex to build and serverlessly deploy a chat agent that can index PDF documents and answer questions about them.
-
-# First, let's do imports and initialize DBOS.
-
 import os
 from tempfile import TemporaryDirectory
 from typing import List
@@ -29,7 +25,7 @@ config: DBOSConfig = {
 DBOS(fastapi=app, config=config)
 
 
-# Next, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
+# First, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
 
 
 def configure_index():
