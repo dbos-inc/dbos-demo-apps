@@ -23,7 +23,7 @@ config: DBOSConfig = {
     "system_database_url": database_url,
     "conductor_key": os.environ.get("CONDUCTOR_KEY"),
 }
-DBOS(fastapi=app, config=config)
+DBOS(config=config)
 
 
 # First, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
