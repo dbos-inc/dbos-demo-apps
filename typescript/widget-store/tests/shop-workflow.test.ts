@@ -1,4 +1,4 @@
-import { checkoutWorkflowFunction, PAYMENT_TOPIC, PAYMENT_ID_EVENT, ORDER_ID_EVENT } from './main';
+import { checkoutWorkflowFunction, PAYMENT_TOPIC, PAYMENT_ID_EVENT, ORDER_ID_EVENT } from '../src/main';
 import { DBOS } from '@dbos-inc/dbos-sdk';
 import {
   subtractInventory,
@@ -7,10 +7,10 @@ import {
   dispatchOrder,
   errorOrder,
   undoSubtractInventory,
-} from './shop';
+} from '../src/shop';
 
 // Mock the shop module
-jest.mock('./shop', () => ({
+jest.mock('../src/shop', () => ({
   subtractInventory: jest.fn(),
   createOrder: jest.fn(),
   markOrderPaid: jest.fn(),

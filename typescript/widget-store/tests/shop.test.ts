@@ -1,4 +1,4 @@
-import { createOrder, retrieveOrder, OrderStatus, PRODUCT_ID } from './shop';
+import { createOrder, retrieveOrder, OrderStatus, PRODUCT_ID } from '../src/shop';
 import knex, { Knex } from 'knex';
 import path from 'path';
 
