@@ -140,7 +140,7 @@ class URLList(BaseModel):
 
 
 @app.post("/index")
-async def index_endpoint(urls: URLList):
+def index_endpoint(urls: URLList):
     DBOS.start_workflow(index_documents, urls.urls)
 
 
