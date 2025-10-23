@@ -33,3 +33,13 @@ npm run start
 ```
 
 Visit [`http://localhost:3000`](http://localhost:3000) to see your app!
+
+## Unit Tests
+
+Run unit tests with `npx jest tests/shop-unit.test.ts`.
+This does not require any database setup.
+
+## Integration Tests
+
+Run integration tests with `npx jest tests/shop-integration.test.ts`.
+This requires the `DBOS_DATABASE_URL` environment variable to be set to a connection string to your test database.

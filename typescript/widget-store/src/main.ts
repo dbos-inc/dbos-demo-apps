@@ -37,13 +37,13 @@ export const ORDER_ID_EVENT = 'order_url';
 // Within seconds, your app will recover to exactly the state it was in before the crash
 // and continue as if nothing happened.
 
-const checkoutWorkflow = DBOS.registerWorkflow(
+export const checkoutWorkflow = DBOS.registerWorkflow(
   async () => {
     // Attempt to reserve inventory, failing if no inventory remains
     try {
       await subtractInventory();
     } catch (error) {
-      DBOS.logger.error(`Failed to update inventory: ${(error as Error).message}`);
+      console.error(`Failed to update inventory: ${(error as Error).message}`);
       await DBOS.setEvent(PAYMENT_ID_EVENT, null);
       return;
     }
@@ -59,11 +59,11 @@ const checkoutWorkflow = DBOS.registerWorkflow(
     // If payment succeeded, mark the order as paid and start the order dispatch workflow.
     // Otherwise, return reserved inventory and cancel the order.
     if (notification && notification === 'paid') {
-      DBOS.logger.info(`Payment successful!`);
+      console.info(`Payment successful!`);
       await markOrderPaid(orderID);
       await DBOS.startWorkflow(dispatchOrder)(orderID);
     } else {
-      DBOS.logger.warn(`Payment failed...`);
+      console.warn(`Payment failed...`);
       await errorOrder(orderID);
       await undoSubtractInventory();
     }
@@ -96,7 +96,7 @@ fastify.post<{
   // Wait for the checkout workflow to send a payment ID, then return it.
   const paymentID = await DBOS.getEvent<string | null>(handle.workflowID, PAYMENT_ID_EVENT);
   if (paymentID === null) {
-    DBOS.logger.error('checkout failed');
+    console.error('checkout failed');
     return reply.code(500).send('Error starting checkout');
   }
   return paymentID;
@@ -116,7 +116,7 @@ fastify.post<{
   // Wait for the checkout workflow to send an order ID, then return it.
   const orderID = await DBOS.getEvent<string>(key, ORDER_ID_EVENT);
   if (orderID === null) {
-    DBOS.logger.error('retrieving order ID failed');
+    console.error('retrieving order ID failed');
     return reply.code(500).send('Error retrieving order ID');
   }
   return orderID;
@@ -175,4 +175,6 @@ async function main() {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 }
 
-main().catch(console.log);
+if (require.main === module) {
+  main().catch(console.log);
+}
