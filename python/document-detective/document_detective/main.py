@@ -78,7 +78,7 @@ def indexing_workflow(urls: List[HttpUrl]):
     indexed_pages = 0
     for handle in handles:
         indexed_pages += handle.get_result()
-    DBOS.logger.info(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
+    print(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
 
 
 # This function ingests a PDF document from a URL. It downloads it, scans it into pages,
@@ -91,8 +91,10 @@ def indexing_workflow(urls: List[HttpUrl]):
 
 @DBOS.step(retries_allowed=True, max_attempts=5)
 def index_document(document_url: HttpUrl) -> int:
+    # Download the document to a temporary file
+    print(f"Downloading document from {document_url}")
     with TemporaryDirectory() as temp_dir:
-        temp_file_path = os.path.join(temp_dir, "file.pdf")
+        temp_file_path = os.path.join(temp_dir, "document.pdf")
         with open(temp_file_path, "wb") as temp_file:
             with requests.get(document_url, stream=True) as r:
                 r.raise_for_status()
@@ -100,7 +102,9 @@ def index_document(document_url: HttpUrl) -> int:
                     temp_file.write(page)
             temp_file.seek(0)
             reader = PDFReader()
-            pages = reader.load_data(temp_file_path)
+        # Parse the document into pages
+        pages = reader.load_data(temp_file_path)
+    # Insert each page into the vector index
     for page in pages:
         index.insert(page)
     return len(pages)
