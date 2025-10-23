@@ -59,8 +59,8 @@ index, chat_engine = configure_index()
 # recover from where it left off instead of restarting from the beginning or losing
 # some documents entirely.
 
-# We'll build a concurrent, reliable data ingestion pipeline using DBOS queues and
-# durable execution. This workflow takes in a batch of document URLs and enqueues
+# We'll build a concurrent, reliable data ingestion pipeline using DBOS workflows and queues.
+# This workflow takes in a batch of document URLs and enqueues
 # them for ingestion. It then waits for them all to complete and counts how
 # many total documents and pages were ingested. If it's ever interrupted or restarted,
 # it recovers the ingestion of each document from the last completed step, guaranteeing
@@ -115,13 +115,18 @@ def index_document(document_url: HttpUrl) -> int:
 # This is the endpoint for indexing. It starts the indexing workflow in the background
 # on a batch of documents.
 
-# To test it out, try this example cURL command to index Apple's SEC 10-K filings
-# for 2021, 2022, and 2023.
+# For example, try this cURL command to index Apple's SEC 10-K filings for 2020-2024:
 
 """
 curl -X POST "http://localhost:8000/index" \
      -H "Content-Type: application/json" \
-     -d '{"urls": ["https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/faab4555-c69b-438a-aaf7-e09305f87ca3.pdf", "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/b4266e40-1de6-4a34-9dfb-8632b8bd57e0.pdf", "https://d18rn0p25nwr6d.cloudfront.net/CIK-0000320193/42ede86f-6518-450f-bc88-60211bf39c6d.pdf"]}'
+     -d '{"urls": [
+        "https://dbos-hackathon.s3.us-east-1.amazonaws.com/apple-filings/apple-10k-2020.pdf",
+        "https://dbos-hackathon.s3.us-east-1.amazonaws.com/apple-filings/apple-10k-2021.pdf",
+        "https://dbos-hackathon.s3.us-east-1.amazonaws.com/apple-filings/apple-10k-2022.pdf",
+        "https://dbos-hackathon.s3.us-east-1.amazonaws.com/apple-filings/apple-10k-2023.pdf",
+        "https://dbos-hackathon.s3.us-east-1.amazonaws.com/apple-filings/apple-10k-2024.pdf"
+]}'
 """
 
 
