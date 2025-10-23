@@ -5,13 +5,4 @@
 
 name: document-detective
 language: python
-runtimeConfig:
-  start:
-    - "fastapi run document_detective/main.py"
-database_url: ${DBOS_DATABASE_URL}
-database:
-  migrate:
-    - alembic upgrade head
-    - python3 migrations/setup_llamaindex.py
-env:
-  OPENAI_API_KEY: ${OPENAI_API_KEY}
+system_database_url: ${DBOS_SYSTEM_DATABASE_URL}

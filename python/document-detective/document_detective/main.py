@@ -19,14 +19,14 @@ from sqlalchemy import make_url
 
 from .schema import chat_history
 
-application_database_url = os.environ.get("DBOS_DATABASE_URL")
-if not application_database_url:
-    raise Exception("DBOS_DATABASE_URL not set")
+database_url = os.environ.get("DBOS_SYSTEM_DATABASE_URL")
+if not database_url:
+    raise Exception("DBOS_SYSTEM_DATABASE_URL not set")
 
 app = FastAPI()
 config: DBOSConfig = {
     "name": "document-detective",
-    "application_database_url": application_database_url,
+    "system_database_url": database_url,
 }
 DBOS(fastapi=app, config=config)
 
@@ -36,7 +36,7 @@ DBOS(fastapi=app, config=config)
 
 def configure_index():
     Settings.chunk_size = 512
-    db = make_url(application_database_url)
+    db = make_url(database_url)
     vector_store = PGVectorStore.from_params(
         database=db.database,
         host=db.host,

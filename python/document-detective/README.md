@@ -29,17 +29,18 @@ uv sync
 uv run dbos postgres start
 ```
 
-Set the `DBOS_DATABASE_URL` environment variable to connect to this database:
+Set the `DBOS_SYSTEM_DATABASE_URL` environment variable to connect to this database:
 
 ```shell
-export DBOS_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/document_detective"
+export DBOS_SYSTEM_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/document_detective"
 ```
 
-If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your own connection string.
-3. Run database migrations:
+If you already use Postgres, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your own connection string.
+
+3. Set up the Postgres vector store for LlamaIndex (requires pgvector):
 
 ```shell
-uv run dbos migrate
+uv run python3 setup_llamaindex.py
 ```
 
 4. Start your app!
