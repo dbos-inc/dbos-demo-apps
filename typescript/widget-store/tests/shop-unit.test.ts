@@ -9,7 +9,7 @@ import {
   undoSubtractInventory,
 } from '../src/shop';
 
-// Mock the shop module
+// Mock steps in the shop module
 jest.mock('../src/shop', () => ({
   subtractInventory: jest.fn(),
   createOrder: jest.fn(),
