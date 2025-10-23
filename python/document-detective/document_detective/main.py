@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
 from llama_index.readers.file import PDFReader
+from llama_index.core import Document
 from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy import make_url
@@ -21,6 +22,7 @@ app = FastAPI()
 config: DBOSConfig = {
     "name": "document-detective",
     "system_database_url": database_url,
+    "conductor_key": os.environ.get("CONDUCTOR_KEY"),
 }
 DBOS(fastapi=app, config=config)
 
@@ -77,16 +79,21 @@ def indexing_workflow(urls: List[HttpUrl]):
     print(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
 
 
-# This function ingests a PDF document from a URL. It downloads it, scans it into pages,
-# then uses LlamaIndex to embed it and store the embedding in Postgres.
-
-# We annotate this function with DBOS.step() to mark it as a step in our indexing workflow.
-# Additionally, in case of transient failures (for example in downloading the document), we set it
-# to automatically retry indexing up to 5 times with exponential backoff.
+# This workflow indexes a document from a URL.
+# First, it downloads the document and parses it into pages.
+# Then, it adds each page to the vector index.
 
 
-@DBOS.step(retries_allowed=True, max_attempts=5)
+@DBOS.workflow()
 def index_document(document_url: HttpUrl) -> int:
+    pages = download_document(document_url)
+    for page in pages:
+        index_page(page)
+    return len(pages)
+
+
+@DBOS.step()
+def download_document(document_url: HttpUrl):
     # Download the document to a temporary file
     print(f"Downloading document from {document_url}")
     with TemporaryDirectory() as temp_dir:
@@ -99,13 +106,16 @@ def index_document(document_url: HttpUrl) -> int:
         # Parse the document into pages
         reader = PDFReader()
         pages = reader.load_data(temp_file_path)
-    # Insert each page into the vector index
-    for page in pages:
-        try:
-            index.insert(page)
-        except Exception as e:
-            print("Error inserting page:", page, e)
-    return len(pages)
+    return pages
+
+
+@DBOS.step()
+def index_page(page: Document):
+    # Insert a page into the vector index
+    try:
+        index.insert(page)
+    except Exception as e:
+        print("Error indexing page:", page, e)
 
 
 # This is the endpoint for indexing. It starts the indexing workflow in the background
