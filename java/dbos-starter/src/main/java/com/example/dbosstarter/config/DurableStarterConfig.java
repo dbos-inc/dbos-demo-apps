@@ -37,13 +37,11 @@ public class DurableStarterConfig {
         if (databaseUrl == null || databaseUrl.isEmpty()) {
             databaseUrl = "jdbc:postgresql://localhost:5432/dbos_starter_java";
         }
-        return new DBOSConfig.Builder()
-                .appName("dbos-starter")
-                .databaseUrl(databaseUrl)
-                .dbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
-                .dbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-                .runAdminServer()
-                .adminServerPort(3001)
-                .build();
+        return DBOSConfig.defaults("dbos-starter")
+                .withDatabaseUrl(databaseUrl)
+                .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
+                .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
+                .withAdminServer(true)
+                .withAdminServerPort(3001);
     }
 }
