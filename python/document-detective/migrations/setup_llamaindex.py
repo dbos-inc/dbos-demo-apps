@@ -17,7 +17,7 @@ with engine.connect() as conn:
     # Check if database exists
     result = conn.execute(
         text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
-        {"dbname": db.database}
+        {"dbname": db.database},
     )
     if not result.fetchone():
         # Create the database if it doesn't exist

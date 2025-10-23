@@ -130,61 +130,38 @@ async def index_endpoint(urls: URLList):
     DBOS.start_workflow(indexing_workflow, urls.urls)
 
 
-# Now, let's chat!
-
-# Each time we get a chat message, we call this workflow with three steps:
-# 1. Store the incoming chat message in Postgres.
-# 2. Query LlamaIndex to respond to the message using RAG.
-# 3. Store the response in Postgres.
+# Now, let's chat! We'll build a simple chat interface that stores history in memory.
+# Every time it gets a question, it answers using a RAG chat engine powered by the vector store.
 
 
 class ChatSchema(BaseModel):
     message: str
 
 
+chat_history = []
+
+
 @app.post("/chat")
-@DBOS.workflow()
-def chat_workflow(chat: ChatSchema):
-    insert_chat(chat.message, True)
-    response = query_model(chat.message)
-    insert_chat(response, False)
-    return {"content": response, "isUser": True}
+def chat(chat: ChatSchema):
+    query = {"content": chat.message, "isUser": False}
+    chat_history.append(query)
+    responseMessage = str(chat_engine.chat(chat.message))
+    response = {"content": responseMessage, "isUser": True}
+    chat_history.append(response)
+    return response
 
 
-@DBOS.transaction()
-def insert_chat(content: str, is_user: bool):
-    DBOS.sql_session.execute(
-        chat_history.insert().values(content=content, is_user=is_user)
-    )
-
-
-@DBOS.step()
-def query_model(message: str) -> str:
-    return str(chat_engine.chat(message))
-
-
-# Let's also write a history endpoint that retrieves all past chats
-# from the database.
-
+# Let's also write a history endpoint.
 # This function is called when we open up the chatbot so it
 # can display your chat history.
 
 
 @app.get("/history")
 def history_endpoint():
-    return get_chats()
-
-
-@DBOS.transaction()
-def get_chats():
-    stmt = chat_history.select().order_by(chat_history.c.created_at.asc())
-    result = DBOS.sql_session.execute(stmt)
-    return [{"content": row.content, "isUser": row.is_user} for row in result]
+    return chat_history
 
 
 # Finally, let's serve the app's frontend from an HTML file using FastAPI.
-# In production, we recommend using DBOS primarily for the backend,
-# with your frontend deployed elsewhere.
 
 
 @app.get("/")
