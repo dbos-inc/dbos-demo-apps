@@ -38,7 +38,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
     private WidgetStoreService service;
 
-    public void setWidgetStoreService(WidgetStoreService service) {
+    public void setProxy(WidgetStoreService service) {
         this.service=service;
     }
 

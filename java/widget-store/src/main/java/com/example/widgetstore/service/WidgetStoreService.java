@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface WidgetStoreService {
 
-    void setWidgetStoreService(WidgetStoreService service);
+    void setProxy(WidgetStoreService service);
     
     // Product methods
     ProductDto retrieveProduct();
