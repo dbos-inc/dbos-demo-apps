@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Java 21 or later (The DBOS Transact SDK Supports Java 17+)
+- Java 17 or later
 - PostgreSQL running on localhost:5432
 - PostgreSQL user `postgres` with password `dbos`
 
