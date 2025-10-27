@@ -254,7 +254,7 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "2.1.0"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "psycopg", extra = ["binary"] },
@@ -264,9 +264,9 @@ dependencies = [
     { name = "typer-slim" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/37/77/fd9597da7978d4d403cbb4fbdaadb42d17c2f7becb81baed7b7c8ec5bf70/dbos-2.1.0.tar.gz", hash = "sha256:3ef3d5f1781c951637abd11a8d2145c8739beaca654f4ce7bc03ef436d6ce5c5", size = 209066 }
+sdist = { url = "https://files.pythonhosted.org/packages/3b/b4/b5082fe26f64d1a4d0856e6777897f0c685fe9d862cb4b638e6b82b31cb2/dbos-2.2.0.tar.gz", hash = "sha256:85089526874eb3dd3b32fa16b1860f068b2f752877b2a88de33b4ff72ed2cd04", size = 210807 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ad/1a/a181322857e3c9dd063d0b589f2aa47c32011dc174074431eaad1dcee41a/dbos-2.1.0-py3-none-any.whl", hash = "sha256:8e9c1a951260908fa9958c26049f745578eee82e5e6d3cde1047083aa86719d2", size = 134555 },
+    { url = "https://files.pythonhosted.org/packages/dd/50/018aa40908cc2b4f137b15d4548966c333318784f15184c3e9ab58ad421e/dbos-2.2.0-py3-none-any.whl", hash = "sha256:35953e5675b0656535a0458e3c459e9c1f56664eefa87fdb8f4a2f54ee4ff54a", size = 135471 },
 ]
 
 [package.optional-dependencies]
@@ -307,7 +307,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.16.5" },
-    { name = "dbos", extras = ["otel"], specifier = "==2.1.0" },
+    { name = "dbos", extras = ["otel"], specifier = "==2.2.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.117.1" },
     { name = "plotly", specifier = ">=6.0.0" },
     { name = "streamlit", specifier = ">=1.41.1" },
@@ -338,7 +338,7 @@ name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749 }
 wheels = [

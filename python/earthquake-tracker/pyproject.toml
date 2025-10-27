@@ -7,7 +7,7 @@ dependencies = [
     "plotly>=6.0.0",
     "fastapi[standard]>=0.117.1",
     "alembic>=1.16.5",
-    "dbos[otel]==2.1.0",
+    "dbos[otel]==2.2.0",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
