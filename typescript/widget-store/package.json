@@ -24,7 +24,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^4.1.6",
+    "@dbos-inc/dbos-sdk": "^4.3.8",
     "@dbos-inc/knex-datasource": "^4.0.2",
     "@dbos-inc/otel": "^4.0.2",
     "fastify": "^5.2.2",
