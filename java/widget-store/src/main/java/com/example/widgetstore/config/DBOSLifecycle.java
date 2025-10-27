@@ -2,7 +2,6 @@ package com.example.widgetstore.config;
 
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import dev.dbos.transact.DBOS;
