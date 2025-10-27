@@ -152,26 +152,23 @@
           <div class="rounded-lg shadow-lg overflow-hidden">
 <pre class="code-block"><code><span class="line"><span style="color:#D73A49">public</span><span style="color:#D73A49"> class</span><span style="color:#6F42C1"> DurableServiceImpl</span><span style="color:#24292E"> {</span></span>
 <span class="line"></span>
-<div class="step-1"><span class="line"><span style="color:#24292E">  @</span><span style="color:#D73A49">Step</span></span>
-<span class="line"><span style="color:#D73A49">  public</span><span style="color:#D73A49"> void</span><span style="color:#6F42C1"> stepOne</span><span style="color:#24292E">() {</span></span>
+<div class="step-1"><span class="line"><span style="color:#D73A49">  private</span><span style="color:#D73A49"> void</span><span style="color:#6F42C1"> stepOne</span><span style="color:#24292E">() {</span></span>
 <span class="line"><span style="color:#24292E">    Thread.</span><span style="color:#6F42C1">sleep</span><span style="color:#24292E">(</span><span style="color:#005CC5">5000</span><span style="color:#24292E">);</span></span>
 <span class="line"><span style="color:#24292E">    logger.</span><span style="color:#6F42C1">info</span><span style="color:#24292E">(</span><span style="color:#032F62">"Completed step 1!"</span><span style="color:#24292E">);</span></span>
 <span class="line"><span style="color:#24292E">  }</span></span></div>
-<div class="step-2"><span class="line"><span style="color:#24292E">  @</span><span style="color:#D73A49">Step</span></span>
-<span class="line"><span style="color:#D73A49">  public</span><span style="color:#D73A49"> void</span><span style="color:#6F42C1"> stepTwo</span><span style="color:#24292E">() {</span></span>
+<div class="step-2"><span class="line"><span style="color:#D73A49">  private</span><span style="color:#D73A49"> void</span><span style="color:#6F42C1"> stepTwo</span><span style="color:#24292E">() {</span></span>
 <span class="line"><span style="color:#24292E">    Thread.</span><span style="color:#6F42C1">sleep</span><span style="color:#24292E">(</span><span style="color:#005CC5">5000</span><span style="color:#24292E">);</span></span>
 <span class="line"><span style="color:#24292E">    logger.</span><span style="color:#6F42C1">info</span><span style="color:#24292E">(</span><span style="color:#032F62">"Completed step 2!"</span><span style="color:#24292E">);</span></span>
 <span class="line"><span style="color:#24292E">  }</span></span></div>
-<div class="step-3"><span class="line"><span style="color:#24292E">  @</span><span style="color:#D73A49">Step</span></span>
-<span class="line"><span style="color:#D73A49">  public</span><span style="color:#D73A49"> void</span><span style="color:#6F42C1"> stepThree</span><span style="color:#24292E">() {</span></span>
+<div class="step-3"><span class="line"><span style="color:#D73A49">  private</span><span style="color:#D73A49"> void</span><span style="color:#6F42C1"> stepThree</span><span style="color:#24292E">() {</span></span>
 <span class="line"><span style="color:#24292E">    Thread.</span><span style="color:#6F42C1">sleep</span><span style="color:#24292E">(</span><span style="color:#005CC5">5000</span><span style="color:#24292E">);</span></span>
 <span class="line"><span style="color:#24292E">    logger.</span><span style="color:#6F42C1">info</span><span style="color:#24292E">(</span><span style="color:#032F62">"Completed step 3!"</span><span style="color:#24292E">);</span></span>
 <span class="line"><span style="color:#24292E">  }</span></span></div>
 <span class="line"><span style="color:#24292E">  @</span><span style="color:#D73A49">Workflow</span></span>
 <span class="line"><span style="color:#D73A49">  public</span><span style="color:#D73A49"> void</span><span style="color:#6F42C1"> exampleWorkflow</span><span style="color:#24292E">() {</span></span>
-<span class="line workflow-step-1"><span style="color:#24292E">    self.</span><span style="color:#6F42C1">stepOne</span><span style="color:#24292E">();</span></span>
-<span class="line workflow-step-2"><span style="color:#24292E">    self.</span><span style="color:#6F42C1">stepTwo</span><span style="color:#24292E">();</span></span>
-<span class="line workflow-step-3"><span style="color:#24292E">    self.</span><span style="color:#6F42C1">stepThree</span><span style="color:#24292E">();</span></span>
+<span class="line workflow-step-1"><span style="color:#24292E">    DBOS.</span><span style="color:#6F42C1">runStep</span><span style="color:#24292E">(() -&gt; </span><span style="color:#6F42C1">stepOne</span><span style="color:#24292E">(), </span><span style="color:#032F62">"stepOne"</span><span style="color:#24292E">);</span></span>
+<span class="line workflow-step-2"><span style="color:#24292E">    DBOS.</span><span style="color:#6F42C1">runStep</span><span style="color:#24292E">(() -&gt; </span><span style="color:#6F42C1">stepTwo</span><span style="color:#24292E">(), </span><span style="color:#032F62">"stepTwo"</span><span style="color:#24292E">);</span></span>
+<span class="line workflow-step-3"><span style="color:#24292E">    DBOS.</span><span style="color:#6F42C1">runStep</span><span style="color:#24292E">(() -&gt; </span><span style="color:#6F42C1">stepThree</span><span style="color:#24292E">(), </span><span style="color:#032F62">"stepThree"</span><span style="color:#24292E">);</span></span>
 <span class="line"><span style="color:#24292E">  }</span></span>
 <span class="line"><span style="color:#24292E">}</span></span>
 <span class="line"></span></code></pre>          </div>
