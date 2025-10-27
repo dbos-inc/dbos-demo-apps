@@ -135,7 +135,7 @@
       <p class="mb-4">DBOS helps you build applications that are <strong>resilient to any failure</strong>.</p>
 
       <p class="mb-4">
-        Simply add DBOS to your existing <s>TypeScript</s> <s>Python</s> <s>Go</s> <strong>Java</strong> program by registering ordinary functions as workflows and steps. These <b>durably execute</b> your program, persisting its state to a Postgres database. If your
+        Simply add DBOS to your existing <strong>Java</strong> program by registering ordinary functions as workflows and steps. These <b>durably execute</b> your program, persisting its state to a Postgres database. If your
         program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
       </p>
       <p class="mb-4">
@@ -174,19 +174,7 @@
 <span class="line workflow-step-3"><span style="color:#24292E">    self.</span><span style="color:#6F42C1">stepThree</span><span style="color:#24292E">();</span></span>
 <span class="line"><span style="color:#24292E">  }</span></span>
 <span class="line"><span style="color:#24292E">}</span></span>
-<span class="line"><span style="color:#24292E"> </span></span>
-<span class="line"><span style="color:#24292E">@</span><span style="color:#D73A49">Configuration</span></span>
-<span class="line"><span style="color:#D73A49">public</span><span style="color:#D73A49"> class</span><span style="color:#6F42C1"> DurableConfig</span><span style="color:#24292E"> {</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#24292E">  @</span><span style="color:#D73A49">Bean</span></span>
-<span class="line"><span style="color:#D73A49">  public</span><span style="color:#24292E"> DurableService </span><span style="color:#6F42C1">durableSvc</span><span style="color:#24292E">() {</span></span>
-<span class="line"><span style="color:#D73A49">    var</span><span style="color:#24292E"> proxy </span><span style="color:#D73A49">=</span><span style="color:#24292E"> DBOS.</span><span style="color:#6F42C1">registerWorkflows</span><span style="color:#24292E">(</span></span>
-<span class="line"><span style="color:#24292E">        DurableService.class,</span></span>
-<span class="line"><span style="color:#24292E">        new</span><span style="color:#6F42C1"> DurableServiceImpl</span><span style="color:#24292E">());</span></span>
-<span class="line"><span style="color:#24292E">    proxy.</span><span style="color:#6F42C1">setDurableService</span><span style="color:#24292E">(proxy);</span></span>
-<span class="line"><span style="color:#D73A49">    return</span><span style="color:#24292E"> proxy;</span></span>
-<span class="line"><span style="color:#24292E">  }</span></span>
-<span class="line"><span style="color:#24292E">}</span></span></code></pre>          </div>
+<span class="line"></span></code></pre>          </div>
         </div>
 
         <!-- Controls section -->
