@@ -111,7 +111,7 @@ public class WidgetStoreController {
         logger.info("Payment webhook called with key: " + key + ", status: " + status);
         
         try {
-            DBOS.startWorkflow(() -> widgetStoreService.tempSendWorkflow(key, status, PAYMENT_STATUS));
+            DBOS.send(key, status, PAYMENT_STATUS);
             String orderId = (String) DBOS.getEvent(key, ORDER_ID, Duration.ofSeconds(60));
             return ResponseEntity.ok(orderId);
         } catch (Exception e) {
