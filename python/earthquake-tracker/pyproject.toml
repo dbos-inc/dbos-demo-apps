@@ -14,9 +14,6 @@ readme = "README.md"
 license = {text = "MIT"}
 
 
-[tool.pdm]
-distribution = false
-
 [tool.black]
 line-length = 88
 
