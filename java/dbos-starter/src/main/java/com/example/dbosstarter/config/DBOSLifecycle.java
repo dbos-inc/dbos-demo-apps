@@ -2,10 +2,12 @@ package com.example.dbosstarter.config;
 
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import dev.dbos.transact.DBOS;
+import dev.dbos.transact.config.DBOSConfig;
+
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,18 @@ public class DBOSLifecycle implements SmartLifecycle {
 
     @Override
     public void start() {
+        String databaseUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
+        if (databaseUrl == null || databaseUrl.isEmpty()) {
+            databaseUrl = "jdbc:postgresql://localhost:5432/dbos_starter_java";
+        }
+        var config = DBOSConfig.defaults("dbos-starter")
+                .withDatabaseUrl(databaseUrl)
+                .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
+                .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
+                .withAdminServer(true)
+                .withAdminServerPort(3001);
+        DBOS.configure(config);
+
         log.info("Launch DBOS");
         DBOS.launch();
         running = true;
