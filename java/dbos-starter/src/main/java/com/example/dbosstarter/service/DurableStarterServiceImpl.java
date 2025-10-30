@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dev.dbos.transact.DBOS;
-import dev.dbos.transact.context.DBOSContext;
 import dev.dbos.transact.workflow.Step;
 import dev.dbos.transact.workflow.Workflow;
 
