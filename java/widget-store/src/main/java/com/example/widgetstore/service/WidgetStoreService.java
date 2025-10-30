@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface WidgetStoreService {
 
-    void setWidgetStoreService(WidgetStoreService service);
+    void setProxy(WidgetStoreService service);
     
     // Product methods
     ProductDto retrieveProduct();
@@ -26,7 +26,6 @@ public interface WidgetStoreService {
     
     // Workflow methods
     String checkoutWorkflow(String key);
-    void tempSendWorkflow(String destinationId, Object message, String topic);
     void dispatchOrderWorkflow(Integer orderId);
     void updateOrderProgress(Integer orderId);
 }

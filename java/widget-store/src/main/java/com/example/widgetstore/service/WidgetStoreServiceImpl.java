@@ -23,7 +23,6 @@ import com.example.widgetstore.generated.tables.pojos.Products;
 import com.example.widgetstore.model.OrderStatus;
 
 import dev.dbos.transact.DBOS;
-import dev.dbos.transact.workflow.Step;
 import dev.dbos.transact.workflow.Workflow;
 
 @Transactional
@@ -39,7 +38,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
     private WidgetStoreService service;
 
-    public void setWidgetStoreService(WidgetStoreService service) {
+    public void setProxy(WidgetStoreService service) {
         this.service=service;
     }
 
@@ -68,7 +67,6 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
                 .execute();
     }
 
-    @Step
     public void subtractInventory() throws RuntimeException {
         int updated = dsl.update(PRODUCTS)
                 .set(PRODUCTS.INVENTORY, PRODUCTS.INVENTORY.minus(1))
@@ -88,7 +86,6 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
                 .execute();
     }
 
-    @Step
     public Integer createOrder() {
         return dsl.insertInto(ORDERS)
                 .set(ORDERS.ORDER_STATUS, OrderStatus.PENDING.getValue())
@@ -152,12 +149,12 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
     @Workflow
     public String checkoutWorkflow(String key) {
-        Integer orderId = service.createOrder();
+        Integer orderId = DBOS.runStep(() -> service.createOrder(), "createOrder");
         try {
-            service.subtractInventory();
+            DBOS.runStep(() -> service.subtractInventory(), "subtractInventory");
         } catch (RuntimeException e) {
             logger.error("Failed to reserve inventory for order {}", orderId);
-            service.errorOrder(orderId);
+            DBOS.runStep(() -> service.errorOrder(orderId), "errorOrder");
             DBOS.setEvent(PAYMENT_ID, null);
         }
 
@@ -167,12 +164,12 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
         if (payment_status != null && payment_status.equals("paid")) {
             logger.info("Payment successful for order {}", orderId);
-            service.markOrderPaid(orderId);
+            DBOS.runStep(() -> service.markOrderPaid(orderId), "markOrderPaid");
             DBOS.startWorkflow(() -> service.dispatchOrderWorkflow(orderId));
         } else {
             logger.info("Payment failed for order {}", orderId);
-            service.errorOrder(orderId);
-            service.undoSubtractInventory();
+            DBOS.runStep(() -> service.errorOrder(orderId), "errorOrder");
+            DBOS.runStep(() -> service.undoSubtractInventory(), "undoSubtractInventory");
         }
         
         DBOS.setEvent(ORDER_ID, String.valueOf(orderId));
@@ -180,19 +177,13 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
     }
 
     @Workflow
-    public void tempSendWorkflow(String destinationId, Object message, String topic) {
-        DBOS.send(destinationId, message, topic);
-    }
-
-    @Workflow
     public void dispatchOrderWorkflow(Integer orderId) {
         for (int i = 0; i < 10; i++) {
             DBOS.sleep(Duration.ofSeconds(1));
-            service.updateOrderProgress(orderId);
+            DBOS.runStep(() -> service.updateOrderProgress(orderId), "updateOrderProgress");
         }
     }
 
-    @Step
     public void updateOrderProgress(Integer orderId) {
         Integer progressRemaining = dsl.update(ORDERS)
                 .set(ORDERS.PROGRESS_REMAINING, ORDERS.PROGRESS_REMAINING.minus(1))
