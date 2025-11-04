@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Start backend
-uv run uvicorn main:app --reload &
+uv run python main.py &
 BACKEND_PID=$!
 
 # Start frontend

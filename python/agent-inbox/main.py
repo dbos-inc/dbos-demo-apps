@@ -1,9 +1,12 @@
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, Optional
 from datetime import datetime
 from uuid import uuid4
+from dbos import DBOS, DBOSConfig
+import uvicorn
 
 app = FastAPI()
 
@@ -15,11 +18,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+AGENT_STATUS = "agent_status"
+
 class AgentStartRequest(BaseModel):
     name: str
     task: str
 
-class AgentResponse(BaseModel):
+class AgentStatus(BaseModel):
     agent_id: str
     name: str
     task: str
@@ -30,67 +35,80 @@ class AgentResponse(BaseModel):
 class HumanResponseRequest(BaseModel):
     response: Literal["confirm", "deny"]
 
-agents_db: dict[str, dict] = {}
+@DBOS.workflow()
+def durable_agent(request: AgentStartRequest):
+    # Set agent status for observability
+    agent_status: AgentStatus = AgentStatus(
+        agent_id=DBOS.workflow_id,
+        name=request.name,
+        task=request.task,
+        status="waiting_for_human",
+        created_at=datetime.now().isoformat(),
+        question=f"Should I proceed with task: {request.task}?"
 
-@app.post("/agents", response_model=AgentResponse)
+    )
+    DBOS.set_event(AGENT_STATUS, agent_status)
+    print("Starting agent:", agent_status)
+
+    # Wait for human-in-the-loop approval or denial
+    approval: Optional[HumanResponseRequest] = DBOS.recv()
+    
+    if approval is None:
+        # If approval times out, treat it as a denial
+        agent_status.status = "denied"
+        DBOS.set_event(AGENT_STATUS, agent_status)
+        print("Agent timed out:", agent_status)
+        raise Exception("Agent timed out awaiting approvial")
+    elif approval.response == "deny":
+        agent_status.status = "denied"
+        DBOS.set_event(AGENT_STATUS, agent_status)
+        print("Agent denied:", agent_status)
+        raise Exception("Agent denied approval")
+    else:
+        agent_status.status = "approved"
+        print("Agent approved:", agent_status)
+        DBOS.set_event(AGENT_STATUS, agent_status)
+
+    return "Agent successful"
+
+
+@app.post("/agents", response_model=AgentStatus)
 def start_agent(request: AgentStartRequest):
-    agent_id = str(uuid4())
-    now = datetime.now().isoformat()
+    handle = DBOS.start_workflow(durable_agent, request)
+    status: AgentStatus = DBOS.get_event(handle.workflow_id, AGENT_STATUS)
+    return status
 
-    agent_data = {
-        "agent_id": agent_id,
-        "name": request.name,
-        "task": request.task,
-        "status": "waiting_for_human",
-        "created_at": now,
-        "question": f"Should I proceed with task: {request.task}?"
-    }
-
-    agents_db[agent_id] = agent_data
-    return AgentResponse(**agent_data)
-
-@app.get("/agents/waiting", response_model=list[AgentResponse])
+@app.get("/agents/waiting", response_model=list[AgentStatus])
 def list_waiting_agents():
-    return [
-        AgentResponse(**agent)
-        for agent in agents_db.values()
-        if agent["status"] == "waiting_for_human"
-    ]
+    agent_workflows = DBOS.list_workflows(status="PENDING")
+    return [DBOS.get_event(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
 
-@app.get("/agents/completed", response_model=list[AgentResponse])
+@app.get("/agents/completed", response_model=list[AgentStatus])
 def list_completed_agents():
-    return [
-        AgentResponse(**agent)
-        for agent in agents_db.values()
-        if agent["status"] in ["approved", "denied"]
-    ]
+    agent_workflows = DBOS.list_workflows(status="SUCCESS")
+    return [DBOS.get_event(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
 
-@app.get("/agents/approved", response_model=list[AgentResponse])
+@app.get("/agents/approved", response_model=list[AgentStatus])
 def list_approved_agents():
-    return [
-        AgentResponse(**agent)
-        for agent in agents_db.values()
-        if agent["status"] == "approved"
-    ]
+    agent_workflows = DBOS.list_workflows(status="SUCCESS")
+    return [DBOS.get_event(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
 
-@app.get("/agents/denied", response_model=list[AgentResponse])
+@app.get("/agents/denied", response_model=list[AgentStatus])
 def list_denied_agents():
-    return [
-        AgentResponse(**agent)
-        for agent in agents_db.values()
-        if agent["status"] == "denied"
-    ]
+    agent_workflows = DBOS.list_workflows(status="ERROR")
+    return [DBOS.get_event(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
 
-@app.post("/agents/{agent_id}/respond", response_model=AgentResponse)
+@app.post("/agents/{agent_id}/respond")
 def respond_to_agent(agent_id: str, response: HumanResponseRequest):
-    if agent_id not in agents_db:
-        raise HTTPException(status_code=404, detail="Agent not found")
+    DBOS.send(agent_id, response)
+    return {"ok": True}
 
-    agent = agents_db[agent_id]
-
-    if agent["status"] != "waiting_for_human":
-        raise HTTPException(status_code=400, detail="Agent is not waiting for response")
-
-    agent["status"] = "approved" if response.response == "confirm" else "denied"
-
-    return AgentResponse(**agent)
+if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "agent-inbox",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+        "conductor_key": os.environ.get("CONDUCTOR_KEY")
+    }
+    DBOS(config=config)
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
