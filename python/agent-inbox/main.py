@@ -65,6 +65,22 @@ def list_completed_agents():
         if agent["status"] in ["approved", "denied"]
     ]
 
+@app.get("/agents/approved", response_model=list[AgentResponse])
+def list_approved_agents():
+    return [
+        AgentResponse(**agent)
+        for agent in agents_db.values()
+        if agent["status"] == "approved"
+    ]
+
+@app.get("/agents/denied", response_model=list[AgentResponse])
+def list_denied_agents():
+    return [
+        AgentResponse(**agent)
+        for agent in agents_db.values()
+        if agent["status"] == "denied"
+    ]
+
 @app.post("/agents/{agent_id}/respond", response_model=AgentResponse)
 def respond_to_agent(agent_id: str, response: HumanResponseRequest):
     if agent_id not in agents_db:

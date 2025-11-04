@@ -5,18 +5,24 @@ const API_URL = 'http://localhost:8000'
 
 function App() {
   const [waitingAgents, setWaitingAgents] = useState([])
-  const [agentName, setAgentName] = useState('')
-  const [agentTask, setAgentTask] = useState('')
+  const [approvedAgents, setApprovedAgents] = useState([])
+  const [deniedAgents, setDeniedAgents] = useState([])
+  const [agentCounter, setAgentCounter] = useState(1)
 
-  const fetchWaitingAgents = async () => {
-    const response = await fetch(`${API_URL}/agents/waiting`)
-    const data = await response.json()
-    setWaitingAgents(data)
+  const fetchAgents = async () => {
+    const [waiting, approved, denied] = await Promise.all([
+      fetch(`${API_URL}/agents/waiting`).then(r => r.json()),
+      fetch(`${API_URL}/agents/approved`).then(r => r.json()),
+      fetch(`${API_URL}/agents/denied`).then(r => r.json())
+    ])
+    setWaitingAgents(waiting)
+    setApprovedAgents(approved)
+    setDeniedAgents(denied)
   }
 
   useEffect(() => {
-    fetchWaitingAgents()
-    const interval = setInterval(fetchWaitingAgents, 2000)
+    fetchAgents()
+    const interval = setInterval(fetchAgents, 2000)
     return () => clearInterval(interval)
   }, [])
 
@@ -24,11 +30,13 @@ function App() {
     await fetch(`${API_URL}/agents`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: agentName, task: agentTask })
+      body: JSON.stringify({
+        name: `Agent ${agentCounter}`,
+        task: `Task ${agentCounter}`
+      })
     })
-    setAgentName('')
-    setAgentTask('')
-    fetchWaitingAgents()
+    setAgentCounter(agentCounter + 1)
+    fetchAgents()
   }
 
   const respondToAgent = async (agentId, response) => {
@@ -37,48 +45,58 @@ function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ response })
     })
-    fetchWaitingAgents()
+    fetchAgents()
   }
 
   return (
-    <div style={{ display: 'flex', gap: '40px', padding: '20px' }}>
-      <div style={{ flex: 1 }}>
+    <div style={{ padding: '20px' }}>
+      <div style={{ marginBottom: '20px' }}>
         <h2>Start Agent</h2>
-        <input
-          type="text"
-          placeholder="Agent name"
-          value={agentName}
-          onChange={(e) => setAgentName(e.target.value)}
-          style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
-        />
-        <input
-          type="text"
-          placeholder="Task description"
-          value={agentTask}
-          onChange={(e) => setAgentTask(e.target.value)}
-          style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
-        />
         <button onClick={startAgent}>Start Agent</button>
       </div>
 
-      <div style={{ flex: 1 }}>
-        <h2>Pending Agents ({waitingAgents.length})</h2>
-        {waitingAgents.map((agent) => (
-          <div key={agent.agent_id} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
-            <h3>{agent.name}</h3>
-            <p><strong>Task:</strong> {agent.task}</p>
-            <p><strong>Question:</strong> {agent.question}</p>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => respondToAgent(agent.agent_id, 'confirm')}>
-                Confirm
-              </button>
-              <button onClick={() => respondToAgent(agent.agent_id, 'deny')}>
-                Deny
-              </button>
+      <div style={{ display: 'flex', gap: '20px' }}>
+        <div style={{ flex: 1 }}>
+          <h2>Pending ({waitingAgents.length})</h2>
+          {waitingAgents.map((agent) => (
+            <div key={agent.agent_id} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
+              <h3>{agent.name}</h3>
+              <p><strong>Task:</strong> {agent.task}</p>
+              <p><strong>Question:</strong> {agent.question}</p>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => respondToAgent(agent.agent_id, 'confirm')}>
+                  Confirm
+                </button>
+                <button onClick={() => respondToAgent(agent.agent_id, 'deny')}>
+                  Deny
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-        {waitingAgents.length === 0 && <p>No agents waiting for approval</p>}
+          ))}
+          {waitingAgents.length === 0 && <p>No pending agents</p>}
+        </div>
+
+        <div style={{ flex: 1 }}>
+          <h2>Approved ({approvedAgents.length})</h2>
+          {approvedAgents.map((agent) => (
+            <div key={agent.agent_id} style={{ border: '1px solid #4caf50', padding: '10px', marginBottom: '10px' }}>
+              <h3>{agent.name}</h3>
+              <p><strong>Task:</strong> {agent.task}</p>
+            </div>
+          ))}
+          {approvedAgents.length === 0 && <p>No approved agents</p>}
+        </div>
+
+        <div style={{ flex: 1 }}>
+          <h2>Denied ({deniedAgents.length})</h2>
+          {deniedAgents.map((agent) => (
+            <div key={agent.agent_id} style={{ border: '1px solid #f44336', padding: '10px', marginBottom: '10px' }}>
+              <h3>{agent.name}</h3>
+              <p><strong>Task:</strong> {agent.task}</p>
+            </div>
+          ))}
+          {deniedAgents.length === 0 && <p>No denied agents</p>}
+        </div>
       </div>
     </div>
   )
