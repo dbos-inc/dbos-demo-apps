@@ -8,6 +8,7 @@ function App() {
   const [approvedAgents, setApprovedAgents] = useState([])
   const [deniedAgents, setDeniedAgents] = useState([])
   const [agentCounter, setAgentCounter] = useState(1)
+  const [activeTab, setActiveTab] = useState('pending')
 
   const fetchAgents = async () => {
     const [waiting, approved, denied] = await Promise.all([
@@ -48,54 +49,97 @@ function App() {
     fetchAgents()
   }
 
-  return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <h2>Start Agent</h2>
-        <button onClick={startAgent}>Start Agent</button>
-      </div>
+  const tabs = [
+    { id: 'pending', label: 'Pending', count: waitingAgents.length },
+    { id: 'approved', label: 'Approved', count: approvedAgents.length },
+    { id: 'denied', label: 'Denied', count: deniedAgents.length }
+  ]
 
-      <div style={{ display: 'flex', gap: '20px' }}>
-        <div style={{ flex: 1 }}>
-          <h2>Pending ({waitingAgents.length})</h2>
-          {waitingAgents.map((agent) => (
-            <div key={agent.agent_id} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px' }}>
+  const renderAgentList = () => {
+    let agents = []
+    let emptyMessage = ''
+    let showActions = false
+
+    if (activeTab === 'pending') {
+      agents = waitingAgents
+      emptyMessage = 'No pending agents'
+      showActions = true
+    } else if (activeTab === 'approved') {
+      agents = approvedAgents
+      emptyMessage = 'No approved agents'
+    } else {
+      agents = deniedAgents
+      emptyMessage = 'No denied agents'
+    }
+
+    if (agents.length === 0) {
+      return <div className="empty-state">{emptyMessage}</div>
+    }
+
+    return (
+      <div className="agent-grid">
+        {agents.map((agent) => (
+          <div key={agent.agent_id} className={`agent-card ${activeTab}`}>
+            <div className="agent-header">
               <h3>{agent.name}</h3>
-              <p><strong>Task:</strong> {agent.task}</p>
-              <p><strong>Question:</strong> {agent.question}</p>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => respondToAgent(agent.agent_id, 'confirm')}>
+              <span className={`status-badge ${activeTab}`}>
+                {activeTab === 'pending' ? 'Waiting' : activeTab}
+              </span>
+            </div>
+            <div className="agent-body">
+              <p className="agent-task">{agent.task}</p>
+              {agent.question && <p className="agent-question">{agent.question}</p>}
+            </div>
+            {showActions && (
+              <div className="agent-actions">
+                <button
+                  className="btn-confirm"
+                  onClick={() => respondToAgent(agent.agent_id, 'confirm')}
+                >
                   Confirm
                 </button>
-                <button onClick={() => respondToAgent(agent.agent_id, 'deny')}>
+                <button
+                  className="btn-deny"
+                  onClick={() => respondToAgent(agent.agent_id, 'deny')}
+                >
                   Deny
                 </button>
               </div>
-            </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="app">
+      <div className="sidebar">
+        <div className="logo">
+          <h1>Agent Inbox</h1>
+        </div>
+        <button className="btn-start" onClick={startAgent}>
+          <span className="btn-icon">+</span>
+          Start Agent
+        </button>
+      </div>
+
+      <div className="main-content">
+        <div className="tabs">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`tab ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+              <span className="tab-count">{tab.count}</span>
+            </button>
           ))}
-          {waitingAgents.length === 0 && <p>No pending agents</p>}
         </div>
 
-        <div style={{ flex: 1 }}>
-          <h2>Approved ({approvedAgents.length})</h2>
-          {approvedAgents.map((agent) => (
-            <div key={agent.agent_id} style={{ border: '1px solid #4caf50', padding: '10px', marginBottom: '10px' }}>
-              <h3>{agent.name}</h3>
-              <p><strong>Task:</strong> {agent.task}</p>
-            </div>
-          ))}
-          {approvedAgents.length === 0 && <p>No approved agents</p>}
-        </div>
-
-        <div style={{ flex: 1 }}>
-          <h2>Denied ({deniedAgents.length})</h2>
-          {deniedAgents.map((agent) => (
-            <div key={agent.agent_id} style={{ border: '1px solid #f44336', padding: '10px', marginBottom: '10px' }}>
-              <h3>{agent.name}</h3>
-              <p><strong>Task:</strong> {agent.task}</p>
-            </div>
-          ))}
-          {deniedAgents.length === 0 && <p>No denied agents</p>}
+        <div className="content">
+          {renderAgentList()}
         </div>
       </div>
     </div>
