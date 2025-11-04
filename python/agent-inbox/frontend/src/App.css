@@ -29,11 +29,22 @@ body {
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
 }
 
+.logo {
+  margin-bottom: 48px;
+}
+
+.logo img {
+  width: 140px;
+  height: auto;
+  margin-bottom: 16px;
+  filter: brightness(0) invert(1);
+}
+
 .logo h1 {
   color: #ffffff;
   font-size: 24px;
   font-weight: 700;
-  margin-bottom: 48px;
+  margin: 0;
   letter-spacing: -0.5px;
 }
 
@@ -65,6 +76,38 @@ body {
 
 .btn-icon {
   font-size: 24px;
+  line-height: 1;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.footer-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.link-icon {
+  font-size: 16px;
   line-height: 1;
 }
 

@@ -116,12 +116,23 @@ function App() {
     <div className="app">
       <div className="sidebar">
         <div className="logo">
+          <img src="https://docs.dbos.dev/img/dbos-logo.png" alt="DBOS" />
           <h1>Agent Inbox</h1>
         </div>
         <button className="btn-start" onClick={startAgent}>
           <span className="btn-icon">+</span>
           Start Agent
         </button>
+        <div className="sidebar-footer">
+          <a href="https://docs.dbos.dev/" target="_blank" rel="noopener noreferrer" className="footer-link">
+            <span className="link-icon">📚</span>
+            Documentation
+          </a>
+          <a href="https://github.com/dbos-inc" target="_blank" rel="noopener noreferrer" className="footer-link">
+            <span className="link-icon">⭐</span>
+            GitHub
+          </a>
+        </div>
       </div>
 
       <div className="main-content">
