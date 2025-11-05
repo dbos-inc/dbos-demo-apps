@@ -4,6 +4,8 @@ This app shows how to build durable human-in-the-loop agents with DBOS.
 As agents run, they require manual human approval for key steps.
 From this app's dashboard, see which agentic tasks need approval and approve or deny them.
 
+<img width="2521" height="1254" alt="image" src="https://github.com/user-attachments/assets/a4a01494-e641-461c-97e9-bf4125be324c" />
+
 To see how it works and how you can adapt this pattern to build your own durable agents, check out the agent code in `main.py`.
 
 # Run the App
