@@ -80,21 +80,23 @@ def start_agent(request: AgentStartRequest):
 
 @app.get("/agents/waiting", response_model=list[AgentStatus])
 async def list_waiting_agents():
+    # List all active agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(status="PENDING", name=durable_agent.__qualname__)
-    events = await asyncio.gather(*[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows])
-    return list(events)
+    statuses: list[AgentStatus] = await asyncio.gather(*[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows])
+    # Only return active agents that are currently awaiting human approval
+    return [status for status in statuses if status.status == "waiting_for_human"]
 
 @app.get("/agents/approved", response_model=list[AgentStatus])
 async def list_approved_agents():
     agent_workflows = await DBOS.list_workflows_async(status="SUCCESS", name=durable_agent.__qualname__)
-    events = await asyncio.gather(*[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows])
-    return list(events)
+    statuses = await asyncio.gather(*[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows])
+    return list(statuses)
 
 @app.get("/agents/denied", response_model=list[AgentStatus])
 async def list_denied_agents():
     agent_workflows = await DBOS.list_workflows_async(status="ERROR", name=durable_agent.__qualname__)
-    events = await asyncio.gather(*[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows])
-    return list(events)
+    statuses = await asyncio.gather(*[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows])
+    return list(statuses)
 
 @app.post("/agents/{agent_id}/respond")
 def respond_to_agent(agent_id: str, response: HumanResponseRequest):
