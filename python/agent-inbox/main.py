@@ -1,13 +1,13 @@
+import asyncio
 import os
-from fastapi import FastAPI, HTTPException
+from datetime import datetime
+from typing import Literal, Optional
+
+import uvicorn
+from dbos import DBOS, DBOSConfig
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Literal, Optional
-from datetime import datetime
-from uuid import uuid4
-from dbos import DBOS, DBOSConfig
-import uvicorn
-import asyncio
 
 app = FastAPI()
 
@@ -21,9 +21,11 @@ app.add_middleware(
 
 AGENT_STATUS = "agent_status"
 
+
 class AgentStartRequest(BaseModel):
     name: str
     task: str
+
 
 class AgentStatus(BaseModel):
     agent_id: str
@@ -33,8 +35,10 @@ class AgentStatus(BaseModel):
     created_at: str
     question: str
 
+
 class HumanResponseRequest(BaseModel):
     response: Literal["confirm", "deny"]
+
 
 @DBOS.workflow()
 def durable_agent(request: AgentStartRequest):
@@ -45,15 +49,14 @@ def durable_agent(request: AgentStartRequest):
         task=request.task,
         status="waiting_for_human",
         created_at=datetime.now().isoformat(),
-        question=f"Should I proceed with task: {request.task}?"
-
+        question=f"Should I proceed with task: {request.task}?",
     )
     DBOS.set_event(AGENT_STATUS, agent_status)
     print("Starting agent:", agent_status)
 
     # Wait for human-in-the-loop approval or denial
     approval: Optional[HumanResponseRequest] = DBOS.recv()
-    
+
     if approval is None:
         # If approval times out, treat it as a denial
         agent_status.status = "denied"
@@ -78,36 +81,53 @@ def start_agent(request: AgentStartRequest):
     DBOS.start_workflow(durable_agent, request)
     return {"ok": True}
 
+
 @app.get("/agents/waiting", response_model=list[AgentStatus])
 async def list_waiting_agents():
     # List all active agents and retrieve their statuses
-    agent_workflows = await DBOS.list_workflows_async(status="PENDING", name=durable_agent.__qualname__)
-    statuses: list[AgentStatus] = await asyncio.gather(*[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows])
+    agent_workflows = await DBOS.list_workflows_async(
+        status="PENDING", name=durable_agent.__qualname__
+    )
+    statuses: list[AgentStatus] = await asyncio.gather(
+        *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
+    )
     # Only return active agents that are currently awaiting human approval
     return [status for status in statuses if status.status == "waiting_for_human"]
 
+
 @app.get("/agents/approved", response_model=list[AgentStatus])
 async def list_approved_agents():
-    agent_workflows = await DBOS.list_workflows_async(status="SUCCESS", name=durable_agent.__qualname__)
-    statuses = await asyncio.gather(*[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows])
+    agent_workflows = await DBOS.list_workflows_async(
+        status="SUCCESS", name=durable_agent.__qualname__
+    )
+    statuses = await asyncio.gather(
+        *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
+    )
     return list(statuses)
+
 
 @app.get("/agents/denied", response_model=list[AgentStatus])
 async def list_denied_agents():
-    agent_workflows = await DBOS.list_workflows_async(status="ERROR", name=durable_agent.__qualname__)
-    statuses = await asyncio.gather(*[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows])
+    agent_workflows = await DBOS.list_workflows_async(
+        status="ERROR", name=durable_agent.__qualname__
+    )
+    statuses = await asyncio.gather(
+        *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
+    )
     return list(statuses)
+
 
 @app.post("/agents/{agent_id}/respond")
 def respond_to_agent(agent_id: str, response: HumanResponseRequest):
     DBOS.send(agent_id, response)
     return {"ok": True}
 
+
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "agent-inbox",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-        "conductor_key": os.environ.get("CONDUCTOR_KEY")
+        "conductor_key": os.environ.get("CONDUCTOR_KEY"),
     }
     DBOS(config=config)
     DBOS.launch()
