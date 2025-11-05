@@ -5,7 +5,7 @@ uv run python main.py &
 BACKEND_PID=$!
 
 # Start frontend
-cd frontend && npm run dev &
+cd frontend && npm i && npm run dev &
 FRONTEND_PID=$!
 
 # Trap to kill both processes on exit
