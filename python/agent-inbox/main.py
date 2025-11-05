@@ -31,7 +31,7 @@ class AgentStatus(BaseModel):
     agent_id: str
     name: str
     task: str
-    status: Literal["waiting_for_human", "approved", "denied"]
+    status: Literal["working", "pending_approval", "denied"]
     created_at: str
     question: str
 
@@ -42,21 +42,28 @@ class HumanResponseRequest(BaseModel):
 
 @DBOS.workflow()
 def durable_agent(request: AgentStartRequest):
-    # Set agent status for observability
+    # Set an agent status the frontend can query
     agent_status: AgentStatus = AgentStatus(
         agent_id=DBOS.workflow_id,
         name=request.name,
         task=request.task,
-        status="waiting_for_human",
+        status="working",
         created_at=datetime.now().isoformat(),
         question=f"Should I proceed with task: {request.task}?",
     )
     DBOS.set_event(AGENT_STATUS, agent_status)
     print("Starting agent:", agent_status)
 
-    # Wait for human-in-the-loop approval or denial
+    # Do some work...
+
+    # Upon reaching the step that needs approval, update status
+    # to `pending_approval` and await an approval notification. 
+    agent_status.status = "pending_approval"
+    DBOS.set_event(AGENT_STATUS, agent_status)
     approval: Optional[HumanResponseRequest] = DBOS.recv()
 
+    # If approved, continue execution. Otherwise, raise an exception
+    # and terminate the agent.
     if approval is None:
         # If approval times out, treat it as a denial
         agent_status.status = "denied"
@@ -69,15 +76,18 @@ def durable_agent(request: AgentStartRequest):
         print("Agent denied:", agent_status)
         raise Exception("Agent denied approval")
     else:
-        agent_status.status = "approved"
+        agent_status.status = "working"
         print("Agent approved:", agent_status)
         DBOS.set_event(AGENT_STATUS, agent_status)
+
+    # Do some more work...
 
     return "Agent successful"
 
 
 @app.post("/agents")
 def start_agent(request: AgentStartRequest):
+    # Start a durable agent in the background
     DBOS.start_workflow(durable_agent, request)
     return {"ok": True}
 
@@ -92,11 +102,12 @@ async def list_waiting_agents():
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
     )
     # Only return active agents that are currently awaiting human approval
-    return [status for status in statuses if status.status == "waiting_for_human"]
+    return [status for status in statuses if status.status == "pending_approval"]
 
 
 @app.get("/agents/approved", response_model=list[AgentStatus])
 async def list_approved_agents():
+    # List all successful agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(
         status="SUCCESS", name=durable_agent.__qualname__
     )
@@ -108,6 +119,7 @@ async def list_approved_agents():
 
 @app.get("/agents/denied", response_model=list[AgentStatus])
 async def list_denied_agents():
+    # List all failed agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(
         status="ERROR", name=durable_agent.__qualname__
     )
@@ -119,6 +131,7 @@ async def list_denied_agents():
 
 @app.post("/agents/{agent_id}/respond")
 def respond_to_agent(agent_id: str, response: HumanResponseRequest):
+    # Notify an agent it has been approved or denied
     DBOS.send(agent_id, response)
     return {"ok": True}
 
