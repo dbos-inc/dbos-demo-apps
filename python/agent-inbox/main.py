@@ -79,20 +79,18 @@ def start_agent(request: AgentStartRequest):
 
 @app.get("/agents/waiting", response_model=list[AgentStatus])
 def list_waiting_agents():
-    agent_workflows = DBOS.list_workflows(status="PENDING")
+    agent_workflows = DBOS.list_workflows(status="PENDING", name=durable_agent.__qualname__)
     return [DBOS.get_event(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
 
 @app.get("/agents/approved", response_model=list[AgentStatus])
 def list_approved_agents():
-    agent_workflows = DBOS.list_workflows(status="SUCCESS")
-    return []
-    return [DBOS.get_event(w.workflow_id, AGENT_STATUS, timeout_seconds=0) for w in agent_workflows]
+    agent_workflows = DBOS.list_workflows(status="SUCCESS", name=durable_agent.__qualname__)
+    return [DBOS.get_event(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
 
 @app.get("/agents/denied", response_model=list[AgentStatus])
 def list_denied_agents():
-    agent_workflows = DBOS.list_workflows(status="ERROR")
-    return []
-    return [DBOS.get_event(w.workflow_id, AGENT_STATUS, timeout_seconds=0) for w in agent_workflows]
+    agent_workflows = DBOS.list_workflows(status="ERROR", name=durable_agent.__qualname__)
+    return [DBOS.get_event(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
 
 @app.post("/agents/{agent_id}/respond")
 def respond_to_agent(agent_id: str, response: HumanResponseRequest):
