@@ -3,17 +3,17 @@ from typing import Any, Dict
 
 from dbos import DBOS
 from rich.console import Console
+from rich.panel import Panel
 
-from .agent import evaluate_results_step, generate_follow_ups_step, should_continue_step
+from .agent import evaluate_results_step, generate_follow_ups_step, should_continue_step, synthesize_findings_step
 from .api import get_comments_step, search_hackernews_step
-from .llm import synthesize_findings_step
 from .models import AGENT_STATUS, AgentStatus
 
 console = Console()
 
 
 @DBOS.workflow()
-def agentic_research_workflow(topic: str, max_iterations: int = 5) -> Dict[str, Any]:
+def agentic_research_workflow(topic: str, max_iterations: int = 2) -> Dict[str, Any]:
     """Main agentic workflow that autonomously researches a topic.
 
     This demonstrates a complete agentic workflow using DBOS.
@@ -39,7 +39,6 @@ def agentic_research_workflow(topic: str, max_iterations: int = 5) -> Dict[str, 
     DBOS.set_event(AGENT_STATUS, agent_status)
 
     all_findings = []
-    research_history = []
     current_iteration = 0
     current_query = topic
 
@@ -54,29 +53,8 @@ def agentic_research_workflow(topic: str, max_iterations: int = 5) -> Dict[str, 
         )
 
         # Research the next query in a child workflow
-        iteration_result = research_query(topic, current_query, current_iteration)
-        research_history.append(iteration_result)
-        all_findings.append(iteration_result["evaluation"])
-
-        # Handle cases where no results are found
-        stories_found = iteration_result["stories_found"]
-        if stories_found == 0:
-            console.print(
-                f"[dim]⚠️  No stories found for '{current_query}', trying alternative approach...[/dim]"
-            )
-
-            # Generate alternative queries when hitting dead ends
-            alternative_query = generate_follow_ups_step(
-                topic, all_findings, current_iteration
-            )
-            if alternative_query:
-                current_query = alternative_query
-                console.print(f"[dim]🔄 Retrying with: '{current_query}'[/dim]")
-                continue
-            else:
-                console.print(
-                    "[dim]❌ No alternative queries available, continuing...[/dim]"
-                )
+        evaluation = research_query(topic, current_query)
+        all_findings.append(evaluation)
 
         # Evaluate whether to continue research
         console.print("[dim]🤔 Agent evaluating whether to continue research...[/dim]")
@@ -106,11 +84,13 @@ def agentic_research_workflow(topic: str, max_iterations: int = 5) -> Dict[str, 
     console.print("[dim]📋 Agent synthesizing final research report...[/dim]")
     final_report = synthesize_findings_step(topic, all_findings)
     agent_status.report = final_report
+    console.print(f"\n[bold]📊 Research Report:[/bold]")
+    console.print(Panel(final_report, border_style="blue", padding=(1, 2)))
     DBOS.set_event(AGENT_STATUS, agent_status)
 
 
 @DBOS.workflow()
-def research_query(topic: str, query: str, iteration: int) -> Dict[str, Any]:
+def research_query(topic: str, query: str) -> Dict[str, Any]:
     """Research a query selected by the main agentic workflow."""
 
     console.print(f"[dim]🔍 Searching for stories: '{query}'[/dim]")
@@ -160,14 +140,4 @@ def research_query(topic: str, query: str, iteration: int) -> Dict[str, Any]:
     console.print(
         f"[dim]🤔 Analyzing findings from {len(stories)} stories and {len(comments)} comments...[/dim]"
     )
-    evaluation = evaluate_results_step(topic, query, stories, comments)
-
-    return {
-        "iteration": iteration,
-        "query": query,
-        "stories_found": len(stories),
-        "comments_analyzed": len(comments),
-        "evaluation": evaluation,
-        "stories": stories,
-        "comments": comments,
-    }
+    return evaluate_results_step(topic, query, stories, comments)
