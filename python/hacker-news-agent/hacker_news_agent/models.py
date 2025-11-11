@@ -15,4 +15,4 @@ class AgentStatus(BaseModel):
     topic: str
     iterations: int
     report: Optional[str]
-    status: Literal["PENDING", "SUCCESS", "ERROR"]
+    status: str

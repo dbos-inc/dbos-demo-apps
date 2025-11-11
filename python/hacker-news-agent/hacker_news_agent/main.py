@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 
@@ -7,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from rich.console import Console
 
-from .models import AgentStartRequest, AgentStatus
+from .models import AGENT_STATUS, AgentStartRequest, AgentStatus
 from .workflows import agentic_research_workflow
 
 console = Console()
@@ -27,6 +28,18 @@ def start_agent(request: AgentStartRequest):
     DBOS.start_workflow(agentic_research_workflow, request.topic)
     return {"ok": True}
 
+@app.get("/agents", response_model=list[AgentStatus])
+async def list_agents():
+    # List all active agents and retrieve their statuses
+    agent_workflows = await DBOS.list_workflows_async(
+        name=agentic_research_workflow.__qualname__
+    )
+    statuses: list[AgentStatus] = await asyncio.gather(
+        *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
+    )
+    for workflow, status in zip(agent_workflows, statuses):
+        status.status = workflow.status
+    return statuses
 
 if __name__ == "__main__":
     # Validate required environment variables
