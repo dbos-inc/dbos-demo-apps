@@ -1,9 +1,3 @@
-"""LLM integration for agentic workflows using DBOS.
-
-Demonstrates how to build durable LLM-powered agents with DBOS step functions.
-Each LLM call is wrapped in @DBOS.step() for automatic retries and durability.
-"""
-
 import json
 import os
 from typing import Any, Dict, List

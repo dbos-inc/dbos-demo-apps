@@ -1,9 +1,4 @@
-"""DBOS workflows orchestrating the agentic research process.
-
-This module demonstrates how to build complex agentic workflows using DBOS.
-Each workflow is durable and can recover from failures while maintaining state.
-"""
-
+from datetime import datetime
 from typing import Any, Dict
 
 from dbos import DBOS
@@ -12,6 +7,7 @@ from rich.console import Console
 from .agent import evaluate_results_step, generate_follow_ups_step, should_continue_step
 from .api import get_comments_step, search_hackernews_step
 from .llm import synthesize_findings_step
+from .models import AGENT_STATUS, AgentStatus
 
 console = Console()
 
@@ -32,6 +28,16 @@ def agentic_research_workflow(topic: str, max_iterations: int = 5) -> Dict[str, 
 
     console.print(f"[dim]🎯 Starting agentic research for: {topic}[/dim]")
 
+    agent_status = AgentStatus(
+        agent_id=DBOS.workflow_id,
+        created_at=datetime.now().isoformat(),
+        topic=topic,
+        iterations=0,
+        report=None,
+        status="PENDING",
+    )
+    DBOS.set_event(AGENT_STATUS, agent_status)
+
     all_findings = []
     research_history = []
     current_iteration = 0
@@ -40,6 +46,8 @@ def agentic_research_workflow(topic: str, max_iterations: int = 5) -> Dict[str, 
     # Main agentic research loop
     while current_iteration < max_iterations:
         current_iteration += 1
+        agent_status.iterations = current_iteration
+        DBOS.set_event(AGENT_STATUS, agent_status)
 
         console.print(
             f"[dim]🔄 Starting iteration {current_iteration}/{max_iterations}[/dim]"
@@ -97,26 +105,8 @@ def agentic_research_workflow(topic: str, max_iterations: int = 5) -> Dict[str, 
     # Final step: Synthesize all findings into comprehensive report
     console.print("[dim]📋 Agent synthesizing final research report...[/dim]")
     final_report = synthesize_findings_step(topic, all_findings)
-
-    # Return complete research results
-    return {
-        "topic": topic,
-        "total_iterations": current_iteration,
-        "max_iterations": max_iterations,
-        "research_history": research_history,
-        "final_report": final_report,
-        "summary": {
-            "total_stories": sum(r["stories_found"] for r in research_history),
-            "total_comments": sum(r["comments_analyzed"] for r in research_history),
-            "queries_executed": [r["query"] for r in research_history],
-            "avg_relevance": (
-                sum(f.get("relevance_score", 0) for f in all_findings)
-                / len(all_findings)
-                if all_findings
-                else 0
-            ),
-        },
-    }
+    agent_status.report = final_report
+    DBOS.set_event(AGENT_STATUS, agent_status)
 
 
 @DBOS.workflow()

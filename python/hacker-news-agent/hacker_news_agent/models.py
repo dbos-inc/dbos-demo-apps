@@ -1,4 +1,8 @@
+from typing import Literal, Optional
+
 from pydantic import BaseModel
+
+AGENT_STATUS = "agent_status"
 
 
 class AgentStartRequest(BaseModel):
@@ -9,5 +13,6 @@ class AgentStatus(BaseModel):
     agent_id: str
     created_at: str
     topic: str
-    completed_iterations: str
-    report: str
+    iterations: int
+    report: Optional[str]
+    status: Literal["PENDING", "SUCCESS", "ERROR"]

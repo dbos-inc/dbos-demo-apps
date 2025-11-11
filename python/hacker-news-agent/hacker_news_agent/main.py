@@ -4,13 +4,21 @@ import sys
 import uvicorn
 from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from rich.console import Console
 
 from .models import AgentStartRequest, AgentStatus
 from .workflows import agentic_research_workflow
 
-app = FastAPI()
 console = Console()
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/agents")
