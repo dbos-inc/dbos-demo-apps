@@ -9,8 +9,7 @@ from typing import Any, Dict
 from dbos import DBOS
 from rich.console import Console
 
-from .agent import (evaluate_results_step, generate_follow_ups_step,
-                    should_continue_step)
+from .agent import evaluate_results_step, generate_follow_ups_step, should_continue_step
 from .api import get_comments_step, search_hackernews_step
 from .llm import synthesize_findings_step
 
@@ -18,7 +17,7 @@ console = Console()
 
 
 @DBOS.workflow()
-def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]:
+def agentic_research_workflow(topic: str, max_iterations: int = 5) -> Dict[str, Any]:
     """Main agentic workflow that autonomously researches a topic.
 
     This demonstrates a complete agentic workflow using DBOS.
