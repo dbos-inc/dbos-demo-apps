@@ -237,9 +237,7 @@ def should_continue_step(
 
 
 @DBOS.step()
-def synthesize_findings_step(
-    topic: str, all_findings: List[Dict[str, Any]]
-) -> str:
+def synthesize_findings_step(topic: str, all_findings: List[Dict[str, Any]]) -> str:
     """Synthesize all research findings into a comprehensive report."""
     findings_text = ""
     story_links = []

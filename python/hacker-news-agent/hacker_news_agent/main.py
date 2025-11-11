@@ -28,6 +28,7 @@ def start_agent(request: AgentStartRequest):
     DBOS.start_workflow(agentic_research_workflow, request.topic)
     return {"ok": True}
 
+
 @app.get("/agents", response_model=list[AgentStatus])
 async def list_agents():
     # List all active agents and retrieve their statuses
@@ -40,6 +41,7 @@ async def list_agents():
     for workflow, status in zip(agent_workflows, statuses):
         status.status = workflow.status
     return statuses
+
 
 if __name__ == "__main__":
     # Validate required environment variables

@@ -58,4 +58,3 @@ def clean_json_response(response: str) -> str:
         cleaned = cleaned[:-3]
 
     return cleaned.strip()
-

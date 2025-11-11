@@ -5,7 +5,12 @@ from dbos import DBOS
 from rich.console import Console
 from rich.panel import Panel
 
-from .agent import evaluate_results_step, generate_follow_ups_step, should_continue_step, synthesize_findings_step
+from .agent import (
+    evaluate_results_step,
+    generate_follow_ups_step,
+    should_continue_step,
+    synthesize_findings_step,
+)
 from .api import get_comments_step, search_hackernews_step
 from .models import AGENT_STATUS, AgentStatus
 
