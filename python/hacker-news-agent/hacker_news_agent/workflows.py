@@ -19,16 +19,12 @@ console = Console()
 
 @DBOS.workflow()
 def agentic_research_workflow(topic: str, max_iterations: int = 3):
-    """Main agentic workflow that autonomously researches a topic.
-
-    This demonstrates a complete agentic workflow using DBOS.
-    The agent starts with a research topic then:
+    """
+    This agent starts with a research topic then:
     1. Searches Hacker News for information on that topic.
-    2. Iteratively searches related queries, collecting information.
-    3. Makes decisions about when to continue
+    2. Iteratively searches related topics, collecting information.
+    3. Makes decisions about when to continue.
     4. Synthesizes findings into a final report.
-
-    The entire process is durable and can recover from any failure.
     """
 
     console.print(f"[dim]🎯 Starting agentic research for: {topic}[/dim]")
@@ -45,7 +41,7 @@ def agentic_research_workflow(topic: str, max_iterations: int = 3):
 
     all_findings = []
     current_iteration = 0
-    current_query = topic
+    current_topic = topic
 
     # Main agentic research loop
     while current_iteration < max_iterations:
@@ -57,8 +53,8 @@ def agentic_research_workflow(topic: str, max_iterations: int = 3):
             f"[dim]🔄 Starting iteration {current_iteration}/{max_iterations}[/dim]"
         )
 
-        # Research the next query in a child workflow
-        evaluation = research_query(topic, current_query)
+        # Research the next topic in a child workflow
+        evaluation = research_topic(topic, current_topic)
         all_findings.append(evaluation.model_dump())
 
         # Evaluate whether to continue research
@@ -73,12 +69,12 @@ def agentic_research_workflow(topic: str, max_iterations: int = 3):
         # Generate next research question based on findings
         if current_iteration < max_iterations:
             console.print("[dim]💭 Agent generating next research question...[/dim]")
-            follow_up_query = generate_follow_ups_step(
+            follow_up_topic = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
-            if follow_up_query:
-                current_query = follow_up_query
-                console.print(f"[dim]➡️  Next research focus: '{current_query}'[/dim]")
+            if follow_up_topic:
+                current_topic = follow_up_topic
+                console.print(f"[dim]➡️  Next research focus: '{current_topic}'[/dim]")
             else:
                 console.print(
                     "[dim]💡 No new research directions found, concluding...[/dim]"
@@ -95,8 +91,8 @@ def agentic_research_workflow(topic: str, max_iterations: int = 3):
 
 
 @DBOS.workflow()
-def research_query(topic: str, query: str) -> EvaluationResult:
-    """Research a query selected by the main agentic workflow."""
+def research_topic(topic: str, query: str) -> EvaluationResult:
+    """Research a topic selected by the main agentic workflow."""
 
     console.print(f"[dim]🔍 Searching for stories: '{query}'[/dim]")
 

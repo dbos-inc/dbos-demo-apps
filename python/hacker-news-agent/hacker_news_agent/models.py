@@ -42,8 +42,10 @@ class EvaluationResult(BaseModel):
         description="List of top stories analyzed"
     )
 
+
 class ShouldContinueResult(BaseModel):
     should_continue: bool
+
 
 class ResearchReport(BaseModel):
     report: str
