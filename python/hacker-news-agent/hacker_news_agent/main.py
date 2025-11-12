@@ -41,6 +41,7 @@ async def list_agents():
     )
     for workflow, status in zip(agent_workflows, statuses):
         status.status = workflow.status
+        status.agent_id = workflow.workflow_id
     return statuses
 
 

@@ -10,12 +10,12 @@ class AgentStartRequest(BaseModel):
 
 
 class AgentStatus(BaseModel):
-    agent_id: str
     created_at: str
     topic: str
     iterations: int
     report: Optional[str]
     status: str
+    agent_id: str = ""
 
 
 class StoryReference(BaseModel):

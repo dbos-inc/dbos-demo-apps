@@ -31,7 +31,6 @@ def agentic_research_workflow(topic: str, max_iterations: int = 3):
 
     # Set and update an agent status the frontend can display
     agent_status = AgentStatus(
-        agent_id=DBOS.workflow_id,
         created_at=datetime.now().isoformat(),
         topic=topic,
         iterations=0,
