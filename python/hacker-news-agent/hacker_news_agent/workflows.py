@@ -29,6 +29,7 @@ def agentic_research_workflow(topic: str, max_iterations: int = 3):
 
     console.print(f"[dim]🎯 Starting agentic research for: {topic}[/dim]")
 
+    # Set and update an agent status the frontend can display
     agent_status = AgentStatus(
         agent_id=DBOS.workflow_id,
         created_at=datetime.now().isoformat(),
