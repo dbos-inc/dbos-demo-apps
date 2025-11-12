@@ -39,6 +39,45 @@ export function AgentList() {
     return status.toLowerCase().includes('pending');
   };
 
+  const formatReportWithLinks = (report: string) => {
+    // Split by markdown links [text](url)
+    const parts: (string | JSX.Element)[] = [];
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = linkRegex.exec(report)) !== null) {
+      // Add text before the link
+      if (match.index > lastIndex) {
+        parts.push(report.substring(lastIndex, match.index));
+      }
+
+      // Add the link
+      const linkText = match[1];
+      const linkUrl = match[2];
+      parts.push(
+        <a
+          key={match.index}
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="report-link"
+        >
+          {linkText}
+        </a>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < report.length) {
+      parts.push(report.substring(lastIndex));
+    }
+
+    return parts;
+  };
+
   if (isLoading) {
     return <div className="loading">Loading agents...</div>;
   }
@@ -82,7 +121,7 @@ export function AgentList() {
               {agent.report && (
                 <div className="agent-report">
                   <h4>Report:</h4>
-                  <div className="report-content">{agent.report}</div>
+                  <div className="report-content">{formatReportWithLinks(agent.report)}</div>
                 </div>
               )}
             </div>

@@ -394,6 +394,21 @@ button:disabled {
   background: var(--hn-orange-dark);
 }
 
+.report-link {
+  color: var(--hn-orange);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid var(--hn-orange);
+  transition: all 0.2s ease;
+  padding-bottom: 1px;
+}
+
+.report-link:hover {
+  color: var(--hn-orange-dark);
+  border-bottom-color: var(--hn-orange-dark);
+  background: rgba(255, 102, 0, 0.05);
+}
+
 @media (max-width: 768px) {
   .app {
     padding: 1rem;
