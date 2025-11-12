@@ -18,7 +18,7 @@ console = Console()
 
 
 @DBOS.workflow()
-def agentic_research_workflow(topic: str, max_iterations: int = 2) -> Dict[str, Any]:
+def agentic_research_workflow(topic: str, max_iterations: int = 3) -> Dict[str, Any]:
     """Main agentic workflow that autonomously researches a topic.
 
     This demonstrates a complete agentic workflow using DBOS.

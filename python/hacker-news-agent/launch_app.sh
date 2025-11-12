@@ -6,7 +6,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🚀 Starting Deep Research Agent...${NC}\n"
+echo -e "${GREEN}🚀 Starting HN Research Agent...${NC}\n"
 
 # Check if OPENAI_API_KEY is set
 if [ -z "$OPENAI_API_KEY" ]; then
@@ -26,21 +26,11 @@ if [ ! -d "frontend/node_modules" ]; then
     fi
 fi
 
-# Create a temporary file to store PIDs
-PIDFILE=".app_pids"
-rm -f $PIDFILE
-
 # Cleanup function
 cleanup() {
     echo -e "\n${YELLOW}🛑 Shutting down...${NC}"
-    if [ -f $PIDFILE ]; then
-        while read pid; do
-            if ps -p $pid > /dev/null 2>&1; then
-                kill $pid 2>/dev/null
-            fi
-        done < $PIDFILE
-        rm -f $PIDFILE
-    fi
+    # Kill all background jobs started by this script
+    jobs -p | xargs -r kill 2>/dev/null
     exit 0
 }
 
@@ -56,16 +46,12 @@ echo -e "\nPress ${RED}Ctrl+C${NC} to stop both services\n"
 # Start backend
 echo -e "${GREEN}🐍 Starting backend...${NC}"
 uv run python -m hacker_news_agent.main &
-BACKEND_PID=$!
-echo $BACKEND_PID >> $PIDFILE
 
 # Start frontend
 echo -e "${GREEN}⚛️  Starting frontend...${NC}\n"
 cd frontend
 npm run dev &
-FRONTEND_PID=$!
 cd ..
-echo $FRONTEND_PID >> $PIDFILE
 
-# Wait for both processes
+# Wait for all background jobs
 wait
