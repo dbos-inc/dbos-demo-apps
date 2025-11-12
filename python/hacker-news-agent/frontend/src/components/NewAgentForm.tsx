@@ -31,7 +31,7 @@ export function NewAgentForm({ onAgentStarted }: NewAgentFormProps) {
 
   return (
     <div className="new-agent-form">
-      <h2>Launch New Research Agent</h2>
+      <h2>Launch Research Agent</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="topic">Research Topic:</label>
@@ -40,7 +40,7 @@ export function NewAgentForm({ onAgentStarted }: NewAgentFormProps) {
             id="topic"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="Enter a topic to research..."
+            placeholder="e.g., 'latest trends in AI', 'React vs Vue', 'best practices for microservices'..."
             disabled={isLoading}
           />
         </div>

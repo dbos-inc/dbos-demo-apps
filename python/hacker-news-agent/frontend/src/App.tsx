@@ -14,8 +14,8 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Deep Research Agent</h1>
-        <p>Launch AI agents to perform deep research on any topic</p>
+        <h1>HN Research Agent</h1>
+        <p>Harness the collective wisdom of Hacker News with AI-powered deep research on any tech topic</p>
       </header>
       <main className="app-main">
         <NewAgentForm onAgentStarted={handleAgentStarted} />
