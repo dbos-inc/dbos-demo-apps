@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from dbos import DBOS
 from rich.console import Console
@@ -12,13 +12,13 @@ from .agent import (
     synthesize_findings_step,
 )
 from .api import get_comments_step, search_hackernews_step
-from .models import AGENT_STATUS, AgentStatus
+from .models import AGENT_STATUS, AgentStatus, EvaluationResult
 
 console = Console()
 
 
 @DBOS.workflow()
-def agentic_research_workflow(topic: str, max_iterations: int = 3) -> Dict[str, Any]:
+def agentic_research_workflow(topic: str, max_iterations: int = 3):
     """Main agentic workflow that autonomously researches a topic.
 
     This demonstrates a complete agentic workflow using DBOS.
@@ -59,7 +59,7 @@ def agentic_research_workflow(topic: str, max_iterations: int = 3) -> Dict[str, 
 
         # Research the next query in a child workflow
         evaluation = research_query(topic, current_query)
-        all_findings.append(evaluation)
+        all_findings.append(evaluation.model_dump())
 
         # Evaluate whether to continue research
         console.print("[dim]🤔 Agent evaluating whether to continue research...[/dim]")
@@ -95,7 +95,7 @@ def agentic_research_workflow(topic: str, max_iterations: int = 3) -> Dict[str, 
 
 
 @DBOS.workflow()
-def research_query(topic: str, query: str) -> Dict[str, Any]:
+def research_query(topic: str, query: str) -> EvaluationResult:
     """Research a query selected by the main agentic workflow."""
 
     console.print(f"[dim]🔍 Searching for stories: '{query}'[/dim]")

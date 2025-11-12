@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from dbos import DBOS
 
 from .llm import call_llm, clean_json_response
+from .models import EvaluationResult, StoryReference
 
 
 @DBOS.step()
@@ -12,7 +13,7 @@ def evaluate_results_step(
     query: str,
     stories: List[Dict[str, Any]],
     comments: Optional[List[Dict[str, Any]]] = None,
-) -> Dict[str, Any]:
+) -> EvaluationResult:
     """Agent evaluates search results and extracts insights."""
 
     # Create detailed content digest for LLM
@@ -37,15 +38,15 @@ def evaluate_results_step(
 
         # Store top stories for reference
         top_stories.append(
-            {
-                "title": title,
-                "url": url,
-                "hn_url": hn_url,
-                "points": points,
-                "num_comments": num_comments,
-                "author": author,
-                "objectID": story.get("objectID", ""),
-            }
+            StoryReference(
+                title=title,
+                url=url,
+                hn_url=hn_url,
+                points=points,
+                num_comments=num_comments,
+                author=author,
+                objectID=story.get("objectID", ""),
+            )
         )
 
     comments_text = ""
@@ -68,15 +69,15 @@ def evaluate_results_step(
 
     prompt = f"""
     You are a research agent evaluating search results for: {topic}
-    
+
     Query used: {query}
-    
+
     Stories found:
     {stories_text}
-    
+
     Comments analyzed:
     {comments_text}
-    
+
     Provide a DETAILED analysis with specific insights, not generalizations. Focus on:
     - Specific technical details, metrics, or benchmarks mentioned
     - Concrete tools, libraries, frameworks, or techniques discussed
@@ -84,9 +85,9 @@ def evaluate_results_step(
     - Performance data, comparison results, or quantitative insights
     - Notable opinions, debates, or community perspectives
     - Specific use cases, implementation details, or real-world examples
-    
+
     Return JSON with:
-    - "insights": Array of specific, technical insights with context
+    - "insights": String array of specific, technical insights with context
     - "relevance_score": Number 1-10
     - "summary": Brief summary of findings
     - "key_points": Array of most important points discovered
@@ -103,10 +104,11 @@ def evaluate_results_step(
     response = call_llm(messages, max_tokens=2000)
 
     cleaned_response = clean_json_response(response)
-    evaluation = json.loads(cleaned_response)
-    evaluation["query"] = query
-    evaluation["top_stories"] = top_stories
-    return evaluation
+    evaluation_dict = json.loads(cleaned_response)
+    evaluation_dict["query"] = query
+    evaluation_dict["top_stories"] = top_stories
+
+    return EvaluationResult(**evaluation_dict)
 
 
 @DBOS.step()
