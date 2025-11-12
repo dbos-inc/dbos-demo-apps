@@ -21,10 +21,18 @@ export function AgentList() {
   };
 
   useEffect(() => {
-    fetchAgents();
-    // Poll for updates every 3 seconds
-    const interval = setInterval(fetchAgents, 3000);
-    return () => clearInterval(interval);
+    let timeoutId: NodeJS.Timeout;
+
+    const pollAgents = async () => {
+      await fetchAgents();
+      // Wait 3 seconds after the request completes before polling again
+      timeoutId = setTimeout(pollAgents, 3000);
+    };
+
+    // Start polling
+    pollAgents();
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const getStatusBadgeClass = (status: string) => {

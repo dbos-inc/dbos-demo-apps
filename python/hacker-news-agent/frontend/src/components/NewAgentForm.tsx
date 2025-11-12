@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { startAgent } from '../api';
 
-interface NewAgentFormProps {
-  onAgentStarted: () => void;
-}
-
-export function NewAgentForm({ onAgentStarted }: NewAgentFormProps) {
+export function NewAgentForm() {
   const [topic, setTopic] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +16,6 @@ export function NewAgentForm({ onAgentStarted }: NewAgentFormProps) {
     try {
       await startAgent(topic);
       setTopic('');
-      onAgentStarted();
     } catch (err) {
       setError('Failed to start agent. Please try again.');
       console.error(err);
