@@ -28,12 +28,12 @@ class AgentStartRequest(BaseModel):
 
 
 class AgentStatus(BaseModel):
-    agent_id: str
     name: str
     task: str
     status: Literal["working", "pending_approval", "denied"]
     created_at: str
     question: str
+    agent_id: Optional[str] = None
 
 
 class HumanResponseRequest(BaseModel):
@@ -44,7 +44,6 @@ class HumanResponseRequest(BaseModel):
 def durable_agent(request: AgentStartRequest):
     # Set an agent status the frontend can query
     agent_status: AgentStatus = AgentStatus(
-        agent_id=DBOS.workflow_id,
         name=request.name,
         task=request.task,
         status="working",
@@ -60,7 +59,7 @@ def durable_agent(request: AgentStartRequest):
     # to `pending_approval` and await an approval notification. 
     agent_status.status = "pending_approval"
     DBOS.set_event(AGENT_STATUS, agent_status)
-    approval: Optional[HumanResponseRequest] = DBOS.recv()
+    approval: Optional[HumanResponseRequest] = DBOS.recv(timeout_seconds=3600)
 
     # If approved, continue execution. Otherwise, raise an exception
     # and terminate the agent.
@@ -69,7 +68,7 @@ def durable_agent(request: AgentStartRequest):
         agent_status.status = "denied"
         DBOS.set_event(AGENT_STATUS, agent_status)
         print("Agent timed out:", agent_status)
-        raise Exception("Agent timed out awaiting approvial")
+        raise Exception("Agent timed out awaiting approval")
     elif approval.response == "deny":
         agent_status.status = "denied"
         DBOS.set_event(AGENT_STATUS, agent_status)
@@ -96,11 +95,13 @@ def start_agent(request: AgentStartRequest):
 async def list_waiting_agents():
     # List all active agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(
-        status="PENDING", name=durable_agent.__qualname__
+        status="PENDING", name=durable_agent.__qualname__, app_version=DBOS.application_version,
     )
     statuses: list[AgentStatus] = await asyncio.gather(
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
     )
+    for s, w in zip(statuses, agent_workflows):
+        s.agent_id = w.workflow_id
     # Only return active agents that are currently awaiting human approval
     return [status for status in statuses if status.status == "pending_approval"]
 
@@ -109,7 +110,7 @@ async def list_waiting_agents():
 async def list_approved_agents():
     # List all successful agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(
-        status="SUCCESS", name=durable_agent.__qualname__
+        status="SUCCESS", name=durable_agent.__qualname__, app_version=DBOS.application_version,
     )
     statuses = await asyncio.gather(
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
@@ -121,7 +122,7 @@ async def list_approved_agents():
 async def list_denied_agents():
     # List all failed agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(
-        status="ERROR", name=durable_agent.__qualname__
+        status="ERROR", name=durable_agent.__qualname__, app_version=DBOS.application_version,
     )
     statuses = await asyncio.gather(
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
