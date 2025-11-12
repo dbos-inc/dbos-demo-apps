@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -41,3 +41,9 @@ class EvaluationResult(BaseModel):
     top_stories: List[StoryReference] = Field(
         description="List of top stories analyzed"
     )
+
+class ShouldContinueResult(BaseModel):
+    should_continue: bool
+
+class ResearchReport(BaseModel):
+    report: str

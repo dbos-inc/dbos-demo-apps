@@ -88,9 +88,9 @@ def agentic_research_workflow(topic: str, max_iterations: int = 3):
     # Final step: Synthesize all findings into comprehensive report
     console.print("[dim]📋 Agent synthesizing final research report...[/dim]")
     final_report = synthesize_findings_step(topic, all_findings)
-    agent_status.report = final_report
+    agent_status.report = final_report.report
     console.print(f"\n[bold]📊 Research Report:[/bold]")
-    console.print(Panel(final_report, border_style="blue", padding=(1, 2)))
+    console.print(Panel(final_report.report, border_style="blue", padding=(1, 2)))
     DBOS.set_event(AGENT_STATUS, agent_status)
 
 

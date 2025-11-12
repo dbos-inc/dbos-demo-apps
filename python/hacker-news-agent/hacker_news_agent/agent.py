@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 from dbos import DBOS
 
 from .llm import call_llm, clean_json_response
-from .models import EvaluationResult, StoryReference
+from .models import EvaluationResult, ResearchReport, ShouldContinueResult, StoryReference
 
 
 @DBOS.step()
@@ -231,15 +231,15 @@ def should_continue_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = call_llm(messages)
-
-    cleaned_response = clean_json_response(response)
-    decision = json.loads(cleaned_response)
-    return decision.get("should_continue", True)
+    raw_response = call_llm(messages)
+    cleaned_response = clean_json_response(raw_response)
+    json_response = json.loads(cleaned_response)
+    response = ShouldContinueResult(**json_response)
+    return response.should_continue
 
 
 @DBOS.step()
-def synthesize_findings_step(topic: str, all_findings: List[Dict[str, Any]]) -> str:
+def synthesize_findings_step(topic: str, all_findings: List[Dict[str, Any]]) -> ResearchReport:
     """Synthesize all research findings into a comprehensive report."""
     findings_text = ""
     story_links = []
@@ -355,8 +355,7 @@ def synthesize_findings_step(topic: str, all_findings: List[Dict[str, Any]]) -> 
         {"role": "user", "content": prompt},
     ]
 
-    response = call_llm(messages, max_tokens=3000)
-
-    cleaned_response = clean_json_response(response)
-    result = json.loads(cleaned_response)
-    return result["report"]
+    raw_response = call_llm(messages, max_tokens=3000)
+    cleaned_response = clean_json_response(raw_response)
+    json_response = json.loads(cleaned_response)
+    return ResearchReport(**json_response)
