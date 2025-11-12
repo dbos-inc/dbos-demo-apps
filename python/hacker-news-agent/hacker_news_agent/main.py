@@ -33,7 +33,8 @@ def start_agent(request: AgentStartRequest):
 async def list_agents():
     # List all active agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(
-        name=agentic_research_workflow.__qualname__
+        name=agentic_research_workflow.__qualname__,
+        sort_desc=True,
     )
     statuses: list[AgentStatus] = await asyncio.gather(
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
