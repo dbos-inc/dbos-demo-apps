@@ -95,7 +95,7 @@ def start_agent(request: AgentStartRequest):
 async def list_waiting_agents():
     # List all active agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(
-        status="PENDING", name=durable_agent.__qualname__, app_version=DBOS.application_version,
+        status="PENDING", name=durable_agent.__qualname__
     )
     statuses: list[AgentStatus] = await asyncio.gather(
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
@@ -110,7 +110,7 @@ async def list_waiting_agents():
 async def list_approved_agents():
     # List all successful agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(
-        status="SUCCESS", name=durable_agent.__qualname__, app_version=DBOS.application_version,
+        status="SUCCESS", name=durable_agent.__qualname__
     )
     statuses = await asyncio.gather(
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
@@ -122,7 +122,7 @@ async def list_approved_agents():
 async def list_denied_agents():
     # List all failed agents and retrieve their statuses
     agent_workflows = await DBOS.list_workflows_async(
-        status="ERROR", name=durable_agent.__qualname__, app_version=DBOS.application_version,
+        status="ERROR", name=durable_agent.__qualname__
     )
     statuses = await asyncio.gather(
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
