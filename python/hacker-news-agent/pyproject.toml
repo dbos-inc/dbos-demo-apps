@@ -9,12 +9,16 @@ dependencies = [
     "openai>=1.0.0",
     "rich>=13.0.0",
     "python-dotenv>=1.0.0",
-    "dbos==2.4.0",
+    "dbos>=2.5.0a1",
+    "fastapi[standard]>=0.121.1",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "pytest>=7.0.0",
     "black>=23.0.0",
-    "ruff>=0.1.0"
+    "isort>=7.0.0",
 ]
+
+[tool.isort]
+profile = "black"

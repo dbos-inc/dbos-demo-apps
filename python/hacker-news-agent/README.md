@@ -3,12 +3,15 @@
 An autonomous research agent for searching Hacker News built with DBOS.
 You can find a detailed walkthrough [here](https://docs.dbos.dev/python/examples/hacker-news-agent).
 
+<img width="1202" height="1298" alt="513013609-738119e9-4253-4230-94bb-554888658563" src="https://github.com/user-attachments/assets/4d1d1b61-084b-48ba-a826-f53372ab8768" />
+
+
 ## Setup
 
-1. Install dependencies and activate your virtual environment:
+1. Install dependencies:
+
 ```bash
 uv sync
-source .venv/bin/activate
 ```
 
 2. Set your OpenAI API key:
@@ -16,22 +19,9 @@ source .venv/bin/activate
 export OPENAI_API_KEY='your-api-key-here'
 ```
 
-## Usage
+3. Run the launch script to start the React frontend and agentic backend.
+The app is available at http://localhost:5173/.
 
 ```bash
-python -m hacker_news_agent "artificial intelligence"
+./launch_app.sh
 ```
-
-If the agent fails at any point during its research, you can restart it using its workflow ID to recover it from where it left off:
-
-```shell
-python -m hacker_news_agent "artificial intelligence" --workflow-id <id>
-```
-
-## Code Structure
-
-- **`workflows.py`** - Main DBOS workflows orchestrating the research process
-- **`agent.py`** - Core agent decision-making logic
-- **`llm.py`** - OpenAI API integration with core LLM calls
-- **`api.py`** - Hacker News API integration
-- **`cli.py`** - Command-line interface and result formatting

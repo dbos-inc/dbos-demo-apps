@@ -4,6 +4,12 @@ from typing import Any, Dict, List, Optional
 from dbos import DBOS
 
 from .llm import call_llm, clean_json_response
+from .models import (
+    EvaluationResult,
+    ResearchReport,
+    ShouldContinueResult,
+    StoryReference,
+)
 
 
 @DBOS.step()
@@ -12,13 +18,8 @@ def evaluate_results_step(
     query: str,
     stories: List[Dict[str, Any]],
     comments: Optional[List[Dict[str, Any]]] = None,
-) -> Dict[str, Any]:
+) -> EvaluationResult:
     """Agent evaluates search results and extracts insights."""
-
-    # Prepare content for analysis
-    content_summary = f"Found {len(stories)} stories"
-    if comments:
-        content_summary += f" and {len(comments)} comments"
 
     # Create detailed content digest for LLM
     stories_text = ""
@@ -42,15 +43,15 @@ def evaluate_results_step(
 
         # Store top stories for reference
         top_stories.append(
-            {
-                "title": title,
-                "url": url,
-                "hn_url": hn_url,
-                "points": points,
-                "num_comments": num_comments,
-                "author": author,
-                "objectID": story.get("objectID", ""),
-            }
+            StoryReference(
+                title=title,
+                url=url,
+                hn_url=hn_url,
+                points=points,
+                num_comments=num_comments,
+                author=author,
+                objectID=story.get("objectID", ""),
+            )
         )
 
     comments_text = ""
@@ -73,15 +74,15 @@ def evaluate_results_step(
 
     prompt = f"""
     You are a research agent evaluating search results for: {topic}
-    
+
     Query used: {query}
-    
+
     Stories found:
     {stories_text}
-    
+
     Comments analyzed:
     {comments_text}
-    
+
     Provide a DETAILED analysis with specific insights, not generalizations. Focus on:
     - Specific technical details, metrics, or benchmarks mentioned
     - Concrete tools, libraries, frameworks, or techniques discussed
@@ -89,9 +90,9 @@ def evaluate_results_step(
     - Performance data, comparison results, or quantitative insights
     - Notable opinions, debates, or community perspectives
     - Specific use cases, implementation details, or real-world examples
-    
+
     Return JSON with:
-    - "insights": Array of specific, technical insights with context
+    - "insights": String array of specific, technical insights with context
     - "relevance_score": Number 1-10
     - "summary": Brief summary of findings
     - "key_points": Array of most important points discovered
@@ -107,20 +108,12 @@ def evaluate_results_step(
 
     response = call_llm(messages, max_tokens=2000)
 
-    try:
-        cleaned_response = clean_json_response(response)
-        evaluation = json.loads(cleaned_response)
-        evaluation["query"] = query
-        evaluation["top_stories"] = top_stories
-        return evaluation
-    except json.JSONDecodeError:
-        return {
-            "insights": [f"Found {len(stories)} stories about {topic}"],
-            "relevance_score": 7,
-            "summary": f"Basic search results for {query}",
-            "key_points": [],
-            "query": query,
-        }
+    cleaned_response = clean_json_response(response)
+    evaluation_dict = json.loads(cleaned_response)
+    evaluation_dict["query"] = query
+    evaluation_dict["top_stories"] = top_stories
+
+    return EvaluationResult(**evaluation_dict)
 
 
 @DBOS.step()
@@ -179,12 +172,9 @@ def generate_follow_ups_step(
 
     response = call_llm(messages)
 
-    try:
-        cleaned_response = clean_json_response(response)
-        queries = json.loads(cleaned_response)
-        return queries[0] if isinstance(queries, list) and len(queries) > 0 else None
-    except json.JSONDecodeError:
-        return None
+    cleaned_response = clean_json_response(response)
+    queries = json.loads(cleaned_response)
+    return queries[0] if isinstance(queries, list) and len(queries) > 0 else None
 
 
 @DBOS.step()
@@ -246,11 +236,133 @@ def should_continue_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = call_llm(messages)
+    raw_response = call_llm(messages)
+    cleaned_response = clean_json_response(raw_response)
+    json_response = json.loads(cleaned_response)
+    response = ShouldContinueResult(**json_response)
+    return response.should_continue
 
-    try:
-        cleaned_response = clean_json_response(response)
-        decision = json.loads(cleaned_response)
-        return decision.get("should_continue", True)
-    except json.JSONDecodeError:
-        return True
+
+@DBOS.step()
+def synthesize_findings_step(
+    topic: str, all_findings: List[Dict[str, Any]]
+) -> ResearchReport:
+    """Synthesize all research findings into a comprehensive report."""
+    findings_text = ""
+    story_links = []
+
+    for i, finding in enumerate(all_findings, 1):
+        findings_text += f"\n=== Finding {i} ===\n"
+        findings_text += f"Query: {finding.get('query', 'Unknown')}\n"
+        findings_text += f"Summary: {finding.get('summary', 'No summary')}\n"
+        findings_text += f"Key Points: {finding.get('key_points', [])}\n"
+        findings_text += f"Insights: {finding.get('insights', [])}\n"
+
+        # Extract story links and details for reference
+        if finding.get("top_stories"):
+            for story in finding["top_stories"]:
+                story_links.append(
+                    {
+                        "title": story.get("title", "Unknown"),
+                        "url": story.get("url", ""),
+                        "hn_url": f"https://news.ycombinator.com/item?id={story.get('objectID', '')}",
+                        "points": story.get("points", 0),
+                        "comments": story.get("num_comments", 0),
+                    }
+                )
+
+    # Build comprehensive story and citation data
+    story_citations = {}
+    citation_id = 1
+
+    for finding in all_findings:
+        if finding.get("top_stories"):
+            for story in finding["top_stories"]:
+                story_id = story.get("objectID", "")
+                if story_id and story_id not in story_citations:
+                    story_citations[story_id] = {
+                        "id": citation_id,
+                        "title": story.get("title", "Unknown"),
+                        "url": story.get("url", ""),
+                        "hn_url": story.get("hn_url", ""),
+                        "points": story.get("points", 0),
+                        "comments": story.get("num_comments", 0),
+                    }
+                    citation_id += 1
+
+    # Create citation references text
+    citations_text = "\n".join(
+        [
+            f"[{cite['id']}] {cite['title']} ({cite['points']} points, {cite['comments']} comments) - {cite['hn_url']}"
+            + (f" - {cite['url']}" if cite["url"] else "")
+            for cite in story_citations.values()
+        ]
+    )
+
+    prompt = f"""
+    You are a research analyst. Synthesize the following research findings into a comprehensive, detailed report about: {topic}
+    
+    Research Findings:
+    {findings_text}
+    
+    Available Citations:
+    {citations_text}
+    
+    IMPORTANT: You must return ONLY a valid JSON object with no additional text, explanations, or formatting.
+    
+    Create a comprehensive research report that flows naturally as a single narrative. Include:
+    - Specific technical details and concrete examples
+    - Actionable insights practitioners can use
+    - Interesting discoveries and surprising findings
+    - Specific tools, libraries, or techniques mentioned
+    - Performance metrics, benchmarks, or quantitative data when available
+    - Notable opinions or debates in the community
+    - INLINE LINKS: When making claims, include clickable links directly in the text using this format: [link text](HN_URL)
+    - Use MANY inline links throughout the report. Aim for at least 4-5 links per paragraph.
+    
+    CRITICAL CITATION RULES - FOLLOW EXACTLY:
+    
+    1. NEVER replace words with bare URLs like "(https://news.ycombinator.com/item?id=123)"
+    2. ALWAYS write complete sentences with all words present
+    3. Add citations using descriptive link text in brackets: [descriptive text](URL)
+    4. Every sentence must be grammatically complete and readable without the links
+    5. Links should ALWAYS be to the Hacker News discussion, NEVER directly to the article.
+    
+    CORRECT examples:
+    "PostgreSQL's performance improvements have been significant in recent versions, as discussed in [community forums](https://news.ycombinator.com/item?id=123456), with developers highlighting [specific optimizations](https://news.ycombinator.com/item?id=789012) in query processing."
+    
+    "Redis performance issues can stem from common configuration mistakes, which are well-documented in [troubleshooting guides](https://news.ycombinator.com/item?id=345678) and [community discussions](https://news.ycombinator.com/item?id=901234)."
+    
+    "React's licensing changes have sparked significant community debate, as seen in [detailed discussions](https://news.ycombinator.com/item?id=15316175) about the implications for open-source projects."
+    
+    WRONG examples (NEVER DO THIS):
+    "Community discussions reveal a strong interest in the (https://news.ycombinator.com/item?id=18717168) and the common pitfalls"
+    "One significant topic is the (https://news.ycombinator.com/item?id=15316175), which raises important legal considerations"
+    
+    Always link to relevant discussions for:
+    - Every specific tool, library, or technology mentioned
+    - Performance claims and benchmarks  
+    - Community opinions and debates
+    - Technical implementation details
+    - Companies or projects referenced
+    - Version releases or updates
+    - Problem reports or solutions
+    
+    Return a JSON object with this exact structure:
+    {{
+        "report": "A comprehensive research report written as flowing narrative text with inline clickable links [like this](https://news.ycombinator.com/item?id=123). Include specific technical details, tools, performance metrics, community opinions, and actionable insights. Make it detailed and informative, not just a summary."
+    }}
+    """
+
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a research analyst. Provide comprehensive synthesis in JSON format.",
+        },
+        {"role": "user", "content": prompt},
+    ]
+
+    raw_response = call_llm(messages, max_tokens=3000)
+    cleaned_response = clean_json_response(raw_response)
+    json_response = json.loads(cleaned_response)
+    return ResearchReport(**json_response)
