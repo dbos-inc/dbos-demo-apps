@@ -35,6 +35,10 @@ export function AgentList() {
     return 'status-default';
   };
 
+  const isPending = (status: string) => {
+    return status.toLowerCase().includes('pending');
+  };
+
   if (isLoading) {
     return <div className="loading">Loading agents...</div>;
   }
@@ -55,6 +59,7 @@ export function AgentList() {
               <div className="agent-header">
                 <h3>{agent.topic}</h3>
                 <span className={`status-badge ${getStatusBadgeClass(agent.status)}`}>
+                  {isPending(agent.status) && <span className="spinner"></span>}
                   {agent.status}
                 </span>
               </div>
