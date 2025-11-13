@@ -5,7 +5,7 @@ import { DBOS } from '@dbos-inc/dbos-sdk';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   DBOS.setConfig({
-    name: 'my-app',
+    name: 'dbos-nestjs-starter',
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
