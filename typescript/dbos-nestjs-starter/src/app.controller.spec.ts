@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { DBOS } from '@dbos-inc/dbos-sdk';
+import { appProvider } from './app.module';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -9,7 +9,7 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [appProvider],
     }).compile();
 
     appController = app.get<AppController>(AppController);
