@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -12,11 +13,16 @@ describe('AppController', () => {
     }).compile();
 
     appController = app.get<AppController>(AppController);
+    await DBOS.launch();
+  });
+
+  afterEach(async () => {
+    await DBOS.shutdown();
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return "Hello World!"', async () => {
+      expect(await appController.runWorkflow()).toBe('Hello World!');
     });
   });
 });
