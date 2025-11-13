@@ -58,7 +58,6 @@ jobs:
         run: |
           npm ci
           npm run build
-          npx dbos migrate
           npm test
           npm run lint
         env:
