@@ -38,7 +38,7 @@ def configure_index():
         password=db.password,
         port=db.port,
         user=db.username,
-        perform_setup=False,  # Set up during migration step
+        perform_setup=False,  # Set up in the setup script
     )
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     index = VectorStoreIndex([], storage_context=storage_context)
@@ -47,7 +47,6 @@ def configure_index():
 
 
 index, chat_engine = configure_index()
-
 
 # Now, let's write the document ingestion pipeline. Because ingesting and indexing documents may
 # take a long time, we need to build a pipeline that's both concurrent and reliable.
@@ -154,15 +153,24 @@ class ChatSchema(BaseModel):
     message: str
 
 
-chat_history = []
+class ChatHistoryItem(BaseModel):
+    content: str
+    isUser: bool
+
+
+class ChatHistory(BaseModel):
+    history: List[ChatHistoryItem]
+
+
+chat_history: List[ChatHistoryItem] = []
 
 
 @app.post("/chat")
-def chat(chat: ChatSchema):
-    query = {"content": chat.message, "isUser": False}
+def chat(chat: ChatSchema) -> ChatHistoryItem:
+    query = ChatHistoryItem(content=chat.message, isUser=False)
     chat_history.append(query)
     responseMessage = str(chat_engine.chat(chat.message))
-    response = {"content": responseMessage, "isUser": True}
+    response = ChatHistoryItem(content=responseMessage, isUser=True)
     chat_history.append(response)
     return response
 
@@ -173,11 +181,8 @@ def chat(chat: ChatSchema):
 
 
 @app.get("/history")
-def history_endpoint():
-    return chat_history
-
-
-# Finally, let's serve the app's frontend from an HTML file using FastAPI.
+def history_endpoint() -> ChatHistory:
+    return ChatHistory(history=chat_history)
 
 
 @app.get("/")
