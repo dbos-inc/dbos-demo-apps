@@ -1,8 +1,12 @@
-import { DBOS } from '@dbos-inc/dbos-sdk';
+import { ConfiguredInstance, DBOS } from '@dbos-inc/dbos-sdk';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class AppService {
+export class AppService extends ConfiguredInstance {
+  constructor(name: string) {
+    super(name);
+  }
+
   async stepOne() {
     console.log('Step one completed!');
     return Promise.resolve();
@@ -13,6 +17,7 @@ export class AppService {
     return Promise.resolve();
   }
 
+  @DBOS.workflow()
   async workflow() {
     await DBOS.runStep(() => this.stepOne(), { name: 'stepOne' });
     await DBOS.runStep(() => this.stepTwo(), { name: 'stepTwo' });
