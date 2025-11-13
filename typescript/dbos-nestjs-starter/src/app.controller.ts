@@ -1,14 +1,12 @@
-import { Controller, Get, Inject } from "@nestjs/common";
-import { AppService } from "./app.service";
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(
-    @Inject("dbosProvider") private readonly appService: AppService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   @Get()
-  async getHello(): Promise<string> {
-    return this.appService.getHello();
+  async runWorkflow(): Promise<string> {
+    return await this.appService.workflow();
   }
 }

@@ -1,24 +1,18 @@
-// app.module.ts
-import { Module } from "@nestjs/common";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
-import { Provider } from "@nestjs/common/interfaces";
+import { Module, Provider } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
-export function createDBOSProvider(token: string, name: string): Provider {
-  return {
-    provide: token,
-    useFactory: () => {
-      return new AppService(name);
-    },
-    inject: [],
-  };
-}
-// You can create as many provider as you wish, identified by a unique token ("dbosProvider" in this case)
-const dbosProvider = createDBOSProvider("dbosProvider", "appservice");
+export const appProvider: Provider = {
+  provide: AppService,
+  useFactory: () => {
+    const service = new AppService('dbos-service-instance');
+    return service;
+  },
+};
 
 @Module({
   imports: [],
-  providers: [dbosProvider],
   controllers: [AppController],
+  providers: [appProvider],
 })
 export class AppModule {}
