@@ -8,7 +8,7 @@ function App() {
   async function fetchWorkflows() {
     console.log('Fetching workflows...')
     try {
-      const response = await fetch('/api/workflows', {method: 'PATCH'})
+      const response = await fetch('/api/workflows')
       console.log('Response status:', response.status)
       if (response.ok) {
         const data = await response.json()
