@@ -27,7 +27,7 @@ def workflow(num_steps: int):
     DBOS.set_event(WF_PROGRESS_KEY, progress)
     for i in range(num_steps):
         step(i)
-        # Update the progress each time a step completes
+        # Update workflow progress each time a step completes
         progress["steps_completed"] = i + 1
         DBOS.set_event(WF_PROGRESS_KEY, progress)
 
