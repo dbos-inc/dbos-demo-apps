@@ -12,7 +12,7 @@ system_database_url = os.environ.get(
 client = DBOSClient(system_database_url=system_database_url)
 
 
-@app.get("/api/workflow")
+@app.post("/api/workflow")
 def enqueue_workflow():
     options: EnqueueOptions = {
         "queue_name": "workflow-queue",
