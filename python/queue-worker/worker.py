@@ -18,9 +18,12 @@ def workflow(num_steps: int):
 
 
 if __name__ == "__main__":
+    system_database_url = os.environ.get(
+        "DBOS_SYSTEM_DATABASE_URL", "sqlite:///dbos_queue_worker.sqlite"
+    )
     config: DBOSConfig = {
         "name": "dbos-queue-worker",
-        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+        "system_database_url": system_database_url,
     }
     DBOS(config=config)
     DBOS.launch()

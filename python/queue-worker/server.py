@@ -6,7 +6,10 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
-client = DBOSClient(system_database_url=os.environ.get("DBOS_SYSTEM_DATABASE_URL"))
+system_database_url = os.environ.get(
+    "DBOS_SYSTEM_DATABASE_URL", "sqlite:///dbos_queue_worker.sqlite"
+)
+client = DBOSClient(system_database_url=system_database_url)
 
 
 @app.get("/api/workflow")
