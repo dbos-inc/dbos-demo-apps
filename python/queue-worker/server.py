@@ -1,8 +1,11 @@
 import os
+from pathlib import Path
 
 import uvicorn
 from dbos import DBOSClient, EnqueueOptions
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
@@ -10,6 +13,9 @@ system_database_url = os.environ.get(
     "DBOS_SYSTEM_DATABASE_URL", "sqlite:///dbos_queue_worker.sqlite"
 )
 client = DBOSClient(system_database_url=system_database_url)
+
+# Path to frontend build
+frontend_dist = Path(__file__).parent / "frontend" / "dist"
 
 
 @app.post("/api/workflow")
@@ -20,6 +26,15 @@ def enqueue_workflow():
     }
     num_tasks = 10
     client.enqueue(options, num_tasks)
+
+
+# Serve static files and SPA fallback
+app.mount("/assets", StaticFiles(directory=frontend_dist / "assets"), name="assets")
+
+
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    return FileResponse(frontend_dist / "index.html")
 
 
 if __name__ == "__main__":
