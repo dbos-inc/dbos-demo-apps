@@ -8,3 +8,9 @@ dependencies = [
     "dbos>=2.6.0",
     "fastapi[standard]>=0.123.8",
 ]
+
+[dependency-groups]
+dev = [
+    "black>=25.11.0",
+    "isort>=7.0.0",
+]
