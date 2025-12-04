@@ -11,10 +11,20 @@ def step(i: int):
     print(f"Step {i} completed!")
 
 
+WF_PROGRESS_KEY = "worklow_progress"
+
+
 @DBOS.workflow()
 def workflow(num_steps: int):
+    progress = {
+        "steps_completed": 0,
+        "num_steps": num_steps,
+    }
+    DBOS.set_event(WF_PROGRESS_KEY, progress)
     for i in range(num_steps):
         step(i)
+        progress["steps_completed"] = i + 1
+        DBOS.set_event(WF_PROGRESS_KEY, progress)
 
 
 if __name__ == "__main__":

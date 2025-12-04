@@ -6,7 +6,7 @@ function App() {
   const enqueueWorkflow = async () => {
     setStatus('Enqueueing...')
     try {
-      const response = await fetch('/api/workflow', { method: 'POST' })
+      const response = await fetch('/api/workflows', { method: 'POST' })
       if (response.ok) {
         setStatus('Workflow enqueued successfully!')
       } else {
