@@ -31,7 +31,8 @@ class WorkflowStatus(BaseModel):
     steps_completed: Optional[int]
     num_steps: Optional[int]
 
-
+# Use the DBOS client to enqueue a workflow 
+# for execution on the worker.
 @api.post("/workflows")
 def enqueue_workflow():
     options: EnqueueOptions = {
@@ -43,11 +44,15 @@ def enqueue_workflow():
     return {"status": "enqueued"}
 
 
+# List all workflows and their progress to display on the frontend
 @api.get("/workflows")
 def list_workflows() -> List[WorkflowStatus]:
+    # Use the DBOS client to list all workflows
     workflows = client.list_workflows(name="workflow", sort_desc=True)
     statuses: List[WorkflowStatus] = []
     for workflow in workflows:
+        # Query each workflow's progress event. This may not be available
+        # if the workflow has not yet started executing.
         progress = client.get_event(
             workflow.workflow_id, WF_PROGRESS_KEY, timeout_seconds=0
         )
