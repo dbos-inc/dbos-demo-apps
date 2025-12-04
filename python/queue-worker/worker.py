@@ -13,7 +13,7 @@ def step(i: int):
     time.sleep(1)
 
 
-WF_PROGRESS_KEY = "worklow_progress"
+WF_PROGRESS_KEY = "workflow_progress"
 
 
 @DBOS.workflow()
