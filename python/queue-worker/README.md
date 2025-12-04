@@ -1,6 +1,6 @@
-# DBOS Queue Worker
+# DBOS Worker
 
-This example app demonstrates the "queue worker" architecture.
+This example app demonstrates the "DBOS worker" architecture.
 This is a common pattern where you implement DBOS durable workflows in their own service and use a DBOS Client to enqueue, manage, and monitor workflows from other services.
 
 ## Setup
