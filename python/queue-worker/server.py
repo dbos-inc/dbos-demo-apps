@@ -31,7 +31,8 @@ class WorkflowStatus(BaseModel):
     steps_completed: Optional[int]
     num_steps: Optional[int]
 
-# Use the DBOS client to enqueue a workflow 
+
+# Use the DBOS client to enqueue a workflow
 # for execution on the worker.
 @api.post("/workflows")
 def enqueue_workflow():

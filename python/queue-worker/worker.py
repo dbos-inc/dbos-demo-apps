@@ -8,12 +8,13 @@ from dbos import DBOS, DBOSConfig, Queue
 WF_PROGRESS_KEY = "workflow_progress"
 
 
-# Define a queue on which the backend server
-# can put workflows
+# Define a queue on which the web server
+# can submit workflows for execution.
 Queue("workflow-queue")
 
-# This background workflow is invoked by the 
-# backend server. It runs a number of steps,
+
+# This background workflow is submitted by the
+# web server. It runs a number of steps,
 # periodically reporting its progress.
 @DBOS.workflow()
 def workflow(num_steps: int):
@@ -35,6 +36,7 @@ def workflow(num_steps: int):
 def step(i: int):
     print(f"Step {i} completed!")
     time.sleep(1)
+
 
 # Configure and launch DBOS
 if __name__ == "__main__":
