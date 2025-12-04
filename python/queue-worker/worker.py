@@ -1,5 +1,6 @@
 import os
 import threading
+import time
 
 from dbos import DBOS, DBOSConfig, Queue
 
@@ -9,6 +10,7 @@ Queue("workflow-queue")
 @DBOS.step()
 def step(i: int):
     print(f"Step {i} completed!")
+    time.sleep(1)
 
 
 WF_PROGRESS_KEY = "worklow_progress"
