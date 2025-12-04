@@ -1,18 +1,16 @@
 # DBOS Worker
 
-This example app demonstrates the "DBOS worker" architecture.
-This is a common pattern where you implement DBOS durable workflows in their own service and use a DBOS Client to enqueue, manage, and monitor workflows from other services.
+This example demonstrates how to build DBOS workflows in their own "queue worker" service and enqueue and manage them from other services.
 
 ## Setup
 
-1. Install dependencies.
+1. Install dependencies:
 
 ```shell
 uv sync
 ```
 
-2. Start your app.
-This includes both a FastAPI web server (`server.py`) and a DBOS worker (`worker.py`).
+2. Start both services in this example: a FastAPI web server (`server.py`) and a DBOS worker (`worker.py`):
 
 ```shell
 ./launch_app.sh
