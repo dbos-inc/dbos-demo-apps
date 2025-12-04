@@ -12,7 +12,7 @@ uv sync
 ```
 
 2. Start your app.
-This includes both a FastAPI web server (`server.py`) and a DBOS queue worker (`worker.py`).
+This includes both a FastAPI web server (`server.py`) and a DBOS worker (`worker.py`).
 
 ```shell
 ./launch_app.sh
