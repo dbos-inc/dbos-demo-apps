@@ -54,8 +54,8 @@ def list_workflows() -> List[WorkflowStatus]:
         status = WorkflowStatus(
             workflow_id=workflow.workflow_id,
             workflow_status=workflow.status,
-            steps_completed=progress and progress.get("steps_completed"),
-            num_steps=progress and progress.get("num_steps"),
+            steps_completed=progress.get("steps_completed") if progress else None,
+            num_steps=progress.get("num_steps") if progress else None,
         )
         statuses.append(status)
     return statuses
