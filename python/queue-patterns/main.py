@@ -64,7 +64,7 @@ class WorkflowStatus(BaseModel):
     workflow_status: str
     workflow_name: str
     start_time: int
-    tenant_id: Optional[int]
+    tenant_id: Optional[str]
 
 
 @api.get("/workflows")
