@@ -10,8 +10,6 @@ app.use(express.json());
 
 // Define constants
 const WF_PROGRESS_KEY = 'workflow_progress';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const frontendDist = path.join(__dirname, 'frontend', 'dist');
 
 // Define types
 interface WorkflowStatus {
@@ -29,11 +27,9 @@ interface ProgressEvent {
 // Create a DBOS client
 const systemDatabaseUrl =
   process.env.DBOS_SYSTEM_DATABASE_URL || 'postgresql://postgres:dbos@localhost:5432/dbos_queue_worker';
+const client = await DBOSClient.create({ systemDatabaseUrl });
 
-let client: DBOSClient;
-
-// Use the DBOS client to enqueue a workflow
-// for execution on the worker.
+// Use the DBOS client to enqueue a workflow for execution on the worker.
 app.post('/api/workflows', async (_req: Request, res: Response) => {
   const numSteps = 10;
   await client.enqueue(
@@ -70,6 +66,8 @@ app.get('/api/workflows', async (_req: Request, res: Response) => {
 });
 
 // Serve index.html for root
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const frontendDist = path.join(__dirname, 'frontend', 'dist');
 app.get('/', (_req: Request, res: Response) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
@@ -78,7 +76,6 @@ app.get('/', (_req: Request, res: Response) => {
 app.use(express.static(frontendDist));
 
 async function main(): Promise<void> {
-  client = await DBOSClient.create({ systemDatabaseUrl });
   const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
