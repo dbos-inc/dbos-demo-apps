@@ -139,7 +139,7 @@ function App() {
               className={`tab ${activeTab === 'rate-limited' ? 'active' : ''}`}
               onClick={() => setActiveTab('rate-limited')}
             >
-              Rate Limited
+              Rate Limited Queue
             </button>
           </nav>
         </div>
