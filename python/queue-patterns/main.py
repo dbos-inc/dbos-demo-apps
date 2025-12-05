@@ -63,6 +63,7 @@ class WorkflowStatus(BaseModel):
     workflow_id: str
     workflow_status: str
     workflow_name: str
+    start_time: int
     tenant_id: Optional[int]
 
 
@@ -75,6 +76,7 @@ def list_workflows(workflow_name: str) -> List[WorkflowStatus]:
             workflow_id=w.workflow_id,
             workflow_status=w.status,
             workflow_name=w.name,
+            start_time=w.created_at,
             tenant_id=w.queue_partition_key,
         )
         statuses.append(status)

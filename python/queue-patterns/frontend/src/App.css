@@ -199,9 +199,11 @@
   text-overflow: ellipsis;
 }
 
-.workflow-tenant {
-  font-weight: 600;
-  font-size: 1rem;
+.workflow-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .tenant-badge {
@@ -213,6 +215,17 @@
   border-radius: 9999px;
   font-size: 0.875rem;
   color: var(--primary-light);
+}
+
+.time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
 }
 
 /* Status Badge Styles */
@@ -233,14 +246,18 @@
   color: var(--success);
 }
 
-.status-badge.pending {
-  background: rgba(107, 114, 128, 0.15);
-  color: var(--pending);
+.status-badge.enqueued {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
 }
 
-.status-badge.running {
-  background: rgba(99, 102, 241, 0.15);
-  color: var(--primary-light);
+.status-badge.pending {
+  background: rgba(14, 165, 233, 0.15);
+  color: #0ea5e9;
+}
+
+.status-badge.pending .status-dot {
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 .status-badge.error {
@@ -253,10 +270,6 @@
   height: 6px;
   border-radius: 50%;
   background: currentColor;
-}
-
-.status-badge.running .status-dot {
-  animation: pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse {

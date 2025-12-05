@@ -5,7 +5,13 @@ interface Workflow {
   workflow_id: string;
   workflow_status: string;
   workflow_name: string;
+  start_time: number;
   tenant_id: string | null;
+}
+
+function formatTime(epochMs: number): string {
+  const date = new Date(epochMs);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 interface Toast {
@@ -72,22 +78,22 @@ function App() {
     switch (status.toLowerCase()) {
       case 'success':
         return 'success';
-      case 'pending':
       case 'enqueued':
+        return 'enqueued';
+      case 'pending':
         return 'pending';
-      case 'running':
-        return 'running';
       case 'error':
       case 'failed':
         return 'error';
       default:
-        return 'pending';
+        return 'enqueued';
     }
   };
 
   const stats = {
     total: workflows.length,
-    running: workflows.filter(w => w.workflow_status.toLowerCase() === 'pending').length,
+    enqueued: workflows.filter(w => w.workflow_status.toLowerCase() === 'enqueued').length,
+    pending: workflows.filter(w => w.workflow_status.toLowerCase() === 'pending').length,
     completed: workflows.filter(w => w.workflow_status.toLowerCase() === 'success').length,
   };
 
@@ -168,12 +174,12 @@ function App() {
           <div className="card-body">
             <div className="stats">
               <div className="stat">
-                <div className="stat-value">{stats.total}</div>
-                <div className="stat-label">Total</div>
+                <div className="stat-value">{stats.enqueued}</div>
+                <div className="stat-label">Enqueued</div>
               </div>
               <div className="stat">
-                <div className="stat-value">{stats.running}</div>
-                <div className="stat-label">Running</div>
+                <div className="stat-value">{stats.pending}</div>
+                <div className="stat-label">Pending</div>
               </div>
               <div className="stat">
                 <div className="stat-value">{stats.completed}</div>
@@ -198,12 +204,19 @@ function App() {
                     <div key={workflow.workflow_id} className="workflow-item">
                       <div className="workflow-info">
                         <div className="workflow-id">{workflow.workflow_id}</div>
-                        <div className="workflow-tenant">
+                        <div className="workflow-meta">
                           <span className="tenant-badge">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
                             </svg>
                             {workflow.tenant_id || 'N/A'}
+                          </span>
+                          <span className="time-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M12 6v6l4 2" />
+                            </svg>
+                            {formatTime(workflow.start_time)}
                           </span>
                         </div>
                       </div>
