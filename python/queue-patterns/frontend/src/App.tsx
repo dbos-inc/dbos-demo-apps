@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
-type TabType = 'fair-queue' | 'rate-limited';
+type TabType = 'fair-queue' | 'rate-limited' | 'debouncer';
 
 interface Workflow {
   workflow_id: string;
@@ -24,13 +24,16 @@ interface Toast {
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('fair-queue');
   const [tenantId, setTenantId] = useState('');
+  const [debouncerTenantId, setDebouncerTenantId] = useState('');
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
 
   const workflowName = activeTab === 'fair-queue'
     ? 'fair_queue_concurrency_manager'
-    : 'rate_limited_queue_workflow';
+    : activeTab === 'rate-limited'
+    ? 'rate_limited_queue_workflow'
+    : 'debouncer_workflow';
 
   const fetchWorkflows = useCallback(async () => {
     try {
@@ -101,6 +104,29 @@ function App() {
     }
   };
 
+  const handleDebouncerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!debouncerTenantId.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/workflows/debouncer?tenant_id=${encodeURIComponent(debouncerTenantId)}`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setToast({ message: `Debounced workflow triggered for "${debouncerTenantId}"`, type: 'success' });
+        fetchWorkflows();
+      } else {
+        setToast({ message: 'Failed to submit workflow', type: 'error' });
+      }
+    } catch (error) {
+      setToast({ message: 'Network error', type: 'error' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const getStatusClass = (status: string) => {
     switch (status.toLowerCase()) {
       case 'success':
@@ -123,6 +149,8 @@ function App() {
     completed: workflows.filter(w => w.workflow_status.toLowerCase() === 'success').length,
   };
 
+  const showTenantBadge = activeTab === 'fair-queue';
+
   return (
     <div className="app">
       <header className="header">
@@ -141,6 +169,12 @@ function App() {
             >
               Rate Limited Queue
             </button>
+            <button
+              className={`tab ${activeTab === 'debouncer' ? 'active' : ''}`}
+              onClick={() => setActiveTab('debouncer')}
+            >
+              Debouncer
+            </button>
           </nav>
         </div>
       </header>
@@ -156,7 +190,7 @@ function App() {
             </h2>
           </div>
           <div className="card-body">
-            {activeTab === 'fair-queue' ? (
+            {activeTab === 'fair-queue' && (
               <form onSubmit={handleFairQueueSubmit}>
                 <div className="form-group">
                   <label htmlFor="tenantId" className="form-label">
@@ -183,7 +217,8 @@ function App() {
                   {isSubmitting ? 'Submitting...' : 'Queue Workflow'}
                 </button>
               </form>
-            ) : (
+            )}
+            {activeTab === 'rate-limited' && (
               <div>
                 <p className="form-hint">
                   Rate limiting ensures no more than 2 workflows start per 10 seconds.
@@ -197,6 +232,34 @@ function App() {
                   {isSubmitting ? 'Submitting...' : 'Queue Workflow'}
                 </button>
               </div>
+            )}
+            {activeTab === 'debouncer' && (
+              <form onSubmit={handleDebouncerSubmit}>
+                <div className="form-group">
+                  <label htmlFor="debouncerTenantId" className="form-label">
+                    Tenant ID
+                  </label>
+                  <input
+                    type="text"
+                    id="debouncerTenantId"
+                    className="form-input"
+                    placeholder="Enter tenant identifier..."
+                    value={debouncerTenantId}
+                    onChange={(e) => setDebouncerTenantId(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <p className="form-hint">
+                  Debouncing waits 5 seconds after the last input before starting the workflow for each tenant.
+                </p>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isSubmitting || !debouncerTenantId.trim()}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Trigger Debounce'}
+                </button>
+              </form>
             )}
           </div>
         </div>
@@ -248,7 +311,7 @@ function App() {
                       <div className="workflow-info">
                         <div className="workflow-id">{workflow.workflow_id}</div>
                         <div className="workflow-meta">
-                          {activeTab === 'fair-queue' && (
+                          {showTenantBadge && (
                             <span className="tenant-badge">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />

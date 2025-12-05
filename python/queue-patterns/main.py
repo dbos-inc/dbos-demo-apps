@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import uvicorn
-from dbos import DBOS, DBOSConfig, Queue, SetEnqueueOptions
+from dbos import DBOS, DBOSConfig, Debouncer, Queue, SetEnqueueOptions
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -67,6 +67,27 @@ def rate_limited_queue_workflow():
 #######################
 ## Debouncing
 #######################
+
+debouncer_queue = Queue("debouncer-queue")
+
+
+@DBOS.workflow()
+def debouncer_workflow():
+    time.sleep(5)
+
+
+# Each time a new input is submitted for a tenant, debounce debouncer_workflow.
+# The debouncer will wait until 5 seconds after input stops being submitted for the tenant,
+# then enqueue the workflow with the last input submitted.
+debouncer = Debouncer.create(debouncer_workflow, queue=debouncer_queue)
+
+
+@api.post("/workflows/debouncer")
+def submit_debounced_workflow(tenant_id):
+    debounce_key = tenant_id
+    debounce_period_sec = 5
+    debouncer.debounce(debounce_key, debounce_period_sec)
+
 
 #######################
 ## Observability
