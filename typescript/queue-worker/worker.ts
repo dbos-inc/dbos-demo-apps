@@ -31,6 +31,7 @@ DBOS.registerWorkflow(
 
 async function stepFunction(i: number): Promise<void> {
   console.log(`Step ${i} completed!`);
+  // Sleep one second
   await new Promise((resolve) => setTimeout(resolve, 1000));
 }
 
