@@ -72,7 +72,8 @@ debouncer_queue = Queue("debouncer-queue")
 
 
 @DBOS.workflow()
-def debouncer_workflow():
+def debouncer_workflow(tenant_id: str, input: str):
+    print(f"Executing debounced workflow for tenant {tenant_id} with input {input}")
     time.sleep(5)
 
 
@@ -83,10 +84,10 @@ debouncer = Debouncer.create(debouncer_workflow, queue=debouncer_queue)
 
 
 @api.post("/workflows/debouncer")
-def submit_debounced_workflow(tenant_id):
+def submit_debounced_workflow(tenant_id: str, input: str):
     debounce_key = tenant_id
     debounce_period_sec = 5
-    debouncer.debounce(debounce_key, debounce_period_sec)
+    debouncer.debounce(debounce_key, debounce_period_sec, tenant_id, input)
 
 
 #######################
@@ -100,6 +101,7 @@ class WorkflowStatus(BaseModel):
     workflow_name: str
     start_time: int
     tenant_id: Optional[str]
+    input: Optional[str]
 
 
 @api.get("/workflows")
@@ -107,12 +109,21 @@ def list_workflows(workflow_name: str) -> List[WorkflowStatus]:
     workflows = DBOS.list_workflows(name=workflow_name, sort_desc=True)
     statuses = []
     for w in workflows:
+        if "fair_queue" in workflow_name:
+            tenant_id = w.queue_partition_key
+            input = None
+        elif "rate_limited" in workflow_name:
+            tenant_id, input = None, None
+        elif "debouncer" in workflow_name:
+            tenant_id = w.input["args"][0]
+            input = w.input["args"][1]
         status = WorkflowStatus(
             workflow_id=w.workflow_id,
             workflow_status=w.status,
             workflow_name=w.name,
             start_time=w.created_at,
-            tenant_id=w.queue_partition_key,
+            tenant_id=tenant_id,
+            input=input,
         )
         statuses.append(status)
     return statuses

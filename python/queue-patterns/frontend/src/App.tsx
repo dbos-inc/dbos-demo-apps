@@ -9,6 +9,7 @@ interface Workflow {
   workflow_name: string;
   start_time: number;
   tenant_id: string | null;
+  input: string | null;
 }
 
 function formatTime(epochMs: number): string {
@@ -25,6 +26,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabType>('fair-queue');
   const [tenantId, setTenantId] = useState('');
   const [debouncerTenantId, setDebouncerTenantId] = useState('');
+  const [debouncerInput, setDebouncerInput] = useState('');
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -106,11 +108,11 @@ function App() {
 
   const handleDebouncerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!debouncerTenantId.trim()) return;
+    if (!debouncerTenantId.trim() || !debouncerInput.trim()) return;
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/workflows/debouncer?tenant_id=${encodeURIComponent(debouncerTenantId)}`, {
+      const response = await fetch(`/api/workflows/debouncer?tenant_id=${encodeURIComponent(debouncerTenantId)}&input=${encodeURIComponent(debouncerInput)}`, {
         method: 'POST',
       });
 
@@ -149,7 +151,8 @@ function App() {
     completed: workflows.filter(w => w.workflow_status.toLowerCase() === 'success').length,
   };
 
-  const showTenantBadge = activeTab === 'fair-queue';
+  const showTenantBadge = activeTab === 'fair-queue' || activeTab === 'debouncer';
+  const showInputBadge = activeTab === 'debouncer';
 
   return (
     <div className="app">
@@ -249,13 +252,27 @@ function App() {
                     disabled={isSubmitting}
                   />
                 </div>
+                <div className="form-group">
+                  <label htmlFor="debouncerInput" className="form-label">
+                    Input
+                  </label>
+                  <input
+                    type="text"
+                    id="debouncerInput"
+                    className="form-input"
+                    placeholder="Enter input value..."
+                    value={debouncerInput}
+                    onChange={(e) => setDebouncerInput(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                </div>
                 <p className="form-hint">
                   Debouncing waits 5 seconds after the last input before starting the workflow for each tenant.
                 </p>
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={isSubmitting || !debouncerTenantId.trim()}
+                  disabled={isSubmitting || !debouncerTenantId.trim() || !debouncerInput.trim()}
                 >
                   {isSubmitting ? 'Submitting...' : 'Trigger Debounce'}
                 </button>
@@ -317,6 +334,14 @@ function App() {
                                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
                               </svg>
                               {workflow.tenant_id || 'N/A'}
+                            </span>
+                          )}
+                          {showInputBadge && workflow.input && (
+                            <span className="input-badge">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M4 6h16M4 12h16M4 18h7" />
+                              </svg>
+                              {workflow.input}
                             </span>
                           )}
                           <span className="time-badge">
