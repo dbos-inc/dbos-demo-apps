@@ -84,7 +84,7 @@ app.use(express.static(frontendDist));
 
 async function main(): Promise<void> {
   client = await DBOSClient.create({ systemDatabaseUrl });
-  const PORT = 8000;
+  const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });

@@ -1,4 +1,4 @@
-# DBOS Worker
+# DBOS Queue Worker
 
 This example demonstrates how to build DBOS workflows in their own "queue worker" service and enqueue and manage them from other services.
 
