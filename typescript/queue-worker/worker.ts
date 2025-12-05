@@ -20,7 +20,7 @@ DBOS.registerWorkflow(
     // the current progress of the workflow
     await DBOS.setEvent(WF_PROGRESS_KEY, progress);
     for (let i = 0; i < numSteps; i++) {
-      await DBOS.runStep(() => stepFunction(i), { name: `step-${i}` });
+      await DBOS.runStep(() => stepFunction(i));
       // Update workflow progress each time a step completes
       progress.steps_completed = i + 1;
       await DBOS.setEvent(WF_PROGRESS_KEY, progress);
