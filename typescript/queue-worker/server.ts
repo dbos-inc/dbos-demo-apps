@@ -1,17 +1,17 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import express from "express";
-import type { Request, Response } from "express";
-import { DBOSClient } from "@dbos-inc/dbos-sdk";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import express from 'express';
+import type { Request, Response } from 'express';
+import { DBOSClient } from '@dbos-inc/dbos-sdk';
 
 // Create an Express app
 const app = express();
 app.use(express.json());
 
 // Define constants
-const WF_PROGRESS_KEY = "workflow_progress";
+const WF_PROGRESS_KEY = 'workflow_progress';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const frontendDist = path.join(__dirname, "frontend", "dist");
+const frontendDist = path.join(__dirname, 'frontend', 'dist');
 
 // Define types
 interface WorkflowStatus {
@@ -28,41 +28,36 @@ interface ProgressEvent {
 
 // Create a DBOS client
 const systemDatabaseUrl =
-  process.env.DBOS_SYSTEM_DATABASE_URL ||
-  "postgresql://postgres:dbos@localhost:5432/dbos_queue_worker";
+  process.env.DBOS_SYSTEM_DATABASE_URL || 'postgresql://postgres:dbos@localhost:5432/dbos_queue_worker';
 
 let client: DBOSClient;
 
 // Use the DBOS client to enqueue a workflow
 // for execution on the worker.
-app.post("/api/workflows", async (_req: Request, res: Response) => {
+app.post('/api/workflows', async (_req: Request, res: Response) => {
   const numSteps = 10;
   await client.enqueue(
     {
-      queueName: "workflow-queue",
-      workflowName: "workflow",
+      queueName: 'workflow-queue',
+      workflowName: 'workflow',
     },
-    numSteps
+    numSteps,
   );
-  res.json({ status: "enqueued" });
+  res.json({ status: 'enqueued' });
 });
 
 // List all workflows and their progress to display on the frontend
-app.get("/api/workflows", async (_req: Request, res: Response) => {
+app.get('/api/workflows', async (_req: Request, res: Response) => {
   // Use the DBOS client to list all workflows
   const workflows = await client.listWorkflows({
-    workflowName: "workflow",
+    workflowName: 'workflow',
     sortDesc: true,
   });
   const statuses: WorkflowStatus[] = [];
   for (const workflow of workflows) {
     // Query each workflow's progress event. This may not be available
     // if the workflow has not yet started executing.
-    const progress = await client.getEvent<ProgressEvent>(
-      workflow.workflowID,
-      WF_PROGRESS_KEY,
-      0
-    );
+    const progress = await client.getEvent<ProgressEvent>(workflow.workflowID, WF_PROGRESS_KEY, 0);
     const status: WorkflowStatus = {
       workflow_id: workflow.workflowID,
       workflow_status: workflow.status,
@@ -75,8 +70,8 @@ app.get("/api/workflows", async (_req: Request, res: Response) => {
 });
 
 // Serve index.html for root
-app.get("/", (_req: Request, res: Response) => {
-  res.sendFile(path.join(frontendDist, "index.html"));
+app.get('/', (_req: Request, res: Response) => {
+  res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
 // Mount static frontend files

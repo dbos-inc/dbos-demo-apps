@@ -1,17 +1,11 @@
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS, WorkflowQueue } from '@dbos-inc/dbos-sdk';
 
 // Define constants
-const WF_PROGRESS_KEY = "workflow_progress";
+const WF_PROGRESS_KEY = 'workflow_progress';
 
 // Define a queue on which the web server
 // can submit workflows for execution.
-new WorkflowQueue("workflow-queue");
-
-// Step function - sleeps and logs completion
-async function stepFunction(i: number): Promise<void> {
-  console.log(`Step ${i} completed!`);
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-}
+new WorkflowQueue('workflow-queue');
 
 // This background workflow is submitted by the
 // web server. It runs a number of steps,
@@ -33,22 +27,26 @@ async function workflowFunction(numSteps: number): Promise<void> {
 }
 
 export const workflow = DBOS.registerWorkflow(workflowFunction, {
-  name: "workflow",
+  name: 'workflow',
 });
+
+async function stepFunction(i: number): Promise<void> {
+  console.log(`Step ${i} completed!`);
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+}
 
 // Configure and launch DBOS
 async function main(): Promise<void> {
   const systemDatabaseUrl =
-    process.env.DBOS_SYSTEM_DATABASE_URL ||
-    "postgresql://postgres:dbos@localhost:5432/dbos_queue_worker";
+    process.env.DBOS_SYSTEM_DATABASE_URL || 'postgresql://postgres:dbos@localhost:5432/dbos_queue_worker';
   DBOS.setConfig({
-    name: "dbos-queue-worker",
+    name: 'dbos-queue-worker',
     systemDatabaseUrl: systemDatabaseUrl,
   });
   await DBOS.launch();
   // After launching DBOS, the worker waits indefinitely,
   // dequeuing and executing workflows.
-  console.log("Worker started, waiting for workflows...");
+  console.log('Worker started, waiting for workflows...');
   await new Promise(() => {});
 }
 

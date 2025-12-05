@@ -16,7 +16,6 @@ npm install
 npx dbos postgres start
 ```
 
-
 3. Start both of this example's services: an Express.js web server (`server.ts`) and a DBOS worker (`worker.ts`):
 
 ```shell
@@ -24,4 +23,3 @@ npx dbos postgres start
 ```
 
 Visit http://localhost:3000 to see the app!
-
