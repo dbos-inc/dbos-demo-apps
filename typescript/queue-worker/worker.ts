@@ -10,25 +10,24 @@ new WorkflowQueue('workflow-queue');
 // This background workflow is submitted by the
 // web server. It runs a number of steps,
 // periodically reporting its progress.
-async function workflowFunction(numSteps: number): Promise<void> {
-  const progress = {
-    steps_completed: 0,
-    num_steps: numSteps,
-  };
-  // The server can query this event to obtain
-  // the current progress of the workflow
-  await DBOS.setEvent(WF_PROGRESS_KEY, progress);
-  for (let i = 0; i < numSteps; i++) {
-    await DBOS.runStep(() => stepFunction(i), { name: `step-${i}` });
-    // Update workflow progress each time a step completes
-    progress.steps_completed = i + 1;
+DBOS.registerWorkflow(
+  async function (numSteps: number): Promise<void> {
+    const progress = {
+      steps_completed: 0,
+      num_steps: numSteps,
+    };
+    // The server can query this event to obtain
+    // the current progress of the workflow
     await DBOS.setEvent(WF_PROGRESS_KEY, progress);
-  }
-}
-
-export const workflow = DBOS.registerWorkflow(workflowFunction, {
-  name: 'workflow',
-});
+    for (let i = 0; i < numSteps; i++) {
+      await DBOS.runStep(() => stepFunction(i), { name: `step-${i}` });
+      // Update workflow progress each time a step completes
+      progress.steps_completed = i + 1;
+      await DBOS.setEvent(WF_PROGRESS_KEY, progress);
+    }
+  },
+  { name: 'workflow' },
+);
 
 async function stepFunction(i: number): Promise<void> {
   console.log(`Step ${i} completed!`);
