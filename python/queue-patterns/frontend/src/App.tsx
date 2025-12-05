@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
+type TabType = 'fair-queue' | 'rate-limited';
+
 interface Workflow {
   workflow_id: string;
   workflow_status: string;
@@ -20,14 +22,19 @@ interface Toast {
 }
 
 function App() {
+  const [activeTab, setActiveTab] = useState<TabType>('fair-queue');
   const [tenantId, setTenantId] = useState('');
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
 
+  const workflowName = activeTab === 'fair-queue'
+    ? 'fair_queue_concurrency_manager'
+    : 'rate_limited_queue_workflow';
+
   const fetchWorkflows = useCallback(async () => {
     try {
-      const response = await fetch('/api/workflows?workflow_name=fair_queue_concurrency_manager');
+      const response = await fetch(`/api/workflows?workflow_name=${workflowName}`);
       if (response.ok) {
         const data = await response.json();
         setWorkflows(data);
@@ -35,7 +42,7 @@ function App() {
     } catch (error) {
       console.error('Failed to fetch workflows:', error);
     }
-  }, []);
+  }, [workflowName]);
 
   useEffect(() => {
     fetchWorkflows();
@@ -50,7 +57,7 @@ function App() {
     }
   }, [toast]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFairQueueSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tenantId.trim()) return;
 
@@ -63,6 +70,26 @@ function App() {
       if (response.ok) {
         setToast({ message: `Workflow queued for tenant "${tenantId}"`, type: 'success' });
         setTenantId('');
+        fetchWorkflows();
+      } else {
+        setToast({ message: 'Failed to submit workflow', type: 'error' });
+      }
+    } catch (error) {
+      setToast({ message: 'Network error', type: 'error' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRateLimitedSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/workflows/rate_limited_queue', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setToast({ message: 'Rate-limited workflow queued', type: 'success' });
         fetchWorkflows();
       } else {
         setToast({ message: 'Failed to submit workflow', type: 'error' });
@@ -91,7 +118,6 @@ function App() {
   };
 
   const stats = {
-    total: workflows.length,
     enqueued: workflows.filter(w => w.workflow_status.toLowerCase() === 'enqueued').length,
     pending: workflows.filter(w => w.workflow_status.toLowerCase() === 'pending').length,
     completed: workflows.filter(w => w.workflow_status.toLowerCase() === 'success').length,
@@ -102,7 +128,20 @@ function App() {
       <header className="header">
         <div className="header-content">
           <h1 className="logo">DBOS Queue Patterns</h1>
-          <span className="subtitle">Fair Queueing Demo</span>
+          <nav className="tabs">
+            <button
+              className={`tab ${activeTab === 'fair-queue' ? 'active' : ''}`}
+              onClick={() => setActiveTab('fair-queue')}
+            >
+              Fair Queue
+            </button>
+            <button
+              className={`tab ${activeTab === 'rate-limited' ? 'active' : ''}`}
+              onClick={() => setActiveTab('rate-limited')}
+            >
+              Rate Limited
+            </button>
+          </nav>
         </div>
       </header>
 
@@ -117,44 +156,48 @@ function App() {
             </h2>
           </div>
           <div className="card-body">
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="tenantId" className="form-label">
-                  Tenant ID
-                </label>
-                <input
-                  type="text"
-                  id="tenantId"
-                  className="form-input"
-                  placeholder="Enter tenant identifier..."
-                  value={tenantId}
-                  onChange={(e) => setTenantId(e.target.value)}
+            {activeTab === 'fair-queue' ? (
+              <form onSubmit={handleFairQueueSubmit}>
+                <div className="form-group">
+                  <label htmlFor="tenantId" className="form-label">
+                    Tenant ID
+                  </label>
+                  <input
+                    type="text"
+                    id="tenantId"
+                    className="form-input"
+                    placeholder="Enter tenant identifier..."
+                    value={tenantId}
+                    onChange={(e) => setTenantId(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <p className="form-hint">
+                  Fair queueing ensures at most 5 workflows run concurrently, with max 1 per tenant.
+                </p>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isSubmitting || !tenantId.trim()}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Queue Workflow'}
+                </button>
+              </form>
+            ) : (
+              <div>
+                <p className="form-hint">
+                  Rate limiting ensures no more than 2 workflows start per 10 seconds.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleRateLimitedSubmit}
                   disabled={isSubmitting}
-                />
+                >
+                  {isSubmitting ? 'Submitting...' : 'Queue Workflow'}
+                </button>
               </div>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={isSubmitting || !tenantId.trim()}
-              >
-                {isSubmitting ? (
-                  <>
-                    <svg className="spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" opacity="0.25" />
-                      <path d="M12 2a10 10 0 0 1 10 10" />
-                    </svg>
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-                    </svg>
-                    Queue Workflow
-                  </>
-                )}
-              </button>
-            </form>
+            )}
           </div>
         </div>
 
@@ -195,7 +238,7 @@ function App() {
                   </svg>
                 </div>
                 <h3 className="empty-title">No workflows yet</h3>
-                <p className="empty-text">Submit a workflow with a tenant ID to get started</p>
+                <p className="empty-text">Submit a workflow to get started</p>
               </div>
             ) : (
               <div className="workflow-scroll">
@@ -205,12 +248,14 @@ function App() {
                       <div className="workflow-info">
                         <div className="workflow-id">{workflow.workflow_id}</div>
                         <div className="workflow-meta">
-                          <span className="tenant-badge">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
-                            </svg>
-                            {workflow.tenant_id || 'N/A'}
-                          </span>
+                          {activeTab === 'fair-queue' && (
+                            <span className="tenant-badge">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
+                              </svg>
+                              {workflow.tenant_id || 'N/A'}
+                            </span>
+                          )}
                           <span className="time-badge">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <circle cx="12" cy="12" r="10" />

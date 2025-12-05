@@ -103,7 +103,7 @@ def list_workflows(workflow_name: str) -> List[WorkflowStatus]:
 
 
 # Static files directory
-STATIC_DIR = Path(__file__).parent / "static"
+STATIC_DIR = Path(__file__).parent / "frontend" / "dist"
 
 # Include API router
 app.include_router(api)
