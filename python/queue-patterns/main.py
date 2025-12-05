@@ -1,14 +1,18 @@
 import os
 import time
+from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseModel
 import uvicorn
 from dbos import DBOS, DBOSConfig, Queue, SetEnqueueOptions
 from fastapi import APIRouter, FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
+
 
 #######################
 ## Fair Queueing
@@ -64,7 +68,7 @@ class WorkflowStatus(BaseModel):
 
 @api.get("/workflows")
 def list_workflows(workflow_name: str) -> List[WorkflowStatus]:
-    workflows = DBOS.list_workflows(name=workflow_name)
+    workflows = DBOS.list_workflows(name=workflow_name, sort_desc=True)
     statuses = []
     for w in workflows:
         status = WorkflowStatus(
@@ -80,6 +84,23 @@ def list_workflows(workflow_name: str) -> List[WorkflowStatus]:
 #######################
 ## Configuration
 #######################
+
+
+# Static files directory
+STATIC_DIR = Path(__file__).parent / "static"
+
+# Include API router
+app.include_router(api)
+
+# Serve static files
+if STATIC_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+
+
+# Serve index.html for the root path
+@app.get("/")
+async def serve_index():
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 if __name__ == "__main__":
