@@ -60,18 +60,3 @@ npm run dev
 
 Once the app is running, visit [`http://localhost:3000`](http://localhost:3000) to see the app in action.
 You can edit the code in `src/main.ts` to start building.
-
-## Deploying to DBOS Cloud
-
-You can also deploy this app to DBOS Cloud via the Cloud CLI.
-Install it globally with this command:
-
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-
-Then, run this command to deploy your app:
-
-```shell
-dbos-cloud app deploy
-```
