@@ -50,6 +50,20 @@ def fair_queue_workflow():
 ## Rate Limiting
 #######################
 
+rate_limited_queue = Queue("rate-limited-queue", limiter={"limit": 2, "period": 10})
+
+
+@api.post("/workflows/rate_limited_queue")
+def submit_rate_limited_queue():
+    rate_limited_queue.enqueue(rate_limited_queue_workflow)
+
+
+# This workflow is rate-limited: No more than two workflows can start per 10 seconds
+@DBOS.workflow()
+def rate_limited_queue_workflow():
+    time.sleep(5)
+
+
 #######################
 ## Debouncing
 #######################
