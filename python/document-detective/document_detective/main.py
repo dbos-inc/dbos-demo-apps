@@ -28,7 +28,7 @@ DBOS(config=config)
 
 # First, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
 
-index, chat_engine = configure_index()
+index, chat_engine = configure_index(database_url)
 
 # Now, let's write the document ingestion pipeline. Because ingesting and indexing documents may
 # take a long time, we need to build a pipeline that's both concurrent and reliable.
