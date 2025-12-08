@@ -38,7 +38,7 @@ def configure_index(database_url: str):
         password=db.password,
         port=db.port,
         user=db.username,
-        perform_setup=True,  # Set up during migration step
+        perform_setup=True,
     )
 
     vector_store._initialize()
