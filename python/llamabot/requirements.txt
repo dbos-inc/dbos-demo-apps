@@ -1,5 +1,0 @@
-dbos
-llama-index==0.12.43
-llama-index-vector-stores-postgres==0.5.3
-fastapi[standard]==0.115.13
-slack_bolt==1.23.0

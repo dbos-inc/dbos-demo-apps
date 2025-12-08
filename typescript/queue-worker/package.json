@@ -1,0 +1,17 @@
+{
+  "name": "dbos-queue-worker",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "worker": "node --experimental-strip-types worker.ts",
+    "server": "node --experimental-strip-types server.ts"
+  },
+  "dependencies": {
+    "@dbos-inc/dbos-sdk": "^4.4.9",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.1"
+  }
+}

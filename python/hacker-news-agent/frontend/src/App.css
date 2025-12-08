@@ -113,6 +113,7 @@ body {
   transition: all 0.2s ease;
   background: var(--white);
   font-family: inherit;
+  color: var(--text, #111);
 }
 
 .form-group input:focus {

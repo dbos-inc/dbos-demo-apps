@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Script to run "npm run build" in every folder within a target directory
 # Usage: ./build_all.sh /path/to/target/directory
 
@@ -32,9 +31,19 @@ process_directory() {
     local indent="$2"
     local dir_name=$(basename "$dir")
     
+    ((total_folders++))
+    
     echo ""
     echo "${indent}Processing folder: $dir_name"
     echo "${indent}-----------------------------------"
+    
+    # Check if tsconfig.json exists
+    if [ ! -f "$dir/tsconfig.json" ]; then
+        echo "${indent}⚠️  No tsconfig.json found in $dir_name - skipping"
+        return
+    fi
+    
+    echo "${indent}✓ Found tsconfig.json"
     
     # Check if package.json exists
     if [ -f "$dir/package.json" ]; then
@@ -62,8 +71,6 @@ process_directory() {
     else
         echo "${indent}⚠️  No package.json found in $dir_name - skipping"
     fi
-    
-    ((total_folders++))
 }
 
 # Loop through each folder in the target directory

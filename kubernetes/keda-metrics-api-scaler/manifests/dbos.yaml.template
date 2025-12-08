@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${DBOS_APP_NAME}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${DBOS_APP_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${DBOS_APP_NAME}
+    spec:
+      containers:
+        - name: ${DBOS_APP_NAME}
+          image: ${ECR_REPO}:${IMAGE_NAME}-${IMAGE_TAG}
+          env:
+            - name: DBOS_SYSTEM_DATABASE_URL
+              value: ${DBOS_SYSTEM_DATABASE_URL}
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${DBOS_APP_NAME}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-subnets: "${AWS_LB_SUBNETS}"
+spec:
+  type: LoadBalancer
+  selector:
+    app: ${DBOS_APP_NAME}
+  ports:
+    - port: 8000
+      targetPort: 8000
+

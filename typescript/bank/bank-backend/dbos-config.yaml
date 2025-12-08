@@ -1,6 +1,0 @@
-database:
-  migrate:
-    - node generate_env.js && npx prisma migrate deploy
-runtimeConfig:
-  start:
-    - npm run start
