@@ -14,3 +14,6 @@ dev = [
     "black>=25.11.0",
     "isort>=7.0.0",
 ]
+
+[tool.uv.sources]
+dbos = { path = "dbos-2.7.0a4+g50bf363-py3-none-any.whl" }

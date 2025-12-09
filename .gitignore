@@ -143,3 +143,6 @@ dist
 
 # SQLite
 *.sqlite
+
+# Wheel
+*.whl

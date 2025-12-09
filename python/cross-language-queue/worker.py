@@ -41,7 +41,7 @@ def step(i: int):
 # Configure and launch DBOS
 if __name__ == "__main__":
     system_database_url = os.environ.get(
-        "DBOS_SYSTEM_DATABASE_URL", "sqlite:///dbos_queue_worker.sqlite"
+        "DBOS_SYSTEM_DATABASE_URL", 'postgresql://postgres:dbos@localhost:5432/dbos_queue_worker'
     )
     config: DBOSConfig = {
         "name": "dbos-queue-worker",
