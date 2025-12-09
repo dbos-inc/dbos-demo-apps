@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import express from 'express';
 import type { Request, Response } from 'express';
 import { DBOSClient } from '@dbos-inc/dbos-sdk';
+import type { DBOSSerializer } from '@dbos-inc/dbos-sdk';
 
 // Create an Express app
 const app = express();
@@ -27,7 +28,21 @@ interface ProgressEvent {
 // Create a DBOS client
 const systemDatabaseUrl =
   process.env.DBOS_SYSTEM_DATABASE_URL || 'postgresql://postgres:dbos@localhost:5432/dbos_queue_worker';
-const client = await DBOSClient.create({ systemDatabaseUrl });
+const jsonSerializer: DBOSSerializer = {
+  parse: (text: string | null | undefined): unknown => {
+    // Parsers must always return null when receiving null or undefined
+    if (text === null || text === undefined) return null;
+    return JSON.parse(text);
+  },
+  stringify: (obj: unknown): string => {
+    // JSON.stringify doesn't handle undefined, so convert it to null instead
+    if (obj === undefined) {
+      obj = null;
+    }
+    return JSON.stringify(obj);
+  },
+};
+const client = await DBOSClient.create({ systemDatabaseUrl, serializer: jsonSerializer });
 
 // Use the DBOS client to enqueue a workflow for execution on the worker.
 app.post('/api/workflows', async (_req: Request, res: Response) => {

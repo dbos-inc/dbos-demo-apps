@@ -1,8 +1,10 @@
+import json
 import os
 import threading
 import time
+from typing import Any
 
-from dbos import DBOS, DBOSConfig, Queue
+from dbos import DBOS, DBOSConfig, Queue, Serializer
 
 # Define constants and models
 WF_PROGRESS_KEY = "workflow_progress"
@@ -38,6 +40,14 @@ def step(i: int):
     time.sleep(1)
 
 
+
+class JsonSerializer(Serializer):
+    def serialize(self, data: Any) -> str:
+        return json.dumps(data)
+
+    def deserialize(cls, serialized_data: str) -> Any:
+        return json.loads(serialized_data)
+
 # Configure and launch DBOS
 if __name__ == "__main__":
     system_database_url = os.environ.get(
@@ -46,6 +56,7 @@ if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-queue-worker",
         "system_database_url": system_database_url,
+        "serializer": JsonSerializer(),
     }
     DBOS(config=config)
     DBOS.launch()
