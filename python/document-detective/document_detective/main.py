@@ -7,11 +7,11 @@ import uvicorn
 from dbos import DBOS, DBOSConfig, Queue, WorkflowHandle
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from llama_index.core import Document, Settings, StorageContext, VectorStoreIndex
+from llama_index.core import Document
 from llama_index.readers.file import PDFReader
-from llama_index.vector_stores.postgres import PGVectorStore
 from pydantic import BaseModel, HttpUrl
-from sqlalchemy import make_url
+
+from .index import configure_index
 
 database_url = os.environ.get("DBOS_SYSTEM_DATABASE_URL")
 if not database_url:
@@ -28,26 +28,7 @@ DBOS(config=config)
 
 # First, let's initialize LlamaIndex to use Postgres with pgvector as its vector store.
 
-
-def configure_index():
-    Settings.chunk_size = 512
-    db = make_url(database_url)
-    vector_store = PGVectorStore.from_params(
-        database=db.database,
-        host=db.host,
-        password=db.password,
-        port=db.port,
-        user=db.username,
-        perform_setup=False,  # Set up during migration step
-    )
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    index = VectorStoreIndex([], storage_context=storage_context)
-    chat_engine = index.as_chat_engine()
-    return index, chat_engine
-
-
-index, chat_engine = configure_index()
-
+index, chat_engine = configure_index(database_url)
 
 # Now, let's write the document ingestion pipeline. Because ingesting and indexing documents may
 # take a long time, we need to build a pipeline that's both concurrent and reliable.
@@ -154,15 +135,24 @@ class ChatSchema(BaseModel):
     message: str
 
 
-chat_history = []
+class ChatHistoryItem(BaseModel):
+    content: str
+    isUser: bool
+
+
+class ChatHistory(BaseModel):
+    history: List[ChatHistoryItem]
+
+
+chat_history: List[ChatHistoryItem] = []
 
 
 @app.post("/chat")
-def chat(chat: ChatSchema):
-    query = {"content": chat.message, "isUser": False}
+def chat(chat: ChatSchema) -> ChatHistoryItem:
+    query = ChatHistoryItem(content=chat.message, isUser=False)
     chat_history.append(query)
     responseMessage = str(chat_engine.chat(chat.message))
-    response = {"content": responseMessage, "isUser": True}
+    response = ChatHistoryItem(content=responseMessage, isUser=True)
     chat_history.append(response)
     return response
 
@@ -173,11 +163,8 @@ def chat(chat: ChatSchema):
 
 
 @app.get("/history")
-def history_endpoint():
-    return chat_history
-
-
-# Finally, let's serve the app's frontend from an HTML file using FastAPI.
+def history_endpoint() -> ChatHistory:
+    return ChatHistory(history=chat_history)
 
 
 @app.get("/")

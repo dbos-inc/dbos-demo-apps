@@ -36,13 +36,7 @@ export DBOS_SYSTEM_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:54
 
 If you already use Postgres, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your own connection string.
 
-3. Set up the Postgres vector store for LlamaIndex (requires pgvector):
-
-```shell
-uv run python3 setup_llamaindex.py
-```
-
-4. Start your app!
+3. Start your app!
 
 ```shell
 uv run python3 -m document_detective.main
