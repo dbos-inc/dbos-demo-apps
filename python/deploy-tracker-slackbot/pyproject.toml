@@ -1,0 +1,15 @@
+[project]
+name = "deploy-tracker-slackbot"
+version = "0.1.0"
+description = "A Slackbot that deploys your app"
+readme = "README.md"
+dependencies = [
+    "dbos>=2.7.0",
+    "slack-bolt>=1.27.0",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.12.0",
+    "isort>=7.0.0",
+]

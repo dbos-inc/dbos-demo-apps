@@ -1,6 +1,7 @@
 # Logs
 **/.DS_Store
 #**/prisma/migrations/*
+**.python-version
 
 logs
 *.log
