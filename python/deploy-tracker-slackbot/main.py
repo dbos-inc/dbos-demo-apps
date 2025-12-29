@@ -23,21 +23,14 @@ def post_slack_message(message: str, channel: str, thread_ts: Optional[str] = No
 @DBOS.step()
 def build_step() -> float:
     duration = random.uniform(5, 20)
-    sleep(duration)  # Simulate time taken for the deployment step
+    sleep(duration)  # Simulate time taken for the build step
     return duration
 
 
-@DBOS.step(retries_allowed=True, max_attempts=3)
+@DBOS.step()
 def test_step() -> float:
-    # Simulate a random failure for demonstration purposes; it should be automatically retried
-    dice_roll = random.randint(1, 6)
-    if dice_roll <= 1:  # 1 in 6 chance of failure
-        raise Exception(
-            f"Deployment step 'Test 🧪' failed due to unlucky dice roll ({dice_roll})!"
-        )
-
     duration = random.uniform(10, 20)
-    sleep(duration)  # Simulate time taken for the deployment step
+    sleep(duration)  # Simulate time taken for the test step
     return duration
 
 
