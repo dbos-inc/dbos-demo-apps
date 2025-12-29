@@ -21,43 +21,31 @@ def post_slack_message(message: str, channel: str, thread_ts: Optional[str] = No
 
 
 @DBOS.step()
-def build_step(channel_id: str):
-    step_name = "Build 🚧"
+def build_step() -> float:
     duration = random.uniform(5, 20)
     sleep(duration)  # Simulate time taken for the deployment step
-    post_slack_message(
-        message=f"[Workflow {DBOS.workflow_id}] Step *{step_name}* completed in {duration:.2f} seconds.",
-        channel=channel_id,
-    )
+    return duration
 
 
 @DBOS.step(retries_allowed=True, max_attempts=3)
-def test_step(channel_id: str):
-    step_name = "Test 🧪"
+def test_step() -> float:
     # Simulate a random failure for demonstration purposes; it should be automatically retried
     dice_roll = random.randint(1, 6)
     if dice_roll <= 1:  # 1 in 6 chance of failure
         raise Exception(
-            f"Deployment step '{step_name}' failed due to unlucky dice roll ({dice_roll})!"
+            f"Deployment step 'Test 🧪' failed due to unlucky dice roll ({dice_roll})!"
         )
 
     duration = random.uniform(10, 20)
     sleep(duration)  # Simulate time taken for the deployment step
-    post_slack_message(
-        message=f"[Workflow {DBOS.workflow_id}] Step *{step_name}* completed in {duration:.2f} seconds.",
-        channel=channel_id,
-    )
+    return duration
 
 
 @DBOS.step()
-def deploy_step(channel_id: str):
-    step_name = "Deploy 🚀"
+def deploy_step() -> float:
     duration = random.uniform(5, 15)
     sleep(duration)  # Simulate time taken for the deployment step
-    post_slack_message(
-        message=f"[Workflow {DBOS.workflow_id}] Step *{step_name}* completed in {duration:.2f} seconds.",
-        channel=channel_id,
-    )
+    return duration
 
 
 @DBOS.workflow()
@@ -69,13 +57,25 @@ def deploy_tracker_workflow(user_id: str, channel_id: str):
     DBOS.set_event("deploy_status", "started")
 
     # Additional steps for deployment can be added here
-    build_step(channel_id)
+    duration = build_step()
+    post_slack_message(
+        message=f"[Workflow {DBOS.workflow_id}] Step *Build 🚧* completed in {duration:.2f} seconds.",
+        channel=channel_id,
+    )
     DBOS.set_event("deploy_status", "build_completed")
 
-    test_step(channel_id)
+    duration = test_step()
+    post_slack_message(
+        message=f"[Workflow {DBOS.workflow_id}] Step *Test 🧪* completed in {duration:.2f} seconds.",
+        channel=channel_id,
+    )
     DBOS.set_event("deploy_status", "tests_completed")
 
-    deploy_step(channel_id)
+    duration = deploy_step()
+    post_slack_message(
+        message=f"[Workflow {DBOS.workflow_id}] Step *Deploy 🚀* completed in {duration:.2f} seconds.",
+        channel=channel_id,
+    )
     DBOS.set_event("deploy_status", "deployed")
 
     post_slack_message(
