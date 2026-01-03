@@ -10,10 +10,8 @@ github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ3
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dbos-inc/dbos-transact-golang v0.5.5-beta h1:mppRd8TmkAnBKs+yGWZ2KFpqG6bO0UFbH92od/ILVSk=
-github.com/dbos-inc/dbos-transact-golang v0.5.5-beta/go.mod h1:/vujZM3WtZoZSJd/cFd02M8ndDLuGaODR6vCcnxCwQY=
-github.com/dbos-inc/dbos-transact-golang v0.5.5-beta.0.20250911181830-7741ebeaea84 h1:AD1jzJz1d2k7kChYy7oyW38r0Yxb53sSQAIBtdmGfIM=
-github.com/dbos-inc/dbos-transact-golang v0.5.5-beta.0.20250911181830-7741ebeaea84/go.mod h1:aIL1pB+wY2l5ooIRZLnx0LTQk9u2VNGfzvJqVPomXtY=
+github.com/dbos-inc/dbos-transact-golang v0.9.0 h1:M3wzWHF8VUTZqC3p78ys2lXlSs+0tSp9vmZFvXmmORc=
+github.com/dbos-inc/dbos-transact-golang v0.9.0/go.mod h1:a9g6XFRciuoDIqJX1yVH0mpw1mrSv62p5dI9Wfr3A8c=
 github.com/gabriel-vasile/mimetype v1.4.3 h1:in2uUcidCuFcDKtdcBxlR0rJ1+fsokWf+uqxgUFjbI0=
 github.com/gabriel-vasile/mimetype v1.4.3/go.mod h1:d8uq/6HKRL6CGdk+aubisF/M5GcPfT7nKyLpA0lbSSk=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
