@@ -22,10 +22,10 @@ dbos postgres start
 go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 ```
 
-4. Create a database for this application and set the `DBOS_SYSTEM_DATABASE_URL` environment variable to point to it.
+4. Create a database for this application and set the `DBOS_SYSTEM_DATABASE_URL` environment variable to point to it.  If you're asked for a password, use `dbos`.
 ```bash
 createdb -h localhost -U postgres widget_store_go
-export DBOS_SYSTEM_DATABASE_URL="postgres://postgres:dbos@localhost:5432/widget_store_go"
+export DBOS_SYSTEM_DATABASE_URL="postgres://postgres:dbos@localhost:5432/widget_store_go?sslmode=disable"
 ```
 
 5. Create the application tables.
