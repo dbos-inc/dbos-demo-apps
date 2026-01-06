@@ -1,13 +1,12 @@
 import asyncio
 import os
 import sys
-import uuid
 from datetime import datetime
 from typing import Annotated, List, Optional
 
 import uvicorn
 from annotated_types import MaxLen
-from dbos import DBOS, DBOSConfig, SetWorkflowID, WorkflowHandleAsync
+from dbos import DBOS, DBOSConfig, WorkflowHandleAsync
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
