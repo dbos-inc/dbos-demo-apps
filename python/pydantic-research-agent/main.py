@@ -168,28 +168,6 @@ async def list_agents():
     return statuses
 
 
-async def deep_research_durable(query: str):
-    config: DBOSConfig = {
-        "name": "deep_research_durable",
-        "enable_otlp": True,
-        "system_database_url": "postgresql://postgres@localhost:5432/dbos",
-    }
-    DBOS(config=config)
-    DBOS.launch()
-    resume_id = sys.argv[1] if len(sys.argv) > 1 else None
-    wf_id = f"deep-research-{uuid.uuid4()}"
-    if resume_id is not None:
-        print("resuming existing workflow", resume_id)
-        wf_id = resume_id
-    else:
-        print("starting new workflow", wf_id)
-
-    with SetWorkflowID(wf_id):
-        summary = await deep_research(query)
-
-    print(summary)
-
-
 if __name__ == "__main__":
     # Validate required environment variables
     if not os.environ.get("ANTHROPIC_API_KEY"):
