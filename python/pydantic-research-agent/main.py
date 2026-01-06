@@ -2,19 +2,17 @@ import asyncio
 import os
 import sys
 import uuid
+from datetime import datetime
 from typing import Annotated, List, Optional
-from fastapi.middleware.cors import CORSMiddleware
 
+import uvicorn
 from annotated_types import MaxLen
 from dbos import DBOS, DBOSConfig, SetWorkflowID, WorkflowHandleAsync
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 from pydantic_ai import Agent, WebSearchTool, format_as_xml
 from pydantic_ai.durable_exec.dbos import DBOSAgent
-import uvicorn
-from datetime import datetime
-
-
 
 app = FastAPI()
 app.add_middleware(
@@ -49,22 +47,22 @@ class DeepResearchPlan(BaseModel, **ConfigDict(use_attribute_docstrings=True)):
 
 
 plan_agent = Agent(
-    'anthropic:claude-sonnet-4-5',
-    instructions='Analyze the users query and design a plan for deep research to answer their query.',
+    "anthropic:claude-sonnet-4-5",
+    instructions="Analyze the users query and design a plan for deep research to answer their query.",
     output_type=DeepResearchPlan,
-    name='plan_agent',
+    name="plan_agent",
 )
 
 
 search_agent = Agent(
-    'google-gla:gemini-2.5-flash',
-    instructions='Perform a web search for the given terms and return a detailed report on the results.',
+    "google-gla:gemini-2.5-flash",
+    instructions="Perform a web search for the given terms and return a detailed report on the results.",
     builtin_tools=[WebSearchTool()],
-    name='search_agent',
+    name="search_agent",
 )
 
 analysis_agent = Agent(
-    'anthropic:claude-sonnet-4-5',
+    "anthropic:claude-sonnet-4-5",
     instructions="""
 Analyze the research from the previous steps and generate a report on the given subject.
 
@@ -75,10 +73,11 @@ Your report should start with an executive summary of the results, then a concis
 
 Include links to original sources whenever possible.
 """,
-    name='analysis_agent',
+    name="analysis_agent",
 )
 
 AGENT_STATUS = "agent_status"
+
 
 class AgentStartRequest(BaseModel):
     query: str
@@ -125,7 +124,9 @@ async def deep_research(query: str) -> str:
     tasks_handles: List[WorkflowHandleAsync[str]] = []
     for step in plan.web_search_steps:
         # Asynchronously start search workflows without waiting for each to complete
-        task_handle = await DBOS.start_workflow_async(search_workflow, step.search_terms)
+        task_handle = await DBOS.start_workflow_async(
+            search_workflow, step.search_terms
+        )
         tasks_handles.append(task_handle)
 
     search_results = [await task.get_result() for task in tasks_handles]
@@ -133,9 +134,9 @@ async def deep_research(query: str) -> str:
     analysis_result = await dbos_analysis_agent.run(
         format_as_xml(
             {
-                'query': query,
-                'search_results': search_results,
-                'instructions': plan.analysis_instructions,
+                "query": query,
+                "search_results": search_results,
+                "instructions": plan.analysis_instructions,
             }
         ),
     )
@@ -169,19 +170,19 @@ async def list_agents():
 
 async def deep_research_durable(query: str):
     config: DBOSConfig = {
-        'name': 'deep_research_durable',
-        'enable_otlp': True,
-        'system_database_url': 'postgresql://postgres@localhost:5432/dbos',
+        "name": "deep_research_durable",
+        "enable_otlp": True,
+        "system_database_url": "postgresql://postgres@localhost:5432/dbos",
     }
     DBOS(config=config)
     DBOS.launch()
     resume_id = sys.argv[1] if len(sys.argv) > 1 else None
-    wf_id = f'deep-research-{uuid.uuid4()}'
+    wf_id = f"deep-research-{uuid.uuid4()}"
     if resume_id is not None:
-        print('resuming existing workflow', resume_id)
+        print("resuming existing workflow", resume_id)
         wf_id = resume_id
     else:
-        print('starting new workflow', wf_id)
+        print("starting new workflow", wf_id)
 
     with SetWorkflowID(wf_id):
         summary = await deep_research(query)
@@ -192,14 +193,10 @@ async def deep_research_durable(query: str):
 if __name__ == "__main__":
     # Validate required environment variables
     if not os.environ.get("ANTHROPIC_API_KEY"):
-        print(
-            "❌ Error: ANTHROPIC_API_KEY environment variable not set"
-        )
+        print("❌ Error: ANTHROPIC_API_KEY environment variable not set")
         sys.exit(1)
     if not os.environ.get("GOOGLE_API_KEY"):
-        print(
-            "❌ Error: GOOGLE_API_KEY environment variable not set"
-        )
+        print("❌ Error: GOOGLE_API_KEY environment variable not set")
         sys.exit(1)
 
     config: DBOSConfig = {
