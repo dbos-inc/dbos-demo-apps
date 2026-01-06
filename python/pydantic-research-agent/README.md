@@ -2,7 +2,6 @@
 
 An autonomous research agent for doing deep Internet research with DBOS and Pydantic AI.
 
-
 ## Setup
 
 1. Install dependencies:
