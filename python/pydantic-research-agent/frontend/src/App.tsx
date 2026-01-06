@@ -6,8 +6,8 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>HN Research Agent</h1>
-        <p>Harness the collective wisdom of Hacker News with AI-powered deep research on any tech topic</p>
+        <h1>Pydantic AI Research Agent</h1>
+        <p>AI-powered deep research with structured outputs and durable execution</p>
       </header>
       <main className="app-main">
         <NewAgentForm />

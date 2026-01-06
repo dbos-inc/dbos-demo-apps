@@ -5,14 +5,14 @@
 }
 
 :root {
-  --hn-orange: #ff6600;
-  --hn-orange-dark: #e65c00;
-  --hn-orange-light: #ff7a1f;
-  --hn-bg: #f6f6ef;
-  --hn-border: #e6e6df;
+  --pydantic-pink: #e92063;
+  --pydantic-pink-dark: #c91a54;
+  --pydantic-pink-light: #ff3d7f;
+  --pydantic-bg: #fafafa;
+  --pydantic-border: #e8e8e8;
   --text-primary: #1a1a1a;
   --text-secondary: #666666;
-  --text-muted: #828282;
+  --text-muted: #888888;
   --white: #ffffff;
   --success: #2e7d32;
   --success-bg: #e8f5e9;
@@ -29,7 +29,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--hn-bg);
+  background: var(--pydantic-bg);
   color: var(--text-primary);
 }
 
@@ -47,10 +47,10 @@ body {
 .app-header h1 {
   font-size: 3rem;
   font-weight: 700;
-  color: var(--hn-orange);
+  color: var(--pydantic-pink);
   margin-bottom: 0.75rem;
   letter-spacing: -0.02em;
-  text-shadow: 0 2px 4px rgba(255, 102, 0, 0.1);
+  text-shadow: 0 2px 4px rgba(233, 32, 99, 0.1);
 }
 
 .app-header p {
@@ -74,13 +74,13 @@ body {
   border-radius: 12px;
   box-shadow: var(--shadow-md);
   margin-bottom: 3rem;
-  border: 2px solid var(--hn-border);
+  border: 2px solid var(--pydantic-border);
   transition: all 0.3s ease;
 }
 
 .new-agent-form:hover {
   box-shadow: var(--shadow-lg);
-  border-color: var(--hn-orange);
+  border-color: var(--pydantic-pink);
 }
 
 .new-agent-form h2 {
@@ -107,7 +107,7 @@ body {
 .form-group input {
   width: 100%;
   padding: 1rem 1.25rem;
-  border: 2px solid var(--hn-border);
+  border: 2px solid var(--pydantic-border);
   border-radius: 8px;
   font-size: 1.05rem;
   transition: all 0.2s ease;
@@ -118,13 +118,13 @@ body {
 
 .form-group input:focus {
   outline: none;
-  border-color: var(--hn-orange);
-  box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+  border-color: var(--pydantic-pink);
+  box-shadow: 0 0 0 3px rgba(233, 32, 99, 0.1);
   transform: translateY(-1px);
 }
 
 .form-group input:disabled {
-  background: var(--hn-bg);
+  background: var(--pydantic-bg);
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -144,7 +144,7 @@ body {
 }
 
 button {
-  background: linear-gradient(135deg, var(--hn-orange) 0%, var(--hn-orange-dark) 100%);
+  background: linear-gradient(135deg, var(--pydantic-pink) 0%, var(--pydantic-pink-dark) 100%);
   color: var(--white);
   padding: 1rem 2.5rem;
   border: none;
@@ -159,7 +159,7 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--hn-orange-light) 0%, var(--hn-orange) 100%);
+  background: linear-gradient(135deg, var(--pydantic-pink-light) 0%, var(--pydantic-pink) 100%);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -181,7 +181,7 @@ button:disabled {
   padding: 2.5rem;
   border-radius: 12px;
   box-shadow: var(--shadow-md);
-  border: 2px solid var(--hn-border);
+  border: 2px solid var(--pydantic-border);
 }
 
 .agent-list h2 {
@@ -208,10 +208,10 @@ button:disabled {
 }
 
 .agent-card {
-  background: var(--hn-bg);
+  background: var(--pydantic-bg);
   padding: 2rem;
   border-radius: 10px;
-  border: 2px solid var(--hn-border);
+  border: 2px solid var(--pydantic-border);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -224,14 +224,14 @@ button:disabled {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--hn-orange) 0%, var(--hn-orange-light) 100%);
+  background: linear-gradient(90deg, var(--pydantic-pink) 0%, var(--pydantic-pink-light) 100%);
   transform: scaleX(0);
   transition: transform 0.3s ease;
 }
 
 .agent-card:hover {
   box-shadow: var(--shadow-lg);
-  border-color: var(--hn-orange);
+  border-color: var(--pydantic-pink);
   transform: translateY(-2px);
 }
 
@@ -273,9 +273,9 @@ button:disabled {
 }
 
 .status-running {
-  background: #fff8e1;
-  color: var(--hn-orange-dark);
-  border: 1px solid var(--hn-orange);
+  background: #fce4ec;
+  color: var(--pydantic-pink-dark);
+  border: 1px solid var(--pydantic-pink);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -301,8 +301,8 @@ button:disabled {
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 102, 0, 0.3);
-  border-top-color: var(--hn-orange);
+  border: 2px solid rgba(233, 32, 99, 0.3);
+  border-top-color: var(--pydantic-pink);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-right: 6px;
@@ -352,7 +352,7 @@ button:disabled {
 .agent-report {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 2px solid var(--hn-border);
+  border-top: 2px solid var(--pydantic-border);
 }
 
 .agent-report h4 {
@@ -373,7 +373,7 @@ button:disabled {
   line-height: 1.8;
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid var(--hn-border);
+  border: 1px solid var(--pydantic-border);
   font-size: 0.95rem;
 }
 
@@ -382,32 +382,32 @@ button:disabled {
 }
 
 .report-content::-webkit-scrollbar-track {
-  background: var(--hn-bg);
+  background: var(--pydantic-bg);
   border-radius: 4px;
 }
 
 .report-content::-webkit-scrollbar-thumb {
-  background: var(--hn-orange);
+  background: var(--pydantic-pink);
   border-radius: 4px;
 }
 
 .report-content::-webkit-scrollbar-thumb:hover {
-  background: var(--hn-orange-dark);
+  background: var(--pydantic-pink-dark);
 }
 
 .report-link {
-  color: var(--hn-orange);
+  color: var(--pydantic-pink);
   text-decoration: none;
   font-weight: 500;
-  border-bottom: 1px solid var(--hn-orange);
+  border-bottom: 1px solid var(--pydantic-pink);
   transition: all 0.2s ease;
   padding-bottom: 1px;
 }
 
 .report-link:hover {
-  color: var(--hn-orange-dark);
-  border-bottom-color: var(--hn-orange-dark);
-  background: rgba(255, 102, 0, 0.05);
+  color: var(--pydantic-pink-dark);
+  border-bottom-color: var(--pydantic-pink-dark);
+  background: rgba(233, 32, 99, 0.05);
 }
 
 @media (max-width: 768px) {

@@ -1,12 +1,11 @@
 export interface AgentStatus {
   agent_id: string;
   created_at: string;
-  topic: string;
-  iterations: number;
+  query: string;
   report: string | null;
   status: string;
 }
 
 export interface AgentStartRequest {
-  topic: string;
+  query: string;
 }

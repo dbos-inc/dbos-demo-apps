@@ -104,7 +104,7 @@ export function AgentList() {
           {agents.map((agent) => (
             <div key={agent.agent_id} className="agent-card">
               <div className="agent-header">
-                <h3>{agent.topic}</h3>
+                <h3>{agent.query}</h3>
                 <span className={`status-badge ${getStatusBadgeClass(agent.status)}`}>
                   {isPending(agent.status) && <span className="spinner"></span>}
                   {agent.status}
@@ -120,10 +120,6 @@ export function AgentList() {
                   <span className="meta-value">
                     {new Date(agent.created_at).toLocaleString()}
                   </span>
-                </div>
-                <div className="meta-item">
-                  <span className="meta-label">Iterations:</span>
-                  <span className="meta-value">{agent.iterations}</span>
                 </div>
               </div>
               {agent.report && (
