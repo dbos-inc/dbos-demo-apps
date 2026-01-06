@@ -1,13 +1,29 @@
 import asyncio
+import os
 import sys
 import uuid
-from typing import Annotated, List
+from typing import Annotated, List, Optional
+from fastapi.middleware.cors import CORSMiddleware
 
 from annotated_types import MaxLen
 from dbos import DBOS, DBOSConfig, SetWorkflowID, WorkflowHandleAsync
+from fastapi import FastAPI
 from pydantic import BaseModel, ConfigDict
 from pydantic_ai import Agent, WebSearchTool, format_as_xml
 from pydantic_ai.durable_exec.dbos import DBOSAgent
+import uvicorn
+from datetime import datetime
+
+
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class WebSearchStep(BaseModel):
@@ -62,6 +78,19 @@ Include links to original sources whenever possible.
     name='analysis_agent',
 )
 
+AGENT_STATUS = "agent_status"
+
+class AgentStartRequest(BaseModel):
+    query: str
+
+
+class AgentStatus(BaseModel):
+    created_at: str
+    query: str
+    report: Optional[str]
+    status: str
+    agent_id: str = ""
+
 
 @analysis_agent.tool_plain
 async def extra_search(query: str) -> str:
@@ -83,6 +112,14 @@ async def search_workflow(search_terms: str) -> str:
 
 @DBOS.workflow()
 async def deep_research(query: str) -> str:
+    # Set and update an agent status the frontend can display
+    agent_status = AgentStatus(
+        created_at=datetime.now().isoformat(),
+        query=query,
+        report=None,
+        status="PENDING",
+    )
+    DBOS.set_event(AGENT_STATUS, agent_status)
     result = await dbos_plan_agent.run(query)
     plan = result.output
     tasks_handles: List[WorkflowHandleAsync[str]] = []
@@ -102,7 +139,32 @@ async def deep_research(query: str) -> str:
             }
         ),
     )
+    agent_status.report = analysis_result.output
+    DBOS.set_event(AGENT_STATUS, agent_status)
     return analysis_result.output
+
+
+@app.post("/agents")
+async def start_agent(request: AgentStartRequest):
+    # Start a durable agent in the background
+    DBOS.start_workflow(deep_research, request.query)
+    return {"ok": True}
+
+
+@app.get("/agents", response_model=list[AgentStatus])
+async def list_agents():
+    # List all active agents and retrieve their statuses
+    agent_workflows = await DBOS.list_workflows_async(
+        name=deep_research.__qualname__,
+        sort_desc=True,
+    )
+    statuses: list[AgentStatus] = await asyncio.gather(
+        *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
+    )
+    for workflow, status in zip(agent_workflows, statuses):
+        status.status = workflow.status
+        status.agent_id = workflow.workflow_id
+    return statuses
 
 
 async def deep_research_durable(query: str):
@@ -127,9 +189,24 @@ async def deep_research_durable(query: str):
     print(summary)
 
 
-if __name__ == '__main__':
-    asyncio.run(
-        deep_research_durable(
-            'Whats the best Python agent framework to use if I care about durable execution and type safety?'
+if __name__ == "__main__":
+    # Validate required environment variables
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print(
+            "❌ Error: ANTHROPIC_API_KEY environment variable not set"
         )
-    )
+        sys.exit(1)
+    if not os.environ.get("GOOGLE_API_KEY"):
+        print(
+            "❌ Error: GOOGLE_API_KEY environment variable not set"
+        )
+        sys.exit(1)
+
+    config: DBOSConfig = {
+        "name": "pydantic-research-agent",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+        "conductor_key": os.environ.get("CONDUCTOR_KEY"),
+    }
+    DBOS(config=config)
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)

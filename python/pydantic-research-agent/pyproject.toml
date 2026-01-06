@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "dbos>=2.7.0",
+    "fastapi[standard]>=0.128.0",
     "pydantic-ai>=1.39.1",
 ]
