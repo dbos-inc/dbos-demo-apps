@@ -9,7 +9,7 @@ dependencies = [
     "openai>=1.0.0",
     "rich>=13.0.0",
     "python-dotenv>=1.0.0",
-    "dbos==2.7.0",
+    "dbos==2.8.0",
     "fastapi[standard]>=0.121.1",
 ]
 
