@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.config.DBOSConfig;
 
-import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,41 +17,47 @@ import org.slf4j.LoggerFactory;
 public class DBOSLifecycle implements SmartLifecycle {
 
     private static final Logger log = LoggerFactory.getLogger(DBOSLifecycle.class);
-    private volatile boolean running = false;
+    private final AtomicBoolean running = new AtomicBoolean(false);
+
+    private static String getEnvOrDefault(String envVar, String defaultValue) {
+        String value = System.getenv(envVar);
+        return (value == null || value.isBlank()) ? defaultValue : value;
+    }
 
     @Override
     public void start() {
-        String databaseUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
-        if (databaseUrl == null || databaseUrl.isEmpty()) {
-            databaseUrl = "jdbc:postgresql://localhost:5432/dbos_starter_java";
+        if (running.compareAndSet(false, true)) {
+            var config = DBOSConfig.defaults("dbos-starter")
+                    .withDatabaseUrl(getEnvOrDefault("DBOS_SYSTEM_JDBC_URL",
+                            "jdbc:postgresql://localhost:5432/dbos_starter_java"))
+                    .withDbUser(getEnvOrDefault("PGUSER", "postgres"))
+                    .withDbPassword(getEnvOrDefault("PGPASSWORD", "dbos"))
+                    .withAdminServer(true)
+                    .withAdminServerPort(3001);
+            DBOS.configure(config);
+            DBOS.launch();
+        } else {
+            log.debug("DBOS already running, skipping start()");
         }
-        var config = DBOSConfig.defaults("dbos-starter")
-                .withDatabaseUrl(databaseUrl)
-                .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
-                .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-                .withAdminServer(true)
-                .withAdminServerPort(3001);
-        DBOS.configure(config);
-
-        log.info("Launch DBOS");
-        DBOS.launch();
-        running = true;
     }
 
     @Override
     public void stop() {
-        log.info("Shut Down DBOS");
-        try {
-            DBOS.shutdown();
-        } finally {
-            running = false;
+        if (running.compareAndSet(true, false)) {
+            try {
+                DBOS.shutdown();
+            } catch (Exception e) {
+                log.error("Error during DBOS shutdown", e);
+                // Don't rethrow - we still consider it stopped
+            }
+        } else {
+            log.debug("DBOS not running, skipping shutdown()");
         }
+
     }
 
-    @Override public boolean isRunning() { return running; }
-
-    @Override public boolean isAutoStartup() { return true; }
-
-    // Start BEFORE the web server (default is 0). Lower = earlier.
-    @Override public int getPhase() { return -1; }
+    @Override
+    public boolean isRunning() {
+        return running.get();
+    }
 }
