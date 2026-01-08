@@ -1,4 +1,4 @@
-package com.example.dbosstarter.config;
+package com.example.dbos_starter.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

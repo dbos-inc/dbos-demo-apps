@@ -1,4 +1,4 @@
-package com.example.dbosstarter;
+package com.example.dbos_starter;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
