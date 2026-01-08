@@ -1,1 +1,1 @@
-rootProject.name = "DurableStarter"
+rootProject.name = "dbos-starter"

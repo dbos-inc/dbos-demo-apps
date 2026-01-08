@@ -1,4 +1,4 @@
-package com.example.dbosstarter.controller;
+package com.example.dbos_starter.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.dbosstarter.service.DurableStarterService;
+import com.example.dbos_starter.service.DurableStarterService;
 
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.StartWorkflowOptions;
 
-import static com.example.dbosstarter.service.DurableStarterService.STEPS_EVENT;
+import static com.example.dbos_starter.service.DurableStarterService.STEPS_EVENT;
 
 import java.time.Duration;
 

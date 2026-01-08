@@ -1,13 +1,11 @@
-package com.example.dbosstarter.config;
-
-import java.util.Objects;
+package com.example.dbos_starter.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import com.example.dbosstarter.service.DurableStarterService;
-import com.example.dbosstarter.service.DurableStarterServiceImpl;
+import com.example.dbos_starter.service.DurableStarterService;
+import com.example.dbos_starter.service.DurableStarterServiceImpl;
 
 import dev.dbos.transact.DBOS;
 
@@ -17,11 +15,9 @@ public class DurableStarterConfig {
     @Primary
     @Bean
     public DurableStarterService durableStarterService() {
-	    var impl = new DurableStarterServiceImpl();
 	    var proxy = DBOS.registerWorkflows(
             DurableStarterService.class,
-            impl);
-	    impl.setDurableStarterService(proxy);
+            new DurableStarterServiceImpl());
         return proxy;
     }
 }

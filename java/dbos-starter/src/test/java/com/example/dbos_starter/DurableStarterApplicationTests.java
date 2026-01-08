@@ -1,4 +1,4 @@
-package com.example.dbosstarter;
+package com.example.dbos_starter;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

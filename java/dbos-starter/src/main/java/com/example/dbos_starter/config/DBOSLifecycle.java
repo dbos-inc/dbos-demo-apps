@@ -1,4 +1,4 @@
-package com.example.dbosstarter.config;
+package com.example.dbos_starter.config;
 
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Lazy;
