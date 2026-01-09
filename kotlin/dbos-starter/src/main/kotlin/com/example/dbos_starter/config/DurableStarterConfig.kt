@@ -13,10 +13,9 @@ class DurableStarterConfig {
     @Primary
     @Bean
     fun durableStarterService(): DurableStarterService {
-        val proxy = DBOS.registerWorkflows(
+        return DBOS.registerWorkflows(
             DurableStarterService::class.java,
             DurableStarterServiceImpl()
         )
-        return proxy
     }
 }
