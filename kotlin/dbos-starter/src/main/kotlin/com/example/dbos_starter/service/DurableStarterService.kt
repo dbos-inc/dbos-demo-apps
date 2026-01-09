@@ -46,11 +46,11 @@ class DurableStarterServiceImpl : DurableStarterService {
 
     @Workflow
     override fun exampleWorkflow() {
-        DBOS.runStep(ThrowingRunnable<Exception> { stepOne() }, "stepOne")
+        DBOS.runStep<Exception>({ stepOne() }, "stepOne")
         DBOS.setEvent(STEPS_EVENT, 1)
-        DBOS.runStep(ThrowingRunnable<Exception> { stepTwo() }, "stepTwo")
+        DBOS.runStep<Exception>({ stepTwo() }, "stepTwo")
         DBOS.setEvent(STEPS_EVENT, 2)
-        DBOS.runStep(ThrowingRunnable<Exception> { stepThree() }, "stepThree")
+        DBOS.runStep<Exception>({ stepThree() }, "stepThree")
         DBOS.setEvent(STEPS_EVENT, 3)
     }
 }
