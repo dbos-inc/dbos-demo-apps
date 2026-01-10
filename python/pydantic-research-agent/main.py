@@ -22,6 +22,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Validate required environment variables
+model_prefix = ""
+
+if os.environ.get("PYDANTIC_AI_GATEWAY_API_KEY"):
+    model_prefix = "gateway/"
+    print("Using Pydantic AI Gateway for model access")
+else:
+    print("PYDANTIC_AI_GATEWAY_API_KEY environment variable not set, using providers directly")
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print("❌ Error: ANTHROPIC_API_KEY environment variable not set")
+        sys.exit(1)
+    if not os.environ.get("GOOGLE_API_KEY"):
+        print("❌ Error: GOOGLE_API_KEY environment variable not set")
+        sys.exit(1)
 
 class WebSearchStep(BaseModel):
     """A step that performs a web search.
@@ -46,7 +60,7 @@ class DeepResearchPlan(BaseModel, **ConfigDict(use_attribute_docstrings=True)):
 
 
 plan_agent = Agent(
-    "anthropic:claude-sonnet-4-5",
+    f"{model_prefix}anthropic:claude-sonnet-4-5",
     instructions="Analyze the users query and design a plan for deep research to answer their query.",
     output_type=DeepResearchPlan,
     name="plan_agent",
@@ -54,14 +68,14 @@ plan_agent = Agent(
 
 
 search_agent = Agent(
-    "google-gla:gemini-2.5-flash",
+    f"{model_prefix}google-vertex:gemini-2.5-flash",
     instructions="Perform a web search for the given terms and return a detailed report on the results.",
     builtin_tools=[WebSearchTool()],
     name="search_agent",
 )
 
 analysis_agent = Agent(
-    "anthropic:claude-sonnet-4-5",
+    f"{model_prefix}anthropic:claude-sonnet-4-5",
     instructions="""
 Analyze the research from the previous steps and generate a report on the given subject.
 
@@ -168,18 +182,10 @@ async def list_agents():
 
 
 if __name__ == "__main__":
-    # Validate required environment variables
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("❌ Error: ANTHROPIC_API_KEY environment variable not set")
-        sys.exit(1)
-    if not os.environ.get("GOOGLE_API_KEY"):
-        print("❌ Error: GOOGLE_API_KEY environment variable not set")
-        sys.exit(1)
-
     config: DBOSConfig = {
         "name": "pydantic-research-agent",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-        "conductor_key": os.environ.get("CONDUCTOR_KEY"),
+        "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
     }
     DBOS(config=config)
     DBOS.launch()
