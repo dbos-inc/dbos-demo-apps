@@ -2265,6 +2265,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "dbos" },
     { name = "fastapi", extra = ["standard"] },
+    { name = "logfire" },
     { name = "pydantic-ai" },
 ]
 
@@ -2278,6 +2279,7 @@ dev = [
 requires-dist = [
     { name = "dbos", specifier = "==2.8.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.128.0" },
+    { name = "logfire", specifier = ">=4.16.0" },
     { name = "pydantic-ai", specifier = "==1.40.0" },
 ]
 

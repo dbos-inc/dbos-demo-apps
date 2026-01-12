@@ -4,6 +4,7 @@ import sys
 from datetime import datetime
 from typing import Annotated, List, Optional
 
+import logfire
 import uvicorn
 from annotated_types import MaxLen
 from dbos import DBOS, DBOSConfig, WorkflowHandleAsync
@@ -22,6 +23,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Enable Logfire instrumentation if LOGFIRE_TOKEN is set
+enable_logfire = False
+if os.environ.get("LOGFIRE_TOKEN"):
+    print("Enabling Logfire instrumentation")
+    enable_logfire = True
+    logfire.configure(service_name="pydantic-research-agent")
+    logfire.instrument_pydantic_ai()
+
 # Validate required environment variables
 model_prefix = ""
 
@@ -29,13 +38,16 @@ if os.environ.get("PYDANTIC_AI_GATEWAY_API_KEY"):
     model_prefix = "gateway/"
     print("Using Pydantic AI Gateway for model access")
 else:
-    print("PYDANTIC_AI_GATEWAY_API_KEY environment variable not set, using providers directly")
+    print(
+        "PYDANTIC_AI_GATEWAY_API_KEY environment variable not set, using providers directly"
+    )
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print("❌ Error: ANTHROPIC_API_KEY environment variable not set")
         sys.exit(1)
     if not os.environ.get("GOOGLE_API_KEY"):
         print("❌ Error: GOOGLE_API_KEY environment variable not set")
         sys.exit(1)
+
 
 class WebSearchStep(BaseModel):
     """A step that performs a web search.
@@ -184,8 +196,11 @@ async def list_agents():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "pydantic-research-agent",
-        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+        # "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+        "system_database_url": "postgresql+asyncpg://postgres:dbos@localhost:5432/pydantic_research",
         "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+        "enable_otlp": enable_logfire,
+        "application_version": "0.1.0",
     }
     DBOS(config=config)
     DBOS.launch()
