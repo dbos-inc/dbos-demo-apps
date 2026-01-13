@@ -141,12 +141,15 @@ async def deep_research(query: str) -> str:
         created_at=datetime.now().isoformat(),
         query=query,
         report=None,
-        status="PENDING",
+        status="PLANNING",
     )
     DBOS.set_event(AGENT_STATUS, agent_status)
     result = await dbos_plan_agent.run(query)
     plan = result.output
     tasks_handles: List[WorkflowHandleAsync[str]] = []
+
+    agent_status.status = "SEARCHING"
+    DBOS.set_event(AGENT_STATUS, agent_status)
     for step in plan.web_search_steps:
         # Asynchronously start search workflows without waiting for each to complete
         task_handle = await DBOS.start_workflow_async(
@@ -156,6 +159,8 @@ async def deep_research(query: str) -> str:
 
     search_results = [await task.get_result() for task in tasks_handles]
 
+    agent_status.status = "ANALYZING"
+    DBOS.set_event(AGENT_STATUS, agent_status)
     analysis_result = await dbos_analysis_agent.run(
         format_as_xml(
             {
@@ -166,6 +171,7 @@ async def deep_research(query: str) -> str:
         ),
     )
     agent_status.report = analysis_result.output
+    agent_status.status = "COMPLETED"
     DBOS.set_event(AGENT_STATUS, agent_status)
     return analysis_result.output
 
@@ -188,7 +194,7 @@ async def list_agents():
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
     )
     for workflow, status in zip(agent_workflows, statuses):
-        status.status = workflow.status
+        status.status = workflow.status if workflow.status == "ERROR" or workflow.status == "CANCELLED" else status.status
         status.agent_id = workflow.workflow_id
     return statuses
 
@@ -196,8 +202,7 @@ async def list_agents():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "pydantic-research-agent",
-        # "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-        "system_database_url": "postgresql+asyncpg://postgres:dbos@localhost:5432/pydantic_research",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
         "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
         "enable_otlp": enable_logfire,
         "application_version": "0.1.0",
