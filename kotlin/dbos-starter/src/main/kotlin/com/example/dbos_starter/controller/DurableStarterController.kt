@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.Duration
+import startWorkflow
 
 private val logger = LoggerFactory.getLogger(DurableStarterController::class.java)
 
@@ -18,11 +19,8 @@ private val logger = LoggerFactory.getLogger(DurableStarterController::class.jav
 class DurableStarterController(private val service: DurableStarterService) {
 
     @GetMapping("/workflow/{taskId}")
-    fun startWorkflow(@PathVariable taskId: String): ResponseEntity<Void> {
-        DBOS.startWorkflow<Exception>(
-            { service.exampleWorkflow() },
-            StartWorkflowOptions(taskId)
-        )
+    fun runWorkflow(@PathVariable taskId: String): ResponseEntity<Void> {
+        startWorkflow(taskId) { service.exampleWorkflow() }
         return ResponseEntity.ok().build()
     }
 
