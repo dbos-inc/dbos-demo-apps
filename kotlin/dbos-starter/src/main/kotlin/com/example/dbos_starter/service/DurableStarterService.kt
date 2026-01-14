@@ -4,6 +4,7 @@ import dev.dbos.transact.DBOS
 import dev.dbos.transact.execution.ThrowingRunnable
 import dev.dbos.transact.workflow.Workflow
 import org.slf4j.LoggerFactory
+import runStep
 
 const val STEPS_EVENT = "steps_event"
 private val logger = LoggerFactory.getLogger(DurableStarterServiceImpl::class.java)
@@ -14,43 +15,28 @@ interface DurableStarterService {
 
 class DurableStarterServiceImpl : DurableStarterService {
 
-    private fun stepOne() {
-        try {
-            Thread.sleep(5000)
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            logger.error("stepOne interrupted", e)
-        }
+    fun stepOne() {
+        Thread.sleep(5000)
         logger.info("Completed step 1!")
     }
 
-    private fun stepTwo() {
-        try {
-            Thread.sleep(5000)
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            logger.error("stepTwo interrupted", e)
-        }
+    fun stepTwo() {
+        Thread.sleep(5000)
         logger.info("Completed step 2!")
     }
 
-    private fun stepThree() {
-        try {
-            Thread.sleep(5000)
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            logger.error("stepThree interrupted", e)
-        }
+    fun stepThree() {
+        Thread.sleep(5000)
         logger.info("Completed step 3!")
     }
 
     @Workflow
     override fun exampleWorkflow() {
-        DBOS.runStep<Exception>({ stepOne() }, "stepOne")
+        runStep("stepOne") { stepOne() }
         DBOS.setEvent(STEPS_EVENT, 1)
-        DBOS.runStep<Exception>({ stepTwo() }, "stepTwo")
+        runStep("stepTwo") { stepTwo() }
         DBOS.setEvent(STEPS_EVENT, 2)
-        DBOS.runStep<Exception>({ stepThree() }, "stepThree")
+        runStep("stepThree") { stepThree() }
         DBOS.setEvent(STEPS_EVENT, 3)
     }
 }

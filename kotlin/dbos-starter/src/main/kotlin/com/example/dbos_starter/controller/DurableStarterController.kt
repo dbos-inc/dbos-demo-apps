@@ -15,10 +15,7 @@ private val logger = LoggerFactory.getLogger(DurableStarterController::class.jav
 
 @RestController
 @CrossOrigin(origins = ["*"])
-class DurableStarterController {
-
-    @Autowired
-    private lateinit var service: DurableStarterService
+class DurableStarterController(private val service: DurableStarterService) {
 
     @GetMapping("/workflow/{taskId}")
     fun startWorkflow(@PathVariable taskId: String): ResponseEntity<Void> {
