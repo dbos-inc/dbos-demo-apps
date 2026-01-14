@@ -1,8 +1,8 @@
-# Starter - Java Spring Boot
+# Starter - Kotlin Spring Boot
 
 ## Prerequisites
 
-- Java 17 or later
+- Java 21 or later
 - PostgreSQL running on localhost:5432
 - PostgreSQL user `postgres` with password `dbos`
 

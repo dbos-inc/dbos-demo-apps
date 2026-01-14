@@ -6,7 +6,7 @@ import dev.dbos.transact.workflow.StepOptions
 import dev.dbos.transact.StartWorkflowOptions
 
 // These top level helper functions do two things:
-//   1. puts the lambda paramerter last to take advantage of Kotlin's trailing lambda syntax
+//   1. puts the lambda parameter last to take advantage of Kotlin's trailing lambda syntax
 //   2. eliminates the generic Exception parameter since Kotlin doesn't have checked exceptions
 
 inline fun <reified T : Any> registerWorkflows(implementation: T, instanceName: String = ""): T {
