@@ -9,6 +9,10 @@ import dev.dbos.transact.StartWorkflowOptions
 //   1. puts the lambda paramerter last to take advantage of Kotlin's trailing lambda syntax
 //   2. eliminates the generic Exception parameter since Kotlin doesn't have checked exceptions
 
+inline fun <reified T : Any> registerWorkflows(implementation: T, instanceName: String = ""): T {
+    return DBOS.registerWorkflows(T::class.java, implementation, instanceName)
+}
+
 fun runStep(name: String, block: () -> Unit) {
     DBOS.runStep(ThrowingRunnable { block() }, StepOptions(name))
 }

@@ -6,6 +6,7 @@ import dev.dbos.transact.DBOS
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import registerWorkflows
 
 @Configuration
 class DurableStarterConfig {
@@ -13,9 +14,6 @@ class DurableStarterConfig {
     @Primary
     @Bean
     fun durableStarterService(): DurableStarterService {
-        return DBOS.registerWorkflows(
-            DurableStarterService::class.java,
-            DurableStarterServiceImpl()
-        )
+        return registerWorkflows<DurableStarterService>(DurableStarterServiceImpl())
     }
 }
