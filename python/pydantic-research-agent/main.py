@@ -116,17 +116,15 @@ class AgentStatus(BaseModel):
     agent_id: str = ""
 
 
-@analysis_agent.tool_plain
-async def extra_search(query: str) -> str:
-    """Perform an extra search for the given query."""
-    result = await search_agent.run(query)
-    return result.output
-
-
 dbos_plan_agent = DBOSAgent(plan_agent)
 dbos_search_agent = DBOSAgent(search_agent)
 dbos_analysis_agent = DBOSAgent(analysis_agent)
 
+@analysis_agent.tool_plain
+async def extra_search(query: str) -> str:
+    """Perform an extra search for the given query."""
+    result = await dbos_search_agent.run(query)
+    return result.output
 
 @DBOS.workflow()
 async def search_workflow(search_terms: str) -> str:
