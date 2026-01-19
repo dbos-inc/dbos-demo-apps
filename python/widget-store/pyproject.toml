@@ -5,6 +5,6 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "alembic>=1.16.5",
-    "dbos[otel]==2.8.0",
+    "dbos[otel]==2.9.0",
     "fastapi[standard]>=0.117.1",
 ]
