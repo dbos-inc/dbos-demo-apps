@@ -37,10 +37,9 @@ export function AgentList() {
 
   const getStatusBadgeClass = (status: string) => {
     const lowerStatus = status.toLowerCase();
-    if (lowerStatus.includes('success')) return 'status-success';
-    if (lowerStatus.includes('pending') || lowerStatus.includes('running')) return 'status-running';
+    if (lowerStatus.includes('complete')) return 'status-success';
     if (lowerStatus.includes('error') || lowerStatus.includes('fail')) return 'status-error';
-    return 'status-default';
+    return 'status-running';
   };
 
   const isPending = (status: string) => {
