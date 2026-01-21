@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-  implementation("dev.dbos:transact:0.6.+")
+  implementation("dev.dbos:transact:0.7.+")
   implementation("org.springframework.boot:spring-boot-starter-web")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
