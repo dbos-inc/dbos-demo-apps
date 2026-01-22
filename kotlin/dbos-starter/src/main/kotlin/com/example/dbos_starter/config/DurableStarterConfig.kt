@@ -6,7 +6,7 @@ import dev.dbos.transact.DBOS
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import registerWorkflows
+import dev.dbos.transact.registerWorkflows
 
 @Configuration
 class DurableStarterConfig {

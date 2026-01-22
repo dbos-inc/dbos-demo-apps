@@ -4,9 +4,10 @@ import dev.dbos.transact.DBOS
 import dev.dbos.transact.execution.ThrowingRunnable
 import dev.dbos.transact.workflow.Workflow
 import org.slf4j.LoggerFactory
-import runStep
+import dev.dbos.transact.runStep
 
 const val STEPS_EVENT = "steps_event"
+
 private val logger = LoggerFactory.getLogger(DurableStarterServiceImpl::class.java)
 
 interface DurableStarterService {
