@@ -4,6 +4,7 @@ import sys
 from datetime import datetime
 from typing import Annotated, List, Optional
 
+import logfire
 import uvicorn
 from annotated_types import MaxLen
 from dbos import DBOS, DBOSConfig, WorkflowHandleAsync
@@ -21,6 +22,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Enable Logfire instrumentation if LOGFIRE_TOKEN is set
+enable_logfire = False
+if os.environ.get("LOGFIRE_TOKEN"):
+    print("Enabling Logfire instrumentation")
+    enable_logfire = True
+    logfire.configure(service_name="pydantic-research-agent")
+    logfire.instrument_pydantic_ai()
+
+# Validate required environment variables
+model_prefix = ""
+
+if os.environ.get("PYDANTIC_AI_GATEWAY_API_KEY"):
+    model_prefix = "gateway/"
+    print("Using Pydantic AI Gateway for model access")
+else:
+    print(
+        "PYDANTIC_AI_GATEWAY_API_KEY environment variable not set, using providers directly"
+    )
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print("❌ Error: ANTHROPIC_API_KEY environment variable not set")
+        sys.exit(1)
+    if not os.environ.get("GOOGLE_API_KEY"):
+        print("❌ Error: GOOGLE_API_KEY environment variable not set")
+        sys.exit(1)
 
 
 class WebSearchStep(BaseModel):
@@ -46,7 +72,7 @@ class DeepResearchPlan(BaseModel, **ConfigDict(use_attribute_docstrings=True)):
 
 
 plan_agent = Agent(
-    "anthropic:claude-sonnet-4-5",
+    f"{model_prefix}anthropic:claude-sonnet-4-5",
     instructions="Analyze the users query and design a plan for deep research to answer their query.",
     output_type=DeepResearchPlan,
     name="plan_agent",
@@ -54,14 +80,14 @@ plan_agent = Agent(
 
 
 search_agent = Agent(
-    "google-gla:gemini-2.5-flash",
+    f"{model_prefix}google-vertex:gemini-2.5-flash",
     instructions="Perform a web search for the given terms and return a detailed report on the results.",
     builtin_tools=[WebSearchTool()],
     name="search_agent",
 )
 
 analysis_agent = Agent(
-    "anthropic:claude-sonnet-4-5",
+    f"{model_prefix}anthropic:claude-sonnet-4-5",
     instructions="""
 Analyze the research from the previous steps and generate a report on the given subject.
 
@@ -90,17 +116,15 @@ class AgentStatus(BaseModel):
     agent_id: str = ""
 
 
-@analysis_agent.tool_plain
-async def extra_search(query: str) -> str:
-    """Perform an extra search for the given query."""
-    result = await search_agent.run(query)
-    return result.output
-
-
 dbos_plan_agent = DBOSAgent(plan_agent)
 dbos_search_agent = DBOSAgent(search_agent)
 dbos_analysis_agent = DBOSAgent(analysis_agent)
 
+@analysis_agent.tool_plain
+async def extra_search(query: str) -> str:
+    """Perform an extra search for the given query."""
+    result = await dbos_search_agent.run(query)
+    return result.output
 
 @DBOS.workflow()
 async def search_workflow(search_terms: str) -> str:
@@ -115,12 +139,15 @@ async def deep_research(query: str) -> str:
         created_at=datetime.now().isoformat(),
         query=query,
         report=None,
-        status="PENDING",
+        status="PLANNING",
     )
     DBOS.set_event(AGENT_STATUS, agent_status)
     result = await dbos_plan_agent.run(query)
     plan = result.output
     tasks_handles: List[WorkflowHandleAsync[str]] = []
+
+    agent_status.status = "SEARCHING"
+    DBOS.set_event(AGENT_STATUS, agent_status)
     for step in plan.web_search_steps:
         # Asynchronously start search workflows without waiting for each to complete
         task_handle = await DBOS.start_workflow_async(
@@ -130,6 +157,8 @@ async def deep_research(query: str) -> str:
 
     search_results = [await task.get_result() for task in tasks_handles]
 
+    agent_status.status = "ANALYZING"
+    DBOS.set_event(AGENT_STATUS, agent_status)
     analysis_result = await dbos_analysis_agent.run(
         format_as_xml(
             {
@@ -140,6 +169,7 @@ async def deep_research(query: str) -> str:
         ),
     )
     agent_status.report = analysis_result.output
+    agent_status.status = "COMPLETED"
     DBOS.set_event(AGENT_STATUS, agent_status)
     return analysis_result.output
 
@@ -162,25 +192,19 @@ async def list_agents():
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
     )
     for workflow, status in zip(agent_workflows, statuses):
-        status.status = workflow.status
+        status.status = workflow.status if workflow.status == "ERROR" or workflow.status == "CANCELLED" else status.status
         status.agent_id = workflow.workflow_id
     return statuses
 
 
 if __name__ == "__main__":
-    # Validate required environment variables
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("❌ Error: ANTHROPIC_API_KEY environment variable not set")
-        sys.exit(1)
-    if not os.environ.get("GOOGLE_API_KEY"):
-        print("❌ Error: GOOGLE_API_KEY environment variable not set")
-        sys.exit(1)
-
     config: DBOSConfig = {
         "name": "pydantic-research-agent",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-        "conductor_key": os.environ.get("CONDUCTOR_KEY"),
+        "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+        "enable_otlp": enable_logfire,
+        "application_version": "0.1.0",
     }
     DBOS(config=config)
     DBOS.launch()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_config=None)

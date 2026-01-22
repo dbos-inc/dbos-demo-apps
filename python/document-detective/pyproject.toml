@@ -3,7 +3,7 @@ name = "document-detective"
 version = "0.1.0"
 
 dependencies = [
-    "dbos==2.8.0",
+    "dbos==2.9.0",
     "fastapi[standard]>=0.120.0",
     "llama-index==0.14.5",
     "llama-index-vector-stores-postgres==0.7.1",
