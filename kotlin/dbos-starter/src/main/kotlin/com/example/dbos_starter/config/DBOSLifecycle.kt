@@ -26,7 +26,7 @@ class DBOSLifecycle : SmartLifecycle {
         if (running.compareAndSet(false, true)) {
             val config = DBOSConfig.defaults("dbos-starter")
                 .withDatabaseUrl(getEnvOrDefault("DBOS_SYSTEM_JDBC_URL",
-                    "jdbc:postgresql://localhost:5432/dbos_starter_java"))
+                    "jdbc:postgresql://localhost:5432/dbos_starter_kotlin"))
                 .withDbUser(getEnvOrDefault("PGUSER", "postgres"))
                 .withDbPassword(getEnvOrDefault("PGPASSWORD", "dbos"))
                 .withAdminServer(true)
