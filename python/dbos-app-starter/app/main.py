@@ -15,7 +15,7 @@ config: DBOSConfig = {
     "name": "dbos-app-starter",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
-DBOS(fastapi=app, config=config)
+DBOS(config=config)
 
 steps_event = "steps_event"
 

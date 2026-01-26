@@ -20,7 +20,7 @@ config: DBOSConfig = {
     "name": "widget-store",
     "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
-DBOS(fastapi=app, config=config)
+DBOS(config=config)
 
 WIDGET_ID = 1
 PAYMENT_STATUS = "payment_status"
