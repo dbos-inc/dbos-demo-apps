@@ -15,9 +15,9 @@ public class DurableStarterConfig {
     @Primary
     @Bean
     public DurableStarterService durableStarterService() {
-	    var proxy = DBOS.registerWorkflows(
-            DurableStarterService.class,
-            new DurableStarterServiceImpl());
+        var proxy = DBOS.registerWorkflows(
+                DurableStarterService.class,
+                new DurableStarterServiceImpl());
         return proxy;
     }
 }
