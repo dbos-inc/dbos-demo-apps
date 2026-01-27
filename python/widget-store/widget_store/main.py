@@ -19,6 +19,7 @@ app = FastAPI()
 config: DBOSConfig = {
     "name": "widget-store",
     "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "application_version": "0.1.0",
 }
 DBOS(config=config)
 

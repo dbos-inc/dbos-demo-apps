@@ -168,6 +168,7 @@ async function main() {
   DBOS.setConfig({
     name: 'widget-store-node',
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+    applicationVersion: "0.1.0",
   });
   DBOS.logRegisteredEndpoints();
   await DBOS.launch();

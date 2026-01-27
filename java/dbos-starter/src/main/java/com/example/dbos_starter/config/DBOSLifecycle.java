@@ -30,7 +30,8 @@ public class DBOSLifecycle implements SmartLifecycle {
                 .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
                 .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
                 .withAdminServer(true)
-                .withAdminServerPort(3001);
+                .withAdminServerPort(3001)
+                .withAppVersion("0.1.0");
         DBOS.configure(config);
 
         log.info("Launch DBOS");

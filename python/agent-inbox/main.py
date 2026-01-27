@@ -142,6 +142,7 @@ if __name__ == "__main__":
         "name": "agent-inbox",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
         "conductor_key": os.environ.get("CONDUCTOR_KEY"),
+        "application_version": "0.1.0",
     }
     DBOS(config=config)
     DBOS.launch()

@@ -22,6 +22,7 @@ config: DBOSConfig = {
     "name": "document-detective",
     "system_database_url": database_url,
     "conductor_key": os.environ.get("CONDUCTOR_KEY"),
+    "application_version": "0.1.0",
 }
 DBOS(config=config)
 

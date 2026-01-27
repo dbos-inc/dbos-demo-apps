@@ -10,6 +10,7 @@ class PollsConfig(AppConfig):
         dbos_config: DBOSConfig = {
             "name": "django-app",
             "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+            "application_version": "0.1.0",
         }
         DBOS(config=dbos_config)
         DBOS.launch()

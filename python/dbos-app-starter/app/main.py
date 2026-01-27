@@ -14,6 +14,7 @@ app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-app-starter",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "application_version": "0.1.0",
 }
 DBOS(config=config)
 

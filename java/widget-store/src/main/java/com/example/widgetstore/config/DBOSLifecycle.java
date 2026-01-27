@@ -29,7 +29,8 @@ public class DBOSLifecycle implements SmartLifecycle {
                 .withDatabaseUrl(databaseUrl)
                 .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
                 .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-                .withAdminServer(true);
+                .withAdminServer(true)
+                .withAppVersion("0.1.0");
         DBOS.configure(config);
 
         log.info("Launch DBOS");

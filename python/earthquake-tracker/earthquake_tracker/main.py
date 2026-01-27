@@ -117,6 +117,7 @@ if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "earthquake-tracker",
         "application_database_url": application_database_url,
+        "application_version": "0.1.0",
     }
     DBOS(config=config)
     DBOS.launch()

@@ -56,6 +56,7 @@ def dbos(test_database_url):
     config: DBOSConfig = {
         "name": "earthquake-tracker",
         "database_url": test_database_url,
+        "application_version": "0.1.0",
     }
     reset_database(config["database_url"])
     run_migrations(config["database_url"])
