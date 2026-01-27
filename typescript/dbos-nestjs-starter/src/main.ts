@@ -7,6 +7,7 @@ async function bootstrap() {
   DBOS.setConfig({
     name: 'dbos-nestjs-starter',
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+    applicationVersion: "0.1.0",
   });
   await DBOS.launch();
   await app.listen(process.env.PORT ?? 3000);

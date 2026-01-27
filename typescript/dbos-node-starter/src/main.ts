@@ -100,6 +100,7 @@ async function main() {
   DBOS.setConfig({
     name: "dbos-node-starter",
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+    applicationVersion: "0.1.0",
   });
   await DBOS.launch();
 

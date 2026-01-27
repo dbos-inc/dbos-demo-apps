@@ -90,9 +90,10 @@ func main() {
 	// Create DBOS context
 	var err error
 	dbosCtx, err = dbos.NewDBOSContext(context.Background(), dbos.Config{
-		DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-		AppName:     "dbos-toolbox",
-		AdminServer: true,
+		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+		AppName:            "dbos-toolbox",
+		AdminServer:        true,
+		ApplicationVersion: "0.1.0",
 	})
 	if err != nil {
 		panic(err)

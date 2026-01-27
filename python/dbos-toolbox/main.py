@@ -12,6 +12,7 @@ config: DBOSConfig = {
     "name": "dbos-toolbox",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     "application_database_url": os.environ.get("DBOS_DATABASE_URL"), # This is only needed if using "@DBOS.transaction"
+    "application_version": "0.1.0",
 }
 DBOS(config=config)
 

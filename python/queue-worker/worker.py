@@ -46,6 +46,7 @@ if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-queue-worker",
         "system_database_url": system_database_url,
+        "application_version": "0.1.0",
     }
     DBOS(config=config)
     DBOS.launch()

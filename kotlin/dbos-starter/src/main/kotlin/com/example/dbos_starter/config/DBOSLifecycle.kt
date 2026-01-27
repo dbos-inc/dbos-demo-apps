@@ -31,6 +31,7 @@ class DBOSLifecycle : SmartLifecycle {
                 .withDbPassword(getEnvOrDefault("PGPASSWORD", "dbos"))
                 .withAdminServer(true)
                 .withAdminServerPort(3001)
+                .withAppVersion("0.1.0")
             DBOS.configure(config)
             DBOS.launch()
         } else {

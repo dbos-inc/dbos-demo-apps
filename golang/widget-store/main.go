@@ -28,11 +28,12 @@ func main() {
 	}
 
 	dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-		AppName:         "gogogo",
-		DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-		AdminServer:     true,
-		Logger:          logger,
-		ConductorAPIKey: os.Getenv("DBOS_CONDUCTOR_API_KEY"),
+		AppName:            "gogogo",
+		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+		AdminServer:        true,
+		Logger:             logger,
+		ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_API_KEY"),
+		ApplicationVersion: "0.1.0",
 	})
 	if err != nil {
 		logger.Error("DBOS initialization failed", "error", err)

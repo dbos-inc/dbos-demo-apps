@@ -42,6 +42,7 @@ async function main(): Promise<void> {
   DBOS.setConfig({
     name: 'dbos-queue-worker',
     systemDatabaseUrl: systemDatabaseUrl,
+    applicationVersion: "0.1.0",
   });
   await DBOS.launch();
   // After launching DBOS, the worker waits indefinitely,
