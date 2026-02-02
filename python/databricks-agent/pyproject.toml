@@ -1,0 +1,11 @@
+[project]
+name = "databricks-agent"
+version = "0.1.0"
+description = "Simple chat agent using Databricks + MLflow ResponsesAgent"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "databricks-agents>=1.9.3",
+    "databricks-openai>=0.10.0",
+    "mlflow-skinny[databricks]>=3.9.0",
+]
