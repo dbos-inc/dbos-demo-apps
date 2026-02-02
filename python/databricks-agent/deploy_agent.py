@@ -15,8 +15,8 @@ mlflow.set_registry_uri("databricks-uc")
 
 with mlflow.start_run():
     logged_agent_info = mlflow.pyfunc.log_model(
+        name="dbos_demo_agent",
         python_model="agent.py",
-        artifact_path="agent",
         resources=resources,
         registered_model_name=UC_MODEL_NAME,
     )
