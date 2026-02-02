@@ -8,4 +8,5 @@ dependencies = [
     "databricks-agents>=1.9.3",
     "databricks-openai>=0.10.0",
     "mlflow-skinny[databricks]>=3.9.0",
+    "nest-asyncio>=1.6.0",
 ]

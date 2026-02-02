@@ -503,6 +503,7 @@ dependencies = [
     { name = "databricks-agents" },
     { name = "databricks-openai" },
     { name = "mlflow-skinny", extra = ["databricks"] },
+    { name = "nest-asyncio" },
 ]
 
 [package.metadata]
@@ -510,6 +511,7 @@ requires-dist = [
     { name = "databricks-agents", specifier = ">=1.9.3" },
     { name = "databricks-openai", specifier = ">=0.10.0" },
     { name = "mlflow-skinny", extras = ["databricks"], specifier = ">=3.9.0" },
+    { name = "nest-asyncio", specifier = ">=1.6.0" },
 ]
 
 [[package]]
