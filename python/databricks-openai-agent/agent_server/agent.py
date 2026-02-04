@@ -118,7 +118,8 @@ async def invoke(request: ResponsesAgentRequest) -> ResponsesAgentResponse:
 async def stream(request: dict) -> AsyncGenerator[ResponsesAgentStreamEvent, None]:
     agent = create_agent()
     messages = [i.model_dump() for i in request.input]
-    result = Runner.run_streamed(agent, input=messages)
-
-    async for event in process_agent_stream_events(result.stream_events()):
-        yield event
+    result = await Runner.run(agent, messages)
+    for item in result.new_items:
+        output_item = item.to_input_item()
+        yield {"type": "response.output_item.done", "item": output_item}
+    yield {"type": "response.completed"}
