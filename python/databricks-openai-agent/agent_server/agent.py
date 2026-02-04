@@ -90,8 +90,6 @@ def factorial(n: int) -> str:
     """Compute the factorial of a non-negative integer."""
     if n < 0:
         return "Error: factorial is not defined for negative numbers"
-    if n > 170:
-        return "Error: number too large for factorial"
     result = math.factorial(n)
     return f"{n}! = {result}"
 
