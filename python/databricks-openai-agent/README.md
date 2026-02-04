@@ -1,6 +1,9 @@
 # DBOS Databricks Agent
 
 This example shows you how to build a durable agent using DBOS and the OpenAI Agents SDK and deploy it to Databricks, using Lakebase as a durable store.
+With durable execution, you can build reliable agents that preserve progress across transient API failures, application errors, and restarts, while also handling long-running, asynchronous, and human-in-the-loop workflows with production-grade reliability.
+
+The example is a calculator app that demonstrates agentic tool-calling. For example, prompt it with "What is (8 * 4! + 2)?"
 
 ## Connecting to Lakebase
 
@@ -30,12 +33,17 @@ You can see your app at http://localhost:8000!
 
 ## Deploying to Databricks
 
-After verifying the app works locally, run the following commands:
+First, store your database URL in a Databricks secret scope:
+
+```
+databricks secrets create-scope dbos-secrets
+databricks secrets put-secret dbos-secrets DBOS_SYSTEM_DATABASE_URL --string-value "$DBOS_SYSTEM_DATABASE_URL"
+```
+
+Then deploy:
 
 ```
 databricks apps create agent-openai-agents-sdk
-databricks bundle deploy -t prod \
-  --var dbos_system_database_url=$DBOS_SYSTEM_DATABASE_URL \
-  --var databricks_lakebase_endpoint=$DATABRICKS_LAKEBASE_ENDPOINT
+databricks bundle deploy -t prod
 databricks bundle run agent_openai_agents_sdk -t prod
 ```

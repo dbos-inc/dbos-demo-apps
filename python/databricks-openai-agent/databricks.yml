@@ -1,9 +1,3 @@
-variables:
-  dbos_system_database_url:
-    default: ""
-  databricks_lakebase_endpoint:
-    default: ""
-
 bundle:
   name: agent_openai_agents_sdk
 
@@ -19,18 +13,17 @@ resources:
       description: "OpenAI Agents SDK agent application"
       source_code_path: ./
 
-      env:
-        - name: DBOS_SYSTEM_DATABASE_URL
-          value: "${var.dbos_system_database_url}"
-        - name: DATABRICKS_LAKEBASE_ENDPOINT
-          value: "${var.databricks_lakebase_endpoint}"
-
       # Resources which this app has access to
       resources:
         - name: 'experiment'
           experiment:
             experiment_id: "${resources.experiments.agent_openai_agents_sdk_experiment.id}"
             permission: 'CAN_MANAGE'
+        - name: 'dbos-system-database-url'
+          secret:
+            scope: 'dbos-secrets'
+            key: 'DBOS_SYSTEM_DATABASE_URL'
+            permission: 'READ'
 
 targets:
   dev:
