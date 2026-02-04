@@ -46,3 +46,6 @@ yarn-error.log*
 /playwright/*
 tsconfig.tsbuildinfo
 .idea
+
+# Override parent gitignore's lib/ rule which excludes client/src/lib/
+!client/src/lib/
