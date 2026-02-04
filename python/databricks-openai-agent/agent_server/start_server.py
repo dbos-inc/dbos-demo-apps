@@ -1,3 +1,5 @@
+import os
+from dbos import DBOS, DBOSConfig
 from dotenv import load_dotenv
 from mlflow.genai.agent_server import AgentServer, setup_mlflow_git_based_version_tracking
 
@@ -14,4 +16,11 @@ setup_mlflow_git_based_version_tracking()
 
 
 def main():
+    config: DBOSConfig = {
+        "name": "dbos-databricks-agent",
+        "system_database_url": 'sqlite:///dbos_databricks_agent.sqlite',
+        "conductor_key": os.environ.get("CONDUCTOR_KEY")
+    }
+    DBOS(config=config)
+    DBOS.launch()
     agent_server.run(app_import_string="agent_server.start_server:app")
