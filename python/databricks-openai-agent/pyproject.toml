@@ -16,6 +16,7 @@ dependencies = [
     "python-dotenv",
     "dbos>=2.11.0",
     "dbos-openai-agents>=0.3.0",
+    "databricks-sdk>=0.84.0",
 ]
 
 [build-system]

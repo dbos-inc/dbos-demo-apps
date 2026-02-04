@@ -2,6 +2,10 @@ import os
 from dbos import DBOS, DBOSConfig
 from dotenv import load_dotenv
 from mlflow.genai.agent_server import AgentServer, setup_mlflow_git_based_version_tracking
+from databricks.sdk import WorkspaceClient
+from databricks.sdk import WorkspaceClient
+import psycopg
+import sqlalchemy as sa
 
 # Load env vars from .env before importing the agent for proper auth
 load_dotenv(dotenv_path=".env", override=True)
@@ -16,9 +20,12 @@ setup_mlflow_git_based_version_tracking()
 
 
 def main():
+    system_database_url = os.environ.get("DBOS_SYSTEM_DATABASE_URL")
+    if not system_database_url:
+        raise Exception("DBOS_SYSTEM_DATABASE_URL not found")
     config: DBOSConfig = {
         "name": "dbos-databricks-agent",
-        "system_database_url": 'sqlite:///dbos_databricks_agent.sqlite',
+        "system_database_url": system_database_url,
         "conductor_key": os.environ.get("CONDUCTOR_KEY")
     }
     DBOS(config=config)
