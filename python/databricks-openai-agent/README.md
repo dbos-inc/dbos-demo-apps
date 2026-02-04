@@ -45,9 +45,9 @@ databricks secrets put-secret dbos-secrets DBOS_SYSTEM_DATABASE_URL --string-val
 Then deploy:
 
 ```
-databricks apps create agent-openai-agents-sdk
+databricks apps create dbos-databricks-agent
 databricks bundle deploy -t prod
-databricks bundle run agent_openai_agents_sdk -t prod
+databricks bundle run dbos_databricks_agent -t prod
 ```
 
 You should see the URL for your app hosted on Databricks!

@@ -1,23 +1,23 @@
 bundle:
-  name: agent_openai_agents_sdk
+  name: dbos_databricks_agent
 
 resources:
   # MLflow experiment for agent tracing - automatically created by bundle
   experiments:
-    agent_openai_agents_sdk_experiment:
+    dbos_databricks_agent_experiment:
       name: /Users/${workspace.current_user.userName}/${bundle.name}-${bundle.target}
 
   apps:
-    agent_openai_agents_sdk:
-      name: "${bundle.target}-agent-openai-agents-sdk"
-      description: "OpenAI Agents SDK agent application"
+    dbos_databricks_agent:
+      name: "${bundle.target}-dbos-databricks-agent"
+      description: "Durably executed agent deployed to Databricks"
       source_code_path: ./
 
       # Resources which this app has access to
       resources:
         - name: 'experiment'
           experiment:
-            experiment_id: "${resources.experiments.agent_openai_agents_sdk_experiment.id}"
+            experiment_id: "${resources.experiments.dbos_databricks_agent_experiment.id}"
             permission: 'CAN_MANAGE'
         - name: 'dbos-system-database-url'
           secret:
@@ -38,5 +38,5 @@ targets:
     #   host: https://...
     resources:
       apps:
-        agent_openai_agents_sdk:
-          name: agent-openai-agents-sdk
+        dbos_databricks_agent:
+          name: dbos-databricks-agent

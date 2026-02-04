@@ -1,3 +1,4 @@
+import logging
 import os
 from dbos import DBOS, DBOSConfig
 from dotenv import load_dotenv
@@ -12,7 +13,10 @@ import agent_server.agent  # noqa: E402
 agent_server = AgentServer("ResponsesAgent", enable_chat_proxy=True)
 # Define the app as a module level variable to enable multiple workers
 app = agent_server.app  # noqa: F841
-setup_mlflow_git_based_version_tracking()
+try:
+    setup_mlflow_git_based_version_tracking()
+except Exception:
+    logging.warning("Failed to set up MLflow git-based version tracking, skipping")
 
 
 def main():
