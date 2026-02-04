@@ -132,4 +132,4 @@ async def stream(request: dict) -> AsyncGenerator[ResponsesAgentStreamEvent, Non
     result = await run_agent(messages)
     for item in result:
         yield {"type": "response.output_item.done", "item": item}
-    yield {"type": "response.completed"}
+    yield {"type": "response.completed", "response": {"output": result}}
