@@ -1,6 +1,7 @@
 # DBOS Databricks Agent
 
 This example shows you how to build a durable agent using DBOS and the OpenAI Agents SDK and deploy it to Databricks, using Lakebase as a durable store.
+It is based on the [deploy an AI agent to Databricks](https://docs.databricks.com/aws/en/generative-ai/agent-framework/author-agent-db-app) demo.
 With durable execution, you can build reliable agents that preserve progress across transient API failures, application errors, and restarts, while also handling long-running, asynchronous, and human-in-the-loop workflows with production-grade reliability.
 
 You can add durable execution with DBOS to any agent that is [deployed as a Databricks app](https://docs.databricks.com/aws/en/generative-ai/agent-framework/author-agent-db-app).
