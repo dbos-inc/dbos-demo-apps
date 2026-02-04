@@ -1,5 +1,10 @@
 # Responses API Agent
 
+To run locally:
+
+```
+uv run start-app
+```
 
 To deploy:
 
