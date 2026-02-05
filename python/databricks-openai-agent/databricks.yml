@@ -1,0 +1,42 @@
+bundle:
+  name: dbos_databricks_agent
+
+resources:
+  # MLflow experiment for agent tracing - automatically created by bundle
+  experiments:
+    dbos_databricks_agent_experiment:
+      name: /Users/${workspace.current_user.userName}/${bundle.name}-${bundle.target}
+
+  apps:
+    dbos_databricks_agent:
+      name: "${bundle.target}-dbos-databricks-agent"
+      description: "Durably executed agent deployed to Databricks"
+      source_code_path: ./
+
+      # Resources which this app has access to
+      resources:
+        - name: 'experiment'
+          experiment:
+            experiment_id: "${resources.experiments.dbos_databricks_agent_experiment.id}"
+            permission: 'CAN_MANAGE'
+        - name: 'dbos-system-database-url'
+          secret:
+            scope: 'dbos-secrets'
+            key: 'DBOS_SYSTEM_DATABASE_URL'
+            permission: 'READ'
+
+targets:
+  dev:
+    mode: development
+    default: true
+    # workspace:
+    #   host: https://...
+
+  prod:
+    mode: production
+    # workspace:
+    #   host: https://...
+    resources:
+      apps:
+        dbos_databricks_agent:
+          name: dbos-databricks-agent
