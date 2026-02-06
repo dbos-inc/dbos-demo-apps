@@ -831,6 +831,145 @@ func (_c *MockDBOSContext_Launch_Call) RunAndReturn(run func() error) *MockDBOSC
 	return _c
 }
 
+// ListRegisteredQueues provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) ListRegisteredQueues(dBOSContext dbos.DBOSContext) ([]dbos.WorkflowQueue, error) {
+	ret := _mock.Called(dBOSContext)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListRegisteredQueues")
+	}
+
+	var r0 []dbos.WorkflowQueue
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext) ([]dbos.WorkflowQueue, error)); ok {
+		return returnFunc(dBOSContext)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext) []dbos.WorkflowQueue); ok {
+		r0 = returnFunc(dBOSContext)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dbos.WorkflowQueue)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext) error); ok {
+		r1 = returnFunc(dBOSContext)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDBOSContext_ListRegisteredQueues_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListRegisteredQueues'
+type MockDBOSContext_ListRegisteredQueues_Call struct {
+	*mock.Call
+}
+
+// ListRegisteredQueues is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+func (_e *MockDBOSContext_Expecter) ListRegisteredQueues(dBOSContext interface{}) *MockDBOSContext_ListRegisteredQueues_Call {
+	return &MockDBOSContext_ListRegisteredQueues_Call{Call: _e.mock.On("ListRegisteredQueues", dBOSContext)}
+}
+
+func (_c *MockDBOSContext_ListRegisteredQueues_Call) Run(run func(dBOSContext dbos.DBOSContext)) *MockDBOSContext_ListRegisteredQueues_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_ListRegisteredQueues_Call) Return(queues []dbos.WorkflowQueue, err error) *MockDBOSContext_ListRegisteredQueues_Call {
+	_c.Call.Return(queues, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_ListRegisteredQueues_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext) ([]dbos.WorkflowQueue, error)) *MockDBOSContext_ListRegisteredQueues_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListRegisteredWorkflows provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) ListRegisteredWorkflows(dBOSContext dbos.DBOSContext, opts ...dbos.ListRegisteredWorkflowsOption) ([]dbos.WorkflowRegistryEntry, error) {
+	var tmpRet mock.Arguments
+	if len(opts) > 0 {
+		tmpRet = _mock.Called(dBOSContext, opts)
+	} else {
+		tmpRet = _mock.Called(dBOSContext)
+	}
+	ret := tmpRet
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListRegisteredWorkflows")
+	}
+
+	var r0 []dbos.WorkflowRegistryEntry
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, ...dbos.ListRegisteredWorkflowsOption) ([]dbos.WorkflowRegistryEntry, error)); ok {
+		return returnFunc(dBOSContext, opts...)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, ...dbos.ListRegisteredWorkflowsOption) []dbos.WorkflowRegistryEntry); ok {
+		r0 = returnFunc(dBOSContext, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dbos.WorkflowRegistryEntry)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, ...dbos.ListRegisteredWorkflowsOption) error); ok {
+		r1 = returnFunc(dBOSContext, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDBOSContext_ListRegisteredWorkflows_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListRegisteredWorkflows'
+type MockDBOSContext_ListRegisteredWorkflows_Call struct {
+	*mock.Call
+}
+
+// ListRegisteredWorkflows is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - opts ...dbos.ListRegisteredWorkflowsOption
+func (_e *MockDBOSContext_Expecter) ListRegisteredWorkflows(dBOSContext interface{}, opts ...interface{}) *MockDBOSContext_ListRegisteredWorkflows_Call {
+	return &MockDBOSContext_ListRegisteredWorkflows_Call{Call: _e.mock.On("ListRegisteredWorkflows",
+		append([]interface{}{dBOSContext}, opts...)...)}
+}
+
+func (_c *MockDBOSContext_ListRegisteredWorkflows_Call) Run(run func(dBOSContext dbos.DBOSContext, opts ...dbos.ListRegisteredWorkflowsOption)) *MockDBOSContext_ListRegisteredWorkflows_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 []dbos.ListRegisteredWorkflowsOption
+		var variadicArgs []dbos.ListRegisteredWorkflowsOption
+		if len(args) > 1 {
+			variadicArgs = args[1].([]dbos.ListRegisteredWorkflowsOption)
+		}
+		arg1 = variadicArgs
+		run(
+			arg0,
+			arg1...,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_ListRegisteredWorkflows_Call) Return(entries []dbos.WorkflowRegistryEntry, err error) *MockDBOSContext_ListRegisteredWorkflows_Call {
+	_c.Call.Return(entries, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_ListRegisteredWorkflows_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, opts ...dbos.ListRegisteredWorkflowsOption) ([]dbos.WorkflowRegistryEntry, error)) *MockDBOSContext_ListRegisteredWorkflows_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListWorkflows provides a mock function for the type MockDBOSContext
 func (_mock *MockDBOSContext) ListWorkflows(dBOSContext dbos.DBOSContext, opts ...dbos.ListWorkflowsOption) ([]dbos.WorkflowStatus, error) {
 	var tmpRet mock.Arguments
