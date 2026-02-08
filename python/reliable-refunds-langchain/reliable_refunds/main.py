@@ -148,7 +148,7 @@ class State(TypedDict):
 # Set up LangGraph to answer refund requests. The agent uses two tools: one to look up order status, the other to process refunds.
 # We'll configure LangChain to store checkpoints in Postgres so it persists across app restarts.
 def create_agent():
-    llm = ChatOpenAI(model="gpt-3.5-turbo")
+    llm = ChatOpenAI(model="gpt-4.1-mini")
     tools = [tool_get_purchase_by_id, process_refund]
     llm_with_tools = llm.bind_tools(tools)
 
