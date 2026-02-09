@@ -14,7 +14,7 @@ dependencies = [
     "mlflow>=3.8.0rc0",
     "openai-agents>=0.4.1",
     "python-dotenv",
-    "dbos>=2.11.0",
+    "dbos==2.12.0",
     "dbos-openai-agents>=0.3.0",
     "databricks-sdk>=0.84.0",
 ]
