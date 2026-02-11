@@ -115,29 +115,6 @@ func ScalingWorkflow(ctx dbos.DBOSContext, scheduledTime time.Time) (string, err
 	return fmt.Sprintf("qlen=%d, instances=%d", qlen, desiredInstances), nil
 }
 
-// getInstanceID retrieves the unique instance ID from the GCE metadata server.
-func getInstanceID() (string, error) {
-	req, err := http.NewRequest("GET",
-		"http://metadata.google.internal/computeMetadata/v1/instance/id", nil)
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Metadata-Flavor", "Google")
-
-	client := &http.Client{Timeout: 2 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
-}
-
 // getAccessToken retrieves an access token from the GCE metadata server.
 func getAccessToken() (string, error) {
 	req, err := http.NewRequest("GET",
@@ -283,14 +260,7 @@ func main() {
 	// Create DBOS context
 	var err error
 
-	// 1. Get the instance ID from the GCE metadata server (unique per container)
-	executorID, err := getInstanceID()
-	if err != nil {
-		fmt.Printf("WARN: could not get instance ID, using hostname: %v\n", err)
-		executorID, _ = os.Hostname()
-	}
-
-	// 2. Get the raw password from the Env Var injected by Cloud Run
+	// 1. Get the raw password from the Env Var injected by Cloud Run
 	dbPassword := os.Getenv("DB_PASSWORD")
 	if dbPassword == "" {
 		panic(fmt.Errorf("DB_PASSWORD environment variable is required"))
@@ -310,7 +280,6 @@ func main() {
 		AppName:            "cloudrun-go",
 		AdminServer:        true,
 		ApplicationVersion: os.Getenv("K_REVISION"),
-		ExecutorID:         executorID,
 		ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_KEY"),
 	})
 	if err != nil {

@@ -10,7 +10,7 @@ In addition, it declares a third workflow, `ScalingWorkflow`, responsible for si
 
 ## Cloud Run Integration
 
-We set the DBOS application version to the `K_REVISION` environement variable. We set the DBOS executor ID to the container's ID, obtained at startup from the GCP metadata server.
+We set the DBOS application version to the `K_REVISION` environment variable.
 
 ## Worker Pool Scaling
 
