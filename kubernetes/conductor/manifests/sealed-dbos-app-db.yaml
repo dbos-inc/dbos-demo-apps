@@ -1,0 +1,13 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: dbos-app-db
+  namespace: dbos
+spec:
+  encryptedData:
+    database-url: AgB+UGhkKVvPWORcDwDJKfZGzPcGFmPev/YGJFZX3BY/iag4sjs7/btkkyRrDO+PHUVx4a9wxRrVexirNoo8fHRtMlXEZPxZ3kjaoncELB6UanaiDjf6PSVJiN6XtRFgaudWHj/9Jp6adgSl1gLXb/NqRMyBTtYwncdUcw+OeFb1vt6KGHJlaKHpj/40u25KllQ6z2y/SCeDiwPdyY7pTw8qGc97Do8F9AhkEbcpWnIoEIQRccVPY4UcMIBy6ht4M0k6vF5M7BeUWlJS+Yv3BpFvzhRM4gR6AzZfskwRPiw+/mEHZLiEjogBDrl4EE5SKD6Ot3rCXP6Zo1h5Xpe4Xe9ntHBTbJFx4UXpQ+ISN17Kfh2GK7pxeFs0i8sIUW/t+SAZKpRqicQOG94qI0jCszlTUnyUlqCgQ6SfovztWT+Hvjxh7CwUxwH7KP/3QuR2gDZIOVTfyeee4nSHogXizyYllR3tOCzTqgz8XXQIIilJlcCbQC8zbZG5X+elZMSmqiy9qC+IyUq3IOC3tApRUJ5qWdo9ND4mlDwz4ITgvA5U2fVQ5SyLs/8rvR1Qmp4VKjBYvIwVa8HcF9zsiNHBuNyDM5Dk+5DRN4cDZBqcROMyYBlMLvRCdov6XE8B0JOWQzv70lvC2CQFZbL4jiCY5Zl64OXUQHWQaYO7x6mJu4GyKxkjC+dUbgdt13gNwYRHFo1EuvsByTYv4SNoTDxT5Y+2cNcewZT2LKRefW3LJOYzjx6LzclLjx63vaY+EYtgobDgk67GlEq6nPbaQ8ZYS9jGDfQriuOdHgiMktNjh0OYaV2hVv+jQhgXwnzTxlA+tP/rggas/WkggwwdmiduJxX7xSCn5awTzvsLqwLep7ceg76FPy6q
+  template:
+    metadata:
+      name: dbos-app-db
+      namespace: dbos

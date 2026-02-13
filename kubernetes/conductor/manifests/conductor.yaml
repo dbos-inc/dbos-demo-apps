@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conductor
+  namespace: dbos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: conductor
+  template:
+    metadata:
+      labels:
+        app: conductor
+    spec:
+      containers:
+        - name: conductor
+          image: dbosdev/conductor
+          env:
+            - name: DBOS__CONDUCTOR_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: conductor-db
+                  key: database-url
+            - name: DBOS_CONDUCTOR_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: conductor-license
+                  key: license-key
+            # OAuth
+            - name: DBOS_OAUTH_ENABLED
+              value: "true"
+            - name: DBOS_OAUTH_JWKS_URL
+              value: "http://dex.dbos.svc.cluster.local:5556/dex/keys"
+            - name: DBOS_OAUTH_ISSUER
+              value: "https://ad994e5252cd240f480252abcc75486c-707864310.us-west-2.elb.amazonaws.com/dex"
+            - name: DBOS_OAUTH_AUDIENCE
+              value: "dbos-console"
+          ports:
+            - containerPort: 8090
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8090
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: conductor
+  namespace: dbos
+spec:
+  selector:
+    app: conductor
+  ports:
+    - port: 8090
+      targetPort: 8090

@@ -1,0 +1,107 @@
+# Default-deny all ingress traffic to the dbos namespace.
+# Each pod must be explicitly allowed by a subsequent policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: dbos
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Conductor: allow from ingress-nginx (external), console (API proxy), and dbos-app (WebSocket).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-conductor-ingress
+  namespace: dbos
+spec:
+  podSelector:
+    matchLabels:
+      app: conductor
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app: console
+        - podSelector:
+            matchLabels:
+              app: dbos-app
+      ports:
+        - protocol: TCP
+          port: 8090
+---
+# Console: allow from ingress-nginx only (browser traffic).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-console-ingress
+  namespace: dbos
+spec:
+  podSelector:
+    matchLabels:
+      app: console
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80
+---
+# Dex: allow from ingress-nginx (browser auth) and conductor (JWKS key fetch).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dex-ingress
+  namespace: dbos
+spec:
+  podSelector:
+    matchLabels:
+      app: dex
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app: conductor
+      ports:
+        - protocol: TCP
+          port: 5556
+---
+# DBOS App: allow from ingress-nginx (external) and keda (metrics scraping).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dbos-app-ingress
+  namespace: dbos
+spec:
+  podSelector:
+    matchLabels:
+      app: dbos-app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/name: keda
+      ports:
+        - protocol: TCP
+          port: 8080

@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dex-config
+  namespace: dbos
+data:
+  config.yaml: |
+    issuer: https://ad994e5252cd240f480252abcc75486c-707864310.us-west-2.elb.amazonaws.com/dex
+
+    storage:
+      type: memory
+
+    web:
+      http: 0.0.0.0:5556
+      allowedOrigins:
+        - "http://localhost:8080"
+
+    oauth2:
+      skipApprovalScreen: true
+      responseTypes:
+        - code
+
+    staticClients:
+      - id: dbos-console
+        name: DBOS Console
+        redirectURIs:
+          - "https://ad994e5252cd240f480252abcc75486c-707864310.us-west-2.elb.amazonaws.com/oauth/callback"
+          - "http://localhost:8080/oauth/callback"
+        public: true
+
+    enablePasswordDB: true
+    staticPasswords:
+      - email: "admin@example.com"
+        hash: "$2y$10$CXja0hV0v7TeAo55Q9D2Re8U63oNr1Tb3VFWgNJga8RDZi5x9tKV."
+        username: admin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dex
+  namespace: dbos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dex
+  template:
+    metadata:
+      labels:
+        app: dex
+    spec:
+      containers:
+        - name: dex
+          image: dexidp/dex:v2.41.1
+          args:
+            - dex
+            - serve
+            - /etc/dex/config.yaml
+          ports:
+            - containerPort: 5556
+          volumeMounts:
+            - name: config
+              mountPath: /etc/dex
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /dex/healthz
+              port: 5556
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /dex/healthz
+              port: 5556
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+      volumes:
+        - name: config
+          configMap:
+            name: dex-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dex
+  namespace: dbos
+spec:
+  selector:
+    app: dex
+  ports:
+    - port: 5556
+      targetPort: 5556
