@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console
+  namespace: dbos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: console
+  template:
+    metadata:
+      labels:
+        app: console
+    spec:
+      containers:
+        - name: console
+          image: dbosdev/console
+          env:
+            - name: DBOS_CONDUCTOR_URL
+              value: "conductor.dbos.svc.cluster.local:8090"
+            # OAuth
+            - name: DBOS_OAUTH_ENABLED
+              value: "true"
+            - name: DBOS_OAUTH_AUTHORIZATION_URL
+              value: "https://ad994e5252cd240f480252abcc75486c-707864310.us-west-2.elb.amazonaws.com/dex/auth"
+            - name: DBOS_OAUTH_TOKEN_URL
+              value: "https://ad994e5252cd240f480252abcc75486c-707864310.us-west-2.elb.amazonaws.com/dex/token"
+            - name: DBOS_OAUTH_CLIENT_ID
+              value: "dbos-console"
+            - name: DBOS_OAUTH_SCOPE
+              value: "openid profile email"
+            - name: DBOS_OAUTH_USERINFO_URL
+              value: "https://ad994e5252cd240f480252abcc75486c-707864310.us-west-2.elb.amazonaws.com/dex/userinfo"
+            - name: DBOS_OAUTH_AUDIENCE
+              value: "dbos-console"
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: console
+  namespace: dbos
+spec:
+  selector:
+    app: console
+  ports:
+    - port: 80
+      targetPort: 80

@@ -1,0 +1,13 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: conductor-license
+  namespace: dbos
+spec:
+  encryptedData:
+    license-key: AgCtR2yI2VNP3rI1wklsLKLfoRg8+mfHF3yL+W1OEeGbJKZVAV23/2MqxCJy5mMYRDtCe2iWrnbc8B0G0YCQ0H/FjTYMEbcPuZuaAulUrGKwkxkIKihHJ0VPc7U2fkabV2n/1pQHAb9M6TPZf5Ywz4KQOa1zeKEjSf5vkhRBZf3Xm2ZYz8StzNQ1yzC7uLR2xrV7mfCksmFKl4XP+UIHiWIgyrFJ4b/4yg54LG32J1pdB+ylwuMF9LGu4mGVx4YZApzJAKWquSWje9+op3+ppS9m3HskQCbZxdLigOg/r+knNvYniOJmVEJ9CKo1nFHf8TtXLOyCdUXubncDxyxcy3URuDVQ9uuGl7hO+vzPTWXAYSwqjwRMbACFjVRxYHAjQwp5gYVjodGCqdVJPj54JmOb3PApleYprczAXYGXTf3lcndWLYjn/dh0sR4LviHW99Cayo/to9yi4rVelkscvqutIJ3GcXCpPSPj4bSvTrvuV1W3MFjjvcDD0+8dav56fewEOAXCwixnvnIQmAV/LjKHXDuBopTsKGK5vIZmnvNPk/cbM2dDFF+qUq30+dWUhb5lcrbxkEMM1NAz+lkdjR8GCbUAeP0hMmTeCVPj+tKyAZdUeP6/KiuqVxdKDsv0DhQQ+WoKRVG1fZV6hwP204wxHXurob2mDA/U/2o+Hol7ltsvov2w9VRs4liFHN63IpP5K6gnEciJuI93QV7Z7UiGkI7NL8ci5UjMpLMHlj8HrV4JERE=
+  template:
+    metadata:
+      name: conductor-license
+      namespace: dbos
