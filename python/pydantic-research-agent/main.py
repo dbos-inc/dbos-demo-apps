@@ -141,13 +141,13 @@ async def deep_research(query: str) -> str:
         report=None,
         status="PLANNING",
     )
-    DBOS.set_event(AGENT_STATUS, agent_status)
+    await DBOS.set_event_async(AGENT_STATUS, agent_status)
     result = await dbos_plan_agent.run(query)
     plan = result.output
     tasks_handles: List[WorkflowHandleAsync[str]] = []
 
     agent_status.status = "SEARCHING"
-    DBOS.set_event(AGENT_STATUS, agent_status)
+    await DBOS.set_event_async(AGENT_STATUS, agent_status)
     for step in plan.web_search_steps:
         # Asynchronously start search workflows without waiting for each to complete
         task_handle = await DBOS.start_workflow_async(
@@ -158,7 +158,7 @@ async def deep_research(query: str) -> str:
     search_results = [await task.get_result() for task in tasks_handles]
 
     agent_status.status = "ANALYZING"
-    DBOS.set_event(AGENT_STATUS, agent_status)
+    await DBOS.set_event_async(AGENT_STATUS, agent_status)
     analysis_result = await dbos_analysis_agent.run(
         format_as_xml(
             {
@@ -170,7 +170,7 @@ async def deep_research(query: str) -> str:
     )
     agent_status.report = analysis_result.output
     agent_status.status = "COMPLETED"
-    DBOS.set_event(AGENT_STATUS, agent_status)
+    await DBOS.set_event_async(AGENT_STATUS, agent_status)
     return analysis_result.output
 
 
