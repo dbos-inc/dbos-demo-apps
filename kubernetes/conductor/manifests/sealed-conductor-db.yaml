@@ -1,0 +1,13 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: conductor-db
+  namespace: dbos
+spec:
+  encryptedData:
+    database-url: AgAhvLOmGyFQ2HH7fakbRSnhbhOZatvlRustm4YTtvJnd1WHAtXKbyTAf0qvw93/MR9uqUWbZv8dR2rSjdXi8pGR+V0uMpAV62ZEwSIeKAe8ncJmZcUfxjIhvKC9QOqf03lUbZ9sZddezrz45UwiNQde41xr9YKYwpQp3XqQSUU/+dfu4fXOSvIWzlDtjhkD7j6BzZ10Z3hKr1hoYJ/gPjNzCAFgHgkAWgrcps0zb/1harqi1IO5EPYIyaECO3b7mOFr7rRVefjyuy/WngXgTyFunzQhlKTq9YeNtwSsv2C9JRPPvcMdTnxjA9qdnbL/dntxYrpHW3fXexBJs2N7/97pOjkY/M5FRhL73WSM0FXw4mwSLmRAW5gqoxl+mkWSJIieQnM60BljurHpk3Xa80KjYIal5Ts0UjZjbASuZriJ6AyTDwlnfcgior9BzKc2FQIyBNVasiE+8u5zk4Wm+NIc1gzAreWWNR6CS1+lY+8ljh0QsP8d3LfxBLtzX7t8HIGo8EpZ5Z8j9BzBBsNHhcc1cSD9cA6WHtR2zLZ4AtLwSkBzpwQl8iLaw3csVbORcACsEbGqtTsrCAf/xLQgIYixfV3xyE0zbqTkXQtR1eGRSUb6wNGL8l9916IAdWJukGnZMoDm9ikPp4Yag7HghBlhLXpGnf7QLemUZi902YyNyRuP5AEsWC5rMlyNmzeBrdExA4RH4c1SfLPXTyOOsk1hwchNSx+rkC/3jie7wJ4Ihr0Ug7Els4nBsy7SuVw+EBedqSR3G3086Q501JLBrE9o4vgRklmadBPZ/cL7VQsUwb+HpDJNPu8wPI9Lhk7qO+jy+lKuA4ppQahBy4MlIdZkbgsiAaYLuY62/a0PK/uoOLnI54o9g79f+xTWNNbV0FXxSmOLCK8Y
+  template:
+    metadata:
+      name: conductor-db
+      namespace: dbos

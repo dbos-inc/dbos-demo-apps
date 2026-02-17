@@ -1,0 +1,13 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: conductor-api-key
+  namespace: dbos
+spec:
+  encryptedData:
+    api-key: AgBBqCECbBEIHrehe7WAUUy5GI/kiiqxU5K7JT3+thWGKzPTJMCdwf/5twZ1nzq9KSrZsqjUraduvlki9spQZlify9uRNa8/Gu97O9Bw5Br39XRuOK3QI+eZsI1vv3+AvAyuGje/ewHSy/S42gcFOmgeT/Y5OHQYgvJQwLDmwx6RGAqQ/T80u9oZ2hSPRRl6mRDbT9G6o41+bEJshvrCmNjUERmX3vymWf0YY0f9udbnvPZAaOzSsgtTz/0Xfhe5aOXaa0wPGXTYKF2CfZjWF3WGbqR1V1DS78UpGnr3V3e8YYlqsPVuA4ml+E/rYXbowXxkuOsREY6+bgotDlHzs6D3Irg+Y0tPCBaNugIIqkZ4aUru/K501LYip5nWWoubmjqr1Q6u5hBoIkLUfEPTthagSj95Zf9OHSWGnJIScGyyrDhKQl44sfJ/VE+w66YPs5gsFGcxQ+c/S9YLIjkTnpgHjXAcgHKQMmohHkzeptR72aXC4AWon8KE45N9HVDp252mYe/o7YnUbV769XIqBh4cX2Wgky9FEKaVlK/h/GNZVJidgJXpHOMp55Pktm6357lwzBvmTt43snViFrSSETc5n9QX8qepTUtCJ+LBkO41wN+8HDKHYhqvyJjtU69KDUZVNWB1mzDkyIo3lfP408WR5ob0pIYSyZk8jZtsZ5amF2eUUCq9z7jexWXeHacF6GthMrdINiCsrOvgyUOzk0RMaFPbMXLGR9ew4hfcIXRNhoSkErDQtQZ/39scA9Hegg==
+  template:
+    metadata:
+      name: conductor-api-key
+      namespace: dbos
