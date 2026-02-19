@@ -22,8 +22,8 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "file:latest@dbos-inc/otel@latest",
-    "@dbos-inc/otel": "^4.8.8",
+    "@dbos-inc/dbos-sdk": "^4.9.11",
+    "@dbos-inc/otel": "^4.9.11",
     "@koa/router": "^13.1.1",
     "dotenv": "^17.2.0",
     "koa": "^3.0.0",
