@@ -38,16 +38,7 @@ ORDER_ID_EVENT = "order_id_event"
 @DBOS.transaction()
 def create_orders_table() -> None:
     """Ensure the orders table exists."""
-    DBOS.sql_session.execute(sa.text("""
-            CREATE TABLE IF NOT EXISTS orders (
-                order_id            SERIAL PRIMARY KEY,
-                customer            VARCHAR(255) NOT NULL,
-                item                VARCHAR(255) NOT NULL,
-                quantity            INTEGER      NOT NULL,
-                notification_status VARCHAR(50)  NOT NULL DEFAULT 'PENDING',
-                created_at          TIMESTAMP    DEFAULT NOW()
-            )
-            """))
+    metadata.create_all(DBOS.sql_session.connection())
 
 
 # ---------------------------------------------------------------------------
