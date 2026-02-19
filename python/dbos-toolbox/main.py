@@ -11,7 +11,8 @@ app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-toolbox",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-    "application_database_url": os.environ.get("DBOS_DATABASE_URL"), # This is only needed if using "@DBOS.transaction"
+    # This is only needed if using "@DBOS.transaction"
+    "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
     "application_version": "0.1.0",
 }
 DBOS(config=config)
@@ -68,9 +69,8 @@ def queue_workflow():
 ##################################
 
 
-@DBOS.scheduled("*/15 * * * *")
 @DBOS.workflow()
-def run_every_15min(scheduled_time, actual_time):
+def run_every_15min(scheduled_time, _context):
     DBOS.logger.info(f"I am a scheduled workflow. It is currently {scheduled_time}.")
 
 
@@ -173,4 +173,15 @@ async def read_root():
 
 if __name__ == "__main__":
     DBOS.launch()
+    # Define a schedule for the scheduled workflow
+    DBOS.apply_schedules(
+        [
+            {
+                "schedule_name": "run_every_15min",
+                "schedule": "*/15 * * * *",
+                "workflow_fn": run_every_15min,
+                "context": None,
+            }
+        ]
+    )
     uvicorn.run(app, host="0.0.0.0", port=8000)
