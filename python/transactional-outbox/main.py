@@ -97,7 +97,7 @@ def send_order_notification(order_id: int, customer: str, item: str) -> None:
 
 @DBOS.workflow()
 def place_order_workflow(customer: str, item: str, quantity: int) -> int:
-    """Place an order and send a notification, exactly once.
+    """Place an order and send a notification, atomically.
 
     If this process crashes after insert_order but before
     send_order_notification, DBOS will automatically recover and complete
