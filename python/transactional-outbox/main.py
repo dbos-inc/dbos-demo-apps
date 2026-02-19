@@ -101,7 +101,7 @@ def place_order_workflow(customer: str, item: str, quantity: int) -> int:
 
     If this process crashes after insert_order but before
     send_order_notification, DBOS will automatically recover and complete
-    the notification on restart — no outbox polling required.
+    the notification on restart.
     """
     order_id = insert_order(customer, item, quantity)
     DBOS.set_event(ORDER_ID_EVENT, order_id)
