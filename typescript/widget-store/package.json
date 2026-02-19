@@ -24,8 +24,8 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^4.8.8",
-    "@dbos-inc/knex-datasource": "^4.8.8",
+    "@dbos-inc/dbos-sdk": "file:latest@dbos-inc/otel@latest",
+    "@dbos-inc/knex-datasource": "^4.9.11",
     "@dbos-inc/otel": "^4.8.8",
     "fastify": "^5.2.2",
     "liquidjs": "^10.10.1",
