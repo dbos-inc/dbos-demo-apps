@@ -80,8 +80,8 @@ def send_order_notification(order_id: int, customer: str, item: str) -> None:
     """Simulate sending an order confirmation (e.g. email, Kafka, webhook).
 
     In the classic pattern a background poller would read the outbox and call
-    this.  With DBOS the workflow calls it directly, and the step decorator
-    guarantees it runs exactly once.
+    this.  With DBOS the workflow calls it directly and guarantees it will
+    be retried until it succeeds.
     """
     DBOS.logger.info(
         f"Sending notification for order {order_id}: {item} for {customer}"
