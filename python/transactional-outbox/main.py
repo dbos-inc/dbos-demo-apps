@@ -51,7 +51,7 @@ def create_orders_table() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Database operations (replace the "write to outbox" half of the pattern)
+# Database operations
 # ---------------------------------------------------------------------------
 
 
@@ -82,7 +82,7 @@ def update_notification_status(order_id: int, status: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# External side-effect (replace the "poller sends messages" half)
+# External side-effects
 # ---------------------------------------------------------------------------
 
 
