@@ -7,7 +7,7 @@
     "server": "node --experimental-strip-types server.ts"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^4.8.8",
+    "@dbos-inc/dbos-sdk": "^4.9.11",
     "express": "^4.21.2"
   },
   "devDependencies": {

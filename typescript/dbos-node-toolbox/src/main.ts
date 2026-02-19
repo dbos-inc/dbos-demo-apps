@@ -1,42 +1,42 @@
-import { DBOS, WorkflowQueue } from '@dbos-inc/dbos-sdk';
-import { KnexDataSource } from '@dbos-inc/knex-datasource';
-import express from 'express';
-import dotenv from 'dotenv';
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { KnexDataSource } from "@dbos-inc/knex-datasource";
+import express from "express";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 export const app = express();
 app.use(express.json());
 
-const queue = new WorkflowQueue('example_queue');
+const queue = new WorkflowQueue("example_queue");
 
 // Note, there is no requirement to use DBOS_DATABASE_URL with DBOS Data Sources if you're self hosting.
 // We are using DBOS_DATABASE_URL here so this demo application can run in DBOS Cloud.
 
 const config = {
-  client: 'pg',
+  client: "pg",
   connection:
     process.env.DBOS_DATABASE_URL ||
-    `postgresql://postgres:${process.env.PGPASSWORD || 'dbos'}@localhost:5432/dbos_node_toolbox`,
+    `postgresql://postgres:${process.env.PGPASSWORD || "dbos"}@localhost:5432/dbos_node_toolbox`,
 };
 
-const knexds = new KnexDataSource('app-db', config);
+const knexds = new KnexDataSource("app-db", config);
 
 //////////////////////////////////
 //// Workflows and steps
 //////////////////////////////////
 
 async function stepOne() {
-  DBOS.logger.info('Step one completed!');
+  DBOS.logger.info("Step one completed!");
 }
 
 async function stepTwo() {
-  DBOS.logger.info('Step two completed!');
+  DBOS.logger.info("Step two completed!");
 }
 
 async function exampleWorkflowFunc() {
-  await DBOS.runStep(() => stepOne(), { name: 'stepOne' });
-  await DBOS.runStep(() => stepTwo(), { name: 'stepTwo' });
+  await DBOS.runStep(() => stepOne(), { name: "stepOne" });
+  await DBOS.runStep(() => stepTwo(), { name: "stepTwo" });
 }
 
 const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunc);
@@ -49,13 +49,17 @@ async function taskFunction(n: number) {
   await DBOS.sleep(5000);
   DBOS.logger.info(`Task ${n} completed!`);
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, { name: 'taskWorkflow' });
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, {
+  name: "taskWorkflow",
+});
 
 async function queueFunction() {
-  DBOS.logger.info('Enqueueing tasks!');
+  DBOS.logger.info("Enqueueing tasks!");
   const handles = [];
   for (let i = 0; i < 10; i++) {
-    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(i));
+    handles.push(
+      await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(i),
+    );
   }
   const results = [];
   for (const h of handles) {
@@ -63,53 +67,65 @@ async function queueFunction() {
   }
   DBOS.logger.info(`Successfully completed ${results.length} tasks`);
 }
-const queueWorkflow = DBOS.registerWorkflow(queueFunction, { name: 'queueWorkflow' });
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, {
+  name: "queueWorkflow",
+});
 
 //////////////////////////////////
 //// Scheduled workflows
 //////////////////////////////////
 
-async function runEvery15Min(scheduledTime: Date, _startTime: Date) {
-  DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`);
+async function runEvery15Min(scheduledTime: Date, _context: unknown) {
+  DBOS.logger.info(
+    `I am a scheduled workflow. It is currently ${scheduledTime}.`,
+  );
 }
 const scheduledWorkflow = DBOS.registerWorkflow(runEvery15Min);
-DBOS.registerScheduled(scheduledWorkflow, { crontab: '*/15 * * * *' });
 
 //////////////////////////////////
 //// Transactions
 //////////////////////////////////
 
 async function insertRow() {
-  await knexds.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+  await knexds.client.raw("INSERT INTO example_table (name) VALUES (?)", [
+    "dbos",
+  ]);
 }
 
 async function countRows() {
-  const result = await knexds.client.raw('SELECT COUNT(*) as count FROM example_table');
+  const result = await knexds.client.raw(
+    "SELECT COUNT(*) as count FROM example_table",
+  );
   const count = result.rows[0].count;
   DBOS.logger.info(`Row count: ${count}`);
 }
 
 async function transactionWorkflowFunc() {
-  await knexds.runTransaction(() => insertRow(), { name: 'insertRow' });
-  await knexds.runTransaction(() => countRows(), { name: 'countRows', readOnly: true });
+  await knexds.runTransaction(() => insertRow(), { name: "insertRow" });
+  await knexds.runTransaction(() => countRows(), {
+    name: "countRows",
+    readOnly: true,
+  });
 }
-const transactionWorkflow = DBOS.registerWorkflow(transactionWorkflowFunc, { name: 'transactionWorkflow' });
+const transactionWorkflow = DBOS.registerWorkflow(transactionWorkflowFunc, {
+  name: "transactionWorkflow",
+});
 
 /////////////////////////////////////
 //// Express.js HTTP endpoints
 /////////////////////////////////////
 
-app.get('/workflow', async (_req, res) => {
+app.get("/workflow", async (_req, res) => {
   await exampleWorkflow();
   res.send();
 });
 
-app.get('/queue', async (_req, res) => {
+app.get("/queue", async (_req, res) => {
   await queueWorkflow();
   res.send();
 });
 
-app.get('/transaction', async (_req, res) => {
+app.get("/transaction", async (_req, res) => {
   await transactionWorkflow();
   res.send();
 });
@@ -118,7 +134,7 @@ app.get('/transaction', async (_req, res) => {
 //// Readme
 /////////////////////////////////////
 
-app.get('/', (_, res) => {
+app.get("/", (_, res) => {
   const readme = `
     <!DOCTYPE html>
     <html lang="en">
@@ -192,12 +208,20 @@ app.get('/', (_, res) => {
 
 async function main() {
   DBOS.setConfig({
-    name: 'dbos-node-toolbox',
+    name: "dbos-node-toolbox",
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
     applicationVersion: "0.1.0",
   });
   await DBOS.launch();
-  const PORT = parseInt(process.env.NODE_PORT || '3000');
+  // Define a schedule for the scheduled workflow
+  await DBOS.applySchedules([
+    {
+      scheduleName: "runEvery15Min",
+      schedule: "*/15 * * * *",
+      workflowFn: scheduledWorkflow,
+    },
+  ]);
+  const PORT = parseInt(process.env.NODE_PORT || "3000");
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });
