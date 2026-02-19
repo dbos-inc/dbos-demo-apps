@@ -23,12 +23,10 @@ orders = sa.Table(
     "orders",
     metadata,
     sa.Column("order_id", sa.Integer, primary_key=True, autoincrement=True),
-    sa.Column("customer", sa.String(255), nullable=False),
-    sa.Column("item", sa.String(255), nullable=False),
+    sa.Column("customer", sa.Text, nullable=False),
+    sa.Column("item", sa.Text, nullable=False),
     sa.Column("quantity", sa.Integer, nullable=False),
-    sa.Column(
-        "notification_status", sa.String(50), nullable=False, server_default="PENDING"
-    ),
+    sa.Column("notification_status", sa.Text, nullable=False, server_default="PENDING"),
     sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),
 )
 
