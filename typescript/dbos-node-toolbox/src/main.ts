@@ -213,7 +213,7 @@ async function main() {
     applicationVersion: "0.1.0",
   });
   await DBOS.launch();
-  // Schedule the scheduled workflow
+  // Define a schedule for the scheduled workflow
   await DBOS.applySchedules([
     {
       scheduleName: "runEvery15Min",
