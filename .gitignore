@@ -2,6 +2,8 @@
 **/.DS_Store
 #**/prisma/migrations/*
 **.python-version
+.claude
+.agents
 
 logs
 *.log

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transactional Outbox Demo</title>
+  <style>
+    :root {
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --green: #16a34a;
+      --yellow: #ca8a04;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-400: #9ca3af;
+      --gray-600: #4b5563;
+      --gray-800: #1f2937;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.25rem;
+    }
+
+    header p {
+      color: var(--gray-600);
+      font-size: 0.95rem;
+    }
+
+    /* ---- Form card ---- */
+    .card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1.15rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--gray-600);
+    }
+
+    .form-group input {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    .form-group.qty { max-width: 90px; flex: 0 0 90px; }
+
+    button {
+      padding: 0.5rem 1.25rem;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      align-self: flex-end;
+      white-space: nowrap;
+    }
+
+    button:hover { background: var(--blue-dark); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ---- Orders table ---- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-600);
+      padding: 0.5rem 0.75rem;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-sent {
+      background: #dcfce7;
+      color: var(--green);
+    }
+
+    .badge-pending {
+      background: #fef9c3;
+      color: var(--yellow);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray-400);
+    }
+
+    .error {
+      color: #dc2626;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    @media (max-width: 600px) {
+      .form-row { flex-direction: column; }
+      .form-group.qty { max-width: 100%; flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Transactional Outbox Demo</h1>
+    </header>
+
+    <!-- Place order form -->
+    <div class="card">
+      <h2>Place Order</h2>
+      <form id="order-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="customer">Customer</label>
+            <input id="customer" type="text" required placeholder="Alice" />
+          </div>
+          <div class="form-group">
+            <label for="item">Item</label>
+            <input id="item" type="text" required placeholder="Widget A" />
+          </div>
+          <div class="form-group qty">
+            <label for="quantity">Qty</label>
+            <input id="quantity" type="number" min="1" value="1" required />
+          </div>
+          <button type="submit" id="submit-btn">Place Order</button>
+        </div>
+        <div id="form-error" class="error" hidden></div>
+      </form>
+    </div>
+
+    <!-- Orders list -->
+    <div class="card">
+      <h2>Orders</h2>
+      <div id="orders-container">
+        <p class="empty-state">Loading&hellip;</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("order-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const formError = document.getElementById("form-error");
+    const ordersContainer = document.getElementById("orders-container");
+
+    // Submit a new order
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      formError.hidden = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Placing…";
+
+      const body = {
+        customer: document.getElementById("customer").value.trim(),
+        item: document.getElementById("item").value.trim(),
+        quantity: parseInt(document.getElementById("quantity").value, 10),
+      };
+
+      try {
+        const res = await fetch("/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        form.reset();
+        document.getElementById("quantity").value = "1";
+        fetchOrders();
+      } catch (err) {
+        formError.textContent = "Failed to place order: " + err.message;
+        formError.hidden = false;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Place Order";
+      }
+    });
+
+    // Fetch and render orders
+    async function fetchOrders() {
+      try {
+        const res = await fetch("/orders");
+        if (!res.ok) throw new Error("Failed to load orders");
+        const orders = await res.json();
+        renderOrders(orders);
+      } catch (err) {
+        ordersContainer.innerHTML = '<p class="error">' + err.message + "</p>";
+      }
+    }
+
+    function renderOrders(orders) {
+      if (orders.length === 0) {
+        ordersContainer.innerHTML = '<p class="empty-state">No orders yet. Place one above!</p>';
+        return;
+      }
+
+      const rows = orders.map((o) => {
+        const badgeClass = o.notification_status === "SENT" ? "badge-sent" : "badge-pending";
+        const ts = o.created_at ? new Date(o.created_at).toLocaleString() : "";
+        return `<tr>
+          <td>${o.order_id}</td>
+          <td>${esc(o.customer)}</td>
+          <td>${esc(o.item)}</td>
+          <td>${o.quantity}</td>
+          <td><span class="badge ${badgeClass}">${esc(o.notification_status)}</span></td>
+          <td>${ts}</td>
+        </tr>`;
+      }).join("");
+
+      ordersContainer.innerHTML = `<table>
+        <thead><tr>
+          <th>ID</th><th>Customer</th><th>Item</th><th>Qty</th><th>Notification</th><th>Created</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    function esc(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // Poll every 2 seconds
+    fetchOrders();
+    setInterval(fetchOrders, 2000);
+  </script>
+</body>
+</html>
