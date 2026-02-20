@@ -1,0 +1,18 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: dbos-app-scaledobject
+  namespace: dbos
+spec:
+  scaleTargetRef:
+    name: dbos-app
+  pollingInterval: 15
+  cooldownPeriod: 60
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+    - type: metrics-api
+      metadata:
+        url: "http://dbos-app.dbos.svc.cluster.local:8080/metrics/taskQueue"
+        valueLocation: "queue_length"
+        targetValue: "2"
