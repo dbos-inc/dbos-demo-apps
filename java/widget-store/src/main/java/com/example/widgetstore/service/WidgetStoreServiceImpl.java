@@ -20,9 +20,11 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
     private static final Logger logger = LoggerFactory.getLogger(WidgetStoreServiceImpl.class);
 
     private final WidgetStoreRepository repository;
+    private final TxStepProvider stepProvider;
 
-    public WidgetStoreServiceImpl(WidgetStoreRepository repository) {
+    public WidgetStoreServiceImpl(WidgetStoreRepository repository, TxStepProvider stepProvider) {
         this.repository = repository;
+        this.stepProvider = stepProvider;
     }
 
     private WidgetStoreService service;
@@ -49,7 +51,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
     @Workflow
     public String checkoutWorkflow(String key) {
-        Integer orderId = DBOS.runStep(() -> repository.createOrder(), "createOrder");
+        Integer orderId = stepProvider.runTxStep(dsl -> { return WidgetStoreRepository.createOrder(dsl); }, "createOrder");
         try {
             DBOS.runStep(() -> repository.subtractInventory(), "subtractInventory");
         } catch (RuntimeException e) {

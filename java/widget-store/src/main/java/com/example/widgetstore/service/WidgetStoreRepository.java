@@ -33,7 +33,9 @@ public class WidgetStoreRepository {
         this.dsl = dsl;
     }
 
-    public ProductDto retrieveProduct() {
+    // Static methods that contain the actual logic
+    
+    public static ProductDto retrieveProduct(DSLContext dsl) {
         Products product = dsl.selectFrom(PRODUCTS)
                 .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
                 .fetchOneInto(Products.class);
@@ -51,14 +53,14 @@ public class WidgetStoreRepository {
         );
     }
 
-    public void setInventory(int inventory) {
+    public static void setInventory(DSLContext dsl, int inventory) {
         dsl.update(PRODUCTS)
                 .set(PRODUCTS.INVENTORY, inventory)
                 .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
                 .execute();
     }
 
-    public void subtractInventory() throws RuntimeException {
+    public static void subtractInventory(DSLContext dsl) throws RuntimeException {
         int updated = dsl.update(PRODUCTS)
                 .set(PRODUCTS.INVENTORY, PRODUCTS.INVENTORY.minus(1))
                 .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
@@ -70,14 +72,14 @@ public class WidgetStoreRepository {
         }
     }
 
-    public void undoSubtractInventory() {
+    public static void undoSubtractInventory(DSLContext dsl) {
         dsl.update(PRODUCTS)
                 .set(PRODUCTS.INVENTORY, PRODUCTS.INVENTORY.plus(1))
                 .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
                 .execute();
     }
 
-    public Integer createOrder() {
+    public static Integer createOrder(DSLContext dsl) {
         return dsl.insertInto(ORDERS)
                 .set(ORDERS.ORDER_STATUS, OrderStatus.PENDING.getValue())
                 .set(ORDERS.PRODUCT_ID, PRODUCT_ID)
@@ -88,7 +90,7 @@ public class WidgetStoreRepository {
                 .get(ORDERS.ORDER_ID);
     }
 
-    public OrderDto retrieveOrder(int orderId) {
+    public static OrderDto retrieveOrder(DSLContext dsl, int orderId) {
         Orders order = dsl.selectFrom(ORDERS)
                 .where(ORDERS.ORDER_ID.eq(orderId))
                 .fetchOneInto(Orders.class);
@@ -106,7 +108,7 @@ public class WidgetStoreRepository {
         );
     }
 
-    public List<OrderDto> retrieveOrders() {
+    public static List<OrderDto> retrieveOrders(DSLContext dsl) {
         List<Orders> orders = dsl.selectFrom(ORDERS)
                 .orderBy(ORDERS.ORDER_ID.desc())
                 .fetchInto(Orders.class);
@@ -122,7 +124,7 @@ public class WidgetStoreRepository {
                 .collect(Collectors.toList());
     }
 
-    public void markOrderPaid(int orderId) {
+    public static void markOrderPaid(DSLContext dsl, int orderId) {
         dsl.update(ORDERS)
                 .set(ORDERS.ORDER_STATUS, OrderStatus.PAID.getValue())
                 .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
@@ -130,12 +132,68 @@ public class WidgetStoreRepository {
                 .execute();
     }
 
-    public void errorOrder(int orderId) {
+    public static void errorOrder(DSLContext dsl, int orderId) {
         dsl.update(ORDERS)
                 .set(ORDERS.ORDER_STATUS, OrderStatus.CANCELLED.getValue())
                 .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
                 .where(ORDERS.ORDER_ID.eq(orderId))
                 .execute();
+    }
+
+    public static void updateOrderProgress(DSLContext dsl, Integer orderId) {
+        Integer progressRemaining = dsl.update(ORDERS)
+                .set(ORDERS.PROGRESS_REMAINING, ORDERS.PROGRESS_REMAINING.minus(1))
+                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
+                .where(ORDERS.ORDER_ID.eq(orderId))
+                .returningResult(ORDERS.PROGRESS_REMAINING)
+                .fetchOne()
+                .get(ORDERS.PROGRESS_REMAINING);
+
+        if (progressRemaining == 0) {
+            dsl.update(ORDERS)
+                    .set(ORDERS.ORDER_STATUS, OrderStatus.DISPATCHED.getValue())
+                    .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
+                    .where(ORDERS.ORDER_ID.eq(orderId))
+                    .execute();
+        }
+    }
+
+    // Instance methods that delegate to static methods
+    
+    public ProductDto retrieveProduct() {
+        return retrieveProduct(dsl);
+    }
+
+    public void setInventory(int inventory) {
+        setInventory(dsl, inventory);
+    }
+
+    public void subtractInventory() throws RuntimeException {
+        subtractInventory(dsl);
+    }
+
+    public void undoSubtractInventory() {
+        undoSubtractInventory(dsl);
+    }
+
+    public Integer createOrder() {
+        return createOrder(dsl);
+    }
+
+    public OrderDto retrieveOrder(int orderId) {
+        return retrieveOrder(dsl, orderId);
+    }
+
+    public List<OrderDto> retrieveOrders() {
+        return retrieveOrders(dsl);
+    }
+
+    public void markOrderPaid(int orderId) {
+        markOrderPaid(dsl, orderId);
+    }
+
+    public void errorOrder(int orderId) {
+        errorOrder(dsl, orderId);
     }
 
     public void updateOrderProgress(Integer orderId) {
@@ -144,22 +202,7 @@ public class WidgetStoreRepository {
         // Use JOOQ's native transaction for multi-operation atomicity
         dsl.transaction(configuration -> {
             DSLContext txDsl = configuration.dsl();
-            
-            Integer progressRemaining = txDsl.update(ORDERS)
-                    .set(ORDERS.PROGRESS_REMAINING, ORDERS.PROGRESS_REMAINING.minus(1))
-                    .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                    .where(ORDERS.ORDER_ID.eq(orderId))
-                    .returningResult(ORDERS.PROGRESS_REMAINING)
-                    .fetchOne()
-                    .get(ORDERS.PROGRESS_REMAINING);
-
-            if (progressRemaining == 0) {
-                txDsl.update(ORDERS)
-                        .set(ORDERS.ORDER_STATUS, OrderStatus.DISPATCHED.getValue())
-                        .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                        .where(ORDERS.ORDER_ID.eq(orderId))
-                        .execute();
-            }
+            updateOrderProgress(txDsl, orderId);
         });
     }
 }
