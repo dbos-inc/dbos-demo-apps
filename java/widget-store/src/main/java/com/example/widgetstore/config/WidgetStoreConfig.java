@@ -1,7 +1,6 @@
 package com.example.widgetstore.config;
 
 import com.example.widgetstore.service.TxStepProvider;
-import com.example.widgetstore.service.WidgetStoreRepository;
 import com.example.widgetstore.service.WidgetStoreService;
 import com.example.widgetstore.service.WidgetStoreServiceImpl;
 import dev.dbos.transact.DBOS;
@@ -15,10 +14,10 @@ public class WidgetStoreConfig {
 
     @Bean
     @Primary
-    public WidgetStoreService widgetStoreService(WidgetStoreRepository repository, TxStepProvider stepProvider) {
+    public WidgetStoreService widgetStoreService(TxStepProvider stepProvider) {
         stepProvider.createTxResultsTable();
         
-        var impl = new WidgetStoreServiceImpl(repository, stepProvider);
+        var impl = new WidgetStoreServiceImpl(stepProvider);
         var proxy = DBOS.registerWorkflows(WidgetStoreService.class, impl);
         impl.setProxy(proxy);
         return proxy;

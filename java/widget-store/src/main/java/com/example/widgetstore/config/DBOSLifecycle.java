@@ -25,10 +25,11 @@ public class DBOSLifecycle implements SmartLifecycle {
         if (databaseUrl == null || databaseUrl.isEmpty()) {
             databaseUrl = "jdbc:postgresql://localhost:5432/widget_store_java";
         }
-        var config = DBOSConfig.defaults("widget-store")
+        var config = DBOSConfig.defaults("java-widget-store")
                 .withDatabaseUrl(databaseUrl)
                 .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
                 .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
+                .withConductorKey("dbos_925d86bc-98f8-4801-af86-94a120634163_c3fc6ff6-fea5-40aa-86d4-aa850d19af53")
                 .withAdminServer(true)
                 .withAppVersion("0.1.0");
         DBOS.configure(config);

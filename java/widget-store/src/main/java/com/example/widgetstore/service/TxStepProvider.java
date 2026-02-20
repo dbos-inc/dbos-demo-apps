@@ -24,7 +24,7 @@ public class TxStepProvider {
         dsl.connection(c -> TxResult.createTxResultsTable(c, null));
     }
 
-    public <T, X extends Exception> T runTxStep(TxStepCallable<T, X> callable, String name) {
+    private <T, X extends Exception> T runTxStepInternal(TxStepCallable<T, X> callable, String name) {
         return DBOS.runStep(() -> {
 
             // if we're not in a workflow, execute the callable directly w/o DBOS bookkeeping
@@ -56,7 +56,14 @@ public class TxStepProvider {
         }, name);
     }
 
-    public <X extends Exception> void runTxStep(TxStepRunnable<X> runnable, String name) {
-        runTxStep(runnable.asCallable(), name);
+    public <T, X extends Exception> T runTxStep(TxStepCallable<T, X> callable, String name) throws X {
+        return runTxStepInternal(callable, name);
+    }
+
+    public <X extends Exception> void runTxStep(TxStepRunnable<X> runnable, String name) throws X {
+        runTxStepInternal(dsl -> {
+            runnable.execute(dsl);
+            return null;
+        }, name);
     }
 }
