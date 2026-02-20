@@ -1,160 +1,60 @@
 package com.example.widgetstore.service;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
 
 import static com.example.widgetstore.constants.Constants.ORDER_ID;
 import static com.example.widgetstore.constants.Constants.PAYMENT_ID;
 import static com.example.widgetstore.constants.Constants.PAYMENT_STATUS;
-import static com.example.widgetstore.constants.Constants.PRODUCT_ID;
 import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
-import static com.example.widgetstore.generated.Tables.ORDERS;
-import static com.example.widgetstore.generated.Tables.PRODUCTS;
-import com.example.widgetstore.generated.tables.pojos.Orders;
-import com.example.widgetstore.generated.tables.pojos.Products;
-import com.example.widgetstore.model.OrderStatus;
 
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.workflow.Workflow;
 
-@Transactional
 public class WidgetStoreServiceImpl implements WidgetStoreService {
     
     private static final Logger logger = LoggerFactory.getLogger(WidgetStoreServiceImpl.class);
 
-    private final DSLContext dsl;
+    private final WidgetStoreRepository repository;
 
-    public WidgetStoreServiceImpl(DSLContext dsl) {
-        this.dsl = dsl;
+    public WidgetStoreServiceImpl(WidgetStoreRepository repository) {
+        this.repository = repository;
     }
 
     private WidgetStoreService service;
 
     public void setProxy(WidgetStoreService service) {
-        this.service=service;
+        this.service = service;
     }
 
     public ProductDto retrieveProduct() {
-        Products product = dsl.selectFrom(PRODUCTS)
-                .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
-                .fetchOneInto(Products.class);
-        
-        if (product == null) {
-            return null;
-        }
-        
-        return new ProductDto(
-                product.getProductId(),
-                product.getProduct(),
-                product.getDescription(),
-                product.getInventory(),
-                product.getPrice()
-        );
+        return repository.retrieveProduct();
     }
 
     public void setInventory(int inventory) {
-        dsl.update(PRODUCTS)
-                .set(PRODUCTS.INVENTORY, inventory)
-                .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
-                .execute();
-    }
-
-    public void subtractInventory() throws RuntimeException {
-        int updated = dsl.update(PRODUCTS)
-                .set(PRODUCTS.INVENTORY, PRODUCTS.INVENTORY.minus(1))
-                .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
-                .and(PRODUCTS.INVENTORY.ge(1))
-                .execute();
-        
-        if (updated == 0) {
-            throw new RuntimeException("Insufficient Inventory");
-        }
-    }
-
-    public void undoSubtractInventory() {
-        dsl.update(PRODUCTS)
-                .set(PRODUCTS.INVENTORY, PRODUCTS.INVENTORY.plus(1))
-                .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
-                .execute();
-    }
-
-    public Integer createOrder() {
-        return dsl.insertInto(ORDERS)
-                .set(ORDERS.ORDER_STATUS, OrderStatus.PENDING.getValue())
-                .set(ORDERS.PRODUCT_ID, PRODUCT_ID)
-                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                .set(ORDERS.PROGRESS_REMAINING, 10)
-                .returningResult(ORDERS.ORDER_ID)
-                .fetchOne()
-                .get(ORDERS.ORDER_ID);
+        repository.setInventory(inventory);
     }
 
     public OrderDto retrieveOrder(int orderId) {
-        Orders order = dsl.selectFrom(ORDERS)
-                .where(ORDERS.ORDER_ID.eq(orderId))
-                .fetchOneInto(Orders.class);
-        
-        if (order == null) {
-            return null;
-        }
-        
-        return new OrderDto(
-                order.getOrderId(),
-                order.getOrderStatus(),
-                order.getLastUpdateTime(),
-                order.getProductId(),
-                order.getProgressRemaining()
-        );
+        return repository.retrieveOrder(orderId);
     }
 
     public List<OrderDto> retrieveOrders() {
-        List<Orders> orders = dsl.selectFrom(ORDERS)
-                .orderBy(ORDERS.ORDER_ID.desc())
-                .fetchInto(Orders.class);
-        
-        return orders.stream()
-                .map(order -> new OrderDto(
-                        order.getOrderId(),
-                        order.getOrderStatus(),
-                        order.getLastUpdateTime(),
-                        order.getProductId(),
-                        order.getProgressRemaining()
-                ))
-                .collect(Collectors.toList());
-    }
-
-    public void markOrderPaid(int orderId) {
-        dsl.update(ORDERS)
-                .set(ORDERS.ORDER_STATUS, OrderStatus.PAID.getValue())
-                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                .where(ORDERS.ORDER_ID.eq(orderId))
-                .execute();
-    }
-
-    public void errorOrder(int orderId) {
-        dsl.update(ORDERS)
-                .set(ORDERS.ORDER_STATUS, OrderStatus.CANCELLED.getValue())
-                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                .where(ORDERS.ORDER_ID.eq(orderId))
-                .execute();
+        return repository.retrieveOrders();
     }
 
     @Workflow
     public String checkoutWorkflow(String key) {
-        Integer orderId = DBOS.runStep(() -> service.createOrder(), "createOrder");
+        Integer orderId = DBOS.runStep(() -> repository.createOrder(), "createOrder");
         try {
-            DBOS.runStep(() -> service.subtractInventory(), "subtractInventory");
+            DBOS.runStep(() -> repository.subtractInventory(), "subtractInventory");
         } catch (RuntimeException e) {
             logger.error("Failed to reserve inventory for order {}", orderId);
-            DBOS.runStep(() -> service.errorOrder(orderId), "errorOrder");
+            DBOS.runStep(() -> repository.errorOrder(orderId), "errorOrder");
             DBOS.setEvent(PAYMENT_ID, null);
         }
 
@@ -164,12 +64,12 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
 
         if (payment_status != null && payment_status.equals("paid")) {
             logger.info("Payment successful for order {}", orderId);
-            DBOS.runStep(() -> service.markOrderPaid(orderId), "markOrderPaid");
+            DBOS.runStep(() -> repository.markOrderPaid(orderId), "markOrderPaid");
             DBOS.startWorkflow(() -> service.dispatchOrderWorkflow(orderId));
         } else {
             logger.info("Payment failed for order {}", orderId);
-            DBOS.runStep(() -> service.errorOrder(orderId), "errorOrder");
-            DBOS.runStep(() -> service.undoSubtractInventory(), "undoSubtractInventory");
+            DBOS.runStep(() -> repository.errorOrder(orderId), "errorOrder");
+            DBOS.runStep(() -> repository.undoSubtractInventory(), "undoSubtractInventory");
         }
         
         DBOS.setEvent(ORDER_ID, String.valueOf(orderId));
@@ -180,25 +80,7 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
     public void dispatchOrderWorkflow(Integer orderId) {
         for (int i = 0; i < 10; i++) {
             DBOS.sleep(Duration.ofSeconds(1));
-            DBOS.runStep(() -> service.updateOrderProgress(orderId), "updateOrderProgress");
-        }
-    }
-
-    public void updateOrderProgress(Integer orderId) {
-        Integer progressRemaining = dsl.update(ORDERS)
-                .set(ORDERS.PROGRESS_REMAINING, ORDERS.PROGRESS_REMAINING.minus(1))
-                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                .where(ORDERS.ORDER_ID.eq(orderId))
-                .returningResult(ORDERS.PROGRESS_REMAINING)
-                .fetchOne()
-                .get(ORDERS.PROGRESS_REMAINING);
-
-        if (progressRemaining == 0) {
-            dsl.update(ORDERS)
-                    .set(ORDERS.ORDER_STATUS, OrderStatus.DISPATCHED.getValue())
-                    .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                    .where(ORDERS.ORDER_ID.eq(orderId))
-                    .execute();
+            DBOS.runStep(() -> repository.updateOrderProgress(orderId), "updateOrderProgress");
         }
     }
 }
