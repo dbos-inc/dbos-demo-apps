@@ -30,7 +30,7 @@ spec:
               mountPath: /certs
       containers:
         - name: dbos-app
-          image: 500883621673.dkr.ecr.us-west-2.amazonaws.com/dbos-app:latest
+          image: <your-ecr-repo>/dbos-app:latest
           env:
             - name: DBOS_SYSTEM_DATABASE_URL
               valueFrom:
@@ -38,7 +38,7 @@ spec:
                   name: dbos-app-db
                   key: database-url
             - name: DBOS_CONDUCTOR_URL
-              value: "wss://ad994e5252cd240f480252abcc75486c-707864310.us-west-2.elb.amazonaws.com/conductor/"
+              value: "wss://<your-conductor-endpoint>"
             - name: DBOS_CONDUCTOR_KEY
               valueFrom:
                 secretKeyRef:

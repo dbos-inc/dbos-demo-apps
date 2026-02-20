@@ -10,7 +10,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: 500883621673.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate:latest
+          image: <your-ecr-repo>/dbos-migrate:latest
           args:
             - "migrate"
             - "--app-role"
