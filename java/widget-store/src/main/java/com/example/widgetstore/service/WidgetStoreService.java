@@ -13,19 +13,11 @@ public interface WidgetStoreService {
     ProductDto retrieveProduct();
     void setInventory(int inventory);
     
-    // Inventory methods (DBOS Steps)
-    void subtractInventory() throws RuntimeException;
-    void undoSubtractInventory();
-    
-    // Order methods (DBOS Steps)
-    Integer createOrder();
+    // Order query methods
     OrderDto retrieveOrder(int orderId);
     List<OrderDto> retrieveOrders();
-    void markOrderPaid(int orderId);
-    void errorOrder(int orderId);
     
     // Workflow methods
     String checkoutWorkflow(String key);
     void dispatchOrderWorkflow(Integer orderId);
-    void updateOrderProgress(Integer orderId);
 }
