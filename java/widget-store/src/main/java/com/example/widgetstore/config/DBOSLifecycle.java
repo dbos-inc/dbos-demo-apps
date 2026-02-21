@@ -29,7 +29,7 @@ public class DBOSLifecycle implements SmartLifecycle {
                 .withDatabaseUrl(databaseUrl)
                 .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
                 .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-                .withConductorKey("dbos_925d86bc-98f8-4801-af86-94a120634163_c3fc6ff6-fea5-40aa-86d4-aa850d19af53")
+                // .withConductorKey(<insert conductor API key here>)
                 .withAdminServer(true)
                 .withAppVersion("0.1.0");
         DBOS.configure(config);
