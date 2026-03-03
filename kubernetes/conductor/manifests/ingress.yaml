@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dbos-ingress
+  namespace: dbos
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - <your-elb-hostname>
+      secretName: dbos-tls
+  rules:
+    - host: <your-elb-hostname>
+      http:
+        paths:
+          - path: /conductor(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: conductor
+                port:
+                  number: 8090
+          - path: /app(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: dbos-app
+                port:
+                  number: 8080
+          - path: /()(dex/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: dex
+                port:
+                  number: 5556
+          - path: /()(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: console
+                port:
+                  number: 80

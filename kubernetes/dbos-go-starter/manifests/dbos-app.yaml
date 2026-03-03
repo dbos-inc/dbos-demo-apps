@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dbos-app
+  namespace: dbos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dbos-app
+  template:
+    metadata:
+      labels:
+        app: dbos-app
+    spec:
+      initContainers:
+        - name: setup-certs
+          image: alpine:latest
+          command:
+            - sh
+            - -c
+            - |
+              cp /etc/ssl/certs/ca-certificates.crt /certs/ca-certificates.crt
+              cat /tls/tls.crt >> /certs/ca-certificates.crt
+          volumeMounts:
+            - name: tls-cert
+              mountPath: /tls
+              readOnly: true
+            - name: ca-certs
+              mountPath: /certs
+      containers:
+        - name: dbos-app
+          image: <your-ecr-repo>/dbos-app:latest
+          env:
+            - name: DBOS_SYSTEM_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dbos-app-db
+                  key: database-url
+            - name: DBOS_CONDUCTOR_URL
+              value: "wss://<your-conductor-endpoint>"
+            - name: DBOS_CONDUCTOR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: conductor-api-key
+                  key: api-key
+            - name: SSL_CERT_FILE
+              value: "/certs/ca-certificates.crt"
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 500m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 512Mi
+          volumeMounts:
+            - name: ca-certs
+              mountPath: /certs
+              readOnly: true
+      volumes:
+        - name: tls-cert
+          secret:
+            secretName: dbos-tls
+            items:
+              - key: tls.crt
+                path: tls.crt
+        - name: ca-certs
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dbos-app
+  namespace: dbos
+spec:
+  selector:
+    app: dbos-app
+  ports:
+    - port: 8080
+      targetPort: 8080

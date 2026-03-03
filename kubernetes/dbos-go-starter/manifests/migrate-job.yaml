@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dbos-migrate
+  namespace: dbos
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: <your-ecr-repo>/dbos-migrate:latest
+          args:
+            - "migrate"
+            - "--app-role"
+            - "dbos_app_role"
+          env:
+            - name: DBOS_SYSTEM_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-admin
+                  key: database-url
