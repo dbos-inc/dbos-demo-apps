@@ -8,6 +8,7 @@ import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.example.widgetstore.constants.Constants.PRODUCT_ID;
 import com.example.widgetstore.dto.OrderDto;
@@ -19,12 +20,12 @@ import com.example.widgetstore.generated.tables.pojos.Products;
 import com.example.widgetstore.model.OrderStatus;
 
 /**
- * Repository layer that handles all database operations.
- * Uses JOOQ's native transaction management where needed.
+ * Repository layer that handles all database operations. Uses JOOQ's native
+ * transaction management where needed.
  */
 @Service
 public class WidgetStoreRepository {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(WidgetStoreRepository.class);
 
     private final DSLContext dsl;
@@ -37,11 +38,11 @@ public class WidgetStoreRepository {
         Products product = dsl.selectFrom(PRODUCTS)
                 .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
                 .fetchOneInto(Products.class);
-        
+
         if (product == null) {
             return null;
         }
-        
+
         return new ProductDto(
                 product.getProductId(),
                 product.getProduct(),
@@ -64,7 +65,7 @@ public class WidgetStoreRepository {
                 .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
                 .and(PRODUCTS.INVENTORY.ge(1))
                 .execute();
-        
+
         if (updated == 0) {
             throw new RuntimeException("Insufficient Inventory");
         }
@@ -92,11 +93,11 @@ public class WidgetStoreRepository {
         Orders order = dsl.selectFrom(ORDERS)
                 .where(ORDERS.ORDER_ID.eq(orderId))
                 .fetchOneInto(Orders.class);
-        
+
         if (order == null) {
             return null;
         }
-        
+
         return new OrderDto(
                 order.getOrderId(),
                 order.getOrderStatus(),
@@ -110,15 +111,15 @@ public class WidgetStoreRepository {
         List<Orders> orders = dsl.selectFrom(ORDERS)
                 .orderBy(ORDERS.ORDER_ID.desc())
                 .fetchInto(Orders.class);
-        
+
         return orders.stream()
                 .map(order -> new OrderDto(
-                        order.getOrderId(),
-                        order.getOrderStatus(),
-                        order.getLastUpdateTime(),
-                        order.getProductId(),
-                        order.getProgressRemaining()
-                ))
+                order.getOrderId(),
+                order.getOrderStatus(),
+                order.getLastUpdateTime(),
+                order.getProductId(),
+                order.getProgressRemaining()
+        ))
                 .collect(Collectors.toList());
     }
 
@@ -138,28 +139,24 @@ public class WidgetStoreRepository {
                 .execute();
     }
 
+    @Transactional
     public void updateOrderProgress(Integer orderId) {
-        logger.info("updateOrderProgress() - Using JOOQ transaction management");
-        
-        // Use JOOQ's native transaction for multi-operation atomicity
-        dsl.transaction(configuration -> {
-            DSLContext txDsl = configuration.dsl();
-            
-            Integer progressRemaining = txDsl.update(ORDERS)
-                    .set(ORDERS.PROGRESS_REMAINING, ORDERS.PROGRESS_REMAINING.minus(1))
+        logger.info("updateOrderProgress() - Using JOOQ transaction management {}");
+
+        var progressRemaining = dsl.update(ORDERS)
+                .set(ORDERS.PROGRESS_REMAINING, ORDERS.PROGRESS_REMAINING.minus(1))
+                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
+                .where(ORDERS.ORDER_ID.eq(orderId))
+                .returningResult(ORDERS.PROGRESS_REMAINING)
+                .fetchOne()
+                .get(ORDERS.PROGRESS_REMAINING);
+
+        if (progressRemaining == 0) {
+            dsl.update(ORDERS)
+                    .set(ORDERS.ORDER_STATUS, OrderStatus.DISPATCHED.getValue())
                     .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
                     .where(ORDERS.ORDER_ID.eq(orderId))
-                    .returningResult(ORDERS.PROGRESS_REMAINING)
-                    .fetchOne()
-                    .get(ORDERS.PROGRESS_REMAINING);
-
-            if (progressRemaining == 0) {
-                txDsl.update(ORDERS)
-                        .set(ORDERS.ORDER_STATUS, OrderStatus.DISPATCHED.getValue())
-                        .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                        .where(ORDERS.ORDER_ID.eq(orderId))
-                        .execute();
-            }
-        });
+                    .execute();
+        }
     }
 }
