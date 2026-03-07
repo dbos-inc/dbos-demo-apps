@@ -1,13 +1,11 @@
 package com.example.widgetstore.service;
 
+import java.util.List;
+
 import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
 
-import java.util.List;
-
 public interface WidgetStoreService {
-
-    void setProxy(WidgetStoreService service);
     
     // Product methods
     ProductDto retrieveProduct();
