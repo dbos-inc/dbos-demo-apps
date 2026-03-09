@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.example.widgetstore.constants.Constants.ORDER_ID;
 import static com.example.widgetstore.constants.Constants.PAYMENT_ID;
 import static com.example.widgetstore.constants.Constants.PAYMENT_STATUS;
-
 import com.example.widgetstore.dto.OrderDto;
 import com.example.widgetstore.dto.ProductDto;
 import com.example.widgetstore.service.WidgetStoreService;
@@ -30,8 +28,14 @@ public class WidgetStoreController {
 
     private static final Logger logger = LoggerFactory.getLogger(WidgetStoreController.class);
 
-    @Autowired
-    private WidgetStoreService widgetStoreService;
+    private final DBOS.Instance dbos;
+    private final WidgetStoreService widgetStoreService;
+
+    public WidgetStoreController(DBOS.Instance dbos, WidgetStoreService widgetStoreService) {
+        this.dbos = dbos;
+        this.widgetStoreService = widgetStoreService;
+    }
+
 
     @GetMapping("/product")
     public ResponseEntity<ProductDto> getProduct() {
@@ -92,9 +96,9 @@ public class WidgetStoreController {
             // Execute the checkout workflow using DBOS
             logger.info("Calling checkoutWorkflow on service: {}", widgetStoreService.getClass().getName());
             var options = new StartWorkflowOptions(key);
-            DBOS.startWorkflow(() -> widgetStoreService.checkoutWorkflow(key), options);
+            dbos.startWorkflow(() -> widgetStoreService.checkoutWorkflow(key), options);
 
-            String paymentID = (String) DBOS.getEvent(key, PAYMENT_ID, Duration.ofSeconds(60));
+            String paymentID = (String) dbos.getEvent(key, PAYMENT_ID, Duration.ofSeconds(60));
             if (paymentID == null) {
                 return ResponseEntity.internalServerError().body("Item not available");
             }
@@ -111,8 +115,8 @@ public class WidgetStoreController {
         logger.info("Payment webhook called with key: " + key + ", status: " + status);
         
         try {
-            DBOS.send(key, status, PAYMENT_STATUS);
-            String orderId = (String) DBOS.getEvent(key, ORDER_ID, Duration.ofSeconds(60));
+            dbos.send(key, status, PAYMENT_STATUS);
+            String orderId = (String) dbos.getEvent(key, ORDER_ID, Duration.ofSeconds(60));
             return ResponseEntity.ok(orderId);
         } catch (Exception e) {
             logger.error("Payment webhook processing failed", e);

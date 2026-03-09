@@ -17,8 +17,13 @@ public class WidgetStoreConfig {
 
     @Bean
     @Primary
-    public WidgetStoreService widgetStoreService(DBOSConfig config, WidgetStoreServiceImpl impl) {
-        return DBOS.registerWorkflows(WidgetStoreService.class, impl);
+    public WidgetStoreService widgetStoreService(DBOS.Instance dbos, WidgetStoreServiceImpl impl) {
+        return dbos.registerWorkflows(WidgetStoreService.class, impl);
+    }
+
+    @Bean
+    public DBOS.Instance dbos(DBOSConfig config) {
+        return new DBOS.Instance(config);
     }
 
     @Bean
@@ -27,15 +32,12 @@ public class WidgetStoreConfig {
         if (databaseUrl == null || databaseUrl.isEmpty()) {
             databaseUrl = "jdbc:postgresql://localhost:5432/widget_store_java";
         }
-        var config = DBOSConfig.defaults("widget-store")
+        return DBOSConfig.defaults("widget-store")
                 .withDatabaseUrl(databaseUrl)
                 .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
                 .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
                 .withAdminServer(true)
                 .withAppVersion("0.1.0");
-        DBOS.configure(config);
-
-        return config;
     }
 
 }

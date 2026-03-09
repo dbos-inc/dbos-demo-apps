@@ -12,21 +12,29 @@ import dev.dbos.transact.DBOS;
 @Lazy(false)
 public class DBOSLifecycle implements SmartLifecycle {
 
+    private final DBOS.Instance dbos;
+
+    public DBOSLifecycle(DBOS.Instance dbos) {
+        this.dbos = dbos;
+    }
+
     private static final Logger log = LoggerFactory.getLogger(DBOSLifecycle.class);
     private volatile boolean running = false;
+
 
     @Override
     public void start() {
         log.info("Launch DBOS");
-        DBOS.launch();
+        dbos.launch();
         running = true;
     }
+
 
     @Override
     public void stop() {
         log.info("Shut Down DBOS");
         try {
-            DBOS.shutdown();
+            dbos.shutdown();
         } finally {
             running = false;
         }

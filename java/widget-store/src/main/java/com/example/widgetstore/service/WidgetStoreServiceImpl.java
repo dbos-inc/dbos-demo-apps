@@ -34,8 +34,10 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
     private static final Logger logger = LoggerFactory.getLogger(WidgetStoreServiceImpl.class);
 
     private final DSLContext dsl;
+    private final DBOS.Instance dbos;
 
-    public WidgetStoreServiceImpl(DSLContext dsl) {
+    public WidgetStoreServiceImpl(DBOS.Instance dbos, DSLContext dsl) {
+        this.dbos = dbos;
         this.dsl = dsl;
     }
 
@@ -49,30 +51,30 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
     @Workflow
     @Override
     public String checkoutWorkflow(String key) {
-        Integer orderId = DBOS.runStep(() -> createOrder(), "createOrder");
+        Integer orderId = dbos.runStep(() -> createOrder(), "createOrder");
         try {
-            DBOS.runStep(() -> subtractInventory(), "subtractInventory");
+            dbos.runStep(() -> subtractInventory(), "subtractInventory");
         } catch (RuntimeException e) {
             logger.error("Failed to reserve inventory for order {}", orderId);
-            DBOS.runStep(() -> errorOrder(orderId), "errorOrder");
-            DBOS.setEvent(PAYMENT_ID, null);
+            dbos.runStep(() -> errorOrder(orderId), "errorOrder");
+            dbos.setEvent(PAYMENT_ID, null);
         }
 
-        DBOS.setEvent(PAYMENT_ID, key);
+        dbos.setEvent(PAYMENT_ID, key);
 
-        String payment_status = (String) DBOS.recv(PAYMENT_STATUS, Duration.ofSeconds(60));
+        String payment_status = (String) dbos.recv(PAYMENT_STATUS, Duration.ofSeconds(60));
 
         if (payment_status != null && payment_status.equals("paid")) {
             logger.info("Payment successful for order {}", orderId);
-            DBOS.runStep(() -> markOrderPaid(orderId), "markOrderPaid");
-            DBOS.startWorkflow(() -> proxy.dispatchOrderWorkflow(orderId));
+            dbos.runStep(() -> markOrderPaid(orderId), "markOrderPaid");
+            dbos.startWorkflow(() -> proxy.dispatchOrderWorkflow(orderId));
         } else {
             logger.info("Payment failed for order {}", orderId);
-            DBOS.runStep(() -> errorOrder(orderId), "errorOrder");
-            DBOS.runStep(() -> undoSubtractInventory(), "undoSubtractInventory");
+            dbos.runStep(() -> errorOrder(orderId), "errorOrder");
+            dbos.runStep(() -> undoSubtractInventory(), "undoSubtractInventory");
         }
 
-        DBOS.setEvent(ORDER_ID, String.valueOf(orderId));
+        dbos.setEvent(ORDER_ID, String.valueOf(orderId));
         return key;
     }
 
@@ -80,8 +82,8 @@ public class WidgetStoreServiceImpl implements WidgetStoreService {
     @Override
     public void dispatchOrderWorkflow(Integer orderId) {
         for (int i = 0; i < 10; i++) {
-            DBOS.sleep(Duration.ofSeconds(1));
-            DBOS.runStep(() -> updateOrderProgress(orderId), "updateOrderProgress");
+            dbos.sleep(Duration.ofSeconds(1));
+            dbos.runStep(() -> updateOrderProgress(orderId), "updateOrderProgress");
         }
     }
 

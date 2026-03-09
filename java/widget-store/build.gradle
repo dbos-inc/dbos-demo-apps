@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.diffplug.spotless' version "8.1.0"
     id 'org.springframework.boot' version '4.0.1'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'nu.studer.jooq' version '10.2'
@@ -28,10 +29,12 @@ sourceSets {
 
 dependencies {
     // DBOS
-    implementation 'dev.dbos:transact:0.7.+'
-    
+    implementation "dev.dbos:transact:0.8.0-m17"
+    // implementation 'dev.dbos:transact:0.7.+'
+
     // Spring Boot starters
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation "org.springframework.boot:spring-boot-starter-aop:3.5.11"
     implementation 'org.springframework.boot:spring-boot-starter-jooq'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     
