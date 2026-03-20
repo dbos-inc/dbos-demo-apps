@@ -75,6 +75,20 @@ def tool_get_purchase_by_id(order_id: int) -> str:
     """Look up a purchase by its order id."""
     return asdict(get_purchase_by_id(order_id))
 
+# look up all orders: without this the agent may try to run two tools and that didn't work
+@ds.transaction()
+def get_all_purchases() -> list[dict]:
+    DBOS.logger.info("Looking up all purchases")
+    query = purchases.select().order_by(purchases.c.order_id)
+    result = ds.sql_session().execute(query)
+    rows = result.fetchall()
+    return [asdict(Purchase.from_row(row)) for row in rows]
+
+# Define a wrapper function to make the output JSON serializable.
+@tool
+def tool_get_all_purchases() -> list[dict]:
+    """List all purchases in the database."""
+    return get_all_purchases()
 
 # This tool processes a refund for an order. If the order exceeds a cost threshold,
 # it escalates to manual review.
@@ -157,14 +171,16 @@ class State(TypedDict):
 # We'll configure LangChain to store checkpoints in Postgres so it persists across app restarts.
 def create_agent():
     llm = ChatOpenAI(model="gpt-5.4-mini")
-    tools = [tool_get_purchase_by_id, process_refund]
+    tools = [tool_get_purchase_by_id, process_refund, tool_get_all_purchases]
     llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
     prompt = ChatPromptTemplate.from_messages(
         [
             (
                 "system",
-                "You are a helpful refund agent. You always speak in fluent, natural, conversational language. You can look up order status and process refunds.",
+                ("You are a helpful refund agent. You always speak in fluent, "
+                 "natural, conversational language. You can look up purchases, "
+                 "list purchases, check order status, and process refunds."),
             ),
             MessagesPlaceholder(variable_name="messages"),
         ]
