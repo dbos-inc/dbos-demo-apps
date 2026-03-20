@@ -3,12 +3,12 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 from string import Template
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Any
 
 from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-from langchain_core.messages import AIMessage, HumanMessage
+from fastapi.responses import HTMLResponse, Response
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
@@ -16,6 +16,7 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
+import orjson
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 from sendgrid import SendGridAPIClient
@@ -223,31 +224,62 @@ def chat_workflow(chat: ChatSchema):
     return response_messages
 
 
-@app.get("/history")
-def history_endpoint():
-    # Retrieve the messages from the chat history and parse them for the frontend
-    chats = compiled_agent.checkpointer.list(config=chat_config, limit=1000)
-    message_list = []
-    for chat in chats:
-        writes = chat.metadata.get("writes")
-        if writes is not None:
-            record = writes.get("chatbot") or writes.get(START)
-            if record is not None:
-                messages = record.get("messages")
-                if messages is not None:
-                    for message in messages:
-                        if isinstance(message, HumanMessage) and message.content:
-                            message_list.append(
-                                {"isUser": True, "content": message.content}
-                            )
-                        elif isinstance(message, AIMessage) and message.content:
-                            message_list.append(
-                                {"isUser": False, "content": message.content}
-                            )
-    # The list is reversed so the most recent messages appear at the bottom
-    message_list.reverse()
-    return message_list
+class PrettyJSONResponse(Response):
+    """ this is to enable pretty printing in the history endpoint """
+    media_type = "application/json"
 
+    def render(self, content: Any) -> bytes:
+        return orjson.dumps(content, option=orjson.OPT_INDENT_2)
+
+
+@app.get("/history", response_class=PrettyJSONResponse)
+def history_endpoint():
+    snapshot = compiled_agent.get_state(chat_config)
+    messages = snapshot.values.get("messages", [])
+
+    history = []
+
+    for msg in messages:
+        if isinstance(msg, HumanMessage):
+            history.append({
+                "type": "human",
+                "content": msg.content,
+                "id": getattr(msg, "id", None),
+            })
+
+        elif isinstance(msg, AIMessage):
+            # Show tool calls if present
+            if getattr(msg, "tool_calls", None):
+                history.append({
+                    "type": "assistant_tool_calls",
+                    "content": msg.content,  # often empty
+                    "tool_calls": msg.tool_calls,
+                    "id": getattr(msg, "id", None),
+                })
+            # Show ordinary assistant text if present
+            elif msg.content:
+                history.append({
+                    "type": "assistant",
+                    "content": msg.content,
+                    "id": getattr(msg, "id", None),
+                })
+
+        elif isinstance(msg, ToolMessage):
+            history.append({
+                "type": "tool_result",
+                "tool_name": getattr(msg, "name", None),
+                "tool_call_id": getattr(msg, "tool_call_id", None),
+                "content": msg.content,
+                "id": getattr(msg, "id", None),
+            })
+
+    return {
+        "thread_id": chat_config["configurable"]["thread_id"],
+        "checkpoint_id": snapshot.config["configurable"].get("checkpoint_id"),
+        "next": list(snapshot.next),
+        "message_count": len(messages),
+        "history": history,
+    }
 
 @app.get("/approval/{workflow_id}/{status}")
 def approval_endpoint(workflow_id: str, status: str):
