@@ -1,0 +1,6 @@
+#Helidon Project Configuration
+#Tue Mar 24 08:55:37 PDT 2026
+schema.version=1.1.0
+helidon.version=4.4.0
+project.flavor=se
+project.archetype=custom
