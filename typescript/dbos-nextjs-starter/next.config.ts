@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: ["@dbos-inc/dbos-sdk"],
 };
 
 export default nextConfig;
