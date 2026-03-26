@@ -3,7 +3,7 @@ module protobuf-serializer
 go 1.25.0
 
 require (
-	github.com/dbos-inc/dbos-transact-golang v0.5.6-beta
+	github.com/dbos-inc/dbos-transact-golang v0.11.1-0.20260326003300-fa9dc28346b3
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.8
