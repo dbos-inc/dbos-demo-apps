@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	"context"
 	"time"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
@@ -95,6 +96,63 @@ func (_c *MockDBOSContext_CancelWorkflow_Call) RunAndReturn(run func(dBOSContext
 	return _c
 }
 
+// CloseStream provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) CloseStream(dBOSContext dbos.DBOSContext, key string) error {
+	ret := _mock.Called(dBOSContext, key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CloseStream")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string) error); ok {
+		r0 = returnFunc(dBOSContext, key)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockDBOSContext_CloseStream_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CloseStream'
+type MockDBOSContext_CloseStream_Call struct {
+	*mock.Call
+}
+
+// CloseStream is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - key string
+func (_e *MockDBOSContext_Expecter) CloseStream(dBOSContext interface{}, key interface{}) *MockDBOSContext_CloseStream_Call {
+	return &MockDBOSContext_CloseStream_Call{Call: _e.mock.On("CloseStream", dBOSContext, key)}
+}
+
+func (_c *MockDBOSContext_CloseStream_Call) Run(run func(dBOSContext dbos.DBOSContext, key string)) *MockDBOSContext_CloseStream_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_CloseStream_Call) Return(err error) *MockDBOSContext_CloseStream_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockDBOSContext_CloseStream_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, key string) error) *MockDBOSContext_CloseStream_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Deadline provides a mock function for the type MockDBOSContext
 func (_mock *MockDBOSContext) Deadline() (time.Time, bool) {
 	ret := _mock.Called()
@@ -148,6 +206,63 @@ func (_c *MockDBOSContext_Deadline_Call) RunAndReturn(run func() (time.Time, boo
 	return _c
 }
 
+// DeprecatePatch provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) DeprecatePatch(dBOSContext dbos.DBOSContext, patchName string) error {
+	ret := _mock.Called(dBOSContext, patchName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeprecatePatch")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string) error); ok {
+		r0 = returnFunc(dBOSContext, patchName)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockDBOSContext_DeprecatePatch_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeprecatePatch'
+type MockDBOSContext_DeprecatePatch_Call struct {
+	*mock.Call
+}
+
+// DeprecatePatch is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - patchName string
+func (_e *MockDBOSContext_Expecter) DeprecatePatch(dBOSContext interface{}, patchName interface{}) *MockDBOSContext_DeprecatePatch_Call {
+	return &MockDBOSContext_DeprecatePatch_Call{Call: _e.mock.On("DeprecatePatch", dBOSContext, patchName)}
+}
+
+func (_c *MockDBOSContext_DeprecatePatch_Call) Run(run func(dBOSContext dbos.DBOSContext, patchName string)) *MockDBOSContext_DeprecatePatch_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_DeprecatePatch_Call) Return(err error) *MockDBOSContext_DeprecatePatch_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockDBOSContext_DeprecatePatch_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, patchName string) error) *MockDBOSContext_DeprecatePatch_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Done provides a mock function for the type MockDBOSContext
 func (_mock *MockDBOSContext) Done() <-chan struct{} {
 	ret := _mock.Called()
@@ -190,101 +305,6 @@ func (_c *MockDBOSContext_Done_Call) Return(valCh <-chan struct{}) *MockDBOSCont
 }
 
 func (_c *MockDBOSContext_Done_Call) RunAndReturn(run func() <-chan struct{}) *MockDBOSContext_Done_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Enqueue provides a mock function for the type MockDBOSContext
-func (_mock *MockDBOSContext) Enqueue(dBOSContext dbos.DBOSContext, queueName string, workflowName string, input any, opts ...dbos.EnqueueOption) (dbos.WorkflowHandle[any], error) {
-	var tmpRet mock.Arguments
-	if len(opts) > 0 {
-		tmpRet = _mock.Called(dBOSContext, queueName, workflowName, input, opts)
-	} else {
-		tmpRet = _mock.Called(dBOSContext, queueName, workflowName, input)
-	}
-	ret := tmpRet
-
-	if len(ret) == 0 {
-		panic("no return value specified for Enqueue")
-	}
-
-	var r0 dbos.WorkflowHandle[any]
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, string, any, ...dbos.EnqueueOption) (dbos.WorkflowHandle[any], error)); ok {
-		return returnFunc(dBOSContext, queueName, workflowName, input, opts...)
-	}
-	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, string, any, ...dbos.EnqueueOption) dbos.WorkflowHandle[any]); ok {
-		r0 = returnFunc(dBOSContext, queueName, workflowName, input, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(dbos.WorkflowHandle[any])
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, string, string, any, ...dbos.EnqueueOption) error); ok {
-		r1 = returnFunc(dBOSContext, queueName, workflowName, input, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockDBOSContext_Enqueue_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Enqueue'
-type MockDBOSContext_Enqueue_Call struct {
-	*mock.Call
-}
-
-// Enqueue is a helper method to define mock.On call
-//   - dBOSContext dbos.DBOSContext
-//   - queueName string
-//   - workflowName string
-//   - input any
-//   - opts ...dbos.EnqueueOption
-func (_e *MockDBOSContext_Expecter) Enqueue(dBOSContext interface{}, queueName interface{}, workflowName interface{}, input interface{}, opts ...interface{}) *MockDBOSContext_Enqueue_Call {
-	return &MockDBOSContext_Enqueue_Call{Call: _e.mock.On("Enqueue",
-		append([]interface{}{dBOSContext, queueName, workflowName, input}, opts...)...)}
-}
-
-func (_c *MockDBOSContext_Enqueue_Call) Run(run func(dBOSContext dbos.DBOSContext, queueName string, workflowName string, input any, opts ...dbos.EnqueueOption)) *MockDBOSContext_Enqueue_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 dbos.DBOSContext
-		if args[0] != nil {
-			arg0 = args[0].(dbos.DBOSContext)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
-		var arg3 any
-		if args[3] != nil {
-			arg3 = args[3].(any)
-		}
-		var arg4 []dbos.EnqueueOption
-		var variadicArgs []dbos.EnqueueOption
-		if len(args) > 4 {
-			variadicArgs = args[4].([]dbos.EnqueueOption)
-		}
-		arg4 = variadicArgs
-		run(
-			arg0,
-			arg1,
-			arg2,
-			arg3,
-			arg4...,
-		)
-	})
-	return _c
-}
-
-func (_c *MockDBOSContext_Enqueue_Call) Return(workflowHandle dbos.WorkflowHandle[any], err error) *MockDBOSContext_Enqueue_Call {
-	_c.Call.Return(workflowHandle, err)
-	return _c
-}
-
-func (_c *MockDBOSContext_Enqueue_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, queueName string, workflowName string, input any, opts ...dbos.EnqueueOption) (dbos.WorkflowHandle[any], error)) *MockDBOSContext_Enqueue_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -397,6 +417,59 @@ func (_c *MockDBOSContext_ForkWorkflow_Call) Return(workflowHandle dbos.Workflow
 }
 
 func (_c *MockDBOSContext_ForkWorkflow_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, input dbos.ForkWorkflowInput) (dbos.WorkflowHandle[any], error)) *MockDBOSContext_ForkWorkflow_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// From provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) From(ctx context.Context) dbos.DBOSContext {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for From")
+	}
+
+	var r0 dbos.DBOSContext
+	if returnFunc, ok := ret.Get(0).(func(context.Context) dbos.DBOSContext); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(dbos.DBOSContext)
+		}
+	}
+	return r0
+}
+
+// MockDBOSContext_From_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'From'
+type MockDBOSContext_From_Call struct {
+	*mock.Call
+}
+
+// From is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockDBOSContext_Expecter) From(ctx interface{}) *MockDBOSContext_From_Call {
+	return &MockDBOSContext_From_Call{Call: _e.mock.On("From", ctx)}
+}
+
+func (_c *MockDBOSContext_From_Call) Run(run func(ctx context.Context)) *MockDBOSContext_From_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_From_Call) Return(dBOSContext dbos.DBOSContext) *MockDBOSContext_From_Call {
+	_c.Call.Return(dBOSContext)
+	return _c
+}
+
+func (_c *MockDBOSContext_From_Call) RunAndReturn(run func(ctx context.Context) dbos.DBOSContext) *MockDBOSContext_From_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -787,6 +860,89 @@ func (_c *MockDBOSContext_GetWorkflowSteps_Call) RunAndReturn(run func(dBOSConte
 	return _c
 }
 
+// Go provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) Go(dBOSContext dbos.DBOSContext, fn dbos.StepFunc, opts ...dbos.StepOption) (chan dbos.StepOutcome[any], error) {
+	var tmpRet mock.Arguments
+	if len(opts) > 0 {
+		tmpRet = _mock.Called(dBOSContext, fn, opts)
+	} else {
+		tmpRet = _mock.Called(dBOSContext, fn)
+	}
+	ret := tmpRet
+
+	if len(ret) == 0 {
+		panic("no return value specified for Go")
+	}
+
+	var r0 chan dbos.StepOutcome[any]
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.StepFunc, ...dbos.StepOption) (chan dbos.StepOutcome[any], error)); ok {
+		return returnFunc(dBOSContext, fn, opts...)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, dbos.StepFunc, ...dbos.StepOption) chan dbos.StepOutcome[any]); ok {
+		r0 = returnFunc(dBOSContext, fn, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(chan dbos.StepOutcome[any])
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, dbos.StepFunc, ...dbos.StepOption) error); ok {
+		r1 = returnFunc(dBOSContext, fn, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDBOSContext_Go_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Go'
+type MockDBOSContext_Go_Call struct {
+	*mock.Call
+}
+
+// Go is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - fn dbos.StepFunc
+//   - opts ...dbos.StepOption
+func (_e *MockDBOSContext_Expecter) Go(dBOSContext interface{}, fn interface{}, opts ...interface{}) *MockDBOSContext_Go_Call {
+	return &MockDBOSContext_Go_Call{Call: _e.mock.On("Go",
+		append([]interface{}{dBOSContext, fn}, opts...)...)}
+}
+
+func (_c *MockDBOSContext_Go_Call) Run(run func(dBOSContext dbos.DBOSContext, fn dbos.StepFunc, opts ...dbos.StepOption)) *MockDBOSContext_Go_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 dbos.StepFunc
+		if args[1] != nil {
+			arg1 = args[1].(dbos.StepFunc)
+		}
+		var arg2 []dbos.StepOption
+		var variadicArgs []dbos.StepOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]dbos.StepOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_Go_Call) Return(stepOutcomeCh chan dbos.StepOutcome[any], err error) *MockDBOSContext_Go_Call {
+	_c.Call.Return(stepOutcomeCh, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_Go_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, fn dbos.StepFunc, opts ...dbos.StepOption) (chan dbos.StepOutcome[any], error)) *MockDBOSContext_Go_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Launch provides a mock function for the type MockDBOSContext
 func (_mock *MockDBOSContext) Launch() error {
 	ret := _mock.Called()
@@ -827,6 +983,145 @@ func (_c *MockDBOSContext_Launch_Call) Return(err error) *MockDBOSContext_Launch
 }
 
 func (_c *MockDBOSContext_Launch_Call) RunAndReturn(run func() error) *MockDBOSContext_Launch_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListRegisteredQueues provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) ListRegisteredQueues(dBOSContext dbos.DBOSContext) ([]dbos.WorkflowQueue, error) {
+	ret := _mock.Called(dBOSContext)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListRegisteredQueues")
+	}
+
+	var r0 []dbos.WorkflowQueue
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext) ([]dbos.WorkflowQueue, error)); ok {
+		return returnFunc(dBOSContext)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext) []dbos.WorkflowQueue); ok {
+		r0 = returnFunc(dBOSContext)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dbos.WorkflowQueue)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext) error); ok {
+		r1 = returnFunc(dBOSContext)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDBOSContext_ListRegisteredQueues_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListRegisteredQueues'
+type MockDBOSContext_ListRegisteredQueues_Call struct {
+	*mock.Call
+}
+
+// ListRegisteredQueues is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+func (_e *MockDBOSContext_Expecter) ListRegisteredQueues(dBOSContext interface{}) *MockDBOSContext_ListRegisteredQueues_Call {
+	return &MockDBOSContext_ListRegisteredQueues_Call{Call: _e.mock.On("ListRegisteredQueues", dBOSContext)}
+}
+
+func (_c *MockDBOSContext_ListRegisteredQueues_Call) Run(run func(dBOSContext dbos.DBOSContext)) *MockDBOSContext_ListRegisteredQueues_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_ListRegisteredQueues_Call) Return(workflowQueues []dbos.WorkflowQueue, err error) *MockDBOSContext_ListRegisteredQueues_Call {
+	_c.Call.Return(workflowQueues, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_ListRegisteredQueues_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext) ([]dbos.WorkflowQueue, error)) *MockDBOSContext_ListRegisteredQueues_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListRegisteredWorkflows provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) ListRegisteredWorkflows(dBOSContext dbos.DBOSContext, opts ...dbos.ListRegisteredWorkflowsOption) ([]dbos.WorkflowRegistryEntry, error) {
+	var tmpRet mock.Arguments
+	if len(opts) > 0 {
+		tmpRet = _mock.Called(dBOSContext, opts)
+	} else {
+		tmpRet = _mock.Called(dBOSContext)
+	}
+	ret := tmpRet
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListRegisteredWorkflows")
+	}
+
+	var r0 []dbos.WorkflowRegistryEntry
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, ...dbos.ListRegisteredWorkflowsOption) ([]dbos.WorkflowRegistryEntry, error)); ok {
+		return returnFunc(dBOSContext, opts...)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, ...dbos.ListRegisteredWorkflowsOption) []dbos.WorkflowRegistryEntry); ok {
+		r0 = returnFunc(dBOSContext, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dbos.WorkflowRegistryEntry)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, ...dbos.ListRegisteredWorkflowsOption) error); ok {
+		r1 = returnFunc(dBOSContext, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDBOSContext_ListRegisteredWorkflows_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListRegisteredWorkflows'
+type MockDBOSContext_ListRegisteredWorkflows_Call struct {
+	*mock.Call
+}
+
+// ListRegisteredWorkflows is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - opts ...dbos.ListRegisteredWorkflowsOption
+func (_e *MockDBOSContext_Expecter) ListRegisteredWorkflows(dBOSContext interface{}, opts ...interface{}) *MockDBOSContext_ListRegisteredWorkflows_Call {
+	return &MockDBOSContext_ListRegisteredWorkflows_Call{Call: _e.mock.On("ListRegisteredWorkflows",
+		append([]interface{}{dBOSContext}, opts...)...)}
+}
+
+func (_c *MockDBOSContext_ListRegisteredWorkflows_Call) Run(run func(dBOSContext dbos.DBOSContext, opts ...dbos.ListRegisteredWorkflowsOption)) *MockDBOSContext_ListRegisteredWorkflows_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 []dbos.ListRegisteredWorkflowsOption
+		var variadicArgs []dbos.ListRegisteredWorkflowsOption
+		if len(args) > 1 {
+			variadicArgs = args[1].([]dbos.ListRegisteredWorkflowsOption)
+		}
+		arg1 = variadicArgs
+		run(
+			arg0,
+			arg1...,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_ListRegisteredWorkflows_Call) Return(workflowRegistryEntrys []dbos.WorkflowRegistryEntry, err error) *MockDBOSContext_ListRegisteredWorkflows_Call {
+	_c.Call.Return(workflowRegistryEntrys, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_ListRegisteredWorkflows_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, opts ...dbos.ListRegisteredWorkflowsOption) ([]dbos.WorkflowRegistryEntry, error)) *MockDBOSContext_ListRegisteredWorkflows_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -904,6 +1199,280 @@ func (_c *MockDBOSContext_ListWorkflows_Call) Return(workflowStatuss []dbos.Work
 }
 
 func (_c *MockDBOSContext_ListWorkflows_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, opts ...dbos.ListWorkflowsOption) ([]dbos.WorkflowStatus, error)) *MockDBOSContext_ListWorkflows_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListenQueues provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) ListenQueues(dBOSContext dbos.DBOSContext, queues ...dbos.WorkflowQueue) {
+	if len(queues) > 0 {
+		_mock.Called(dBOSContext, queues)
+	} else {
+		_mock.Called(dBOSContext)
+	}
+
+	return
+}
+
+// MockDBOSContext_ListenQueues_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListenQueues'
+type MockDBOSContext_ListenQueues_Call struct {
+	*mock.Call
+}
+
+// ListenQueues is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - queues ...dbos.WorkflowQueue
+func (_e *MockDBOSContext_Expecter) ListenQueues(dBOSContext interface{}, queues ...interface{}) *MockDBOSContext_ListenQueues_Call {
+	return &MockDBOSContext_ListenQueues_Call{Call: _e.mock.On("ListenQueues",
+		append([]interface{}{dBOSContext}, queues...)...)}
+}
+
+func (_c *MockDBOSContext_ListenQueues_Call) Run(run func(dBOSContext dbos.DBOSContext, queues ...dbos.WorkflowQueue)) *MockDBOSContext_ListenQueues_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 []dbos.WorkflowQueue
+		var variadicArgs []dbos.WorkflowQueue
+		if len(args) > 1 {
+			variadicArgs = args[1].([]dbos.WorkflowQueue)
+		}
+		arg1 = variadicArgs
+		run(
+			arg0,
+			arg1...,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_ListenQueues_Call) Return() *MockDBOSContext_ListenQueues_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *MockDBOSContext_ListenQueues_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, queues ...dbos.WorkflowQueue)) *MockDBOSContext_ListenQueues_Call {
+	_c.Run(run)
+	return _c
+}
+
+// Patch provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) Patch(dBOSContext dbos.DBOSContext, patchName string) (bool, error) {
+	ret := _mock.Called(dBOSContext, patchName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Patch")
+	}
+
+	var r0 bool
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string) (bool, error)); ok {
+		return returnFunc(dBOSContext, patchName)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string) bool); ok {
+		r0 = returnFunc(dBOSContext, patchName)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, string) error); ok {
+		r1 = returnFunc(dBOSContext, patchName)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDBOSContext_Patch_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Patch'
+type MockDBOSContext_Patch_Call struct {
+	*mock.Call
+}
+
+// Patch is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - patchName string
+func (_e *MockDBOSContext_Expecter) Patch(dBOSContext interface{}, patchName interface{}) *MockDBOSContext_Patch_Call {
+	return &MockDBOSContext_Patch_Call{Call: _e.mock.On("Patch", dBOSContext, patchName)}
+}
+
+func (_c *MockDBOSContext_Patch_Call) Run(run func(dBOSContext dbos.DBOSContext, patchName string)) *MockDBOSContext_Patch_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_Patch_Call) Return(b bool, err error) *MockDBOSContext_Patch_Call {
+	_c.Call.Return(b, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_Patch_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, patchName string) (bool, error)) *MockDBOSContext_Patch_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ReadStream provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) ReadStream(dBOSContext dbos.DBOSContext, workflowID string, key string) ([]any, bool, error) {
+	ret := _mock.Called(dBOSContext, workflowID, key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ReadStream")
+	}
+
+	var r0 []any
+	var r1 bool
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, string) ([]any, bool, error)); ok {
+		return returnFunc(dBOSContext, workflowID, key)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, string) []any); ok {
+		r0 = returnFunc(dBOSContext, workflowID, key)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]any)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, string, string) bool); ok {
+		r1 = returnFunc(dBOSContext, workflowID, key)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+	if returnFunc, ok := ret.Get(2).(func(dbos.DBOSContext, string, string) error); ok {
+		r2 = returnFunc(dBOSContext, workflowID, key)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// MockDBOSContext_ReadStream_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReadStream'
+type MockDBOSContext_ReadStream_Call struct {
+	*mock.Call
+}
+
+// ReadStream is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - workflowID string
+//   - key string
+func (_e *MockDBOSContext_Expecter) ReadStream(dBOSContext interface{}, workflowID interface{}, key interface{}) *MockDBOSContext_ReadStream_Call {
+	return &MockDBOSContext_ReadStream_Call{Call: _e.mock.On("ReadStream", dBOSContext, workflowID, key)}
+}
+
+func (_c *MockDBOSContext_ReadStream_Call) Run(run func(dBOSContext dbos.DBOSContext, workflowID string, key string)) *MockDBOSContext_ReadStream_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_ReadStream_Call) Return(vs []any, b bool, err error) *MockDBOSContext_ReadStream_Call {
+	_c.Call.Return(vs, b, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_ReadStream_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, workflowID string, key string) ([]any, bool, error)) *MockDBOSContext_ReadStream_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ReadStreamAsync provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) ReadStreamAsync(dBOSContext dbos.DBOSContext, workflowID string, key string) (<-chan dbos.StreamValue[any], error) {
+	ret := _mock.Called(dBOSContext, workflowID, key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ReadStreamAsync")
+	}
+
+	var r0 <-chan dbos.StreamValue[any]
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, string) (<-chan dbos.StreamValue[any], error)); ok {
+		return returnFunc(dBOSContext, workflowID, key)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, string) <-chan dbos.StreamValue[any]); ok {
+		r0 = returnFunc(dBOSContext, workflowID, key)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(<-chan dbos.StreamValue[any])
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, string, string) error); ok {
+		r1 = returnFunc(dBOSContext, workflowID, key)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDBOSContext_ReadStreamAsync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReadStreamAsync'
+type MockDBOSContext_ReadStreamAsync_Call struct {
+	*mock.Call
+}
+
+// ReadStreamAsync is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - workflowID string
+//   - key string
+func (_e *MockDBOSContext_Expecter) ReadStreamAsync(dBOSContext interface{}, workflowID interface{}, key interface{}) *MockDBOSContext_ReadStreamAsync_Call {
+	return &MockDBOSContext_ReadStreamAsync_Call{Call: _e.mock.On("ReadStreamAsync", dBOSContext, workflowID, key)}
+}
+
+func (_c *MockDBOSContext_ReadStreamAsync_Call) Run(run func(dBOSContext dbos.DBOSContext, workflowID string, key string)) *MockDBOSContext_ReadStreamAsync_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_ReadStreamAsync_Call) Return(streamValueCh <-chan dbos.StreamValue[any], err error) *MockDBOSContext_ReadStreamAsync_Call {
+	_c.Call.Return(streamValueCh, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_ReadStreamAsync_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, workflowID string, key string) (<-chan dbos.StreamValue[any], error)) *MockDBOSContext_ReadStreamAsync_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1290,6 +1859,74 @@ func (_c *MockDBOSContext_RunWorkflow_Call) RunAndReturn(run func(dBOSContext db
 	return _c
 }
 
+// Select provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) Select(dBOSContext dbos.DBOSContext, channels []<-chan dbos.StepOutcome[any]) (any, error) {
+	ret := _mock.Called(dBOSContext, channels)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Select")
+	}
+
+	var r0 any
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, []<-chan dbos.StepOutcome[any]) (any, error)); ok {
+		return returnFunc(dBOSContext, channels)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, []<-chan dbos.StepOutcome[any]) any); ok {
+		r0 = returnFunc(dBOSContext, channels)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(any)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.DBOSContext, []<-chan dbos.StepOutcome[any]) error); ok {
+		r1 = returnFunc(dBOSContext, channels)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDBOSContext_Select_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Select'
+type MockDBOSContext_Select_Call struct {
+	*mock.Call
+}
+
+// Select is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - channels []<-chan dbos.StepOutcome[any]
+func (_e *MockDBOSContext_Expecter) Select(dBOSContext interface{}, channels interface{}) *MockDBOSContext_Select_Call {
+	return &MockDBOSContext_Select_Call{Call: _e.mock.On("Select", dBOSContext, channels)}
+}
+
+func (_c *MockDBOSContext_Select_Call) Run(run func(dBOSContext dbos.DBOSContext, channels []<-chan dbos.StepOutcome[any])) *MockDBOSContext_Select_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 []<-chan dbos.StepOutcome[any]
+		if args[1] != nil {
+			arg1 = args[1].([]<-chan dbos.StepOutcome[any])
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_Select_Call) Return(v any, err error) *MockDBOSContext_Select_Call {
+	_c.Call.Return(v, err)
+	return _c
+}
+
+func (_c *MockDBOSContext_Select_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, channels []<-chan dbos.StepOutcome[any]) (any, error)) *MockDBOSContext_Select_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Send provides a mock function for the type MockDBOSContext
 func (_mock *MockDBOSContext) Send(dBOSContext dbos.DBOSContext, destinationID string, message any, topic string) error {
 	ret := _mock.Called(dBOSContext, destinationID, message, topic)
@@ -1577,6 +2214,69 @@ func (_c *MockDBOSContext_Value_Call) Return(v any) *MockDBOSContext_Value_Call 
 }
 
 func (_c *MockDBOSContext_Value_Call) RunAndReturn(run func(key any) any) *MockDBOSContext_Value_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// WriteStream provides a mock function for the type MockDBOSContext
+func (_mock *MockDBOSContext) WriteStream(dBOSContext dbos.DBOSContext, key string, value any) error {
+	ret := _mock.Called(dBOSContext, key, value)
+
+	if len(ret) == 0 {
+		panic("no return value specified for WriteStream")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.DBOSContext, string, any) error); ok {
+		r0 = returnFunc(dBOSContext, key, value)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockDBOSContext_WriteStream_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WriteStream'
+type MockDBOSContext_WriteStream_Call struct {
+	*mock.Call
+}
+
+// WriteStream is a helper method to define mock.On call
+//   - dBOSContext dbos.DBOSContext
+//   - key string
+//   - value any
+func (_e *MockDBOSContext_Expecter) WriteStream(dBOSContext interface{}, key interface{}, value interface{}) *MockDBOSContext_WriteStream_Call {
+	return &MockDBOSContext_WriteStream_Call{Call: _e.mock.On("WriteStream", dBOSContext, key, value)}
+}
+
+func (_c *MockDBOSContext_WriteStream_Call) Run(run func(dBOSContext dbos.DBOSContext, key string, value any)) *MockDBOSContext_WriteStream_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.DBOSContext
+		if args[0] != nil {
+			arg0 = args[0].(dbos.DBOSContext)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 any
+		if args[2] != nil {
+			arg2 = args[2].(any)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDBOSContext_WriteStream_Call) Return(err error) *MockDBOSContext_WriteStream_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockDBOSContext_WriteStream_Call) RunAndReturn(run func(dBOSContext dbos.DBOSContext, key string, value any) error) *MockDBOSContext_WriteStream_Call {
 	_c.Call.Return(run)
 	return _c
 }
