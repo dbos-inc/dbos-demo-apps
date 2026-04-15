@@ -6,8 +6,6 @@ plugins {
 
 repositories { mavenCentral() }
 
-configurations { create("mockitoAgent") }
-
 dependencies {
   implementation("dev.dbos:transact:0.8.+") // TODO: update when released
 
@@ -18,16 +16,11 @@ dependencies {
   testImplementation(libs.junit.jupiter.engine)
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
   testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
-
-  // Add ByteBuddy agent (required by Mockito for inline mocking)
-  add("mockitoAgent", "net.bytebuddy:byte-buddy-agent:1.17.7")
 }
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 
 tasks.test {
-  // Configure Mockito agent to avoid self-attaching warnings
-  jvmArgs("-javaagent:${configurations["mockitoAgent"].asPath}")
 
   // Suppress JVM warning about class data sharing when agents are loaded
   jvmArgs("-Xshare:off")
