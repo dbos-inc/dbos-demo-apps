@@ -27,24 +27,38 @@ class DurableStarterServiceImpl implements DurableStarterService {
     this.dbos = dbos;
   }
 
-  private void sleepStep(String stepName) {
+  private void sleep(long duration) {
     try {
       Thread.sleep(5000);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.error("Step {} interrupted", stepName, e);
+      logger.error("Sleep interrupted", e);
     }
-    logger.info("Workflow {} step {} completed!", DBOS.workflowId(), stepName);
+  }
+
+  private void stepOne() {
+    sleep(5000);
+    logger.info("Workflow {} step 1 completed!", DBOS.workflowId());
+  }
+
+  private void stepTwo() {
+    sleep(5000);
+    logger.info("Workflow {} step 2 completed!", DBOS.workflowId());
+  }
+
+  private void stepThree() {
+    sleep(5000);
+    logger.info("Workflow {} step 3 completed!", DBOS.workflowId());
   }
 
   @Workflow
   @Override
   public void exampleWorkflow() {
-    dbos.runStep(() -> sleepStep("1"), "stepOne");
+    dbos.runStep(this::stepOne, "stepOne");
     dbos.setEvent(STEPS_EVENT, 1);
-    dbos.runStep(() -> sleepStep("2"), "stepTwo");
+    dbos.runStep(this::stepTwo, "stepTwo");
     dbos.setEvent(STEPS_EVENT, 2);
-    dbos.runStep(() -> sleepStep("3"), "stepThree");
+    dbos.runStep(this::stepThree, "stepThree");
     dbos.setEvent(STEPS_EVENT, 3);
   }
 }
