@@ -1,0 +1,31 @@
+syntax = "proto3";
+package task;
+option go_package = "protobuf-serializer/pb";
+
+message Task {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  Priority priority = 4;
+  repeated string tags = 5;
+  map<string, string> metadata = 6;
+}
+
+message TaskResult {
+  string task_id = 1;
+  bool success = 2;
+  string message = 3;
+  map<string, string> output_metadata = 4;
+}
+
+message WorkflowRef {
+  string workflow_id = 1;
+}
+
+enum Priority {
+  PRIORITY_UNSPECIFIED = 0;
+  LOW = 1;
+  MEDIUM = 2;
+  HIGH = 3;
+  CRITICAL = 4;
+}
