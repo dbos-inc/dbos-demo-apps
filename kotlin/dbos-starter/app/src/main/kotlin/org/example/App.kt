@@ -26,17 +26,17 @@ class DurableStarterServiceImpl(private val dbos: DBOS) : DurableStarterService 
 
   private fun stepOne() {
     Thread.sleep(5000)
-    logger.info("Completed Step 1!")
+    logger.info("Workflow {} step 1 completed!", DBOS.workflowId())
   }
 
   private fun stepTwo() {
     Thread.sleep(5000)
-    logger.info("Completed Step 2!")
+    logger.info("Workflow {} step 2 completed!", DBOS.workflowId())
   }
 
   private fun stepThree() {
     Thread.sleep(5000)
-    logger.info("Completed Step 3!")
+    logger.info("Workflow {} step 3 completed!", DBOS.workflowId())
   }
 
   @Workflow
@@ -66,8 +66,7 @@ fun main(args: Array<String>) {
 
   val dbos = DBOS(dbosConfig)
 
-  val proxy =
-    dbos.registerWorkflows(DurableStarterService::class.java, DurableStarterServiceImpl(dbos))
+  val proxy = dbos.registerProxy(DurableStarterService::class.java, DurableStarterServiceImpl(dbos))
 
   @Suppress("UNUSED_VARIABLE")
   val app =
@@ -86,8 +85,8 @@ fun main(args: Array<String>) {
         }
         config.routes.get("/last_step/{taskId}") { ctx ->
           val taskId = ctx.pathParam("taskId")
-          val step = dbos.getEvent(taskId, STEPS_EVENT, Duration.ofSeconds(0)) as Int?
-          ctx.result((step ?: 0).toString())
+          val step = dbos.getEvent<Int>(taskId, STEPS_EVENT, Duration.ofSeconds(0)).orElse(0)
+          ctx.result(step.toString())
         }
         config.routes.post("/crash") { ctx ->
           logger.warn("Crash endpoint called - terminating application")
