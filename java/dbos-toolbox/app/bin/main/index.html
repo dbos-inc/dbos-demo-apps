@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>DBOS Toolbox</title>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+    <div class="max-w-2xl mx-auto py-12 px-4">
+        <div class="bg-white rounded-lg shadow-lg p-8 space-y-8">
+            <h1 class="text-3xl font-bold text-gray-900">Welcome to the DBOS Toolbox!</h1>
+            
+            <p class="text-gray-600">
+                This app contains example code for many DBOS features. You can use it as a template when starting a new DBOS app—start by editing <code class="bg-gray-100 px-2 py-0.5 rounded font-mono text-sm">App.java</code>.
+            </p>
+
+            <p class="text-gray-600">
+                Each endpoint launches a new workflow—<strong>view the app logs to see them run.</strong>
+            </p>
+
+            <div class="space-y-4">
+                <div class="text-gray-600">
+                    Workflows: <button onclick="fetch('/workflow')" class="text-blue-600 hover:text-blue-800 font-medium">/workflow</button>
+                </div>
+                <div class="text-gray-600">
+                    Queues: <button onclick="fetch('/queue')" class="text-blue-600 hover:text-blue-800 font-medium">/queue</button>
+                </div>
+            </div>
+            
+            <p class="text-gray-600">
+                Check out the
+                <a href="https://docs.dbos.dev/java/programming-guide" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline">
+                    programming guide
+                </a>
+                to learn how to build with DBOS!
+            </p>
+        </div>
+    </div>
+</body>
+</html>
