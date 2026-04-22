@@ -17,6 +17,8 @@ import dev.dbos.transact.DBOS;
 import dev.dbos.transact.execution.ThrowingRunnable;
 import dev.dbos.transact.execution.ThrowingSupplier;
 
+import java.util.Optional;
+
 import com.example.demo.repository.WidgetStoreRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +27,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
-class WidgetStoreServiceImplTest {
+class WidgetStoreServiceTest {
 
   private static ThrowingRunnable<RuntimeException> anyRunnable() {
     return ArgumentMatchers.any();
@@ -38,14 +40,14 @@ class WidgetStoreServiceImplTest {
   private DBOS mockDBOS;
   private WidgetStoreRepository mockRepo;
   private WidgetStoreService mockSelf;
-  private WidgetStoreServiceImpl service;
+  private WidgetStoreService service;
 
   @BeforeEach
   void setUp() {
     mockDBOS = mock(DBOS.class);
     mockRepo = mock(WidgetStoreRepository.class);
     mockSelf = mock(WidgetStoreService.class);
-    service = new WidgetStoreServiceImpl(mockDBOS, mockRepo);
+    service = new WidgetStoreService(mockDBOS, mockRepo);
     service.setSelf(mockSelf);
   }
 
@@ -61,7 +63,7 @@ class WidgetStoreServiceImplTest {
     // Arrange
     int orderId = 42;
     when(mockDBOS.runStep(anySupplier(), eq("createOrder"))).thenReturn(orderId);
-    when(mockDBOS.recv(eq(PAYMENT_STATUS), any())).thenReturn("paid");
+    when(mockDBOS.recv(eq(PAYMENT_STATUS), any())).thenReturn(Optional.of("paid"));
 
     // Act
     service.checkoutWorkflow();
@@ -85,7 +87,7 @@ class WidgetStoreServiceImplTest {
     // Arrange
     int orderId = 42;
     when(mockDBOS.runStep(anySupplier(), eq("createOrder"))).thenReturn(orderId);
-    when(mockDBOS.recv(eq(PAYMENT_STATUS), any())).thenReturn(null);
+    when(mockDBOS.recv(eq(PAYMENT_STATUS), any())).thenReturn(Optional.empty());
 
     // Act
     service.checkoutWorkflow();

@@ -15,11 +15,8 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 
 repositories { mavenCentral() }
 
-configurations { create("mockitoAgent") }
-
 dependencies {
-  implementation("dev.dbos:transact:0.8.+") // TODO: update when released
-
+  implementation("dev.dbos:transact-spring-boot-starter:0.8.+") // TODO: finalize version number
   implementation("org.springframework.boot:spring-boot-starter-webmvc")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.flywaydb:flyway-core")
@@ -28,34 +25,6 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql")
   testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-  // Add ByteBuddy agent (required by Mockito for inline mocking)
-  add("mockitoAgent", "net.bytebuddy:byte-buddy-agent:1.17.7")
-}
-
-tasks.withType<Test> { useJUnitPlatform() }
-
-tasks.test {
-  // Configure Mockito agent to avoid self-attaching warnings
-  jvmArgs("-javaagent:${configurations["mockitoAgent"].asPath}")
-
-  // Suppress JVM warning about class data sharing when agents are loaded
-  jvmArgs("-Xshare:off")
-
-  testLogging {
-    // Show all test events
-    events("passed", "skipped", "failed", "standardOut", "standardError")
-
-    // Maximum detail for failures
-    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-    showExceptions = true
-    showCauses = true
-    showStackTraces = true
-    showStandardStreams = true
-
-    // Show detailed info
-    minGranularity = 0 // Show individual test methods
-  }
 }
 
 spotless {
@@ -78,5 +47,14 @@ spotless {
     ktfmt("0.61").googleStyle() // has its own section below
     trimTrailingWhitespace()
     endWithNewline()
+  }
+}
+
+tasks.test {
+  useJUnitPlatform()
+  testLogging {
+    events("passed", "skipped", "failed")
+    showStandardStreams = true
+    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
   }
 }

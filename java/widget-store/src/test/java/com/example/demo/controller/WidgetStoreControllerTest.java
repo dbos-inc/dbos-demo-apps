@@ -22,6 +22,7 @@ import dev.dbos.transact.execution.ThrowingRunnable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import com.example.demo.dto.OrderDto;
 import com.example.demo.dto.ProductDto;
@@ -109,7 +110,7 @@ class WidgetStoreControllerTest {
   void checkout_returnsPaymentId_whenItemAvailable() throws Exception {
     String key = "test-key";
     String paymentId = "workflow-123";
-    when(mockDBOS.getEvent(eq(key), eq(PAYMENT_ID), any())).thenReturn(paymentId);
+    when(mockDBOS.getEvent(eq(key), eq(PAYMENT_ID), any())).thenReturn(Optional.of(paymentId));
 
     mockMvc
         .perform(post("/checkout/{key}", key))
@@ -122,7 +123,7 @@ class WidgetStoreControllerTest {
   @Test
   void checkout_throwsRuntimeException_whenItemNotAvailable() {
     String key = "test-key";
-    when(mockDBOS.getEvent(eq(key), eq(PAYMENT_ID), any())).thenReturn(null);
+    when(mockDBOS.getEvent(eq(key), eq(PAYMENT_ID), any())).thenReturn(Optional.empty());
 
     var ex = assertThrows(Exception.class, () -> mockMvc.perform(post("/checkout/{key}", key)));
     assertInstanceOf(RuntimeException.class, ex.getCause());
@@ -133,7 +134,7 @@ class WidgetStoreControllerTest {
   void paymentWebhook_sendsStatusAndReturnsOrderId() throws Exception {
     String key = "test-key";
     String orderId = "42";
-    when(mockDBOS.getEvent(eq(key), eq(ORDER_ID), any())).thenReturn(orderId);
+    when(mockDBOS.getEvent(eq(key), eq(ORDER_ID), any())).thenReturn(Optional.of(orderId));
 
     mockMvc
         .perform(post("/payment_webhook/{key}/paid", key))

@@ -77,11 +77,11 @@ public class WidgetStoreController {
 
     var options = new StartWorkflowOptions(key);
     dbos.startWorkflow(() -> service.checkoutWorkflow(), options);
-    var paymentId = (String) dbos.getEvent(key, PAYMENT_ID, Duration.ofSeconds(60));
-    if (paymentId == null) {
+    var paymentId = dbos.<String>getEvent(key, PAYMENT_ID, Duration.ofSeconds(60));
+    if (paymentId.isEmpty()) {
       throw new RuntimeException("Item not available");
     } else {
-      return ResponseEntity.ok(paymentId);
+      return ResponseEntity.ok(paymentId.get());
     }
   }
 
@@ -91,8 +91,8 @@ public class WidgetStoreController {
     logger.info("Payment webhook called with key: " + key + ", status: " + status);
 
     dbos.send(key, status, PAYMENT_STATUS);
-    var orderId = (String) dbos.getEvent(key, ORDER_ID, Duration.ofSeconds(60));
-    return ResponseEntity.ok(orderId);
+    var orderId = dbos.<String>getEvent(key, ORDER_ID, Duration.ofSeconds(60));
+    return ResponseEntity.ok(orderId.orElse(null));
   }
 
   // Crash endpoint for testing
