@@ -18,26 +18,6 @@ dependencies {
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 
-tasks.test {
-  // Suppress JVM warning about class data sharing when agents are loaded
-  jvmArgs("-Xshare:off")
-
-  testLogging {
-    // Show all test events
-    events("passed", "skipped", "failed", "standardOut", "standardError")
-
-    // Maximum detail for failures
-    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-    showExceptions = true
-    showCauses = true
-    showStackTraces = true
-    showStandardStreams = true
-
-    // Show detailed info
-    minGranularity = 0 // Show individual test methods
-  }
-}
-
 spotless {
   java {
     googleJavaFormat()
@@ -63,4 +43,11 @@ spotless {
 
 application { mainClass = "org.example.App" }
 
-tasks.named<Test>("test") { useJUnitPlatform() }
+tasks.test {
+  useJUnitPlatform()
+  testLogging {
+    events("passed", "skipped", "failed")
+    showStandardStreams = true
+    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+  }
+}
