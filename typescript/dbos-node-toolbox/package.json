@@ -16,9 +16,9 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^4.14.5-preview",
-    "@dbos-inc/knex-datasource": "^4.14.6",
-    "@dbos-inc/otel": "^4.14.6",
+    "@dbos-inc/dbos-sdk": "^4.15.5",
+    "@dbos-inc/knex-datasource": "^4.15.5",
+    "@dbos-inc/otel": "^4.15.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0"
   }
