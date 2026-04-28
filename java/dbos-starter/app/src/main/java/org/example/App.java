@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 interface DurableStarterService {
-  void exampleWorkflow();
+  void exampleWorkflow() throws InterruptedException;
 }
 
 class DurableStarterServiceImpl implements DurableStarterService {
@@ -27,33 +27,24 @@ class DurableStarterServiceImpl implements DurableStarterService {
     this.dbos = dbos;
   }
 
-  private void sleep(long duration) {
-    try {
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      logger.error("Sleep interrupted", e);
-    }
-  }
-
-  private void stepOne() {
-    sleep(5000);
+  private void stepOne() throws InterruptedException {
+    Thread.sleep(5000);
     logger.info("Workflow {} step 1 completed!", DBOS.workflowId());
   }
 
-  private void stepTwo() {
-    sleep(5000);
+  private void stepTwo() throws InterruptedException {
+    Thread.sleep(5000);
     logger.info("Workflow {} step 2 completed!", DBOS.workflowId());
   }
 
-  private void stepThree() {
-    sleep(5000);
+  private void stepThree() throws InterruptedException {
+    Thread.sleep(5000);
     logger.info("Workflow {} step 3 completed!", DBOS.workflowId());
   }
 
   @Workflow
   @Override
-  public void exampleWorkflow() {
+  public void exampleWorkflow() throws InterruptedException {
     dbos.runStep(this::stepOne, "stepOne");
     dbos.setEvent(STEPS_EVENT, 1);
     dbos.runStep(this::stepTwo, "stepTwo");
@@ -92,9 +83,8 @@ public class App {
         Javalin.create(
                 config -> {
                   config.startup.showJavalinBanner = false;
-                  // config.staticFiles.add("/public");
-                  config.events.serverStarting(() -> dbos.launch());
-                  config.events.serverStopping(() -> dbos.shutdown());
+                  config.events.serverStarting(dbos::launch);
+                  config.events.serverStopping(dbos::shutdown);
                   config.routes.get(
                       "/",
                       ctx -> {
