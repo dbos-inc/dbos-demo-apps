@@ -17,7 +17,7 @@ import org.mockito.Mockito;
 class AppTest {
 
   @Test
-  void exampleWorkflowExecutesAllStepsInOrder() {
+  void exampleWorkflowExecutesAllStepsInOrder() throws Exception {
     // Arrange
     var mockDBOS = mock(DBOS.class);
     var service = new DurableStarterServiceImpl(mockDBOS);

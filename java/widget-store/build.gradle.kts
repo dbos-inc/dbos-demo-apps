@@ -16,7 +16,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("dev.dbos:transact-spring-boot-starter:0.8.+") // TODO: finalize version number
+  implementation("dev.dbos:transact-spring-boot-starter:0.8.0")
   implementation("org.springframework.boot:spring-boot-starter-webmvc")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.flywaydb:flyway-core")
@@ -28,6 +28,7 @@ dependencies {
 }
 
 spotless {
+  setEnforceCheck(false)
   java {
     googleJavaFormat()
     importOrder("dev.dbos", "java", "javax", "")

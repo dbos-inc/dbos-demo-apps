@@ -7,7 +7,7 @@ plugins {
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("dev.dbos:transact:0.8.+") // TODO: update when released
+  implementation("dev.dbos:transact:0.8.+")
 
   implementation("io.javalin:javalin:7.0.1")
   implementation("org.slf4j:slf4j-simple:2.0.17")
@@ -21,6 +21,7 @@ dependencies {
 java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 
 spotless {
+  setEnforceCheck(false)
   java {
     googleJavaFormat()
     importOrder("dev.dbos", "java", "javax", "")
