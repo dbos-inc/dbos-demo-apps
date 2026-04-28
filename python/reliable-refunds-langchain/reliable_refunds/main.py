@@ -150,7 +150,7 @@ class State(TypedDict):
 def create_agent():
     llm = ChatOpenAI(model="gpt-4.1-mini")
     tools = [tool_get_purchase_by_id, process_refund]
-    llm_with_tools = llm.bind_tools(tools)
+    llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
     prompt = ChatPromptTemplate.from_messages(
         [
