@@ -2,15 +2,10 @@ import os
 import threading
 import time
 
-from dbos import DBOS, DBOSConfig, Queue
+from dbos import DBOS, DBOSConfig
 
 # Define constants and models
 WF_PROGRESS_KEY = "workflow_progress"
-
-
-# Define a queue on which the web server
-# can submit workflows for execution.
-Queue("workflow-queue")
 
 
 # This background workflow is submitted by the
@@ -50,6 +45,9 @@ if __name__ == "__main__":
     }
     DBOS(config=config)
     DBOS.launch()
+    # Define a queue on which the web server
+    # can submit workflows for execution.
+    DBOS.register_queue("workflow-queue")
     # After launching DBOS, the worker waits indefinitely,
     # dequeuing and executing workflows.
     threading.Event().wait()
