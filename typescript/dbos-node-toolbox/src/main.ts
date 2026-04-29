@@ -1,4 +1,4 @@
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import { KnexDataSource } from "@dbos-inc/knex-datasource";
 import express from "express";
 import dotenv from "dotenv";
@@ -8,10 +8,7 @@ dotenv.config();
 export const app = express();
 app.use(express.json());
 
-const queue = new WorkflowQueue("example_queue");
-
-// Note, there is no requirement to use DBOS_DATABASE_URL with DBOS Data Sources if you're self hosting.
-// We are using DBOS_DATABASE_URL here so this demo application can run in DBOS Cloud.
+// Note, there is no requirement to use DBOS_DATABASE_URL with DBOS Data Sources.
 
 const config = {
   client: "pg",
@@ -58,7 +55,7 @@ async function queueFunction() {
   const handles = [];
   for (let i = 0; i < 10; i++) {
     handles.push(
-      await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(i),
+      await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue" })(i),
     );
   }
   const results = [];
@@ -213,6 +210,7 @@ async function main() {
     applicationVersion: "0.1.0",
   });
   await DBOS.launch();
+  await DBOS.registerQueue("example_queue");
   // Define a schedule for the scheduled workflow
   await DBOS.applySchedules([
     {
