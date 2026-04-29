@@ -3,19 +3,11 @@ import time
 
 import sqlalchemy as sa
 import uvicorn
-from dbos import DBOS, DBOSConfig, Queue
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
-config: DBOSConfig = {
-    "name": "dbos-toolbox",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-    # This is only needed if using "@DBOS.transaction"
-    "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
-    "application_version": "0.1.0",
-}
-DBOS(config=config)
 
 ##################################
 #### Workflows and Steps
@@ -43,9 +35,6 @@ def example_workflow():
 #### Queues
 ##################################
 
-queue = Queue("example-queue")
-
-
 @DBOS.step()
 def queued_step(n: int):
     time.sleep(5)
@@ -58,7 +47,7 @@ def queue_workflow():
     DBOS.logger.info("Enqueueing steps")
     handles = []
     for i in range(10):
-        handle = queue.enqueue(queued_step, i)
+        handle = DBOS.enqueue_workflow("example-queue", queued_step, i)
         handles.append(handle)
     results = [handle.get_result() for handle in handles]
     DBOS.logger.info(f"Successfully completed {len(results)} steps")
@@ -172,7 +161,18 @@ async def read_root():
 
 
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "dbos-toolbox",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+        # This is only needed if using "@DBOS.transaction"
+        "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
+        "application_version": "0.1.0",
+        "conductor_key": os.environ.get("CONDUCTOR_KEY"),
+    }
+    DBOS(config=config)
     DBOS.launch()
+    # Register a queue
+    DBOS.register_queue("example-queue")
     # Define a schedule for the scheduled workflow
     DBOS.apply_schedules(
         [
