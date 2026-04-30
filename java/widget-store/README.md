@@ -6,10 +6,10 @@
 - PostgreSQL running on localhost:5432
 - PostgreSQL user `postgres` with password in `PGPASSWORD` evn var
 
-> Note, the widget store demo app needs two PostgreSQL databases. 
-> One for the DBOS System Database and one used by the Widget Store app.
-> DBOS automatically creates the system database on startup (assuming credentials allow).
-> The app database is also created on startup (again, assuming credentials allow) 
+> Note, by default the widget store demo app places the application tables and the DBOS system tables in the same database.
+> This can be changed by specifying dbos.datasource properties that reference a different PostgreSQL database than spring.datasource properties references.
+> DBOS automatically creates the system database on startup (if needed, assuming credentials allow).
+> This demo app is configured to create the app database on startup (again, if needed and assuming credentials allow).
 
 ## Setup
 
