@@ -1,0 +1,19 @@
+# Note, by default DBOS will use the Spring application name and data source.
+# You can specify a different DBOS app name via dbos.application.name property
+# You can specify a separate DBOS system database via dbos.datasource properties
+
+spring:
+  application:
+    name: "widget-store"
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/widget_store_java"
+    username: "postgres"
+    password: "${PGPASSWORD}"
+    driver-class-name: "org.postgresql.Driver"
+
+logging:
+  level: 
+    root: INFO
+    com:
+      zaxxer:
+        hikari: WARN
