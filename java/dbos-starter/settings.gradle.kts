@@ -1,15 +1,7 @@
-rootProject.name = "dbos-starter"
-
 plugins {
-  id("org.gradle.toolchains.foojay-resolver") version "1.0.0"
+    // Apply the foojay-resolver plugin to allow automatic download of JDKs
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-toolchainManagement {
-  jvm {
-    javaRepositories {
-      repository("foojay") {
-        resolverClass.set(org.gradle.toolchains.foojay.FoojayToolchainResolver::class.java)
-      }
-    }
-  }
-}
+rootProject.name = "dbos-starter"
+include("app")

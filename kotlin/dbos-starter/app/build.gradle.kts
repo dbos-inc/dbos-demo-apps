@@ -1,0 +1,59 @@
+plugins {
+  alias(libs.plugins.kotlin.jvm)
+  application
+  id("com.diffplug.spotless") version "8.3.0"
+}
+
+repositories { mavenCentral() }
+
+dependencies {
+  implementation("dev.dbos:transact:0.8.+")
+
+  implementation("io.javalin:javalin:7.0.1")
+  implementation("org.slf4j:slf4j-simple:2.0.17")
+
+  testImplementation("org.jetbrains.kotlin:kotlin-test")
+  testImplementation(libs.junit.jupiter.engine)
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
+}
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
+
+spotless {
+  setEnforceCheck(false)
+  java {
+    googleJavaFormat()
+    importOrder("dev.dbos", "java", "javax", "")
+    removeUnusedImports()
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
+  kotlin {
+    target("src/**/*.kt")
+    targetExclude("build/**/*.kt")
+    ktfmt("0.61").googleStyle()
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
+  kotlinGradle {
+    target("*.gradle.kts")
+    ktfmt("0.61").googleStyle()
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
+}
+
+application {
+  // Define the main class for the application.
+  mainClass = "org.example.AppKt"
+}
+
+tasks.test {
+  useJUnitPlatform()
+  testLogging {
+    events("passed", "skipped", "failed")
+    showStandardStreams = true
+    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+  }
+}
