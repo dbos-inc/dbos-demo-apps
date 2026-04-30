@@ -136,7 +136,7 @@ public class App {
                                 "run_every_min",
                                 "scheduledWorkflow",
                                 DurableToolboxServiceImpl.class.getName(),
-                                "0 * * * * *"));
+                                "*/15 * * * * *"));
                       });
                   config.events.serverStopping(() -> dbos.shutdown());
                   config.routes.get(
