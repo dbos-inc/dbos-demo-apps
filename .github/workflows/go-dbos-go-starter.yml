@@ -1,0 +1,52 @@
+name: CI for Go DBOS Starter
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'golang/dbos-go-starter/**'
+      - '.github/workflows/go-dbos-go-starter.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'golang/dbos-go-starter/**'
+      - '.github/workflows/go-dbos-go-starter.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: dbos
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25.x'
+
+      - name: Run tests
+        working-directory: golang/dbos-go-starter/
+        run: |
+          go mod download
+          go test -v -timeout 5m ./...
+        env:
+          PGPASSWORD: dbos
+          DBOS_SYSTEM_DATABASE_URL: postgres://postgres:dbos@localhost:5432/dbos_go_starter_test?sslmode=disable

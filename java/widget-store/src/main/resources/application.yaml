@@ -1,0 +1,21 @@
+dbos:
+  application:
+    name: "widget-store"
+    version: "0.2.0"
+
+# Because this configuration does not specify dbos.datasource properties,
+# DBOS will fall back to using the spring.datasource for its system database.
+
+spring:
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/widget_store_java"
+    username: "postgres"
+    password: "${PGPASSWORD}"
+    driver-class-name: "org.postgresql.Driver"
+    
+logging:
+  level: 
+    root: INFO
+    com:
+      zaxxer:
+        hikari: WARN

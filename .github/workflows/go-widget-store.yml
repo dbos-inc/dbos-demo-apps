@@ -21,51 +21,37 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        go-version: ['1.22', '1.23.x']
-
     services:
-      # Postgres service container
       postgres:
         image: postgres:16
         env:
-          # Specify the password for Postgres superuser.
           POSTGRES_PASSWORD: dbos
-        # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
         ports:
-          # Maps tcp port 5432 on service container to the host
           - 5432:5432
 
     steps:
-      - name: 'Setup postgres config'
-        run: |
-          docker exec ${{ job.services.postgres.id }} sh -c 'echo "wal_level=logical" >> /var/lib/postgresql/data/postgresql.conf'
-          docker restart ${{ job.services.postgres.id }}
-      
-      - uses: actions/checkout@v4.1.1
-      
-      - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v4
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
         with:
-          go-version: ${{ matrix.go-version }}
-      
+          go-version: '1.25.x'
+
       - name: Create test database
         run: |
           PGPASSWORD=dbos psql -h localhost -U postgres -c "CREATE DATABASE widget_store_test;"
         env:
           PGPASSWORD: dbos
-      
+
       - name: Run tests
         working-directory: golang/widget-store/
         run: |
           go mod download
-          go test -v ./...
+          go test -v -timeout 5m ./...
         env:
           PGPASSWORD: dbos

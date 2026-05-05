@@ -3,10 +3,10 @@ module protobuf-serializer
 go 1.25.0
 
 require (
-	github.com/dbos-inc/dbos-transact-golang v0.11.1-0.20260326003300-fa9dc28346b3
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/dbos-inc/dbos-transact-golang v0.13.0
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/protobuf v1.36.8
+	google.golang.org/protobuf v1.36.11
 )
 
 require (
@@ -22,6 +22,6 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
