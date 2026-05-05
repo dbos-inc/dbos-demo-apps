@@ -1,6 +1,4 @@
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
-
-export const taskQueue = new WorkflowQueue("task_queue");
+import { DBOS } from "@dbos-inc/dbos-sdk";
 
 async function greetingWorkflowFn(name: string) {
   return await DBOS.runStep(
@@ -18,6 +16,7 @@ async function main() {
     runAdminServer: false,
   });
   await DBOS.launch();
+  await DBOS.registerQueue("task_queue");
   console.log("Worker listening for workflows on task_queue...");
 }
 

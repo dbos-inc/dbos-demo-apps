@@ -4,7 +4,7 @@ from typing import List
 
 import requests
 import uvicorn
-from dbos import DBOS, DBOSConfig, Queue, WorkflowHandle
+from dbos import DBOS, DBOSConfig, WorkflowHandle
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from llama_index.core import Document
@@ -45,15 +45,12 @@ index, chat_engine = configure_index(database_url)
 # it recovers the indexing of each document from the last completed step, guaranteeing
 # that every document gets indexed and none are lost.
 
-queue = Queue("indexing_queue")
-
-
 @DBOS.workflow()
 def index_documents(urls: List[HttpUrl]):
     handles: List[WorkflowHandle] = []
     # Enqueue each document for indexing
     for url in urls:
-        handle = queue.enqueue(index_document, url)
+        handle = DBOS.enqueue_workflow("indexing_queue", index_document, url)
         handles.append(handle)
     # Wait for all documents to finish indexing, count the total number of indexed pages
     indexed_pages = 0
@@ -177,4 +174,5 @@ def frontend():
 
 if __name__ == "__main__":
     DBOS.launch()
+    DBOS.register_queue("indexing_queue")
     uvicorn.run(app, host="0.0.0.0", port=8000)
