@@ -453,7 +453,7 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "2.20.0"
+version = "2.21.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "psycopg", extra = ["binary"] },
@@ -463,9 +463,9 @@ dependencies = [
     { name = "typer-slim" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/db/2e/59baf5f058c02313561a5316ce256dbb758810d2dcf21e90a5d6498477da/dbos-2.20.0.tar.gz", hash = "sha256:21eaac3b6c5d152e0971450b6a756ade7a7c54dee842dffbc4a5fc26a0c277c0", size = 458471, upload-time = "2026-05-05T15:47:51.479Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/48/a0c19e5a369ee5ddb88585dd6c4eba938789d50bbc2e144526b2c85f944c/dbos-2.21.0.tar.gz", hash = "sha256:89896b4f4ee31a7ae8463cdb512b4c2029a68f9667fdaa90ebe980d13d4dd915", size = 465138, upload-time = "2026-05-07T16:30:59.981Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/35/bc5072d62a1a0477835865c642546b5cbade08abc62f6fa223a6669645fd/dbos-2.20.0-py3-none-any.whl", hash = "sha256:45d4d86cc34d99691df72337c6cfcc9c08d854958f6923201793c7e651c82040", size = 188167, upload-time = "2026-05-05T15:47:49.913Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/58/072e39d245a37793649711839b1fc4b61827747c7b1c4ab8e02309475c17/dbos-2.21.0-py3-none-any.whl", hash = "sha256:9dd0a39172716972532cfa4b348fd6f8371c10b250b7030f05ca95d53f71f214", size = 189715, upload-time = "2026-05-07T16:30:58.254Z" },
 ]
 
 [[package]]
@@ -535,7 +535,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", specifier = "==2.20.0" },
+    { name = "dbos", specifier = "==2.21.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.120.0" },
     { name = "llama-index", specifier = "==0.14.5" },
     { name = "llama-index-vector-stores-postgres", specifier = "==0.7.1" },
