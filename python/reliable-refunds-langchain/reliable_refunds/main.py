@@ -233,26 +233,14 @@ def chat_workflow(chat: ChatSchema):
 @app.get("/history")
 def history_endpoint():
     # Retrieve the messages from the chat history and parse them for the frontend
-    chats = compiled_agent.checkpointer.list(config=chat_config, limit=1000)
+    state = compiled_agent.get_state(chat_config)
+    messages = state.values.get("messages", []) if state else []
     message_list = []
-    for chat in chats:
-        writes = chat.metadata.get("writes")
-        if writes is not None:
-            record = writes.get("chatbot") or writes.get(START)
-            if record is not None:
-                messages = record.get("messages")
-                if messages is not None:
-                    for message in messages:
-                        if isinstance(message, HumanMessage) and message.content:
-                            message_list.append(
-                                {"isUser": True, "content": message.content}
-                            )
-                        elif isinstance(message, AIMessage) and message.content:
-                            message_list.append(
-                                {"isUser": False, "content": message.content}
-                            )
-    # The list is reversed so the most recent messages appear at the bottom
-    message_list.reverse()
+    for message in messages:
+        if isinstance(message, HumanMessage) and message.content:
+            message_list.append({"isUser": True, "content": message.content})
+        elif isinstance(message, AIMessage) and message.content:
+            message_list.append({"isUser": False, "content": message.content})
     return message_list
 
 

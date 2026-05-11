@@ -1916,7 +1916,6 @@ dependencies = [
     { name = "langchain-openai" },
     { name = "langgraph" },
     { name = "langgraph-checkpoint-postgres" },
-    { name = "langsmith" },
     { name = "psycopg-pool" },
     { name = "sendgrid" },
 ]
@@ -1932,10 +1931,9 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.18.4" },
     { name = "dbos", specifier = "==2.21.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.136.1" },
-    { name = "langchain-openai", specifier = ">=0.3.2" },
-    { name = "langgraph", specifier = ">=0.2.68" },
-    { name = "langgraph-checkpoint-postgres", specifier = ">=2.0.13" },
-    { name = "langsmith", specifier = ">=0.3.2" },
+    { name = "langchain-openai", specifier = ">=1.2.1" },
+    { name = "langgraph", specifier = ">=1.1.10" },
+    { name = "langgraph-checkpoint-postgres", specifier = ">=3.0.5" },
     { name = "psycopg-pool", specifier = ">=3.2.4" },
     { name = "sendgrid", specifier = ">=6.11.0" },
 ]
