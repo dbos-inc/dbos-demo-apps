@@ -33,7 +33,9 @@ app = FastAPI()
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
     "database_url": os.environ.get('DBOS_DATABASE_URL'),
+    "system_database_url": os.environ.get('DBOS_SYSTEM_DATABASE_URL'),
     "application_version": "0.1.0",
+    "conductor_key": os.environ.get('CONDUCTOR_KEY'),
 }
 DBOS(fastapi=app, config=config)
 

@@ -59,6 +59,12 @@ First install dependencies:
 uv sync
 ```
 
+Then set `DBOS_DATABASE_URL` to a path to your Postgres database; for example:
+
+```shell
+export DBOS_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/reliable_refunds"
+```
+
 Then start your app:
 
 ```shell
