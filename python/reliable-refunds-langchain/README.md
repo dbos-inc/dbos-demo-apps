@@ -65,11 +65,11 @@ Then set `DBOS_DATABASE_URL` to a path to your Postgres database; for example:
 export DBOS_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/reliable_refunds"
 ```
 
-Then start your app:
+Then set up your database and start your app:
 
 ```shell
 uv run dbos migrate
-uv run dbos start
+uv run python3 -m reliable_refunds.main
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your customer service chatbot!

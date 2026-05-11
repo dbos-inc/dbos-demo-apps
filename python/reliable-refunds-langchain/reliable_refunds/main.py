@@ -5,6 +5,7 @@ from pathlib import Path
 from string import Template
 from typing import Annotated, Optional
 
+import uvicorn
 from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -37,7 +38,7 @@ config: DBOSConfig = {
     "application_version": "0.1.0",
     "conductor_key": os.environ.get("CONDUCTOR_KEY"),
 }
-DBOS(fastapi=app, config=config)
+DBOS(config=config)
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week timeout for manual review
 
@@ -286,3 +287,8 @@ def frontend():
 @app.post("/crash")
 def crash():
     os._exit(1)
+
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
