@@ -51,23 +51,6 @@ export SENDGRID_FROM_EMAIL=<your email>
 export ADMIN_EMAIL=<your email>
 ```
 
-### Deploying to the Cloud
-
-To serverlessly deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then, run this command to deploy your app:
-
-```shell
-dbos-cloud app deploy
-```
-
-This command outputs a URL&mdash;visit it to see your chatbot!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
 ### Running Locally
 
 First create a virtual environment and install dependencies:
