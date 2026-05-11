@@ -53,20 +53,17 @@ export ADMIN_EMAIL=<your email>
 
 ### Running Locally
 
-First create a virtual environment and install dependencies:
+First install dependencies:
 
 ```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 ```
 
-
-Then start your app in the virtual environment:
+Then start your app:
 
 ```shell
-dbos migrate
-dbos start
+uv run dbos migrate
+uv run dbos start
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your customer service chatbot!
