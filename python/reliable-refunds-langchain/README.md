@@ -51,7 +51,7 @@ export SENDGRID_FROM_EMAIL=<your email>
 export ADMIN_EMAIL=<your email>
 ```
 
-### Running Locally
+### Running the App
 
 First install dependencies:
 
