@@ -1,9 +1,10 @@
 # Each time the app is re-deployed, reset the database.
 
+import os
 from datetime import datetime, timedelta
 from decimal import Decimal
-import os
-from sqlalchemy import create_engine, delete, text, make_url
+
+from sqlalchemy import create_engine, delete, make_url, text
 
 from reliable_refunds import schema
 
@@ -48,7 +49,7 @@ sample_purchases = [
     },
 ]
 
-connection_string = make_url(os.environ.get('DBOS_DATABASE_URL'))
+connection_string = make_url(os.environ.get("DBOS_DATABASE_URL"))
 engine = create_engine(connection_string)
 
 with engine.connect() as connection:
