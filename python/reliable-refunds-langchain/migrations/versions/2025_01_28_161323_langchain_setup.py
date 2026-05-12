@@ -6,9 +6,9 @@ Create Date: 2025-01-28 16:13:23.849114
 
 """
 
+import os
 from typing import Sequence, Union
 
-import os
 import sqlalchemy as sa
 from alembic import op
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -21,7 +21,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    connection_string = sa.make_url(os.environ.get('DBOS_DATABASE_URL')).set(drivername="postgres").render_as_string(hide_password=False)
+    connection_string = (
+        sa.make_url(os.environ.get("DBOS_DATABASE_URL"))
+        .set(drivername="postgres")
+        .render_as_string(hide_password=False)
+    )
     with PostgresSaver.from_conn_string(connection_string) as c:
         c.setup()
 

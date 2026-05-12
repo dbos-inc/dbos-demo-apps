@@ -5,6 +5,7 @@ from pathlib import Path
 from string import Template
 from typing import Annotated, Optional
 
+import uvicorn
 from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -20,7 +21,7 @@ from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from sqlalchemy import text, make_url
+from sqlalchemy import make_url, text
 from typing_extensions import TypedDict
 
 from .schema import OrderStatus, Purchase, purchases
@@ -32,10 +33,12 @@ html_dir = os.path.join(os.path.dirname(script_dir), "html")
 app = FastAPI()
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
-    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     "application_version": "0.1.0",
+    "conductor_key": os.environ.get("CONDUCTOR_KEY"),
 }
-DBOS(fastapi=app, config=config)
+DBOS(config=config)
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week timeout for manual review
 
@@ -148,7 +151,7 @@ class State(TypedDict):
 # Set up LangGraph to answer refund requests. The agent uses two tools: one to look up order status, the other to process refunds.
 # We'll configure LangChain to store checkpoints in Postgres so it persists across app restarts.
 def create_agent():
-    llm = ChatOpenAI(model="gpt-4.1-mini")
+    llm = ChatOpenAI(model="gpt-5.4-mini")
     tools = [tool_get_purchase_by_id, process_refund]
     llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
@@ -184,7 +187,11 @@ def create_agent():
     graph_builder.add_edge(START, "chatbot")
 
     # Create a checkpointer LangChain can use to store message history in Postgres.
-    connection_string = make_url(config.get("database_url")).set(drivername="postgres").render_as_string(hide_password=False)
+    connection_string = (
+        make_url(config.get("database_url"))
+        .set(drivername="postgres")
+        .render_as_string(hide_password=False)
+    )
     pool = ConnectionPool(connection_string)
     checkpointer = PostgresSaver(pool)
 
@@ -226,26 +233,14 @@ def chat_workflow(chat: ChatSchema):
 @app.get("/history")
 def history_endpoint():
     # Retrieve the messages from the chat history and parse them for the frontend
-    chats = compiled_agent.checkpointer.list(config=chat_config, limit=1000)
+    state = compiled_agent.get_state(chat_config)
+    messages = state.values.get("messages", []) if state else []
     message_list = []
-    for chat in chats:
-        writes = chat.metadata.get("writes")
-        if writes is not None:
-            record = writes.get("chatbot") or writes.get(START)
-            if record is not None:
-                messages = record.get("messages")
-                if messages is not None:
-                    for message in messages:
-                        if isinstance(message, HumanMessage) and message.content:
-                            message_list.append(
-                                {"isUser": True, "content": message.content}
-                            )
-                        elif isinstance(message, AIMessage) and message.content:
-                            message_list.append(
-                                {"isUser": False, "content": message.content}
-                            )
-    # The list is reversed so the most recent messages appear at the bottom
-    message_list.reverse()
+    for message in messages:
+        if isinstance(message, HumanMessage) and message.content:
+            message_list.append({"isUser": True, "content": message.content})
+        elif isinstance(message, AIMessage) and message.content:
+            message_list.append({"isUser": False, "content": message.content})
     return message_list
 
 
@@ -280,3 +275,8 @@ def frontend():
 @app.post("/crash")
 def crash():
     os._exit(1)
+
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
