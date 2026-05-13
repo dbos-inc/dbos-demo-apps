@@ -14,6 +14,8 @@ from pydantic import BaseModel
 # ---------------------------------------------------------------------------
 app = FastAPI()
 
+if os.environ.get("DBOS_DATABASE_URL") is None:
+    raise Exception("DBOS_DATABASE_URL not provided")
 ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
 
 # ---------------------------------------------------------------------------
