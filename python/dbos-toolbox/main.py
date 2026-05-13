@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
-ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_APPLICATION_DATABASE_URL") or "sqlite:///dbos_toolbox.sqlite")
+ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL")  or "sqlite:///dbos_toolbox.sqlite")
 
 ##################################
 #### Workflows and Steps
@@ -165,7 +165,7 @@ async def read_root():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-toolbox",
-        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+        "system_database_url": os.environ.get("DBOS_DATABASE_URL"),
         "application_version": "0.1.0",
         "conductor_key": os.environ.get("CONDUCTOR_KEY"),
     }

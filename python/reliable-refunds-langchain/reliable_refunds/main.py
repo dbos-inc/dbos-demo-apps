@@ -33,7 +33,7 @@ html_dir = os.path.join(os.path.dirname(script_dir), "html")
 app = FastAPI()
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_DATABASE_URL"),
     "application_version": "0.1.0",
     "conductor_key": os.environ.get("CONDUCTOR_KEY"),
 }
