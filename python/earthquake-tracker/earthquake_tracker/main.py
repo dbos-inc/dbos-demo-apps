@@ -93,9 +93,8 @@ def record_earthquake_data(data: EarthquakeData) -> bool:
 # so it runs exactly-once per minute and you'll never miss an earthquake or record a duplicate.
 
 
-@DBOS.scheduled("* * * * *")
 @DBOS.workflow()
-def run_every_minute(scheduled_time: datetime, actual_time: datetime):
+def run_every_minute(scheduled_time: datetime, context: None):
     end_time = scheduled_time
     start_time = scheduled_time - timedelta(hours=1)
     earthquakes = get_earthquake_data(start_time, end_time)
@@ -113,14 +112,27 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
 # while the background threads run.
 
 if __name__ == "__main__":
-    ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
+    database_url = os.environ.get("DBOS_DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DBOS_DATABASE_URL environment variable is not set")
+    ds = SQLAlchemyDatasource.create(database_url)
     config: DBOSConfig = {
         "name": "earthquake-tracker",
-        "system_database_url": os.environ.get("DBOS_DATABASE_URL"),
+        "system_database_url": database_url,
         "application_version": "0.1.0",
     }
     DBOS(config=config)
     DBOS.launch()
+    DBOS.apply_schedules(
+        [
+            {
+                "schedule_name": "run_every_minute",
+                "workflow_fn": run_every_minute,
+                "schedule": "* * * * *",
+                "context": None,
+            }
+        ]
+    )
     threading.Event().wait()
 
 # To deploy this app to the cloud as a persistent cron job and dashboard, run `dbos-cloud app deploy`

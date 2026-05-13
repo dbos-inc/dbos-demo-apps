@@ -47,7 +47,6 @@ def test_main_workflow(dbos):
     """
     now = datetime.now()
     scheduled_time = now
-    actual_time = now
     earthquake: EarthquakeData = {
         "id": "ci40171730",
         "place": "15 km SW of Searles Valley, CA",
@@ -65,7 +64,7 @@ def test_main_workflow(dbos):
             mock_record_data.return_value = True
 
             # Call the main workflow
-            run_every_minute(scheduled_time, actual_time)
+            run_every_minute(scheduled_time, None)
 
             # Verify get_earthquake_data was called once with correct parameters
             start_time = scheduled_time - timedelta(hours=1)
