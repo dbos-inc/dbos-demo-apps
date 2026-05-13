@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
+import earthquake_tracker.main as earthquake_tracker
 from earthquake_tracker.main import (
     EarthquakeData,
     get_earthquake_data,
@@ -34,7 +35,9 @@ def test_record_data(dbos):
         "magnitude": 2.21,
         "timestamp": 1738136375670,
     }
-    assert record_earthquake_data(earthquake) is True
+    assert earthquake_tracker.ds.run_tx_step(
+        {"name": "record_earthquake_data"}, record_earthquake_data, earthquake
+    ) is True
 
 
 def test_main_workflow(dbos):

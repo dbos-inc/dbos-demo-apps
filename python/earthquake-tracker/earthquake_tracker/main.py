@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from .schema import earthquake_tracker
 
-ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
+ds: SQLAlchemyDatasource
 
 # First, let's write a function that queries the USGS for information on recent earthquakes.
 # Our function will take in a time range and return the id, place, magnitude, and timestamp
@@ -76,7 +76,6 @@ def get_earthquake_data(
 # Return true if we inserted a new earthquake, false if we updated an existing one.
 
 
-@ds.transaction()
 def record_earthquake_data(data: EarthquakeData) -> bool:
     return ds.sql_session().execute(
         insert(earthquake_tracker)
@@ -103,7 +102,9 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
     if len(earthquakes) == 0:
         DBOS.logger.info(f"No earthquakes found between {start_time} and {end_time}")
     for earthquake in earthquakes:
-        new_earthquake = record_earthquake_data(earthquake)
+        new_earthquake = ds.run_tx_step(
+            {"name": "record_earthquake_data"}, record_earthquake_data, earthquake
+        )
         if new_earthquake:
             DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 
@@ -112,6 +113,7 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
 # while the background threads run.
 
 if __name__ == "__main__":
+    ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
     config: DBOSConfig = {
         "name": "earthquake-tracker",
         "system_database_url": os.environ.get("DBOS_DATABASE_URL"),
