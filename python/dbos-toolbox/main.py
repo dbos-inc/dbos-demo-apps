@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
-ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
+ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL") or "sqlite:///dbos_toolbox.sqlite")
 
 ##################################
 #### Workflows and Steps
