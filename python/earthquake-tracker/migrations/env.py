@@ -14,7 +14,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Programmatically set the sqlalchemy.url field to the DBOS application database URL
-conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/earthquake_tracker?connect_timeout=5")
+conn_string = os.environ.get("DBOS_APPLICATION_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/earthquake_tracker?connect_timeout=5")
 config.set_main_option("sqlalchemy.url", conn_string)
 
 # Load metadata for autogeneration
