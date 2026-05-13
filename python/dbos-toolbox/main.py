@@ -3,11 +3,13 @@ import time
 
 import sqlalchemy as sa
 import uvicorn
-from dbos import DBOS, DBOSConfig
+from dbos import DBOS, DBOSConfig, SQLAlchemyDatasource
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
+
+ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
 
 ##################################
 #### Workflows and Steps
@@ -68,9 +70,9 @@ def run_every_15min(scheduled_time, _context):
 ##################################
 
 
-@DBOS.transaction()
+@ds.transaction()
 def select_one():
-    DBOS.sql_session.execute(sa.text("SELECT 1"))
+    ds.sql_session().execute(sa.text("SELECT 1"))
 
 
 @app.get("/transaction")
@@ -164,8 +166,6 @@ if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-toolbox",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-        # This is only needed if using "@DBOS.transaction"
-        "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
         "application_version": "0.1.0",
         "conductor_key": os.environ.get("CONDUCTOR_KEY"),
     }

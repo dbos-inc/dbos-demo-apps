@@ -6,7 +6,7 @@ from string import Template
 from typing import Annotated, Optional
 
 import uvicorn
-from dbos import DBOS, DBOSConfig
+from dbos import DBOS, DBOSConfig, SQLAlchemyDatasource
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from langchain_core.messages import AIMessage, HumanMessage
@@ -33,12 +33,12 @@ html_dir = os.path.join(os.path.dirname(script_dir), "html")
 app = FastAPI()
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     "application_version": "0.1.0",
     "conductor_key": os.environ.get("CONDUCTOR_KEY"),
 }
 DBOS(config=config)
+ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week timeout for manual review
 
@@ -55,11 +55,11 @@ callback_domain = os.environ.get("DBOS_APP_HOSTNAME", "http://localhost:8000")
 
 
 # This tool lets the agent look up the details of an order given its ID.
-@DBOS.transaction()
+@ds.transaction()
 def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
     DBOS.logger.info(f"Looking up purchase by order_id {order_id}")
     query = purchases.select().where(purchases.c.order_id == order_id)
-    result = DBOS.sql_session.execute(query)
+    result = ds.sql_session().execute(query)
     row = result.first()
     return Purchase.from_row(row) if row is not None else None
 
@@ -133,14 +133,14 @@ def send_email(purchase: Purchase):
 
 
 # This function updates the status of a purchase.
-@DBOS.transaction()
+@ds.transaction()
 def update_purchase_status(order_id: int, status: OrderStatus):
     query = (
         purchases.update()
         .where(purchases.c.order_id == order_id)
         .values(order_status=status)
     )
-    DBOS.sql_session.execute(query)
+    ds.sql_session().execute(query)
 
 
 # Define the state for LangGraph
@@ -188,7 +188,7 @@ def create_agent():
 
     # Create a checkpointer LangChain can use to store message history in Postgres.
     connection_string = (
-        make_url(config.get("database_url"))
+        make_url(os.environ.get("DBOS_DATABASE_URL"))
         .set(drivername="postgres")
         .render_as_string(hide_password=False)
     )
@@ -255,14 +255,15 @@ def approval_endpoint(workflow_id: str, status: str):
 
 
 @app.post("/reset")
-@DBOS.transaction()
+@ds.transaction()
 def reset():
-    DBOS.sql_session.execute(
+    session = ds.sql_session()
+    session.execute(
         purchases.update().values(order_status=OrderStatus.PURCHASED.value)
     )
-    DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoints"))
-    DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoint_blobs"))
-    DBOS.sql_session.execute(text("TRUNCATE TABLE checkpoint_writes"))
+    session.execute(text("TRUNCATE TABLE checkpoints"))
+    session.execute(text("TRUNCATE TABLE checkpoint_blobs"))
+    session.execute(text("TRUNCATE TABLE checkpoint_writes"))
 
 
 @app.get("/")

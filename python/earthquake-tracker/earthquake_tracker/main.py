@@ -9,11 +9,13 @@ from datetime import datetime, timedelta
 from typing import TypedDict
 
 import requests
-from dbos import DBOS, DBOSConfig
+from dbos import DBOS, DBOSConfig, SQLAlchemyDatasource
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 
 from .schema import earthquake_tracker
+
+ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
 
 # First, let's write a function that queries the USGS for information on recent earthquakes.
 # Our function will take in a time range and return the id, place, magnitude, and timestamp
@@ -74,9 +76,9 @@ def get_earthquake_data(
 # Return true if we inserted a new earthquake, false if we updated an existing one.
 
 
-@DBOS.transaction()
+@ds.transaction()
 def record_earthquake_data(data: EarthquakeData) -> bool:
-    return DBOS.sql_session.execute(
+    return ds.sql_session().execute(
         insert(earthquake_tracker)
         .values(**data)
         .on_conflict_do_update(index_elements=["id"], set_=data)
@@ -110,13 +112,8 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
 # while the background threads run.
 
 if __name__ == "__main__":
-    application_database_url = os.environ.get('DBOS_DATABASE_URL')
-    if not application_database_url:
-        raise Exception("DBOS_DATABASE_URL not set")
-
     config: DBOSConfig = {
         "name": "earthquake-tracker",
-        "application_database_url": application_database_url,
         "application_version": "0.1.0",
     }
     DBOS(config=config)
