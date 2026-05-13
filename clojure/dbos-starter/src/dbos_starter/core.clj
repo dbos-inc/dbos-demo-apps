@@ -7,8 +7,6 @@
   (:import
    [dev.dbos.transact DBOS StartWorkflowOptions]
    [dev.dbos.transact.config DBOSConfig]
-   [dev.dbos.transact.workflow SerializationStrategy Workflow]
-   [java.lang.reflect InvocationHandler Proxy]
    [java.time Duration])
   (:gen-class))
 
@@ -34,44 +32,26 @@
   (.runStep dbos step-three "stepThree")
   (.setEvent dbos steps-event (Integer/valueOf 3)))
 
-(defn- make-workflow-annotation [workflow-name]
-  (Proxy/newProxyInstance
-   (.getClassLoader Workflow)
-   (into-array Class [Workflow])
-   (reify InvocationHandler
-     (invoke [_ _ method _]
-       (case (.getName method)
-         "name"                  workflow-name
-         "maxRecoveryAttempts"   (int -1)
-         "serializationStrategy" SerializationStrategy/DEFAULT
-         "annotationType"        Workflow
-         nil)))))
+;; Note, this version of register workflow works with DBOS transact 0.9.0-m3
+;; and uses the updated DBOSIntegration API that a) doesn't need to construct a
+;; @Workflow annotation and b) returns the registered workflow instance needed
+;; by startRegisteredWorkflow
 
-;; Note, this version of register workflow works with DBOS transact 0.8.0 
-;; We recently updated the DBOSIntegration API to make this cleaner: 
-;;    https://github.com/dbos-inc/dbos-transact-java/pull/382
-;; If you target transact 0.9.0-m3 or later, dbos.integration.registerWorkflow
-;; now returns the  registered workflow that you can pass to startRegisteredWorkflow 
-;; without needing to call getRegisteredWorkflow
 (defn register-workflow
   "Registers a Clojure fn as a named DBOS workflow (must be called before launch).
    arity is the number of runtime args the workflow fn accepts (not counting any
-   closed-over dependencies). Returns a fn [task-id & args] that looks up the
-   registration, starts the workflow via startRegisteredWorkflow, and blocks on getResult."
+   closed-over dependencies). Returns a fn [task-id & args] that starts the workflow
+   via startRegisteredWorkflow and blocks on getResult."
   [^DBOS dbos workflow-name f arity]
   (let [param-types (into-array Class (repeat arity Object))
         ifn-invoke  (.getMethod clojure.lang.IFn "invoke" param-types)
-        class-name  (.getName (.getClass f))]
-    (.registerWorkflow (.integration dbos) (make-workflow-annotation workflow-name) f ifn-invoke nil)
+        class-name  (.getName (.getClass f))
+        reg-wf      (.registerWorkflow (.integration dbos) workflow-name class-name nil f ifn-invoke nil nil)]
     (fn [task-id & args]
-      (let [reg-wf (-> (.integration dbos)
-                       (.getRegisteredWorkflow workflow-name class-name)
-                       (.orElseThrow #(RuntimeException. (str "Workflow not registered: " workflow-name))))
-            handle (.startRegisteredWorkflow (.integration dbos)
-                                             reg-wf
-                                             (object-array args)
-                                             (StartWorkflowOptions. task-id))]
-        (.getResult handle)))))
+      (.getResult (.startRegisteredWorkflow (.integration dbos)
+                                            reg-wf
+                                            (object-array args)
+                                            (StartWorkflowOptions. task-id))))))
 
 (defn- make-app [^DBOS dbos start-workflow]
   (ring/ring-handler
