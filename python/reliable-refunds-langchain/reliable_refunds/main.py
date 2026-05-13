@@ -30,15 +30,19 @@ from .schema import OrderStatus, Purchase, purchases
 script_dir = os.path.dirname(os.path.abspath(__file__))
 html_dir = os.path.join(os.path.dirname(script_dir), "html")
 
+database_url = os.environ.get("DBOS_DATABASE_URL")
+if database_url is None:
+    raise Exception("DBOS_DATABASE_URL not set")
+
 app = FastAPI()
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
-    "system_database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": database_url,
     "application_version": "0.1.0",
     "conductor_key": os.environ.get("CONDUCTOR_KEY"),
 }
 DBOS(config=config)
-ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
+ds = SQLAlchemyDatasource.create(database_url)
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week timeout for manual review
 
@@ -188,7 +192,7 @@ def create_agent():
 
     # Create a checkpointer LangChain can use to store message history in Postgres.
     connection_string = (
-        make_url(os.environ.get("DBOS_DATABASE_URL"))
+        make_url(database_url)
         .set(drivername="postgres")
         .render_as_string(hide_password=False)
     )
