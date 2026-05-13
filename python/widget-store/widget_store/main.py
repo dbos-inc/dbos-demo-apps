@@ -15,13 +15,18 @@ from fastapi.responses import HTMLResponse
 
 from .schema import OrderStatus, orders, products
 
+database_url = os.environ.get("DBOS_DATABASE_URL")
+if database_url is None:
+    raise Exception("DBOS_DATABASE_URL not set")
+
 app = FastAPI()
 config: DBOSConfig = {
     "name": "widget-store",
     "application_version": "0.1.0",
+    "system_database_url": database_url,
 }
 DBOS(config=config)
-ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
+ds = SQLAlchemyDatasource.create(database_url)
 
 WIDGET_ID = 1
 PAYMENT_STATUS = "payment_status"
