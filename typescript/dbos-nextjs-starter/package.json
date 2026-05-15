@@ -12,8 +12,8 @@
     "dev:all": "node worker/index.ts & next dev && kill $!"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^4.17.6",
-    "@dbos-inc/otel": "^4.17.6",
+    "@dbos-inc/dbos-sdk": "^4.18.10",
+    "@dbos-inc/otel": "^4.18.10",
     "next": "^16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4"
