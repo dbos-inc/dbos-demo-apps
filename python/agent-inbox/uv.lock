@@ -15,7 +15,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", specifier = "==2.21.0" },
+    { name = "dbos", specifier = "==2.22.0" },
     { name = "fastapi", specifier = ">=0.121.0" },
     { name = "pydantic", specifier = ">=2.12.3" },
     { name = "uvicorn", specifier = ">=0.38.0" },
@@ -77,19 +77,19 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "2.21.0"
+version = "2.22.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dateutil" },
     { name = "pyyaml" },
-    { name = "sqlalchemy" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "typer-slim" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/48/a0c19e5a369ee5ddb88585dd6c4eba938789d50bbc2e144526b2c85f944c/dbos-2.21.0.tar.gz", hash = "sha256:89896b4f4ee31a7ae8463cdb512b4c2029a68f9667fdaa90ebe980d13d4dd915", size = 465138, upload-time = "2026-05-07T16:30:59.981Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/52/5e4944e7a0605b4da3119876502cc39af7775555f16982c6a298411a7f63/dbos-2.22.0.tar.gz", hash = "sha256:5d43a9d0388d851df0f7bbd4ed752bc8b67be3d6fbe358c8be4d22f6c4887db6", size = 479210, upload-time = "2026-05-15T15:33:51.483Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ed/58/072e39d245a37793649711839b1fc4b61827747c7b1c4ab8e02309475c17/dbos-2.21.0-py3-none-any.whl", hash = "sha256:9dd0a39172716972532cfa4b348fd6f8371c10b250b7030f05ca95d53f71f214", size = 189715, upload-time = "2026-05-07T16:30:58.254Z" },
+    { url = "https://files.pythonhosted.org/packages/9e/bc/0fc571524ba11c9800a1a116cb9b157223bbff39b070e7a2c3ed5b4edbe6/dbos-2.22.0-py3-none-any.whl", hash = "sha256:09edc621ec2857dae73cc1b01bc7379999fe9ee4ef8c6ff4ac69dd1a5263001f", size = 198070, upload-time = "2026-05-15T15:33:49.893Z" },
 ]
 
 [[package]]
@@ -534,6 +534,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/32/d5/0e66097fc64fa266f29a7963296b40a80d6a997b7ac13806183700676f86/sqlalchemy-2.0.44-cp313-cp313-win32.whl", hash = "sha256:ee51625c2d51f8baadf2829fae817ad0b66b140573939dd69284d2ba3553ae73", size = 2101275, upload-time = "2025-10-10T15:03:26.096Z" },
     { url = "https://files.pythonhosted.org/packages/03/51/665617fe4f8c6450f42a6d8d69243f9420f5677395572c2fe9d21b493b7b/sqlalchemy-2.0.44-cp313-cp313-win_amd64.whl", hash = "sha256:c1c80faaee1a6c3428cecf40d16a2365bcf56c424c92c2b6f0f9ad204b899e9e", size = 2127901, upload-time = "2025-10-10T15:03:27.548Z" },
     { url = "https://files.pythonhosted.org/packages/9c/5e/6a29fa884d9fb7ddadf6b69490a9d45fded3b38541713010dad16b77d015/sqlalchemy-2.0.44-py3-none-any.whl", hash = "sha256:19de7ca1246fbef9f9d1bff8f1ab25641569df226364a0e40457dc5457c54b05", size = 1928718, upload-time = "2025-10-10T15:29:45.32Z" },
+]
+
+[package.optional-dependencies]
+asyncio = [
+    { name = "greenlet" },
 ]
 
 [[package]]
