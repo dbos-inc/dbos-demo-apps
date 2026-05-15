@@ -4,7 +4,7 @@ from pathlib import Path
 
 import sqlalchemy as sa
 import uvicorn
-from dbos import DBOS, DBOSConfig
+from dbos import DBOS, DBOSConfig, SQLAlchemyDatasource
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -13,6 +13,10 @@ from pydantic import BaseModel
 # FastAPI app
 # ---------------------------------------------------------------------------
 app = FastAPI()
+
+if os.environ.get("DBOS_DATABASE_URL") is None:
+    raise Exception("DBOS_DATABASE_URL not provided")
+ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
 
 # ---------------------------------------------------------------------------
 # Table definition and creation
@@ -33,10 +37,10 @@ orders = sa.Table(
 ORDER_ID_EVENT = "order_id_event"
 
 
-@DBOS.transaction()
+@ds.transaction()
 def create_orders_table() -> None:
     """Ensure the orders table exists."""
-    metadata.create_all(DBOS.sql_session.connection())
+    metadata.create_all(ds.sql_session().connection())
 
 
 # ---------------------------------------------------------------------------
@@ -44,7 +48,7 @@ def create_orders_table() -> None:
 # ---------------------------------------------------------------------------
 
 
-@DBOS.transaction()
+@ds.transaction()
 def insert_order(customer: str, item: str, quantity: int) -> int:
     """Insert an order and return its ID.
 
@@ -52,7 +56,7 @@ def insert_order(customer: str, item: str, quantity: int) -> int:
     With DBOS the workflow itself provides that guarantee, so no outbox table
     is needed.
     """
-    result = DBOS.sql_session.execute(
+    result = ds.sql_session().execute(
         orders.insert().values(customer=customer, item=item, quantity=quantity)
     )
     order_id: int = result.inserted_primary_key[0]
@@ -60,10 +64,10 @@ def insert_order(customer: str, item: str, quantity: int) -> int:
     return order_id
 
 
-@DBOS.transaction()
+@ds.transaction()
 def update_notification_status(order_id: int, status: str) -> None:
     """Mark an order's notification as sent."""
-    DBOS.sql_session.execute(
+    ds.sql_session().execute(
         orders.update()
         .where(orders.c.order_id == order_id)
         .values(notification_status=status)
@@ -130,11 +134,11 @@ def create_order(request: OrderRequest):
 
 
 @app.get("/orders")
-@DBOS.transaction()
+@ds.transaction()
 def list_orders() -> list[dict]:
     """Return all orders, newest first."""
     rows = (
-        DBOS.sql_session.execute(orders.select().order_by(orders.c.order_id.desc()))
+        ds.sql_session().execute(orders.select().order_by(orders.c.order_id.desc()))
         .mappings()
         .all()
     )
@@ -155,7 +159,6 @@ def index():
 def main() -> None:
     config: DBOSConfig = {
         "name": "transactional-outbox",
-        "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
         "system_database_url": os.environ.get("DBOS_DATABASE_URL"),
     }
     DBOS(config=config)

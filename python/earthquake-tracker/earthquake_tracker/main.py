@@ -9,11 +9,13 @@ from datetime import datetime, timedelta
 from typing import TypedDict
 
 import requests
-from dbos import DBOS, DBOSConfig
+from dbos import DBOS, DBOSConfig, SQLAlchemyDatasource
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 
 from .schema import earthquake_tracker
+
+ds: SQLAlchemyDatasource
 
 # First, let's write a function that queries the USGS for information on recent earthquakes.
 # Our function will take in a time range and return the id, place, magnitude, and timestamp
@@ -74,9 +76,8 @@ def get_earthquake_data(
 # Return true if we inserted a new earthquake, false if we updated an existing one.
 
 
-@DBOS.transaction()
 def record_earthquake_data(data: EarthquakeData) -> bool:
-    return DBOS.sql_session.execute(
+    return ds.sql_session().execute(
         insert(earthquake_tracker)
         .values(**data)
         .on_conflict_do_update(index_elements=["id"], set_=data)
@@ -92,16 +93,17 @@ def record_earthquake_data(data: EarthquakeData) -> bool:
 # so it runs exactly-once per minute and you'll never miss an earthquake or record a duplicate.
 
 
-@DBOS.scheduled("* * * * *")
 @DBOS.workflow()
-def run_every_minute(scheduled_time: datetime, actual_time: datetime):
+def run_every_minute(scheduled_time: datetime, context: None):
     end_time = scheduled_time
     start_time = scheduled_time - timedelta(hours=1)
     earthquakes = get_earthquake_data(start_time, end_time)
     if len(earthquakes) == 0:
         DBOS.logger.info(f"No earthquakes found between {start_time} and {end_time}")
     for earthquake in earthquakes:
-        new_earthquake = record_earthquake_data(earthquake)
+        new_earthquake = ds.run_tx_step(
+            {"name": "record_earthquake_data"}, record_earthquake_data, earthquake
+        )
         if new_earthquake:
             DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 
@@ -110,17 +112,27 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
 # while the background threads run.
 
 if __name__ == "__main__":
-    application_database_url = os.environ.get('DBOS_DATABASE_URL')
-    if not application_database_url:
-        raise Exception("DBOS_DATABASE_URL not set")
-
+    database_url = os.environ.get("DBOS_DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DBOS_DATABASE_URL environment variable is not set")
+    ds = SQLAlchemyDatasource.create(database_url)
     config: DBOSConfig = {
         "name": "earthquake-tracker",
-        "application_database_url": application_database_url,
+        "system_database_url": database_url,
         "application_version": "0.1.0",
     }
     DBOS(config=config)
     DBOS.launch()
+    DBOS.apply_schedules(
+        [
+            {
+                "schedule_name": "run_every_minute",
+                "workflow_fn": run_every_minute,
+                "schedule": "* * * * *",
+                "context": None,
+            }
+        ]
+    )
     threading.Event().wait()
 
 # To deploy this app to the cloud as a persistent cron job and dashboard, run `dbos-cloud app deploy`

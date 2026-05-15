@@ -28,10 +28,11 @@ export DBOS_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/eart
 
 If you already use Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your own connection string.
 
-3. Run database migrations:
+3. Create the `earthquake_tracker` database and run database migrations:
 
 ```shell
-dbos migrate
+psql -c "CREATE DATABASE earthquake_tracker"
+alembic upgrade head
 ```
 
 4. Start your app:
