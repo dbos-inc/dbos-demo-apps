@@ -6,3 +6,5 @@ build
 
 # Ignore Kotlin plugin data
 .kotlin
+
+app/bin
