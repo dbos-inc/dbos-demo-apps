@@ -3,11 +3,16 @@ package org.example;
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.StartWorkflowOptions;
 import dev.dbos.transact.config.DBOSConfig;
+import dev.dbos.transact.database.SystemDatabase;
+import dev.dbos.transact.migrations.MigrationManager;
+import dev.dbos.transact.txstep.JdbcStepFactory;
 import dev.dbos.transact.workflow.Queue;
 import dev.dbos.transact.workflow.Workflow;
 import dev.dbos.transact.workflow.WorkflowHandle;
 import dev.dbos.transact.workflow.WorkflowSchedule;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,9 +28,11 @@ interface DurableToolboxService {
 
   void queueWorkflow();
 
-  void queueChildWorkflow(int i);
+  void queueChildWorkflow(String workflowId, int i);
 
   void scheduledWorkflow(Instant scheduledTime, Object context);
+
+  int txStepWorkflow(String name) throws SQLException;
 }
 
 class DurableToolboxServiceImpl implements DurableToolboxService {
@@ -33,10 +40,12 @@ class DurableToolboxServiceImpl implements DurableToolboxService {
   public static final String STEPS_EVENT = "steps_event";
 
   private final DBOS dbos;
+  private final JdbcStepFactory stepFactory;
   private DurableToolboxService self;
 
-  public DurableToolboxServiceImpl(DBOS dbos) {
+  public DurableToolboxServiceImpl(DBOS dbos, JdbcStepFactory stepFactory) {
     this.dbos = dbos;
+    this.stepFactory = stepFactory;
   }
 
   public void setSelf(DurableToolboxService self) {
@@ -52,6 +61,25 @@ class DurableToolboxServiceImpl implements DurableToolboxService {
     }
   }
 
+  private int insertGreeting(Connection conn, String user) throws SQLException {
+    var sql =
+        """
+        INSERT INTO greetings(name, greet_count)
+        VALUES (?, 1)
+        ON CONFLICT(name)
+        DO UPDATE SET greet_count = greetings.greet_count + 1
+        RETURNING greet_count
+        """;
+
+    try (var stmt = conn.prepareStatement(sql)) {
+      stmt.setString(1, Objects.requireNonNull(user));
+      try (var rs = stmt.executeQuery()) {
+        var greetCount = rs.next() ? rs.getInt("greet_count") : 0;
+        return greetCount;
+      }
+    }
+  }
+
   @Override
   @Workflow
   public void exampleWorkflow() {
@@ -62,13 +90,14 @@ class DurableToolboxServiceImpl implements DurableToolboxService {
   @Override
   @Workflow
   public void queueWorkflow() {
-    logger.info("Enqueueing steps");
+    final var workflowId = DBOS.workflowId();
+    logger.info("Enqueueing steps workflow {}", workflowId);
 
     var handles = new ArrayList<WorkflowHandle<Void, RuntimeException>>();
     var options = new StartWorkflowOptions().withQueue("example-queue");
     for (var i = 0; i < 10; i++) {
       final var step = i;
-      var handle = dbos.startWorkflow(() -> self.queueChildWorkflow(step), options);
+      var handle = dbos.startWorkflow(() -> self.queueChildWorkflow(workflowId, step), options);
       handles.add(handle);
     }
 
@@ -77,14 +106,15 @@ class DurableToolboxServiceImpl implements DurableToolboxService {
       results.add(h.getResult());
     }
 
-    logger.info("successfully completed {} steps", results.size());
+    logger.info("Workflow {} successfully completed {} steps", workflowId, results.size());
   }
 
   @Override
   @Workflow
-  public void queueChildWorkflow(int i) {
+  public void queueChildWorkflow(String workflowId, int i) {
+    logger.info("Running workflow {} queued child step {}", workflowId, i);
     sleep(Duration.ofSeconds(5));
-    logger.info("queueChildWorkflow step {} completed!", i);
+    logger.info("Workflow {} queued child step {} completed!", workflowId, i);
   }
 
   @Override
@@ -92,19 +122,35 @@ class DurableToolboxServiceImpl implements DurableToolboxService {
   public void scheduledWorkflow(Instant scheduledTime, Object context) {
     logger.info("I am a scheduled workflow. It is currently {}", scheduledTime);
   }
+
+  @Override
+  @Workflow
+  public int txStepWorkflow(String name) throws SQLException {
+
+    // Note, step factories are a prerelease feature coming in 0.9.0
+    // This demo app is using the latest 0.9.+ milestone release of DBOS
+
+    var result = stepFactory.txStep((Connection c) -> insertGreeting(c, name), "insertGreeting");
+    logger.info("{} has been greeted {} times", name, result);
+    return result;
+  }
 }
 
 public class App {
   private static final Logger logger = LoggerFactory.getLogger(App.class);
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws SQLException {
 
-    var dbUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
-    if (dbUrl == null || dbUrl.isEmpty()) {
-      dbUrl = "jdbc:postgresql://localhost:5432/dbos_starter_java";
+    var _dbUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
+    if (_dbUrl == null || _dbUrl.isEmpty()) {
+      _dbUrl = "jdbc:postgresql://localhost:5432/dbos_starter_java";
     }
-    var dbUser = Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres");
-    var dbPassword = Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos");
+    final var dbUrl = _dbUrl;
+    final var dbUser = Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres");
+    final var dbPassword = Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos");
+
+    // ensure database exists so we can create the greetings table needed for txStepWorkflow
+    MigrationManager.createDatabaseIfNotExists(dbUrl, dbUser, dbPassword);
 
     var dbosConfig =
         DBOSConfig.defaults("dbos-starter-java")
@@ -114,20 +160,27 @@ public class App {
             .withAppVersion("0.2.0");
 
     var dbos = new DBOS(dbosConfig);
+    var dataSource = SystemDatabase.createDataSource(dbosConfig);
+    var stepFactory = new JdbcStepFactory(dbos, dataSource);
+
+    try (var conn = dataSource.getConnection();
+        var stmt = conn.createStatement()) {
+      stmt.execute(
+          "CREATE TABLE IF NOT EXISTS greetings(name text NOT NULL, greet_count integer DEFAULT 0, PRIMARY KEY(name))");
+    }
+
+    var impl = new DurableToolboxServiceImpl(dbos, stepFactory);
+    var proxy = dbos.registerProxy(DurableToolboxService.class, impl);
+    impl.setSelf(proxy);
 
     var queue = new Queue("example-queue");
     dbos.registerQueue(queue);
-
-    var impl = new DurableToolboxServiceImpl(dbos);
-    var proxy = dbos.registerProxy(DurableToolboxService.class, impl);
-    impl.setSelf(proxy);
 
     @SuppressWarnings("unused")
     var app =
         Javalin.create(
                 config -> {
                   config.startup.showJavalinBanner = false;
-                  // config.staticFiles.add("/public");
                   config.events.serverStarting(
                       () -> {
                         dbos.launch();
@@ -157,8 +210,14 @@ public class App {
                         proxy.queueWorkflow();
                         ctx.status(200);
                       });
-                  // TODO: Transactional step provider endpoint
-                  config.routes.post(
+                  config.routes.get(
+                      "/tx-step/{name}",
+                      ctx -> {
+                        var name = ctx.pathParam("name");
+                        proxy.txStepWorkflow(name);
+                        ctx.status(200);
+                      });
+                  config.routes.get(
                       "/crash",
                       ctx -> {
                         logger.warn("Crash endpoint called - terminating application");
