@@ -3,16 +3,13 @@ import random
 from time import sleep
 from typing import Optional
 
-from dbos import DBOS, DBOSConfig, Queue
+from dbos import DBOS, DBOSConfig
 from slack_bolt import App
 
 # Before running this app, set the following environment variables:
 # export SLACK_SIGNING_SECRET=***
 # export SLACK_BOT_TOKEN=xoxb-***
 app = App()
-
-# Create a queue with concurrency of 1 so only one deployment workflow runs at a time
-task_queue = Queue(name="deploy-tracker-queue", concurrency=1)
 
 
 @DBOS.step()
@@ -83,7 +80,9 @@ def handle_deploy_command(ack, say, command, logger):
         # Acknowledge the command within 3 seconds, after confirming the workflow has enqueued
         user_id = command["user_id"]
         channel_id = command["channel_id"]
-        handle = task_queue.enqueue(deploy_tracker_workflow, user_id, channel_id)
+        handle = DBOS.enqueue_workflow(
+            "deploy-tracker-queue", deploy_tracker_workflow, user_id, channel_id
+        )
         ack({"response_type": "in_channel"})
         # Check the queue size, and inform the user if there are pending workflows
         queued_workflows = DBOS.list_queued_workflows(
@@ -132,4 +131,6 @@ if __name__ == "__main__":
     }
     DBOS(config=config)
     DBOS.launch()
+    # Create a queue with concurrency of 1 so only one deployment workflow runs at a time
+    DBOS.register_queue("deploy-tracker-queue", concurrency=1)
     app.start(port=3000)  # POST http://localhost:3000/slack/events

@@ -78,47 +78,45 @@ public class App {
     var proxy =
         dbos.registerProxy(DurableStarterService.class, new DurableStarterServiceImpl(dbos));
 
-    @SuppressWarnings("unused")
-    var app =
-        Javalin.create(
-                config -> {
-                  config.startup.showJavalinBanner = false;
-                  config.events.serverStarting(dbos::launch);
-                  config.events.serverStopping(dbos::shutdown);
-                  config.routes.get(
-                      "/",
-                      ctx -> {
-                        ctx.contentType("text/html");
-                        ctx.result(App.class.getResourceAsStream("/index.html"));
-                      });
-                  config.routes.get(
-                      "/workflow/{taskId}",
-                      ctx -> {
-                        var taskId = ctx.pathParam("taskId");
-                        dbos.startWorkflow(
-                            () -> proxy.exampleWorkflow(), new StartWorkflowOptions(taskId));
-                        ctx.status(200);
-                      });
-                  config.routes.get(
-                      "/last_step/{taskId}",
-                      ctx -> {
-                        var taskId = ctx.pathParam("taskId");
-                        var step =
-                            dbos.<Integer>getEvent(
-                                    taskId,
-                                    DurableStarterServiceImpl.STEPS_EVENT,
-                                    Duration.ofSeconds(0))
-                                .orElse(0);
-                        ctx.result(String.valueOf(step));
-                      });
-                  config.routes.post(
-                      "/crash",
-                      ctx -> {
-                        logger.warn("Crash endpoint called - terminating application");
-                        Runtime.getRuntime().halt(0);
-                        ctx.status(200);
-                      });
-                })
-            .start(7070);
+    Javalin.create(
+            config -> {
+              config.startup.showJavalinBanner = false;
+              config.events.serverStarting(dbos::launch);
+              config.events.serverStopping(dbos::shutdown);
+              config.routes.get(
+                  "/",
+                  ctx -> {
+                    ctx.contentType("text/html");
+                    ctx.result(App.class.getResourceAsStream("/index.html"));
+                  });
+              config.routes.get(
+                  "/workflow/{taskId}",
+                  ctx -> {
+                    var taskId = ctx.pathParam("taskId");
+                    dbos.startWorkflow(
+                        () -> proxy.exampleWorkflow(), new StartWorkflowOptions(taskId));
+                    ctx.status(200);
+                  });
+              config.routes.get(
+                  "/last_step/{taskId}",
+                  ctx -> {
+                    var taskId = ctx.pathParam("taskId");
+                    var step =
+                        dbos.<Integer>getEvent(
+                                taskId,
+                                DurableStarterServiceImpl.STEPS_EVENT,
+                                Duration.ofSeconds(0))
+                            .orElse(0);
+                    ctx.result(String.valueOf(step));
+                  });
+              config.routes.post(
+                  "/crash",
+                  ctx -> {
+                    logger.warn("Crash endpoint called - terminating application");
+                    Runtime.getRuntime().halt(0);
+                    ctx.status(200);
+                  });
+            })
+        .start(7070);
   }
 }

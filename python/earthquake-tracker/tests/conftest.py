@@ -6,8 +6,9 @@ from alembic.config import Config
 from alembic.operations import Operations
 from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
-from dbos import DBOS, DBOSConfig
+from dbos import DBOS, DBOSConfig, SQLAlchemyDatasource
 from sqlalchemy.engine.url import make_url
+import earthquake_tracker.main as earthquake_tracker
 
 def reset_database(test_database_url: str):
     url = make_url(test_database_url)
@@ -55,11 +56,11 @@ def dbos(test_database_url):
     DBOS.destroy()
     config: DBOSConfig = {
         "name": "earthquake-tracker",
-        "database_url": test_database_url,
+        "system_database_url": test_database_url,
         "application_version": "0.1.0",
     }
-    reset_database(config["database_url"])
-    run_migrations(config["database_url"])
+    reset_database(test_database_url)
+    run_migrations(test_database_url)
     DBOS(config=config)
-    DBOS.reset_system_database()
+    earthquake_tracker.ds = SQLAlchemyDatasource.create(test_database_url)
     DBOS.launch()

@@ -35,7 +35,7 @@ public class WidgetStoreConfig {
 
   @Component
   static class AppStartedLogger {
-    @Value("${spring.application.name}")
+    @Value("${dbos.application.name}")
     private String appName;
 
     @EventListener

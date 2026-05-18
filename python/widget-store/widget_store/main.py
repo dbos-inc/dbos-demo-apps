@@ -9,19 +9,24 @@
 import os
 
 import uvicorn
-from dbos import DBOS, DBOSConfig, SetWorkflowID
+from dbos import DBOS, DBOSConfig, SetWorkflowID, SQLAlchemyDatasource
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import HTMLResponse
 
 from .schema import OrderStatus, orders, products
 
+database_url = os.environ.get("DBOS_DATABASE_URL")
+if database_url is None:
+    raise Exception("DBOS_DATABASE_URL not set")
+
 app = FastAPI()
 config: DBOSConfig = {
     "name": "widget-store",
-    "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
     "application_version": "0.1.0",
+    "system_database_url": database_url,
 }
 DBOS(config=config)
+ds = SQLAlchemyDatasource.create(database_url)
 
 WIDGET_ID = 1
 PAYMENT_STATUS = "payment_status"
@@ -118,14 +123,14 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 
 
 # Next, let's write some database operations. Each of these functions performs a simple
-# CRUD operation. We apply the @DBOS.transaction() decorator to each of them to give them
-# access to a SQLAlchemy database connection. We also make some of these functions
-# HTTP endpoints with FastAPI so the frontend can access them.
+# CRUD operation. We apply the @ds.transaction() decorator from our SQLAlchemy datasource
+# to each of them so they run as durable, exactly-once database transactions. We also make
+# some of these functions HTTP endpoints with FastAPI so the frontend can access them.
 
 
-@DBOS.transaction()
+@ds.transaction()
 def reserve_inventory() -> bool:
-    rows_affected = DBOS.sql_session.execute(
+    rows_affected = ds.sql_session().execute(
         products.update()
         .where(products.c.product_id == WIDGET_ID)
         .where(products.c.inventory > 0)
@@ -134,57 +139,57 @@ def reserve_inventory() -> bool:
     return rows_affected > 0
 
 
-@DBOS.transaction()
+@ds.transaction()
 def undo_reserve_inventory() -> None:
-    DBOS.sql_session.execute(
+    ds.sql_session().execute(
         products.update()
         .where(products.c.product_id == WIDGET_ID)
         .values(inventory=products.c.inventory + 1)
     )
 
 
-@DBOS.transaction()
+@ds.transaction()
 def create_order() -> int:
-    result = DBOS.sql_session.execute(
+    result = ds.sql_session().execute(
         orders.insert().values(order_status=OrderStatus.PENDING.value)
     )
     return result.inserted_primary_key[0]
 
 
 @app.get("/order/{order_id}")
-@DBOS.transaction()
+@ds.transaction()
 def get_order(order_id: int):
     return (
-        DBOS.sql_session.execute(orders.select().where(orders.c.order_id == order_id))
+        ds.sql_session().execute(orders.select().where(orders.c.order_id == order_id))
         .mappings()
         .first()
     )
 
 
-@DBOS.transaction()
+@ds.transaction()
 def update_order_status(order_id: int, status: int) -> None:
-    DBOS.sql_session.execute(
+    ds.sql_session().execute(
         orders.update().where(orders.c.order_id == order_id).values(order_status=status)
     )
 
 
 @app.get("/product")
-@DBOS.transaction()
+@ds.transaction()
 def get_product():
-    return DBOS.sql_session.execute(products.select()).mappings().first()
+    return ds.sql_session().execute(products.select()).mappings().first()
 
 
 @app.get("/orders")
-@DBOS.transaction()
+@ds.transaction()
 def get_orders():
-    rows = DBOS.sql_session.execute(orders.select())
+    rows = ds.sql_session().execute(orders.select())
     return [dict(row) for row in rows.mappings()]
 
 
 @app.post("/restock")
-@DBOS.transaction()
+@ds.transaction()
 def restock():
-    DBOS.sql_session.execute(products.update().values(inventory=100))
+    ds.sql_session().execute(products.update().values(inventory=100))
 
 
 # Now, let's write a workflow to dispatch orders that have been paid for.
@@ -197,10 +202,10 @@ def dispatch_order_workflow(order_id):
         update_order_progress(order_id)
 
 
-@DBOS.transaction()
+@ds.transaction()
 def update_order_progress(order_id):
     # Update the progress of paid orders.
-    progress_remaining = DBOS.sql_session.execute(
+    progress_remaining = ds.sql_session().execute(
         orders.update()
         .where(orders.c.order_id == order_id)
         .values(progress_remaining=orders.c.progress_remaining - 1)
@@ -209,7 +214,7 @@ def update_order_progress(order_id):
 
     # Dispatch if the order is fully-progressed.
     if progress_remaining == 0:
-        DBOS.sql_session.execute(
+        ds.sql_session().execute(
             orders.update()
             .where(orders.c.order_id == order_id)
             .values(order_status=OrderStatus.DISPATCHED.value)

@@ -15,7 +15,10 @@ if config.config_file_name is not None:
 
 
 # Programmatically set the sqlalchemy.url field to the DBOS application database URL
-conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/reliable_refunds_langchain?connect_timeout=5")
+conn_string = os.environ.get(
+    "DBOS_DATABASE_URL",
+    "postgresql+psycopg://postgres:dbos@localhost:5432/reliable_refunds_langchain?connect_timeout=5",
+)
 config.set_main_option("sqlalchemy.url", conn_string)
 
 # add your model's MetaData object here

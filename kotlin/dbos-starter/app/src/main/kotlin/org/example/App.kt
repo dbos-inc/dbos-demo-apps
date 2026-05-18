@@ -68,31 +68,29 @@ fun main(args: Array<String>) {
 
   val proxy = dbos.registerProxy(DurableStarterService::class.java, DurableStarterServiceImpl(dbos))
 
-  @Suppress("UNUSED_VARIABLE")
-  val app =
-    Javalin.create { config ->
-        config.startup.showJavalinBanner = false
-        config.events.serverStarting { dbos.launch() }
-        config.events.serverStopping { dbos.shutdown() }
-        config.routes.get("/") { ctx ->
-          ctx.contentType("text/html")
-          ctx.result(object {}.javaClass.getResourceAsStream("/index.html"))
-        }
-        config.routes.get("/workflow/{taskId}") { ctx ->
-          val taskId = ctx.pathParam("taskId")
-          dbos.startWorkflow(StartWorkflowOptions(taskId)) { proxy.exampleWorkflow() }
-          ctx.status(200)
-        }
-        config.routes.get("/last_step/{taskId}") { ctx ->
-          val taskId = ctx.pathParam("taskId")
-          val step = dbos.getEvent<Int>(taskId, STEPS_EVENT, Duration.ofSeconds(0)).orElse(0)
-          ctx.result(step.toString())
-        }
-        config.routes.post("/crash") { ctx ->
-          logger.warn("Crash endpoint called - terminating application")
-          Runtime.getRuntime().halt(0)
-          ctx.status(200)
-        }
+  Javalin.create { config ->
+      config.startup.showJavalinBanner = false
+      config.events.serverStarting { dbos.launch() }
+      config.events.serverStopping { dbos.shutdown() }
+      config.routes.get("/") { ctx ->
+        ctx.contentType("text/html")
+        ctx.result(object {}.javaClass.getResourceAsStream("/index.html"))
       }
-      .start(7070)
+      config.routes.get("/workflow/{taskId}") { ctx ->
+        val taskId = ctx.pathParam("taskId")
+        dbos.startWorkflow(StartWorkflowOptions(taskId)) { proxy.exampleWorkflow() }
+        ctx.status(200)
+      }
+      config.routes.get("/last_step/{taskId}") { ctx ->
+        val taskId = ctx.pathParam("taskId")
+        val step = dbos.getEvent<Int>(taskId, STEPS_EVENT, Duration.ofSeconds(0)).orElse(0)
+        ctx.result(step.toString())
+      }
+      config.routes.post("/crash") { ctx ->
+        logger.warn("Crash endpoint called - terminating application")
+        Runtime.getRuntime().halt(0)
+        ctx.status(200)
+      }
+    }
+    .start(7070)
 }

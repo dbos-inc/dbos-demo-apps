@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import uvicorn
-from dbos import DBOS, DBOSConfig, Debouncer, Queue, SetEnqueueOptions
+from dbos import DBOS, DBOSConfig, Debouncer, SetEnqueueOptions
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,16 +19,12 @@ api = APIRouter(prefix="/api")
 #######################
 
 
-concurrency_queue = Queue("concurrency-queue", concurrency=5)
-partitioned_queue = Queue("partitioned-queue", partition_queue=True, concurrency=1)
-
-
 @api.post("/workflows/fair_queue")
 def submit_fair_queue(tenant_id: str):
     # First, enqueue a "concurrency manager" workflow to the partitioned
     # queue to enforce per-partition limits.
     with SetEnqueueOptions(queue_partition_key=tenant_id):
-        partitioned_queue.enqueue(fair_queue_concurrency_manager)
+        DBOS.enqueue_workflow("partitioned-queue", fair_queue_concurrency_manager)
 
 
 @DBOS.workflow()
@@ -36,7 +32,7 @@ def fair_queue_concurrency_manager():
     # The "concurrency manager" workflow enqueues the
     # workflow on the non-partitioned queue and
     # awaits its results to enforce global flow control limits.
-    return concurrency_queue.enqueue(fair_queue_workflow).get_result()
+    return DBOS.enqueue_workflow("concurrency-queue", fair_queue_workflow).get_result()
 
 
 # This workflow is fairly queued: at most five workflows can run concurrently,
@@ -50,12 +46,10 @@ def fair_queue_workflow():
 ## Rate Limiting
 #######################
 
-rate_limited_queue = Queue("rate-limited-queue", limiter={"limit": 2, "period": 10})
-
 
 @api.post("/workflows/rate_limited_queue")
 def submit_rate_limited_queue():
-    rate_limited_queue.enqueue(rate_limited_queue_workflow)
+    DBOS.enqueue_workflow("rate-limited-queue", rate_limited_queue_workflow)
 
 
 # This workflow is rate-limited: No more than two workflows can start per 10 seconds
@@ -68,8 +62,6 @@ def rate_limited_queue_workflow():
 ## Debouncing
 #######################
 
-debouncer_queue = Queue("debouncer-queue")
-
 
 @DBOS.workflow()
 def debouncer_workflow(tenant_id: str, input: str):
@@ -80,7 +72,7 @@ def debouncer_workflow(tenant_id: str, input: str):
 # Each time a new input is submitted for a tenant, debounce debouncer_workflow.
 # The debouncer will wait until 5 seconds after input stops being submitted for the tenant,
 # then enqueue the workflow with the last input submitted.
-debouncer = Debouncer.create(debouncer_workflow, queue=debouncer_queue)
+debouncer = Debouncer.create(debouncer_workflow, queue="debouncer-queue")
 
 
 @api.post("/workflows/debouncer")
@@ -159,4 +151,8 @@ if __name__ == "__main__":
     }
     DBOS(config=config)
     DBOS.launch()
+    DBOS.register_queue("concurrency-queue", concurrency=5)
+    DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=1)
+    DBOS.register_queue("rate-limited-queue", limiter={"limit": 2, "period": 10})
+    DBOS.register_queue("debouncer-queue")
     uvicorn.run(app, host="0.0.0.0", port=8000)

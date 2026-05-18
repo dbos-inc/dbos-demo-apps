@@ -51,39 +51,25 @@ export SENDGRID_FROM_EMAIL=<your email>
 export ADMIN_EMAIL=<your email>
 ```
 
-### Deploying to the Cloud
+### Running the App
 
-To serverlessly deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
+First install dependencies:
 
 ```shell
-npm i -g @dbos-inc/dbos-cloud
+uv sync
 ```
 
-Then, run this command to deploy your app:
+Then set `DBOS_DATABASE_URL` to a path to your Postgres database; for example:
 
 ```shell
-dbos-cloud app deploy
+export DBOS_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/reliable_refunds"
 ```
 
-This command outputs a URL&mdash;visit it to see your chatbot!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
-
-First create a virtual environment and install dependencies:
+Then set up your database and start your app:
 
 ```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-
-Then start your app in the virtual environment:
-
-```shell
-dbos migrate
-dbos start
+uv run dbos migrate
+uv run python3 -m reliable_refunds.main
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your customer service chatbot!

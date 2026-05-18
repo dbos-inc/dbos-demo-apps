@@ -453,19 +453,19 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "2.19.0"
+version = "2.22.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dateutil" },
     { name = "pyyaml" },
-    { name = "sqlalchemy" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "typer-slim" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/83/77/9af1f0c5ffe581c198203e0ad421489b997496a1c6c9b20ba9b637c18945/dbos-2.19.0.tar.gz", hash = "sha256:a43b7e8255f77756d0cfbdcb771f53c11908a1a37455c1c1f596c70170feb6c1", size = 443076, upload-time = "2026-04-22T15:28:18.117Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/52/5e4944e7a0605b4da3119876502cc39af7775555f16982c6a298411a7f63/dbos-2.22.0.tar.gz", hash = "sha256:5d43a9d0388d851df0f7bbd4ed752bc8b67be3d6fbe358c8be4d22f6c4887db6", size = 479210, upload-time = "2026-05-15T15:33:51.483Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/41/7cc7ce7f2cd32433e4479a5c207bc042e5b173c23c1023714d8d82df50d2/dbos-2.19.0-py3-none-any.whl", hash = "sha256:d8b8ce86785923df98c0b2dfd3400e8140c0ba6b80296ed5440d62263b8ddbed", size = 178809, upload-time = "2026-04-22T15:28:16.395Z" },
+    { url = "https://files.pythonhosted.org/packages/9e/bc/0fc571524ba11c9800a1a116cb9b157223bbff39b070e7a2c3ed5b4edbe6/dbos-2.22.0-py3-none-any.whl", hash = "sha256:09edc621ec2857dae73cc1b01bc7379999fe9ee4ef8c6ff4ac69dd1a5263001f", size = 198070, upload-time = "2026-05-15T15:33:49.893Z" },
 ]
 
 [[package]]
@@ -535,7 +535,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", specifier = "==2.19.0" },
+    { name = "dbos", specifier = "==2.22.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.120.0" },
     { name = "llama-index", specifier = "==0.14.5" },
     { name = "llama-index-vector-stores-postgres", specifier = "==0.7.1" },

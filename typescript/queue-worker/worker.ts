@@ -1,11 +1,7 @@
-import { DBOS, WorkflowQueue } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 // Define constants
 const WF_PROGRESS_KEY = 'workflow_progress';
-
-// Define a queue on which the web server
-// can submit workflows for execution.
-new WorkflowQueue('workflow-queue');
 
 // This background workflow is submitted by the
 // web server. It runs a number of steps,
@@ -45,6 +41,9 @@ async function main(): Promise<void> {
     applicationVersion: "0.1.0",
   });
   await DBOS.launch();
+  // Define a queue on which the web server
+  // can submit workflows for execution.
+  await DBOS.registerQueue('workflow-queue');
   // After launching DBOS, the worker waits indefinitely,
   // dequeuing and executing workflows.
   console.log('Worker started, waiting for workflows...');
