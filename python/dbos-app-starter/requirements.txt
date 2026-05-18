@@ -1,2 +1,2 @@
-dbos[otel]==2.21.0
+dbos[otel]==2.22.0
 fastapi[standard]

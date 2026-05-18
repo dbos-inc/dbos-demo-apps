@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
+import earthquake_tracker.main as earthquake_tracker
 from earthquake_tracker.main import (
     EarthquakeData,
     get_earthquake_data,
@@ -34,7 +35,9 @@ def test_record_data(dbos):
         "magnitude": 2.21,
         "timestamp": 1738136375670,
     }
-    assert record_earthquake_data(earthquake) is True
+    assert earthquake_tracker.ds.run_tx_step(
+        {"name": "record_earthquake_data"}, record_earthquake_data, earthquake
+    ) is True
 
 
 def test_main_workflow(dbos):
@@ -44,7 +47,6 @@ def test_main_workflow(dbos):
     """
     now = datetime.now()
     scheduled_time = now
-    actual_time = now
     earthquake: EarthquakeData = {
         "id": "ci40171730",
         "place": "15 km SW of Searles Valley, CA",
@@ -62,7 +64,7 @@ def test_main_workflow(dbos):
             mock_record_data.return_value = True
 
             # Call the main workflow
-            run_every_minute(scheduled_time, actual_time)
+            run_every_minute(scheduled_time, None)
 
             # Verify get_earthquake_data was called once with correct parameters
             start_time = scheduled_time - timedelta(hours=1)
