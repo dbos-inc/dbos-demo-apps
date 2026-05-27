@@ -138,7 +138,8 @@ def create_order(request: OrderRequest):
 def list_orders() -> list[dict]:
     """Return all orders, newest first."""
     rows = (
-        ds.sql_session().execute(orders.select().order_by(orders.c.order_id.desc()))
+        ds.sql_session()
+        .execute(orders.select().order_by(orders.c.order_id.desc()))
         .mappings()
         .all()
     )
