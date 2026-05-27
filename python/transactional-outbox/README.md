@@ -25,7 +25,14 @@ export DBOS_DATABASE_URL="postgresql+psycopg://postgres@localhost:5432/transacti
 3. Start the app:
 
 ```shell
-uv run main.py
+uv run atomic_workflow.py
 ```
+
+Or:
+
+```shell
+uv run transactional_enqueue.py
+```
+
 
 Visit [`http://localhost:8000`](http://localhost:8000) to place orders and watch notifications get sent.
