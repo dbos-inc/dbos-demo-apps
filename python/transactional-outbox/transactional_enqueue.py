@@ -19,8 +19,7 @@ if os.environ.get("DBOS_DATABASE_URL") is None:
     raise Exception("DBOS_DATABASE_URL not provided")
 ds = SQLAlchemyDatasource.create(os.environ.get("DBOS_DATABASE_URL"))
 
-# Workflows enqueued from the order transaction run on this queue. It is a
-# database-backed queue, registered after DBOS.launch() in main().
+# Workflows enqueued from the order transaction run on this queue.
 NOTIFICATION_QUEUE = "notification_queue"
 
 # ---------------------------------------------------------------------------
@@ -68,9 +67,9 @@ def insert_order(customer: str, item: str, quantity: int) -> int:
     order_id: int = result.inserted_primary_key[0]
 
     # Enqueue the notification workflow as part of this transaction. Arguments
-    # must be supplied in DBOS's portable JSON format (each positional argument
-    # is a JSON value), so we json.dumps each one. The `AS json` cast is needed
-    # only because psycopg sends bind parameters as an untyped value.
+    # must be supplied in JSON format (each positional argument is a JSON
+    # value), so we json.dumps each one. The `AS json` cast is needed only
+    # because psycopg sends bind parameters as an untyped value.
     session.execute(
         sa.text(
             """
@@ -194,8 +193,6 @@ def main() -> None:
     DBOS(config=config)
     DBOS.launch()
 
-    # Register the database-backed queue. With the DB-backed queue API this
-    # must happen after DBOS.launch(), not at module load time.
     DBOS.register_queue(NOTIFICATION_QUEUE)
 
     create_orders_table()
