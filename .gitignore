@@ -4,6 +4,7 @@
 **.python-version
 .claude
 .agents
+skills-lock.json
 
 logs
 *.log
