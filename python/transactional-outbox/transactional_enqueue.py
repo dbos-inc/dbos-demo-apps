@@ -71,8 +71,7 @@ def insert_order(customer: str, item: str, quantity: int) -> int:
     # value), so we json.dumps each one. The `AS json` cast is needed only
     # because psycopg sends bind parameters as an untyped value.
     session.execute(
-        sa.text(
-            """
+        sa.text("""
             SELECT dbos.enqueue_workflow(
                 workflow_name => :workflow_name,
                 queue_name => :queue_name,
@@ -82,8 +81,7 @@ def insert_order(customer: str, item: str, quantity: int) -> int:
                     CAST(:arg_item AS json)
                 ]
             )
-            """
-        ),
+            """),
         {
             "workflow_name": "send_notification_workflow",
             "queue_name": NOTIFICATION_QUEUE,
@@ -167,7 +165,8 @@ def create_order(request: OrderRequest):
 def list_orders() -> list[dict]:
     """Return all orders, newest first."""
     rows = (
-        ds.sql_session().execute(orders.select().order_by(orders.c.order_id.desc()))
+        ds.sql_session()
+        .execute(orders.select().order_by(orders.c.order_id.desc()))
         .mappings()
         .all()
     )
