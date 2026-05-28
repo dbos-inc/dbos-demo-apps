@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
-import { listAgents, finishAgent, researchMoreAgent } from '../api';
-import type { AgentStatus, SearchStepStatus } from '../types';
+import { useEffect, useState, useCallback } from 'react';
+import { listAgents, getAgentSearches, getWorkflowOutput, finishAgent, researchMoreAgent } from '../api';
+import type { AgentStatus, SearchInfo } from '../types';
 
 export function AgentList() {
   const [agents, setAgents] = useState<AgentStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [agentSearches, setAgentSearches] = useState<Record<string, SearchInfo[]>>({});
+  const [modalSearch, setModalSearch] = useState<SearchInfo | null>(null);
+  const [modalOutput, setModalOutput] = useState<string | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
   const [researchMorePrompts, setResearchMorePrompts] = useState<Record<string, string>>({});
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [actionError, setActionError] = useState<Record<string, string | null>>({});
@@ -15,6 +19,13 @@ export function AgentList() {
       setError(null);
       const data = await listAgents();
       setAgents(data);
+
+      // Fetch searches for every agent that has moved past planning
+      const active = data.filter(a => a.status !== 'PLANNING');
+      const results = await Promise.all(
+        active.map(a => getAgentSearches(a.agent_id).then(s => [a.agent_id, s] as const))
+      );
+      setAgentSearches(Object.fromEntries(results));
     } catch (err) {
       setError('Failed to load agents');
       console.error(err);
@@ -37,6 +48,32 @@ export function AgentList() {
 
     return () => clearTimeout(timeoutId);
   }, []);
+
+  const closeModal = useCallback(() => {
+    setModalSearch(null);
+    setModalOutput(null);
+  }, []);
+
+  useEffect(() => {
+    if (!modalSearch) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [modalSearch, closeModal]);
+
+  const openSearchModal = async (search: SearchInfo) => {
+    setModalSearch(search);
+    setModalOutput(null);
+    setModalLoading(true);
+    try {
+      const output = await getWorkflowOutput(search.workflow_id);
+      setModalOutput(output);
+    } catch {
+      setModalOutput('Failed to load search results.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
 
   const getStatusBadgeClass = (status: string) => {
     const lowerStatus = status.toLowerCase();
@@ -157,18 +194,22 @@ export function AgentList() {
                   </span>
                 </div>
               </div>
-              {(agent.search_steps ?? []).length > 0 && (
+              {(agentSearches[agent.agent_id] ?? []).length > 0 && (
                 <div className="search-steps">
                   <h4>Searches:</h4>
                   <ul className="search-step-list">
-                    {(agent.search_steps as SearchStepStatus[]).map((step, i) => (
-                      <li key={i} className={`search-step-item ${step.completed ? 'done' : 'running'}`}>
+                    {agentSearches[agent.agent_id].map((s, i) => (
+                      <li
+                        key={i}
+                        className={`search-step-item ${s.completed ? 'done clickable' : 'running'}`}
+                        onClick={s.completed ? () => openSearchModal(s) : undefined}
+                      >
                         <span className="step-indicator">
-                          {step.completed
+                          {s.completed
                             ? <span className="step-check">✓</span>
                             : <span className="spinner step-spinner"></span>}
                         </span>
-                        <span className="step-terms">{step.search_terms}</span>
+                        <span className="step-terms">{s.search_terms}</span>
                       </li>
                     ))}
                   </ul>
@@ -223,6 +264,28 @@ export function AgentList() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {modalSearch && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{modalSearch.search_terms}</h3>
+              <button className="modal-close" onClick={closeModal}>✕</button>
+            </div>
+            <div className="modal-body">
+              {modalLoading ? (
+                <div className="modal-loading">
+                  <span className="spinner"></span> Loading…
+                </div>
+              ) : (
+                <div className="modal-output">
+                  {modalOutput ? formatReportWithLinks(modalOutput) : 'No output available.'}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

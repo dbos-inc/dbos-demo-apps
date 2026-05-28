@@ -402,6 +402,22 @@ button:disabled {
   color: var(--text-muted);
 }
 
+.search-step-item.clickable {
+  cursor: pointer;
+  border-radius: 4px;
+  padding-left: 0.25rem;
+  margin-left: -0.25rem;
+  transition: background 0.15s ease;
+}
+
+.search-step-item.clickable:hover {
+  background: rgba(240, 37, 117, 0.07);
+}
+
+.search-step-item.clickable:hover .step-terms {
+  color: var(--pydantic-pink-light);
+}
+
 .step-indicator {
   display: flex;
   align-items: center;
@@ -559,6 +575,92 @@ button.btn-finish {
 
 button.btn-finish:hover:not(:disabled) {
   background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--pydantic-border);
+  width: 100%;
+  max-width: 700px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--pydantic-border);
+  gap: 1rem;
+}
+
+.modal-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  line-height: 1.4;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.2s;
+  box-shadow: none;
+  transform: none;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.modal-close:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: none;
+  transform: none;
+  box-shadow: none;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  padding: 2rem;
+  justify-content: center;
+}
+
+.modal-output {
+  white-space: pre-wrap;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.7;
 }
 
 @media (max-width: 768px) {

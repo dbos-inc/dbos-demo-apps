@@ -8,7 +8,7 @@ import logfire
 import uvicorn
 from annotated_types import MaxLen
 from dbos import DBOS, DBOSConfig, WorkflowHandleAsync
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 from pydantic_ai import Agent, WebSearchTool, format_as_xml
@@ -115,6 +115,7 @@ class ApprovalRequest(BaseModel):
 
 
 class SearchStepStatus(BaseModel):
+    """Kept for backward compatibility with pickled events stored in SQLite."""
     search_terms: str
     completed: bool = False
 
@@ -124,8 +125,14 @@ class AgentStatus(BaseModel):
     query: str
     report: Optional[str]
     status: str
-    search_steps: List[SearchStepStatus] = []
     agent_id: str = ""
+
+
+class SearchInfo(BaseModel):
+    workflow_id: str
+    search_terms: str
+    status: str
+    completed: bool
 
 
 dbos_plan_agent = DBOSAgent(plan_agent)
@@ -164,10 +171,6 @@ async def deep_research(query: str) -> str:
         tasks_handles: List[WorkflowHandleAsync[str]] = []
 
         agent_status.status = "SEARCHING"
-        agent_status.search_steps = [
-            SearchStepStatus(search_terms=step.search_terms)
-            for step in plan.web_search_steps
-        ]
         await DBOS.set_event_async(AGENT_STATUS, agent_status)
         for step in plan.web_search_steps:
             task_handle = await DBOS.start_workflow_async(
@@ -175,11 +178,7 @@ async def deep_research(query: str) -> str:
             )
             tasks_handles.append(task_handle)
 
-        search_results = []
-        for i, task in enumerate(tasks_handles):
-            search_results.append(await task.get_result())
-            agent_status.search_steps[i].completed = True
-            await DBOS.set_event_async(AGENT_STATUS, agent_status)
+        search_results = [await task.get_result() for task in tasks_handles]
 
         agent_status.status = "ANALYZING"
         await DBOS.set_event_async(AGENT_STATUS, agent_status)
@@ -240,14 +239,64 @@ async def list_agents():
     for workflow, status in zip(agent_workflows, statuses):
         status.status = workflow.status if workflow.status == "ERROR" or workflow.status == "CANCELLED" else status.status
         status.agent_id = workflow.workflow_id
-        if not hasattr(status, "search_steps") or status.search_steps is None:
-            status.search_steps = []
-        elif status.search_steps and isinstance(status.search_steps[0], str):
-            status.search_steps = [
-                SearchStepStatus(search_terms=s, completed=True)
-                for s in status.search_steps
-            ]
     return statuses
+
+
+@app.get("/agents/{agent_id}/searches", response_model=list[SearchInfo])
+async def get_agent_searches(agent_id: str):
+    searches: list[SearchInfo] = []
+
+    # Plan searches: direct search_workflow children of the main workflow
+    plan_wfs = await DBOS.list_workflows_async(
+        parent_workflow_id=agent_id,
+        name=search_workflow.__qualname__,
+        load_input=True,
+    )
+    for wf in plan_wfs:
+        terms = wf.input["args"][0] if wf.input and wf.input.get("args") else ""
+        searches.append(SearchInfo(
+            workflow_id=wf.workflow_id,
+            search_terms=terms,
+            status=wf.status,
+            completed=wf.status == "SUCCESS",
+        ))
+
+    # Extra searches: search_agent.run children of analysis_agent.run children
+    analysis_wfs = await DBOS.list_workflows_async(
+        parent_workflow_id=agent_id,
+        name="analysis_agent.run",
+    )
+    extra_wfs = await asyncio.gather(*[
+        DBOS.list_workflows_async(
+            parent_workflow_id=awf.workflow_id,
+            name="search_agent.run",
+            load_input=True,
+        )
+        for awf in analysis_wfs
+    ])
+    for wf_list in extra_wfs:
+        for wf in wf_list:
+            terms = wf.input["args"][0] if wf.input and wf.input.get("args") else ""
+            searches.append(SearchInfo(
+                workflow_id=wf.workflow_id,
+                search_terms=terms,
+                status=wf.status,
+                completed=wf.status == "SUCCESS",
+            ))
+
+    return searches
+
+
+@app.get("/workflows/{workflow_id}/output")
+async def get_workflow_output(workflow_id: str):
+    wfs = await DBOS.list_workflows_async(workflow_ids=[workflow_id], load_output=True)
+    if not wfs:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    output = wfs[0].output
+    # DBOSAgent workflows return an AgentRunResult; unwrap to the string output
+    if hasattr(output, "output"):
+        output = output.output
+    return {"output": str(output) if output is not None else ""}
 
 
 if __name__ == "__main__":

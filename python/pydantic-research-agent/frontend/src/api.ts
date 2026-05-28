@@ -1,4 +1,4 @@
-import type { AgentStatus, AgentStartRequest, ApprovalRequest } from './types';
+import type { AgentStatus, AgentStartRequest, ApprovalRequest, SearchInfo } from './types';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -36,6 +36,19 @@ async function sendApproval(agentId: string, body: ApprovalRequest): Promise<voi
   if (!response.ok) {
     throw new Error('Failed to send approval');
   }
+}
+
+export async function getAgentSearches(agentId: string): Promise<SearchInfo[]> {
+  const response = await fetch(`${API_BASE}/agents/${agentId}/searches`);
+  if (!response.ok) throw new Error('Failed to fetch searches');
+  return response.json();
+}
+
+export async function getWorkflowOutput(workflowId: string): Promise<string> {
+  const response = await fetch(`${API_BASE}/workflows/${workflowId}/output`);
+  if (!response.ok) throw new Error('Failed to fetch workflow output');
+  const data = await response.json();
+  return data.output as string;
 }
 
 export async function finishAgent(agentId: string): Promise<void> {
