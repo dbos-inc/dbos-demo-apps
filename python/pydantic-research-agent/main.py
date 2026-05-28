@@ -114,11 +114,17 @@ class ApprovalRequest(BaseModel):
     prompt: Optional[str] = None
 
 
+class SearchStepStatus(BaseModel):
+    search_terms: str
+    completed: bool = False
+
+
 class AgentStatus(BaseModel):
     created_at: str
     query: str
     report: Optional[str]
     status: str
+    search_steps: List[SearchStepStatus] = []
     agent_id: str = ""
 
 
@@ -142,12 +148,13 @@ async def search_workflow(search_terms: str) -> str:
 async def deep_research(query: str) -> str:
     created_at = datetime.now().isoformat()
     current_query = query
+    display_query = query  # User-facing label; updated each iteration
     current_report: Optional[str] = None
 
     while True:
         agent_status = AgentStatus(
             created_at=created_at,
-            query=query,  # Always show the original top-level query
+            query=display_query,
             report=current_report,
             status="PLANNING",
         )
@@ -157,6 +164,10 @@ async def deep_research(query: str) -> str:
         tasks_handles: List[WorkflowHandleAsync[str]] = []
 
         agent_status.status = "SEARCHING"
+        agent_status.search_steps = [
+            SearchStepStatus(search_terms=step.search_terms)
+            for step in plan.web_search_steps
+        ]
         await DBOS.set_event_async(AGENT_STATUS, agent_status)
         for step in plan.web_search_steps:
             task_handle = await DBOS.start_workflow_async(
@@ -164,7 +175,11 @@ async def deep_research(query: str) -> str:
             )
             tasks_handles.append(task_handle)
 
-        search_results = [await task.get_result() for task in tasks_handles]
+        search_results = []
+        for i, task in enumerate(tasks_handles):
+            search_results.append(await task.get_result())
+            agent_status.search_steps[i].completed = True
+            await DBOS.set_event_async(AGENT_STATUS, agent_status)
 
         agent_status.status = "ANALYZING"
         await DBOS.set_event_async(AGENT_STATUS, agent_status)
@@ -192,6 +207,7 @@ async def deep_research(query: str) -> str:
 
         # Research more: build a context-aware query for the next iteration
         additional_prompt = approval.get("prompt") or ""
+        display_query = additional_prompt
         current_query = (
             f"<previous_research_summary>\n{current_report}\n</previous_research_summary>\n\n"
             f"Additional research requested: {additional_prompt}"
@@ -224,6 +240,13 @@ async def list_agents():
     for workflow, status in zip(agent_workflows, statuses):
         status.status = workflow.status if workflow.status == "ERROR" or workflow.status == "CANCELLED" else status.status
         status.agent_id = workflow.workflow_id
+        if not hasattr(status, "search_steps") or status.search_steps is None:
+            status.search_steps = []
+        elif status.search_steps and isinstance(status.search_steps[0], str):
+            status.search_steps = [
+                SearchStepStatus(search_terms=s, completed=True)
+                for s in status.search_steps
+            ]
     return statuses
 
 

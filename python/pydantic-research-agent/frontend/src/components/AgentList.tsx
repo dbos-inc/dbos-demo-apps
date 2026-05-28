@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { listAgents, finishAgent, researchMoreAgent } from '../api';
-import type { AgentStatus } from '../types';
+import type { AgentStatus, SearchStepStatus } from '../types';
 
 export function AgentList() {
   const [agents, setAgents] = useState<AgentStatus[]>([]);
@@ -157,6 +157,23 @@ export function AgentList() {
                   </span>
                 </div>
               </div>
+              {(agent.search_steps ?? []).length > 0 && (
+                <div className="search-steps">
+                  <h4>Searches:</h4>
+                  <ul className="search-step-list">
+                    {(agent.search_steps as SearchStepStatus[]).map((step, i) => (
+                      <li key={i} className={`search-step-item ${step.completed ? 'done' : 'running'}`}>
+                        <span className="step-indicator">
+                          {step.completed
+                            ? <span className="step-check">✓</span>
+                            : <span className="spinner step-spinner"></span>}
+                        </span>
+                        <span className="step-terms">{step.search_terms}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {agent.report && (
                 <div className="agent-report">
                   <h4>Report:</h4>

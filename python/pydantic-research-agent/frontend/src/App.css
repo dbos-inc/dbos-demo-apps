@@ -364,6 +364,65 @@ button:disabled {
   font-size: 0.9rem;
 }
 
+.search-steps {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--pydantic-border);
+}
+
+.search-steps h4 {
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.search-step-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.search-step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  padding: 0.1rem 0;
+}
+
+.search-step-item.done .step-terms {
+  color: var(--text-secondary);
+}
+
+.search-step-item.running .step-terms {
+  color: var(--text-muted);
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.step-check {
+  color: var(--success);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.step-spinner {
+  width: 11px;
+  height: 11px;
+  border-width: 1.5px;
+  margin: 0;
+}
+
 .agent-report {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
