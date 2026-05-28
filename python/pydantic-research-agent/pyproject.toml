@@ -5,10 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "anthropic>=0.105.0",
     "dbos==2.22.0",
     "fastapi[standard]>=0.128.0",
     "logfire>=4.16.0",
-    "pydantic-ai==1.40.0",
+    "pydantic-ai>=1.103.0",
+    "pydantic-ai-slim[anthropic]>=1.103.0",
 ]
 
 [dependency-groups]

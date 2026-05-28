@@ -11,8 +11,10 @@ from dbos import DBOS, DBOSConfig, WorkflowHandleAsync
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
-from pydantic_ai import Agent, WebSearchTool, format_as_xml
+from pydantic_ai.capabilities import NativeTool, WebSearch
+from pydantic_ai import Agent, WebSearchTool, format_as_xml, RunContext
 from pydantic_ai.durable_exec.dbos import DBOSAgent
+from pydantic_ai.models.google import GoogleModel
 
 app = FastAPI()
 app.add_middleware(
@@ -72,22 +74,25 @@ class DeepResearchPlan(BaseModel, **ConfigDict(use_attribute_docstrings=True)):
 
 
 plan_agent = Agent(
-    f"{model_prefix}anthropic:claude-sonnet-4-5",
+    f"{model_prefix}anthropic:claude-sonnet-4-6",
     instructions="Analyze the users query and design a plan for deep research to answer their query.",
     output_type=DeepResearchPlan,
     name="plan_agent",
 )
 
+search_model = GoogleModel('gemini-3.5-flash')
 
+# 2. Enable native Google Search grounding using capabilities
 search_agent = Agent(
-    f"{model_prefix}google-gla:gemini-2.5-flash",
-    instructions="Perform a web search for the given terms and return a detailed report on the results.",
-    builtin_tools=[WebSearchTool()],
+    search_model,
+    capabilities=[NativeTool(WebSearchTool())],
+    system_prompt="""Perform a web search for the given terms and return a detailed report on the results. At the end of the report, include a "## Sources" section listing every URL visited. Each URL should be formatted as a markdown link of the form [source title](URL).""",
     name="search_agent",
 )
 
+
 analysis_agent = Agent(
-    f"{model_prefix}anthropic:claude-sonnet-4-5",
+    f"{model_prefix}anthropic:claude-sonnet-4-6",
     instructions="""
 Analyze the research from the previous steps and generate a report on the given subject.
 
@@ -216,7 +221,7 @@ async def deep_research(query: str) -> str:
 @app.post("/agents")
 async def start_agent(request: AgentStartRequest):
     # Start a durable agent in the background
-    DBOS.start_workflow(deep_research, request.query)
+    await DBOS.start_workflow_async(deep_research, request.query)
     return {"ok": True}
 
 
@@ -297,6 +302,11 @@ async def get_workflow_output(workflow_id: str):
     if hasattr(output, "output"):
         output = output.output
     return {"output": str(output) if output is not None else ""}
+
+
+@app.post("/crash")
+async def crash_app():
+    os._exit(1)
 
 
 if __name__ == "__main__":
