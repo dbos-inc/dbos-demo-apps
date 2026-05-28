@@ -215,7 +215,7 @@ export function AgentList() {
                   </ul>
                 </div>
               )}
-              {agent.report && (
+              {agent.report && (agent.status === 'PENDING_APPROVAL' || agent.status.toLowerCase().includes('complete')) && (
                 <div className="agent-report">
                   <h4>Report:</h4>
                   <div className="report-content">{formatReportWithLinks(agent.report)}</div>
