@@ -9,3 +9,8 @@ export interface AgentStatus {
 export interface AgentStartRequest {
   query: string;
 }
+
+export interface ApprovalRequest {
+  action: 'finish' | 'research_more';
+  prompt?: string;
+}

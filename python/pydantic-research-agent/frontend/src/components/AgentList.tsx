@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { listAgents } from '../api';
+import { listAgents, finishAgent, researchMoreAgent } from '../api';
 import type { AgentStatus } from '../types';
 
 export function AgentList() {
   const [agents, setAgents] = useState<AgentStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [researchMorePrompts, setResearchMorePrompts] = useState<Record<string, string>>({});
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [actionError, setActionError] = useState<Record<string, string | null>>({});
 
   const fetchAgents = async () => {
     try {
@@ -39,11 +42,15 @@ export function AgentList() {
     const lowerStatus = status.toLowerCase();
     if (lowerStatus.includes('complete')) return 'status-success';
     if (lowerStatus.includes('error') || lowerStatus.includes('fail')) return 'status-error';
+    if (lowerStatus === 'pending_approval') return 'status-pending-approval';
     return 'status-running';
   };
 
-  const isPending = (status: string) => {
-    return status.toLowerCase().includes('pending');
+  const showSpinner = (status: string) => {
+    const lowerStatus = status.toLowerCase();
+    return lowerStatus !== 'pending_approval' &&
+      !lowerStatus.includes('complete') &&
+      !lowerStatus.includes('error');
   };
 
   const formatReportWithLinks = (report: string) => {
@@ -85,6 +92,35 @@ export function AgentList() {
     return parts;
   };
 
+  const handleFinish = async (agentId: string) => {
+    setActionLoading(prev => ({ ...prev, [agentId]: true }));
+    setActionError(prev => ({ ...prev, [agentId]: null }));
+    try {
+      await finishAgent(agentId);
+    } catch (err) {
+      setActionError(prev => ({ ...prev, [agentId]: 'Failed to finish. Please try again.' }));
+      console.error(err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [agentId]: false }));
+    }
+  };
+
+  const handleResearchMore = async (agentId: string) => {
+    const prompt = researchMorePrompts[agentId]?.trim();
+    if (!prompt) return;
+    setActionLoading(prev => ({ ...prev, [agentId]: true }));
+    setActionError(prev => ({ ...prev, [agentId]: null }));
+    try {
+      await researchMoreAgent(agentId, prompt);
+      setResearchMorePrompts(prev => ({ ...prev, [agentId]: '' }));
+    } catch (err) {
+      setActionError(prev => ({ ...prev, [agentId]: 'Failed to request more research. Please try again.' }));
+      console.error(err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [agentId]: false }));
+    }
+  };
+
   if (isLoading) {
     return <div className="loading">Loading agents...</div>;
   }
@@ -105,7 +141,7 @@ export function AgentList() {
               <div className="agent-header">
                 <h3>{agent.query}</h3>
                 <span className={`status-badge ${getStatusBadgeClass(agent.status)}`}>
-                  {isPending(agent.status) && <span className="spinner"></span>}
+                  {showSpinner(agent.status) && <span className="spinner"></span>}
                   {agent.status}
                 </span>
               </div>
@@ -125,6 +161,47 @@ export function AgentList() {
                 <div className="agent-report">
                   <h4>Report:</h4>
                   <div className="report-content">{formatReportWithLinks(agent.report)}</div>
+                </div>
+              )}
+              {agent.status === 'PENDING_APPROVAL' && (
+                <div className="approval-section">
+                  <p className="approval-prompt">
+                    Research complete — would you like to finish or dig deeper?
+                  </p>
+                  {actionError[agent.agent_id] && (
+                    <div className="error approval-error">{actionError[agent.agent_id]}</div>
+                  )}
+                  <div className="approval-actions">
+                    <button
+                      className="btn-finish"
+                      onClick={() => handleFinish(agent.agent_id)}
+                      disabled={actionLoading[agent.agent_id]}
+                    >
+                      {actionLoading[agent.agent_id] ? 'Sending...' : 'Finish'}
+                    </button>
+                    <span className="approval-or">or</span>
+                    <div className="research-more-group">
+                      <input
+                        type="text"
+                        className="research-more-input"
+                        placeholder="What additional research would you like?"
+                        value={researchMorePrompts[agent.agent_id] || ''}
+                        onChange={(e) =>
+                          setResearchMorePrompts(prev => ({ ...prev, [agent.agent_id]: e.target.value }))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleResearchMore(agent.agent_id);
+                        }}
+                        disabled={actionLoading[agent.agent_id]}
+                      />
+                      <button
+                        onClick={() => handleResearchMore(agent.agent_id)}
+                        disabled={actionLoading[agent.agent_id] || !researchMorePrompts[agent.agent_id]?.trim()}
+                      >
+                        {actionLoading[agent.agent_id] ? 'Sending...' : 'Research More'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

@@ -80,7 +80,7 @@ plan_agent = Agent(
 
 
 search_agent = Agent(
-    f"{model_prefix}google-vertex:gemini-2.5-flash",
+    f"{model_prefix}google-gla:gemini-2.5-flash",
     instructions="Perform a web search for the given terms and return a detailed report on the results.",
     builtin_tools=[WebSearchTool()],
     name="search_agent",
@@ -102,10 +102,16 @@ Include links to original sources whenever possible.
 )
 
 AGENT_STATUS = "agent_status"
+APPROVAL_TOPIC = "approval"
 
 
 class AgentStartRequest(BaseModel):
     query: str
+
+
+class ApprovalRequest(BaseModel):
+    action: str  # "finish" or "research_more"
+    prompt: Optional[str] = None
 
 
 class AgentStatus(BaseModel):
@@ -134,50 +140,74 @@ async def search_workflow(search_terms: str) -> str:
 
 @DBOS.workflow()
 async def deep_research(query: str) -> str:
-    # Set and update an agent status the frontend can display
-    agent_status = AgentStatus(
-        created_at=datetime.now().isoformat(),
-        query=query,
-        report=None,
-        status="PLANNING",
-    )
-    await DBOS.set_event_async(AGENT_STATUS, agent_status)
-    result = await dbos_plan_agent.run(query)
-    plan = result.output
-    tasks_handles: List[WorkflowHandleAsync[str]] = []
+    created_at = datetime.now().isoformat()
+    current_query = query
+    current_report: Optional[str] = None
 
-    agent_status.status = "SEARCHING"
-    await DBOS.set_event_async(AGENT_STATUS, agent_status)
-    for step in plan.web_search_steps:
-        # Asynchronously start search workflows without waiting for each to complete
-        task_handle = await DBOS.start_workflow_async(
-            search_workflow, step.search_terms
+    while True:
+        agent_status = AgentStatus(
+            created_at=created_at,
+            query=query,  # Always show the original top-level query
+            report=current_report,
+            status="PLANNING",
         )
-        tasks_handles.append(task_handle)
+        await DBOS.set_event_async(AGENT_STATUS, agent_status)
+        result = await dbos_plan_agent.run(current_query)
+        plan = result.output
+        tasks_handles: List[WorkflowHandleAsync[str]] = []
 
-    search_results = [await task.get_result() for task in tasks_handles]
+        agent_status.status = "SEARCHING"
+        await DBOS.set_event_async(AGENT_STATUS, agent_status)
+        for step in plan.web_search_steps:
+            task_handle = await DBOS.start_workflow_async(
+                search_workflow, step.search_terms
+            )
+            tasks_handles.append(task_handle)
 
-    agent_status.status = "ANALYZING"
-    await DBOS.set_event_async(AGENT_STATUS, agent_status)
-    analysis_result = await dbos_analysis_agent.run(
-        format_as_xml(
-            {
-                "query": query,
-                "search_results": search_results,
-                "instructions": plan.analysis_instructions,
-            }
-        ),
-    )
-    agent_status.report = analysis_result.output
-    agent_status.status = "COMPLETED"
-    await DBOS.set_event_async(AGENT_STATUS, agent_status)
-    return analysis_result.output
+        search_results = [await task.get_result() for task in tasks_handles]
+
+        agent_status.status = "ANALYZING"
+        await DBOS.set_event_async(AGENT_STATUS, agent_status)
+        analysis_result = await dbos_analysis_agent.run(
+            format_as_xml(
+                {
+                    "query": current_query,
+                    "search_results": search_results,
+                    "instructions": plan.analysis_instructions,
+                }
+            ),
+        )
+        current_report = analysis_result.output
+        agent_status.report = current_report
+        agent_status.status = "PENDING_APPROVAL"
+        await DBOS.set_event_async(AGENT_STATUS, agent_status)
+
+        # Wait for the user to finish or request more research (up to 1 hour)
+        approval = await DBOS.recv_async(APPROVAL_TOPIC, timeout_seconds=3600)
+
+        if approval is None or approval.get("action") == "finish":
+            agent_status.status = "COMPLETED"
+            await DBOS.set_event_async(AGENT_STATUS, agent_status)
+            return current_report
+
+        # Research more: build a context-aware query for the next iteration
+        additional_prompt = approval.get("prompt") or ""
+        current_query = (
+            f"<previous_research_summary>\n{current_report}\n</previous_research_summary>\n\n"
+            f"Additional research requested: {additional_prompt}"
+        )
 
 
 @app.post("/agents")
 async def start_agent(request: AgentStartRequest):
     # Start a durable agent in the background
     DBOS.start_workflow(deep_research, request.query)
+    return {"ok": True}
+
+
+@app.post("/agents/{agent_id}/approve")
+async def approve_agent(agent_id: str, request: ApprovalRequest):
+    await DBOS.send_async(agent_id, {"action": request.action, "prompt": request.prompt}, APPROVAL_TOPIC)
     return {"ok": True}
 
 
