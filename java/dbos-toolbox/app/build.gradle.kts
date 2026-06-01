@@ -9,12 +9,11 @@ dependencies {
   // using latest 0.9 milestone release of DBOS for step factory support
   implementation("dev.dbos:transact:0.9.+")
 
-  implementation("io.javalin:javalin:7.0.1")
-  implementation("org.slf4j:slf4j-simple:2.0.17")
+  implementation("io.javalin:javalin:7.2.2")
+  implementation("org.slf4j:slf4j-simple:2.0.18")
+
   implementation("com.zaxxer:HikariCP:7.0.2")
 }
-
-java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 
 spotless {
   java {
@@ -40,3 +39,12 @@ spotless {
 }
 
 application { mainClass = "org.example.App" }
+
+tasks.test {
+  useJUnitPlatform()
+  testLogging {
+    events("passed", "skipped", "failed")
+    showStandardStreams = true
+    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+  }
+}
