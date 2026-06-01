@@ -1,22 +1,21 @@
 plugins {
   application
-  id("com.diffplug.spotless") version "8.3.0"
+  id("com.diffplug.spotless") version "8.6.0"
 }
 
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("dev.dbos:transact:0.8.0")
+  // using latest 0.9 milestone release of DBOS
+  implementation("dev.dbos:transact:0.9.+")
 
-  implementation("io.javalin:javalin:7.0.1")
-  implementation("org.slf4j:slf4j-simple:2.0.17")
+  implementation("io.javalin:javalin:7.2.2")
+  implementation("org.slf4j:slf4j-simple:2.0.18")
 
-  testImplementation(libs.junit.jupiter)
+  testImplementation("org.junit.jupiter:junit-jupiter:6.1.0")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-  testImplementation("org.mockito:mockito-core:5.22.0")
+  testImplementation("org.mockito:mockito-core:5.23.0")
 }
-
-java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 
 spotless {
   setEnforceCheck(false)

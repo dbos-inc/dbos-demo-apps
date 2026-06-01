@@ -1,24 +1,22 @@
 plugins {
-  alias(libs.plugins.kotlin.jvm)
   application
+  id("org.jetbrains.kotlin.jvm") version "2.3.21"
   id("com.diffplug.spotless") version "8.3.0"
 }
 
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("dev.dbos:transact:0.8.+")
+  // using latest 0.9 milestone release of DBOS
+  implementation("dev.dbos:transact:0.9.+")
 
-  implementation("io.javalin:javalin:7.0.1")
-  implementation("org.slf4j:slf4j-simple:2.0.17")
+  implementation("io.javalin:javalin:7.2.2")
+  implementation("org.slf4j:slf4j-simple:2.0.18")
 
   testImplementation("org.jetbrains.kotlin:kotlin-test")
-  testImplementation(libs.junit.jupiter.engine)
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+  testImplementation("org.junit.jupiter:junit-jupiter:6.1.0")
   testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
 }
-
-java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 
 spotless {
   setEnforceCheck(false)
@@ -44,10 +42,7 @@ spotless {
   }
 }
 
-application {
-  // Define the main class for the application.
-  mainClass = "org.example.AppKt"
-}
+application { mainClass = "org.example.AppKt" }
 
 tasks.test {
   useJUnitPlatform()
