@@ -42,26 +42,26 @@ public class WidgetStoreService {
   public void checkoutWorkflow() {
 
     try {
-      dbos.runStep(() -> repo.subtractInventory(), "subtractInventory");
+      repo.subtractInventory();
     } catch (RuntimeException e) {
       logger.error("Failed to reserve inventory for workflow {}", DBOS.workflowId());
       dbos.setEvent(PAYMENT_ID, null);
       return;
     }
 
-    var orderId = dbos.runStep(() -> repo.createOrder(), "createOrder");
+    var orderId = repo.createOrder();
 
     dbos.setEvent(PAYMENT_ID, DBOS.workflowId());
     var payment_status = dbos.<String>recv(PAYMENT_STATUS, Duration.ofSeconds(120));
 
     if (payment_status.map(ps -> ps.equals("paid")).orElse(false)) {
       logger.info("Payment successful for order {}", orderId);
-      dbos.runStep(() -> repo.markOrderPaid(orderId), "markOrderPaid");
+      repo.markOrderPaid(orderId);
       dbos.startWorkflow(() -> self.dispatchOrderWorkflow(orderId));
     } else {
       logger.info("Payment failed for order {}", orderId);
-      dbos.runStep(() -> repo.errorOrder(orderId), "errorOrder");
-      dbos.runStep(() -> repo.undoSubtractInventory(), "undoSubtractInventory");
+      repo.errorOrder(orderId);
+      repo.undoSubtractInventory();
     }
 
     dbos.setEvent(ORDER_ID, String.valueOf(orderId));
@@ -71,7 +71,7 @@ public class WidgetStoreService {
   public void dispatchOrderWorkflow(Integer orderId) {
     for (int i = 0; i < 10; i++) {
       dbos.sleep(Duration.ofSeconds(1));
-      dbos.runStep(() -> repo.updateOrderProgress(orderId), "updateOrderProgress");
+      repo.updateOrderProgress(orderId);
     }
   }
 }

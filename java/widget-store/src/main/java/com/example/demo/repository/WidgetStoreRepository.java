@@ -1,5 +1,7 @@
 package com.example.demo.repository;
 
+import dev.dbos.transact.spring.txstep.TransactionalStep;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,11 +11,6 @@ import com.example.demo.model.Order;
 import com.example.demo.model.OrderStatus;
 import com.example.demo.model.Product;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-// DBOS @Workflow annotations are not compatible with Spring  @Transactional annotations yet.
-// So for now, all of the database logic is in this separate service class that is injected into the
-// Workflow class
 
 @Service
 public class WidgetStoreRepository {
@@ -33,12 +30,12 @@ public class WidgetStoreRepository {
     return productRepository.findById(PRODUCT_ID).map(ProductDto::fromEntity).orElse(null);
   }
 
-  @Transactional
+  @TransactionalStep
   public void setInventory(int inventory) {
     productRepository.setInventory(PRODUCT_ID, inventory);
   }
 
-  @Transactional
+  @TransactionalStep
   public void subtractInventory() {
     int updated = productRepository.subtractInventory(PRODUCT_ID);
     if (updated == 0) {
@@ -46,12 +43,12 @@ public class WidgetStoreRepository {
     }
   }
 
-  @Transactional
+  @TransactionalStep
   public void undoSubtractInventory() {
     productRepository.addInventory(PRODUCT_ID);
   }
 
-  @Transactional
+  @TransactionalStep
   public Integer createOrder() {
     Product product = productRepository.getReferenceById(PRODUCT_ID);
     Order order = new Order();
@@ -72,17 +69,17 @@ public class WidgetStoreRepository {
         .toList();
   }
 
-  @Transactional
+  @TransactionalStep
   public void markOrderPaid(int orderId) {
     orderRepository.updateOrderStatus(orderId, OrderStatus.PAID);
   }
 
-  @Transactional
+  @TransactionalStep
   public void errorOrder(int orderId) {
     orderRepository.updateOrderStatus(orderId, OrderStatus.CANCELLED);
   }
 
-  @Transactional
+  @TransactionalStep
   public void updateOrderProgress(int orderId) {
     Order order =
         orderRepository
