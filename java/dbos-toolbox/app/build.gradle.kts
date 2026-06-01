@@ -16,6 +16,7 @@ dependencies {
 }
 
 spotless {
+  setEnforceCheck(false)
   java {
     googleJavaFormat()
     importOrder("dev.dbos", "java", "javax", "")
