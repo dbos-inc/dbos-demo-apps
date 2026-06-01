@@ -6,7 +6,7 @@ import dev.dbos.transact.config.DBOSConfig;
 import dev.dbos.transact.database.SystemDatabase;
 import dev.dbos.transact.migrations.MigrationManager;
 import dev.dbos.transact.txstep.JdbcStepFactory;
-import dev.dbos.transact.workflow.Queue;
+import dev.dbos.transact.workflow.QueueOptions;
 import dev.dbos.transact.workflow.Workflow;
 import dev.dbos.transact.workflow.WorkflowHandle;
 import dev.dbos.transact.workflow.WorkflowSchedule;
@@ -126,10 +126,6 @@ class DurableToolboxServiceImpl implements DurableToolboxService {
   @Override
   @Workflow
   public int txStepWorkflow(String name) throws SQLException {
-
-    // Note, step factories are a prerelease feature coming in 0.9.0
-    // This demo app is using the latest 0.9.+ milestone release of DBOS
-
     var result = stepFactory.txStep((Connection c) -> insertGreeting(c, name), "insertGreeting");
     logger.info("{} has been greeted {} times", name, result);
     return result;
@@ -173,9 +169,6 @@ public class App {
     var proxy = dbos.registerProxy(DurableToolboxService.class, impl);
     impl.setSelf(proxy);
 
-    var queue = new Queue("example-queue");
-    dbos.registerQueue(queue);
-
     @SuppressWarnings("unused")
     var app =
         Javalin.create(
@@ -184,6 +177,7 @@ public class App {
                   config.events.serverStarting(
                       () -> {
                         dbos.launch();
+                        dbos.registerQueue("example-queue", QueueOptions.empty());
                         dbos.applySchedules(
                             new WorkflowSchedule(
                                 "run_every_min",
