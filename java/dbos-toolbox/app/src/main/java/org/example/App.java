@@ -6,7 +6,8 @@ import dev.dbos.transact.config.DBOSConfig;
 import dev.dbos.transact.database.SystemDatabase;
 import dev.dbos.transact.migrations.MigrationManager;
 import dev.dbos.transact.txstep.JdbcStepFactory;
-import dev.dbos.transact.workflow.Queue;
+import dev.dbos.transact.workflow.Debouncer;
+import dev.dbos.transact.workflow.QueueOptions;
 import dev.dbos.transact.workflow.Workflow;
 import dev.dbos.transact.workflow.WorkflowHandle;
 import dev.dbos.transact.workflow.WorkflowSchedule;
@@ -17,6 +18,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.javalin.Javalin;
 import org.slf4j.Logger;
@@ -33,6 +35,8 @@ interface DurableToolboxService {
   void scheduledWorkflow(Instant scheduledTime, Object context);
 
   int txStepWorkflow(String name) throws SQLException;
+
+  void debouncerWorkflow(String key);
 }
 
 class DurableToolboxServiceImpl implements DurableToolboxService {
@@ -125,11 +129,13 @@ class DurableToolboxServiceImpl implements DurableToolboxService {
 
   @Override
   @Workflow
+  public void debouncerWorkflow(String key) {
+    logger.info("Debounced workflow executing for key '{}'", key);
+  }
+
+  @Override
+  @Workflow
   public int txStepWorkflow(String name) throws SQLException {
-
-    // Note, step factories are a prerelease feature coming in 0.9.0
-    // This demo app is using the latest 0.9.+ milestone release of DBOS
-
     var result = stepFactory.txStep((Connection c) -> insertGreeting(c, name), "insertGreeting");
     logger.info("{} has been greeted {} times", name, result);
     return result;
@@ -173,8 +179,7 @@ public class App {
     var proxy = dbos.registerProxy(DurableToolboxService.class, impl);
     impl.setSelf(proxy);
 
-    var queue = new Queue("example-queue");
-    dbos.registerQueue(queue);
+    var debouncerRef = new AtomicReference<Debouncer<Void>>();
 
     @SuppressWarnings("unused")
     var app =
@@ -184,6 +189,9 @@ public class App {
                   config.events.serverStarting(
                       () -> {
                         dbos.launch();
+                        debouncerRef.set(
+                            dbos.<Void>debouncer().withDebounceTimeout(Duration.ofMinutes(1)));
+                        dbos.registerQueue("example-queue", QueueOptions.empty());
                         dbos.applySchedules(
                             new WorkflowSchedule(
                                 "run_every_min",
@@ -215,6 +223,17 @@ public class App {
                       ctx -> {
                         var name = ctx.pathParam("name");
                         proxy.txStepWorkflow(name);
+                        ctx.status(200);
+                      });
+                  config.routes.get(
+                      "/debounce/{key}",
+                      ctx -> {
+                        var key = ctx.pathParam("key");
+                        logger.info("Debounce endpoint called for key '{}'", key);
+                        debouncerRef
+                            .get()
+                            .debounce(
+                                key, Duration.ofSeconds(5), () -> proxy.debouncerWorkflow(key));
                         ctx.status(200);
                       });
                   config.routes.get(

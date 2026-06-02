@@ -17,3 +17,19 @@ clj -M:run
 ```
 
 The application runs on `http://localhost:7070` by default.
+
+## Development
+
+```bash
+# Check for outdated dependencies
+clj -M:antq
+
+# Lint source files
+clj -M:lint
+
+# Check formatting
+clj -M:fmt
+
+# Apply formatting fixes
+clj -M:fix
+```
