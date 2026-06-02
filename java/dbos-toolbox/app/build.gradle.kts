@@ -6,8 +6,7 @@ plugins {
 repositories { mavenCentral() }
 
 dependencies {
-  // using latest 0.9 milestone release of DBOS for step factory support
-  implementation("dev.dbos:transact:0.9.+")
+  implementation("dev.dbos:transact:0.9.0")
 
   implementation("io.javalin:javalin:7.2.2")
   implementation("org.slf4j:slf4j-simple:2.0.18")

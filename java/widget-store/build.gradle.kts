@@ -16,8 +16,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 repositories { mavenCentral() }
 
 dependencies {
-  // using latest 0.9 milestone release of DBOS
-  val dbosVersion = "0.9.0+"
+  val dbosVersion = "0.9.0"
   implementation("dev.dbos:transact-spring-boot-starter:$dbosVersion")
   implementation("dev.dbos:transact-spring-txstep-starter:$dbosVersion")
   implementation("org.springframework.boot:spring-boot-starter-webmvc")
