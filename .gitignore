@@ -147,3 +147,6 @@ dist
 
 # SQLite
 *.sqlite
+
+# Scala Metals LSP files
+.metals/

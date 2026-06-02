@@ -1,5 +1,8 @@
 # DBOS Starter app for Clojure
 
+> **Note:** This is a community prototype that demonstrates DBOS running on Clojure via the Java interop layer.
+> It is a placeholder until official first-class Clojure support is added to DBOS.
+
 ## Prerequisites
 
 - Java 17 or later
