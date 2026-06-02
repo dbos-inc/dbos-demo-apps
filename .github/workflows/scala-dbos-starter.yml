@@ -30,6 +30,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Run tests
         working-directory: scala/dbos-starter/
         run: sbt test
