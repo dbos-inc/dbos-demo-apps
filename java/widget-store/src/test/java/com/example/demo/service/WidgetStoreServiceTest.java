@@ -15,7 +15,6 @@ import static org.mockito.Mockito.when;
 
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.execution.ThrowingRunnable;
-import dev.dbos.transact.execution.ThrowingSupplier;
 
 import java.util.Optional;
 
@@ -30,10 +29,6 @@ import org.mockito.Mockito;
 class WidgetStoreServiceTest {
 
   private static ThrowingRunnable<RuntimeException> anyRunnable() {
-    return ArgumentMatchers.any();
-  }
-
-  private static <T> ThrowingSupplier<T, RuntimeException> anySupplier() {
     return ArgumentMatchers.any();
   }
 
@@ -52,68 +47,64 @@ class WidgetStoreServiceTest {
   }
 
   @AfterEach
-  void verifyNoDirectRepoOrSelfCalls() {
-    // the injected repo and self instances are only ever called indirectly via startWorkflow or
-    // runStep
-    verifyNoInteractions(mockRepo, mockSelf);
+  void verifyNoDirectSelfCalls() {
+    verifyNoInteractions(mockSelf);
   }
 
   @Test
   void checkoutWorkflow_paymentSuccessful_paysAndDispatchesOrder() throws Exception {
     // Arrange
     int orderId = 42;
-    when(mockDBOS.runStep(anySupplier(), eq("createOrder"))).thenReturn(orderId);
+    when(mockRepo.createOrder()).thenReturn(orderId);
     when(mockDBOS.recv(eq(PAYMENT_STATUS), any())).thenReturn(Optional.of("paid"));
 
     // Act
     service.checkoutWorkflow();
 
     // Assert
-    InOrder inOrder = Mockito.inOrder(mockDBOS, mockSelf);
-    inOrder.verify(mockDBOS).runStep(anyRunnable(), eq("subtractInventory"));
-    inOrder.verify(mockDBOS).runStep(anySupplier(), eq("createOrder"));
+    InOrder inOrder = Mockito.inOrder(mockDBOS, mockRepo);
+    inOrder.verify(mockRepo).subtractInventory();
+    inOrder.verify(mockRepo).createOrder();
     inOrder.verify(mockDBOS).setEvent(eq(PAYMENT_ID), any());
     inOrder.verify(mockDBOS).recv(eq(PAYMENT_STATUS), any());
-    inOrder.verify(mockDBOS).runStep(anyRunnable(), eq("markOrderPaid"));
+    inOrder.verify(mockRepo).markOrderPaid(orderId);
     inOrder.verify(mockDBOS).startWorkflow(anyRunnable());
     inOrder.verify(mockDBOS).setEvent(eq(ORDER_ID), eq(String.valueOf(orderId)));
 
-    verify(mockDBOS, never()).runStep(anyRunnable(), eq("errorOrder"));
-    verify(mockDBOS, never()).runStep(anyRunnable(), eq("undoSubtractInventory"));
+    verify(mockRepo, never()).errorOrder(orderId);
+    verify(mockRepo, never()).undoSubtractInventory();
   }
 
   @Test
   void checkoutWorkflow_paymentFailed_cancelsOrderAndRestoresInventory() throws Exception {
     // Arrange
     int orderId = 42;
-    when(mockDBOS.runStep(anySupplier(), eq("createOrder"))).thenReturn(orderId);
+    when(mockRepo.createOrder()).thenReturn(orderId);
     when(mockDBOS.recv(eq(PAYMENT_STATUS), any())).thenReturn(Optional.empty());
 
     // Act
     service.checkoutWorkflow();
 
     // Assert
-    InOrder inOrder = Mockito.inOrder(mockDBOS);
-    inOrder.verify(mockDBOS).runStep(anyRunnable(), eq("errorOrder"));
-    inOrder.verify(mockDBOS).runStep(anyRunnable(), eq("undoSubtractInventory"));
+    InOrder inOrder = Mockito.inOrder(mockDBOS, mockRepo);
+    inOrder.verify(mockRepo).errorOrder(orderId);
+    inOrder.verify(mockRepo).undoSubtractInventory();
     inOrder.verify(mockDBOS).setEvent(eq(ORDER_ID), eq(String.valueOf(orderId)));
 
-    verify(mockDBOS, never()).runStep(anyRunnable(), eq("markOrderPaid"));
+    verify(mockRepo, never()).markOrderPaid(orderId);
   }
 
   @Test
   void checkoutWorkflow_insufficientInventory_setsNullPaymentIdAndReturns() throws Exception {
     // Arrange
-    doThrow(new RuntimeException("Insufficient Inventory"))
-        .when(mockDBOS)
-        .runStep(anyRunnable(), eq("subtractInventory"));
+    doThrow(new RuntimeException("Insufficient Inventory")).when(mockRepo).subtractInventory();
 
     // Act
     service.checkoutWorkflow();
 
     // Assert
     verify(mockDBOS).setEvent(eq(PAYMENT_ID), eq(null));
-    verify(mockDBOS, never()).runStep(anySupplier(), eq("createOrder"));
+    verify(mockRepo, never()).createOrder();
     verify(mockDBOS, never()).setEvent(eq(ORDER_ID), any());
   }
 
@@ -127,7 +118,7 @@ class WidgetStoreServiceTest {
 
     // Assert
     verify(mockDBOS, times(10)).sleep(any());
-    verify(mockDBOS, times(10)).runStep(anyRunnable(), eq("updateOrderProgress"));
+    verify(mockRepo, times(10)).updateOrderProgress(orderId);
   }
 
   @Test
@@ -139,10 +130,10 @@ class WidgetStoreServiceTest {
     service.dispatchOrderWorkflow(orderId);
 
     // Assert - sleep always precedes the step in each iteration
-    InOrder inOrder = Mockito.inOrder(mockDBOS);
+    InOrder inOrder = Mockito.inOrder(mockDBOS, mockRepo);
     for (int i = 0; i < 10; i++) {
       inOrder.verify(mockDBOS).sleep(any());
-      inOrder.verify(mockDBOS).runStep(anyRunnable(), eq("updateOrderProgress"));
+      inOrder.verify(mockRepo).updateOrderProgress(orderId);
     }
   }
 }
