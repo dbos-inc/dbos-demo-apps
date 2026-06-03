@@ -1,0 +1,38 @@
+name: CI for Scala DBOS Starter
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'scala/dbos-starter/**'
+      - '.github/workflows/scala-dbos-starter.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'scala/dbos-starter/**'
+      - '.github/workflows/scala-dbos-starter.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Run tests
+        working-directory: scala/dbos-starter/
+        run: sbt test

@@ -12,6 +12,10 @@ dependencies {
   implementation("org.slf4j:slf4j-simple:2.0.18")
 
   implementation("com.zaxxer:HikariCP:7.0.2")
+
+  testImplementation("org.junit.jupiter:junit-jupiter:6.1.0")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+  testImplementation("org.mockito:mockito-core:5.23.0")
 }
 
 spotless {

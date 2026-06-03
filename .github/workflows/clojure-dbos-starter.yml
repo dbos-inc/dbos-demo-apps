@@ -1,0 +1,40 @@
+name: CI for Clojure DBOS Starter
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'clojure/dbos-starter/**'
+      - '.github/workflows/clojure-dbos-starter.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'clojure/dbos-starter/**'
+      - '.github/workflows/clojure-dbos-starter.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Clojure
+        uses: DeLaGuardo/setup-clojure@13
+        with:
+          cli: latest
+
+      - name: Run tests
+        working-directory: clojure/dbos-starter/
+        run: clojure -X:test
