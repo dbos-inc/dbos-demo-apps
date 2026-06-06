@@ -94,6 +94,7 @@ func main() {
 		AppName:            "dbos-toolbox",
 		AdminServer:        true,
 		ApplicationVersion: "0.1.0",
+		ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_KEY"),
 	})
 	if err != nil {
 		panic(err)
