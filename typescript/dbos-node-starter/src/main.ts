@@ -101,9 +101,8 @@ async function main() {
     name: "dbos-node-starter",
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
     applicationVersion: "0.1.0",
-    conductorKey: process.env.DBOS_CONDUCTOR_KEY,
   });
-  await DBOS.launch();
+  await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
 
   const PORT = parseInt(process.env.NODE_PORT || '3000');
   app.listen(PORT, () => {
