@@ -71,6 +71,7 @@ public class App {
             .withDatabaseUrl(dbUrl)
             .withDbUser(dbUser)
             .withDbPassword(dbPassword)
+            .withConductorKey(System.getenv("DBOS_CONDUCTOR_KEY"))
             .withAppVersion("0.2.0");
 
     var dbos = new DBOS(dbosConfig);
