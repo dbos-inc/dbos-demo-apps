@@ -162,7 +162,6 @@ func main() {
 	dbosCtx, err = dbos.NewDBOSContext(context.Background(), dbos.Config{
 		DatabaseURL:        sysDBURL,
 		AppName:            "interop-go",
-		AdminServer:        false,
 		ApplicationVersion: "interop-v1",
 	})
 	if err != nil {
