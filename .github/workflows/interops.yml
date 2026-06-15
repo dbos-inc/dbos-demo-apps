@@ -1,0 +1,120 @@
+name: CI for Cross-Language Interops
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'interops/**'
+      - '.github/workflows/interops.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'interops/**'
+      - '.github/workflows/interops.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: dbos
+          POSTGRES_DB: interop_dbos_sys
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DBOS_SYSTEM_DATABASE_URL: postgresql://postgres:dbos@localhost:5432/interop_dbos_sys
+
+    defaults:
+      run:
+        working-directory: interops
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.13'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.x'
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build TypeScript app
+        working-directory: interops/apps/interop-typescript
+        run: npm install && npm run build
+
+      - name: Migrate system database
+        working-directory: interops/apps/interop-typescript
+        run: npx dbos schema "$DBOS_SYSTEM_DATABASE_URL"
+
+      - name: Build Go app
+        working-directory: interops/apps/interop-go
+        run: go build -o main .
+
+      - name: Build Java app
+        working-directory: interops/apps/interop-java
+        run: ./gradlew shadowJar
+
+      - name: Install Python app
+        working-directory: interops/apps/interop-python
+        run: uv venv && uv pip install -r requirements.txt
+
+      - name: Launch all four apps
+        run: |
+          ( cd apps/interop-python && \
+            DBOS_SYSTEM_DATABASE_URL="$DBOS_SYSTEM_DATABASE_URL" PORT=8001 \
+            nohup .venv/bin/python main.py > /tmp/interop-python.log 2>&1 & )
+          ( cd apps/interop-typescript && \
+            DBOS_SYSTEM_DATABASE_URL="$DBOS_SYSTEM_DATABASE_URL" PORT=8002 \
+            nohup node dist/main.js > /tmp/interop-typescript.log 2>&1 & )
+          ( cd apps/interop-go && \
+            DBOS_SYSTEM_DATABASE_URL="$DBOS_SYSTEM_DATABASE_URL" PORT=8003 \
+            nohup ./main > /tmp/interop-go.log 2>&1 & )
+          ( cd apps/interop-java && \
+            DBOS_SYSTEM_JDBC_URL=jdbc:postgresql://localhost:5432/interop_dbos_sys \
+            PGUSER=postgres PGPASSWORD=dbos SERVER_PORT=8004 \
+            nohup java -jar build/libs/interop-java-all.jar > /tmp/interop-java.log 2>&1 & )
+
+      - name: Wait for health
+        run: |
+          for port in 8001 8002 8003 8004; do
+            for i in $(seq 1 60); do
+              if curl -sf "http://localhost:$port/healthz" > /dev/null; then
+                echo "port $port healthy"; break
+              fi
+              if [ "$i" -eq 60 ]; then
+                echo "port $port never became healthy"; cat /tmp/interop-*.log; exit 1
+              fi
+              sleep 2
+            done
+          done
+
+      - name: Run interop tests
+        run: uv run --with pytest --with requests pytest -s test_interops.py
