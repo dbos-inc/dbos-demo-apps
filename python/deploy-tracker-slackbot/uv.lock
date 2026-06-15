@@ -62,7 +62,7 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "2.23.0"
+version = "2.24.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "psycopg", extra = ["binary"] },
@@ -72,9 +72,9 @@ dependencies = [
     { name = "typer-slim" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/82/7b/65e8626661a9fd7022c888d8faddbd49887106e95a30f10b6ea4ea71fd3f/dbos-2.23.0.tar.gz", hash = "sha256:4cd3f8f2dca3c1b97dfc391f0ae539ff56646e381adbf9860ddba6d4e6114198", size = 495782, upload-time = "2026-06-01T21:36:10.399Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/90/f9/9ba23c70b9bffe15a4a35b1f1ce1ab31ea62a7ba8b8ad335a6e3128c7084/dbos-2.24.0.tar.gz", hash = "sha256:cf4c687ae8b7b6556723905c0c3ecd7f2d9cd4d27d7c816d10fae6e979ba03aa", size = 507075, upload-time = "2026-06-15T15:55:49.794Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/42/1a/1a45caeb874b1a0eae0baeb817ddfdff53fb15bd17e8c875f223b82febb7/dbos-2.23.0-py3-none-any.whl", hash = "sha256:1cf9c21a23a39b90739cd52e79bac7432ae94428c6802574901d1e0e22371459", size = 205652, upload-time = "2026-06-01T21:36:08.744Z" },
+    { url = "https://files.pythonhosted.org/packages/53/f6/788f89785cee5289c13c3220a26ecdc2e90e0d0c549adc342ebfdbfb50b4/dbos-2.24.0-py3-none-any.whl", hash = "sha256:8e72b5fbc0c793214a6bb137cdb780ed08418153ce0afef56c7df2be8f3372ca", size = 210505, upload-time = "2026-06-15T15:55:47.864Z" },
 ]
 
 [[package]]
@@ -94,7 +94,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", specifier = "==2.23.0" },
+    { name = "dbos", specifier = "==2.24.0" },
     { name = "slack-bolt", specifier = ">=1.27.0" },
 ]
 
