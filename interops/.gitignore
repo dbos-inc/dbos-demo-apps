@@ -1,0 +1,21 @@
+# Go
+apps/interop-go/main
+apps/interop-go/interop-go
+
+# Java / Gradle
+apps/interop-java/.gradle/
+apps/interop-java/build/
+apps/interop-java/bin/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# TypeScript / Node
+node_modules/
+dist/
+
+# General
+*.log
+.env
