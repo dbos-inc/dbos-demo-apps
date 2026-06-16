@@ -1,0 +1,14 @@
+[project]
+name = "interops"
+version = "0.0.1"
+requires-python = ">=3.11"
+dependencies = [
+    # test suite
+    "pytest",
+    "requests",
+    "psycopg[binary]",
+    # interop-python app (published SDK, mirrors apps/interop-python/requirements.txt)
+    "dbos>=2.14",
+    "fastapi[standard]",
+    "uvicorn[standard]",
+]

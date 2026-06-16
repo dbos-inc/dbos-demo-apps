@@ -82,8 +82,13 @@ curl -s localhost:8001/enqueue/go -H 'content-type: application/json' \
 ```
 
 The payload shape matches the **target** language's signature — see `TARGET_PAYLOADS`
-in `test_interops.py`. To exercise all 12 pairs with the four apps running:
+in `conftest.py`. To exercise all 12 pairs, just start Postgres (`docker compose up -d`)
+and run:
 
 ```bash
-pip install pytest requests && pytest -s test_interops.py
+uv run pytest -s test_interops.py
 ```
+
+The `interop_apps` fixture in `conftest.py` builds all four apps, launches them as
+subprocesses, waits for their health checks, runs the 12 cross-language enqueue tests,
+and tears everything down — no manual per-app startup required.
