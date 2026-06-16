@@ -1,0 +1,3 @@
+dbos>=2.14
+fastapi[standard]
+uvicorn[standard]

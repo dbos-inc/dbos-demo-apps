@@ -1,0 +1,76 @@
+name: CI for Cross-Language Interops
+
+on:
+  schedule:
+    # Runs every 6 hours
+    - cron: '0 */6 * * *'
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'interops/**'
+      - '.github/workflows/interops.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'interops/**'
+      - '.github/workflows/interops.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: dbos
+          POSTGRES_DB: interop_dbos_sys
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DBOS_SYSTEM_DATABASE_URL: postgresql://postgres:dbos@localhost:5432/interop_dbos_sys
+
+    defaults:
+      run:
+        working-directory: interops
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.13'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.x'
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # The conftest.py session fixture builds all four apps, migrates the
+      # system database, launches the runtimes, health-checks them, and tears
+      # them down afterward.
+      - name: Run interop tests
+        run: uv run pytest -s test_interops.py
