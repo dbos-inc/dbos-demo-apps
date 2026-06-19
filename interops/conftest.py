@@ -5,8 +5,12 @@ Starts all four language runtimes as local sub-processes, each connected
 to a shared Postgres system database. All build steps run automatically
 as part of session setup — no manual pre-build required.
 
-Each app is built against its *published* DBOS SDK (PyPI, npm, the Go module
-proxy, Maven Central) as pinned in its own manifest.
+Each app is built against its *published* DBOS SDK (PyPI, the Go module proxy,
+Maven Central) as pinned in its own manifest — except TypeScript, which is
+built from tip-of-main (cloned, built, packed, and installed). The shared
+system-database schema is migrated by `npx dbos schema`, and that CLI ships
+inside the TypeScript SDK; building TS from source keeps the migration (and
+thus the schema all four apps share) current.
 
 Run the suite with:
     uv run pytest -s test_interops.py
@@ -15,6 +19,7 @@ Python/TypeScript/Go read DBOS_SYSTEM_DATABASE_URL; Java reads DBOS_SYSTEM_JDBC_
 """
 
 import os
+import shutil
 import signal
 import subprocess
 import time
@@ -27,6 +32,13 @@ import requests
 
 ROOT     = Path(__file__).parent
 APPS_DIR = ROOT / "apps"
+
+# The TypeScript SDK is built from tip-of-main rather than the published npm
+# release: the `dbos schema` migration that provisions the shared system DB
+# ships inside this SDK, and the published release can lag behind newer
+# columns the other runtimes already expect (e.g. workflow_status.attributes).
+TS_REPO_URL = "https://github.com/dbos-inc/dbos-transact-ts.git"
+TS_SDK_SRC  = ROOT / ".ts-sdk-src"
 
 SYS_DB_URL = os.environ.get(
     "DBOS_SYSTEM_DATABASE_URL",
@@ -106,9 +118,42 @@ def _build_python() -> None:
     _run(["uv", "sync"], ROOT)
 
 
+def _build_ts_sdk_tarball() -> Path:
+    """Clone @dbos-inc/dbos-sdk at tip-of-main, build it, and `npm pack` it.
+
+    Returns the path to the produced .tgz. Installing this into the
+    interop-typescript app upgrades both the runtime SDK and the bundled
+    `dbos` CLI that _migrate runs.
+    """
+    if (TS_SDK_SRC / ".git").exists():
+        _run(["git", "fetch", "--depth", "1", "origin", "main"], TS_SDK_SRC)
+        _run(["git", "reset", "--hard", "origin/main"], TS_SDK_SRC)
+    else:
+        if TS_SDK_SRC.exists():
+            shutil.rmtree(TS_SDK_SRC)
+        _run(["git", "clone", "--depth", "1", "--branch", "main", TS_REPO_URL, str(TS_SDK_SRC)], ROOT)
+
+    _run(["npm", "install"], TS_SDK_SRC)
+    _run(["npm", "run", "build"], TS_SDK_SRC)
+
+    for stale in TS_SDK_SRC.glob("*.tgz"):
+        stale.unlink()
+    _run(["npm", "pack"], TS_SDK_SRC)
+
+    tarballs = sorted(TS_SDK_SRC.glob("dbos-inc-dbos-sdk-*.tgz"))
+    if not tarballs:
+        raise RuntimeError("npm pack produced no @dbos-inc/dbos-sdk tarball")
+    return tarballs[0]
+
+
 def _build_typescript() -> None:
     app_dir = APPS_DIR / "interop-typescript"
+    tarball = _build_ts_sdk_tarball()
     _run(["npm", "install"], app_dir)
+    # Override the published SDK with the tip-of-main pack. This also replaces
+    # node_modules/.bin/dbos, so _migrate's `npx dbos schema` runs the current
+    # migration. --no-save leaves the app's package.json untouched.
+    _run(["npm", "install", str(tarball), "--no-save"], app_dir)
     _run(["npm", "run", "build"], app_dir)
 
 
@@ -181,7 +226,10 @@ def _kill_ports() -> None:
 # ---------------------------------------------------------------------------
 
 def _migrate() -> None:
-    """Run DBOS schema migrations against the system database."""
+    """Run DBOS schema migrations against the system database.
+
+    Uses the tip-of-main `dbos` CLI installed into interop-typescript by
+    _build_typescript (not the published npm release)."""
     _run(["npx", "dbos", "schema", SYS_DB_URL], APPS_DIR / "interop-typescript")
 
 
