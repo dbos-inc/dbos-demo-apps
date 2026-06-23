@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-ts/refs/heads/main/dbos-config.schema.json
+
+name: tuning-engines-ai
+language: node
+system_database_url: ${DBOS_SYSTEM_DATABASE_URL}
