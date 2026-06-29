@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
     <style>
-      /* Tokens mirror src/theme.ts in the DBOS Cloud Console. */
+      /* Color tokens from the DBOS Cloud Console theme (src/theme.ts). */
       :root {
         --ink-bg: #16181d;
         --ink-border: #3a3d44;
@@ -28,7 +28,6 @@
         --cyan: #44e3ee;
         --lily: #9ab5e5;
         --lily-light: #ced7f8;
-        --flashy-glow: #678406;
 
         --code-bg: #0e1014;
         --code-fg: #f8f8f8;
@@ -38,12 +37,12 @@
 
         --status-error: #dc5848;
         --status-warning: #e5a82f;
-        --status-info: #3d8fd1;
         --status-success: #56a64b;
 
-        --dbos-gradient: linear-gradient(90deg, #c8f62e, #ecfaa0 33%, #44e3ee 66%, #ced7f8);
-        --flashy-bg: radial-gradient(ellipse 50% 100% at 50% 130%, rgba(103, 132, 6, 0.9), #16181d);
-        --flashy-bg-hover: radial-gradient(ellipse 50% 100% at 50% 110%, rgba(103, 132, 6, 0.9), #16181d);
+        --dbos-gradient: linear-gradient(90deg, var(--splice), var(--yellow) 33%, var(--cyan) 66%, var(--lily-light));
+        /* "Flashy" olive-green glow (#678406), faded into the surface. */
+        --flashy-bg: radial-gradient(ellipse 50% 100% at 50% 130%, rgba(103, 132, 6, 0.9), var(--ink-bg));
+        --flashy-bg-hover: radial-gradient(ellipse 50% 100% at 50% 110%, rgba(103, 132, 6, 0.9), var(--ink-bg));
 
         --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -415,7 +414,9 @@
         animation: pulse 1.6s ease-in-out infinite;
       }
       .step.active .step-state { color: var(--cyan); }
-      .step.active .step-state::after {
+      /* Animated "..." trail on the in-progress / disconnected step. */
+      .step.active .step-state::after,
+      .step.recover .step-state::after {
         content: "";
         animation: dots 1.4s steps(1) infinite;
       }
@@ -446,10 +447,6 @@
         animation: pulse-red 1.4s ease-in-out infinite;
       }
       .step.recover .step-state { color: var(--status-error); }
-      .step.recover .step-state::after {
-        content: "";
-        animation: dots 1.4s steps(1) infinite;
-      }
       @keyframes pulse-red {
         0%, 100% { box-shadow: 0 0 0 4px rgba(220, 88, 72, 0.12); }
         50% { box-shadow: 0 0 0 8px rgba(220, 88, 72, 0.03); }
@@ -527,7 +524,7 @@
 
           <div class="divider"></div>
 
-          <div class="timeline status-text" id="status">
+          <div class="timeline" id="status">
             <div class="step pending" id="step-row-1">
               <div class="node">
                 <span class="num">1</span>
