@@ -7,5 +7,5 @@ name: dbos-app-starter
 language: python
 runtimeConfig:
   start:
-    - python3 app/main.py
+    - python3 main.py
 system_database_url: ${DBOS_SYSTEM_DATABASE_URL}
