@@ -96,17 +96,6 @@
         border-radius: 4px;
         border: 1px solid var(--ink-border);
       }
-      .brand .pill {
-        margin-left: auto;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--muted);
-        border: 1px solid var(--ink-border);
-        padding: 5px 12px;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.02);
-        letter-spacing: 0.02em;
-      }
 
       h1 {
         font-size: clamp(28px, 4.6vw, 44px);
@@ -496,18 +485,16 @@
           src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/white_logotype%2Bblack_bg_h1000px.png"
           alt="DBOS"
         />
-        <div class="pill">Durable Workflow Demo</div>
       </div>
 
-      <h1>Build apps that are <span class="grad">resilient to any failure.</span></h1>
+      <h1>Build reliable software <span class="grad">effortlessly</span></h1>
       <p class="lede">
-        Add <code>@DBOS.workflow()</code> and <code>@DBOS.step()</code> decorators to your code. DBOS
-        <strong>durably executes</strong> your program, checkpointing each step to Postgres. If your app ever crashes,
-        DBOS recovers it from the last completed step.
+        DBOS adds <strong>durable execution</strong> to your applications, checkpointing their workflows and steps to Postgres.
+        If your apps ever crash, DBOS recovers them from their last completed steps.
       </p>
       <p class="lede">
-        <strong>Try it:</strong> launch a workflow, then crash the app mid-run. When it restarts, the workflow always
-        resumes exactly where it left off.
+        <strong>Try it:</strong> launch a workflow, then crash this application.
+        When you restart, the workflow always resumes from exactly where it left off.
       </p>
 
       <div class="grid">
