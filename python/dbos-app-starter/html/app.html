@@ -138,11 +138,11 @@
         Simply add
         <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">@DBOS.workflow()</code> and
         <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">@DBOS.step()</code> decorators to
-        your code. These <b>durably execute</b> your program, persisting its state to a Postgres database. If your
-        program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
+        your code. These <b>durably execute</b> your program, checkpointing its progress to a Postgres database. If your
+        program ever fails, DBOS uses these checkpoints to recover it from its last completed step.
       </p>
       <p class="mb-4">
-        Try it: Launch a durable workflow, then crash the application. When your application restarts, your workflow will always recover from the last
+        Try it: Launch a durable workflow, then crash the application. When your application restarts, your workflow will always recover from its last
         completed step!
       </p>
     </div>
@@ -195,41 +195,11 @@
     <!-- Regular width container for remaining content -->
     <div class="max-w-3xl mx-auto">
       <p class="mb-4">
-        To see it's really working, check your app's logs. When you crash your app, its process is forcibly exited.
-        When the process restarts, it recovers any active workflows from their last completed step
-        <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">(Recovering 1 workflows from...)</code>,
-        then runs the recovered workflows <code
-          class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700"
-          >(Completed step...)</code
-        >.
-      </p>
-      <p class="mb-4">To build your own crashproof application:</p>
-      <ul class="space-y-3 mb-4">
-        <li class="flex items-start">
-          <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-            <span class="text-blue-600 text-sm">1</span>
-          </span>
-          <code class="bg-gray-100 px-2 py-0.5 rounded">pip install dbos</code>
-        </li>
-        <li class="flex items-start">
-          <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-            <span class="text-blue-600 text-sm">2</span>
-          </span>
-          <code class="bg-gray-100 px-2 py-0.5 rounded">dbos init --template dbos-app-starter</code>
-        </li>
-        <li class="flex items-start">
-          <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-            <span class="text-blue-600 text-sm">3</span>
-          </span>
-          Edit <code class="bg-gray-100 px-2 py-0.5 rounded">app/main.py</code> to start building!
-        </li>
-      </ul>
-      <p class="mb-4">
         Check out the
         <a href="https://docs.dbos.dev/python/programming-guide" target="_blank" class="text-blue-600 hover:underline"
           >programming guide</a
         >
-        to learn how to build with DBOS!
+        to learn how to build with DBOS.
       </p>
     </div>
 
