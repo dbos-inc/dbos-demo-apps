@@ -7,7 +7,8 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 # Welcome to DBOS!
-# This example shows you how to use DBOS to build applications that are resilient to any failure.
+# This example shows you how to use DBOS to build applications
+# that are resilient to any failure.
 
 app = FastAPI()
 config: DBOSConfig = {
@@ -20,9 +21,8 @@ DBOS(config=config)
 
 steps_event = "steps_event"
 
+
 # This endpoint uses DBOS to launch a durable workflow.
-
-
 @app.get("/workflow/{task_id}")
 def launch_durable_workflow(task_id: str) -> None:
     with SetWorkflowID(task_id):
@@ -31,10 +31,8 @@ def launch_durable_workflow(task_id: str) -> None:
 
 # Here is the code for a durable workflow with three steps.
 # DBOS workflows are resilient to any failure: if your program is crashed,
-# interrupted, or restarted while running this workflow, it
-# automatically resumes from its last completed step.
-
-
+# interrupted, or restarted while running this workflow, it automatically
+# resumes from its last completed step.
 @DBOS.step()
 def step_one():
     time.sleep(5)
@@ -56,7 +54,7 @@ def step_three():
 @DBOS.workflow()
 def workflow():
     step_one()
-    # Use DBOS.set_event to publish progress so frontend can display it
+    # Use DBOS.set_event to publish progress for the frontend to display.
     DBOS.set_event(steps_event, 1)
     step_two()
     DBOS.set_event(steps_event, 2)
@@ -65,8 +63,6 @@ def workflow():
 
 
 # This endpoint retrieves the status of a workflow.
-
-
 @app.get("/last_step/{task_id}")
 def get_last_completed_step(task_id: str):
     try:
@@ -77,16 +73,12 @@ def get_last_completed_step(task_id: str):
 
 
 # This endpoint crashes the application. For demonstration purposes only :)
-
-
 @app.post("/crash")
 def crash_application():
     os._exit(1)
 
 
-# This code serves the HTML frontend.
-
-
+# This endpoint serves the HTML frontend.
 @app.get("/")
 def readme():
     with open(os.path.join("html", "app.html")) as file:
