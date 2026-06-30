@@ -5,9 +5,6 @@ import bodyParser from 'koa-bodyparser';
 import path from 'path';
 import Router from "@koa/router";
 import send from "koa-send";
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 // Welcome to DBOS!
 // This is a template application built with DBOS and Koa.
@@ -95,7 +92,7 @@ router.get("/", async (ctx: Context) => {
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-// Launch DBOS and start the Express.js server
+// Launch DBOS and start the Koa server
 async function main() {
   DBOS.setConfig({
     name: "dbos-node-starter",
