@@ -1,45 +1,36 @@
 # Welcome to DBOS!
 
-This is a template app built with DBOS and Koa.
+This example app demonstrates the durability of DBOS workflows.
 
-## Running Locally
+## Setup
 
-First, install the application dependencies.
+1. Install dependencies and build the application
 
 ```shell
 npm install
+npm run build
 ```
 
-Next, we need to setup a Postgres database.
-DBOS stores application execution history in Postgres.
+2. Start Postgres in a local Docker container:
 
-If you have a Postgres database, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to the connection string for that database.
-You can set this environment variable directly or you can put it in an `.env` file in the root of this project.
-The template app includes an `.env.example` file with a dummy connection string you can use as a reference.
-
-If you don't have a Postgres server, you can start one locally using Docker.
-The DBOS SDK includes a utility to start and stop a local Postgres Docker container.
-
-```shell
+```bash
 npx dbos postgres start
-npx dbos postgres stop
 ```
 
-> Note, DBOS will automatically connect to Postgres running on localhost if `DBOS_SYSTEM_DATABASE_URL` is not specified.
-> If you use a local Postgres Docker container, you do not need to set the `DBOS_SYSTEM_DATABASE_URL` environment variable.
-
-Once you have a setup or configured a Postgres database for DBOS, you can launch the application.
+Set the `DBOS_SYSTEM_DATABASE_URL` environment variable to connect to this database:
 
 ```shell
-npm run launch
+export DBOS_SYSTEM_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost/dbos_node_starter"
 ```
 
-Alternatively, you can run the application with [`nodemon`](https://nodemon.io/)
-to enable automatic restart when the application changes.
+If you already use Postgres, you can instead set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your own connection string.
+
+3. Start your app:
 
 ```shell
-npm run dev
+npm run start
 ```
 
-Once the app is running, visit [`http://localhost:3000`](http://localhost:3000) to see your app.
-Then, edit `src/main.ts` to start building!
+Visit [`http://localhost:3000`](http://localhost:3000) to see your app!
+
+Then check out the [programming guide](https://docs.dbos.dev/typescript/programming-guide) to learn more about building with DBOS.

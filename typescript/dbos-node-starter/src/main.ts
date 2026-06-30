@@ -5,13 +5,10 @@ import bodyParser from 'koa-bodyparser';
 import path from 'path';
 import Router from "@koa/router";
 import send from "koa-send";
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 // Welcome to DBOS!
-// This is a template application built with DBOS and Koa.
-// It shows you how to use DBOS to build durable workflows that are resilient to any failure.
+// This example shows you how to use DBOS to build applications
+// that are resilient to any failure.
 
 export const app = new Koa();
 app.use(bodyParser());
@@ -30,10 +27,6 @@ function sleep(ms: number): Promise<void> {
 // interrupted, or restarted while running this workflow, the workflow
 // automatically resumes from the last completed step.
 
-// One interesting implementation detail: we use setEvent to publish the workflow's
-// status to the frontend after each step completes, so you can observe what your workflow
-// is doing in real time.
-
 async function stepOne() {
   await sleep(5000);
   console.log("Completed step 1!");
@@ -51,6 +44,7 @@ async function stepThree() {
 
 async function exampleWorkflow() {
   await DBOS.runStep(stepOne);
+  // Use DBOS.setEvent to publish progress for the frontend to display.
   await DBOS.setEvent(stepsEvent, 1);
   await DBOS.runStep(stepTwo);
   await DBOS.setEvent(stepsEvent, 2);
@@ -95,7 +89,7 @@ router.get("/", async (ctx: Context) => {
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-// Launch DBOS and start the Express.js server
+// Launch DBOS and start the Koa server
 async function main() {
   DBOS.setConfig({
     name: "dbos-node-starter",
