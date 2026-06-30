@@ -458,6 +458,12 @@
         font-size: 14px;
         line-height: 1.6;
       }
+      .footer .line {
+        display: block;
+      }
+      .footer .line + .line {
+        margin-top: 10px;
+      }
       .footer a {
         color: var(--lily);
         text-decoration: none;
@@ -560,9 +566,15 @@
       </div>
 
       <p class="footer">
-        Check out the
-        <a href="https://docs.dbos.dev/python/programming-guide" target="_blank">programming guide</a>
-        to learn how to build with DBOS.
+        <span class="line">
+          Check out the
+          <a href="https://docs.dbos.dev/python/programming-guide" target="_blank">programming guide</a>
+          to learn how to build with DBOS.
+        </span>
+        <span class="line">
+          To manage and monitor your workflows, visit the
+          <a href="https://console.dbos.dev" target="_blank">DBOS Console</a>.
+        </span>
       </p>
     </div>
 
