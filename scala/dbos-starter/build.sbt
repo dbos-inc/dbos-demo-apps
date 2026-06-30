@@ -7,7 +7,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "dbos-starter-scala",
     libraryDependencies ++= Seq(
-      "dev.dbos"      % "transact"     % "0.9.0",
+      "dev.dbos"      % "transact"     % "1.0.0",
       "com.lihaoyi"   %% "cask"        % "0.11.3",
       "org.slf4j"     % "slf4j-simple" % "2.0.18",
       "org.scalameta" %% "munit"       % "1.0.0"    % Test,
