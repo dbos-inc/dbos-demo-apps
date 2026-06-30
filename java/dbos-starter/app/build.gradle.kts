@@ -6,7 +6,7 @@ plugins {
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("dev.dbos:transact:0.9.0")
+  implementation("dev.dbos:transact:1.0.0")
 
   implementation("io.javalin:javalin:7.2.2")
   implementation("org.slf4j:slf4j-simple:2.0.18")
