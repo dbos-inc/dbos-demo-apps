@@ -7,8 +7,8 @@ import Router from "@koa/router";
 import send from "koa-send";
 
 // Welcome to DBOS!
-// This is a template application built with DBOS and Koa.
-// It shows you how to use DBOS to build durable workflows that are resilient to any failure.
+// This example shows you how to use DBOS to build applications
+// that are resilient to any failure.
 
 export const app = new Koa();
 app.use(bodyParser());
