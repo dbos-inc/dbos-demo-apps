@@ -27,10 +27,6 @@ function sleep(ms: number): Promise<void> {
 // interrupted, or restarted while running this workflow, the workflow
 // automatically resumes from the last completed step.
 
-// One interesting implementation detail: we use setEvent to publish the workflow's
-// status to the frontend after each step completes, so you can observe what your workflow
-// is doing in real time.
-
 async function stepOne() {
   await sleep(5000);
   console.log("Completed step 1!");
@@ -48,6 +44,7 @@ async function stepThree() {
 
 async function exampleWorkflow() {
   await DBOS.runStep(stepOne);
+  // Use DBOS.setEvent to publish progress for the frontend to display.
   await DBOS.setEvent(stepsEvent, 1);
   await DBOS.runStep(stepTwo);
   await DBOS.setEvent(stepsEvent, 2);
