@@ -1,5 +1,7 @@
 import os
 import time
+from datetime import datetime, timezone, timedelta
+from typing import Any
 
 import uvicorn
 from dbos import DBOS, DBOSConfig, SetWorkflowID
@@ -20,6 +22,9 @@ config: DBOSConfig = {
 DBOS(config=config)
 
 steps_event = "steps_event"
+
+SCHEDULE_NAME = "scheduled-workflow"
+DEFAULT_CRON = "*/5 * * * * *"
 
 
 # This endpoint uses DBOS to launch a durable workflow.
@@ -62,6 +67,14 @@ def workflow():
     DBOS.set_event(steps_event, 3)
 
 
+# Scheduled workflow: runs on a cron schedule, sleeps 5 seconds between log lines.
+@DBOS.workflow()
+def scheduled_workflow(scheduled_time: datetime, context: Any):
+    DBOS.logger.info("Scheduled workflow starting.")
+    DBOS.sleep(1)
+    DBOS.logger.info("Scheduled workflow ending.")
+
+
 # This endpoint retrieves the status of a workflow.
 @app.get("/last_step/{task_id}")
 def get_last_completed_step(task_id: str):
@@ -86,6 +99,79 @@ def readme():
     return HTMLResponse(html)
 
 
+# ---- Schedule endpoints ----
+
+@app.get("/schedule/status")
+def get_schedule_status():
+    try:
+        sched = DBOS.get_schedule(SCHEDULE_NAME)
+        cron = sched["schedule"]
+        schedule_status = sched["status"]
+    except Exception:
+        cron = DEFAULT_CRON
+        schedule_status = "UNKNOWN"
+
+    since = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+    all_wfs = DBOS.list_workflows(
+        name="scheduled_workflow",
+        start_time=since,
+        limit=500,
+        load_input=False,
+        load_output=False,
+    )
+
+    counts: dict[str, int] = {}
+    for wf in all_wfs:
+        counts[wf.status] = counts.get(wf.status, 0) + 1
+
+    return {
+        "cron": cron,
+        "schedule_status": schedule_status,
+        "workflow_counts": counts,
+    }
+
+
+@app.post("/schedule/apply")
+async def apply_schedule_endpoint(body: dict):
+    cron = body.get("cron", DEFAULT_CRON)
+    DBOS.apply_schedules([{
+        "schedule_name": SCHEDULE_NAME,
+        "workflow_fn": scheduled_workflow,
+        "schedule": cron,
+        "context": None,
+    }])
+     # explicitly resume so Apply always leaves the schedule active.
+    try:
+        DBOS.resume_schedule(SCHEDULE_NAME)
+    except Exception:
+        pass
+    return {"ok": True}
+
+
+@app.post("/schedule/pause")
+def pause_schedule():
+    DBOS.pause_schedule(SCHEDULE_NAME)
+    return {"ok": True}
+
+
+@app.post("/schedule/resume")
+def resume_schedule():
+    DBOS.resume_schedule(SCHEDULE_NAME)
+    return {"ok": True}
+
+
+@app.post("/schedule/trigger")
+def trigger_schedule():
+    DBOS.trigger_schedule(SCHEDULE_NAME)
+    return {"ok": True}
+
+
 if __name__ == "__main__":
     DBOS.launch()
+    DBOS.apply_schedules([{
+        "schedule_name": SCHEDULE_NAME,
+        "workflow_fn": scheduled_workflow,
+        "schedule": DEFAULT_CRON,
+        "context": None,
+    }])
     uvicorn.run(app, host="0.0.0.0", port=8000)
