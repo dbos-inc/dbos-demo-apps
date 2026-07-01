@@ -653,6 +653,7 @@
         <button class="tab-btn active" onclick="switchTab('workflows', this)">Workflows</button>
         <button class="tab-btn" onclick="switchTab('schedules', this)">Schedules</button>
         <button class="tab-btn" onclick="switchTab('queues', this)">Queues</button>
+        <button class="tab-btn" onclick="switchTab('communication', this)">Communication</button>
       </div>
 
       <!-- ===== WORKFLOWS TAB ===== -->
@@ -868,16 +869,109 @@
           </span>
         </p>
       </div>
+
+      <!-- ===== WORKFLOW COMMUNICATION TAB ===== -->
+      <div id="tab-communication" class="tab-content">
+        <p class="lede">
+          DBOS workflows can <strong>receive messages</strong> while running, enabling inter-workflow communication and human-in-the-loop patterns.
+          <code>DBOS.recv()</code> durably waits for a message, surviving crashes and restarts.
+          Here we use <code>DBOS.send()</code> to deliver a decision from an endpoint.
+        </p>
+
+        <div class="grid">
+          <!-- code editor -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">app/main.py</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="decorator">@DBOS.workflow</span><span class="punct">()</span></span><span class="code-line"><span class="keyword">def</span> <span class="function">communication_workflow</span><span class="punct">():</span></span><span class="code-block-step comm-line-1"><span class="code-line indent"><span class="function">comm_step_one</span><span class="punct">()</span></span></span><span class="code-line indent"><span class="function">DBOS.set_event</span><span class="punct">(</span><span class="string">"comm_status"</span><span class="punct">,</span> <span class="string">"waiting"</span><span class="punct">)</span></span><span class="code-block-step comm-line-2"><span class="code-line indent">decision <span class="punct">=</span> <span class="function">DBOS.recv</span><span class="punct">(</span><span class="string">"approval"</span><span class="punct">,</span></span><span class="code-line indent">    timeout_seconds<span class="punct">=</span><span class="num-lit">120</span><span class="punct">)</span></span></span><span class="code-line indent"><span class="keyword">if</span> decision <span class="punct">==</span> <span class="string">"approve"</span><span class="punct">:</span></span><span class="code-block-step comm-line-3"><span class="code-line indent indent"><span class="function">comm_step_two</span><span class="punct">()</span></span></span><span class="code-line indent"><span class="keyword">elif</span> decision <span class="punct">==</span> <span class="string">"deny"</span><span class="punct">:</span></span><span class="code-line indent indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Denied."</span><span class="punct">)</span></span><span class="code-line indent"><span class="keyword">else</span><span class="punct">:</span>  <span class="punct"># timeout</span></span><span class="code-line indent indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Timed out!"</span><span class="punct">)</span></span></pre>
+          </div>
+
+          <!-- controls -->
+          <div class="card controls">
+            <h2>Run the demo</h2>
+
+            <button onclick="startCommWorkflow()" id="btn-comm-start" class="btn btn-flashy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"></polygon>
+              </svg>
+              Start workflow
+            </button>
+
+            <div class="sched-actions">
+              <button onclick="commApprove()" id="btn-comm-approve" class="btn btn-basic" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Approve
+              </button>
+              <button onclick="commDeny()" id="btn-comm-deny" class="btn btn-danger" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Deny
+              </button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="timeline" id="comm-timeline">
+              <div class="step pending" id="comm-row-1">
+                <div class="node">
+                  <span class="num">1</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">comm_step_one()</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+              <div class="step pending" id="comm-row-2">
+                <div class="node">
+                  <span class="num">2</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">DBOS.recv("approval")</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+              <div class="step pending" id="comm-row-3">
+                <div class="node">
+                  <span class="num">3</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">comm_step_two()</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="comm-outcome" style="display:none;margin-top:4px;font-size:13px;font-weight:600;padding:8px 4px;"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            Check out the
+            <a href="https://docs.dbos.dev/python/tutorials/workflow-communication" target="_blank">workflow communication guide</a>
+            to learn more about messages, events, and human-in-the-loop patterns.
+          </span>
+        </p>
+      </div>
     </div>
 
     <script>
       // ---- Tab switching ----
+      let _activeTab = "workflows";
+
       function switchTab(name, btn) {
         document.querySelectorAll(".tab-content").forEach((el) => el.classList.remove("active"));
         document.querySelectorAll(".tab-btn").forEach((el) => el.classList.remove("active"));
         document.getElementById("tab-" + name).classList.add("active");
         btn.classList.add("active");
+        _activeTab = name;
       }
+
+      function activeTab() { return _activeTab; }
 
       // ============================================================
       // WORKFLOWS TAB logic (unchanged)
@@ -904,10 +998,6 @@
       if (urlId && urlId.length > 0) {
         currentId = urlId;
         enableCrashButton();
-      }
-
-      function activeTab() {
-        return document.querySelector(".tab-btn.active")?.textContent?.trim().toLowerCase();
       }
 
       checkProgress();
@@ -1170,6 +1260,139 @@
           body: JSON.stringify({ concurrency }),
         });
         await pollQueueStatus();
+      }
+      // ============================================================
+      // WORKFLOW COMMUNICATION TAB logic
+      // ============================================================
+      const commUrlParams = new URLSearchParams(window.location.search);
+      let currentCommWfId = commUrlParams.get("comm_id") || null;
+      let commPollInterval = null;
+
+      if (currentCommWfId) startCommPolling();
+
+      const commRows = [
+        document.getElementById("comm-row-1"),
+        document.getElementById("comm-row-2"),
+        document.getElementById("comm-row-3"),
+      ];
+
+      function setCommState(row, state, text) {
+        row.className = "step " + state;
+        row.querySelector(".step-state").textContent = text;
+      }
+
+      function updateCommDiagram(state) {
+        const TERMINAL = ["completed", "denied", "timeout"];
+        const isTerminal = TERMINAL.includes(state);
+
+        // node 1: step1=active, else complete if past it
+        if (state === "step1") {
+          setCommState(commRows[0], "active", "Executing");
+          setCommState(commRows[1], "pending", "Waiting");
+          setCommState(commRows[2], "pending", "Waiting");
+        } else if (state === "waiting") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "active", "Waiting for input");
+          setCommState(commRows[2], "pending", "Waiting");
+        } else if (state === "step2") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "complete", "Approved");
+          setCommState(commRows[2], "active", "Executing");
+        } else if (state === "completed") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "complete", "Approved");
+          setCommState(commRows[2], "complete", "Completed");
+        } else if (state === "denied") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "recover", "Denied");
+          setCommState(commRows[2], "pending", "Skipped");
+        } else if (state === "timeout") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "recover", "Timed out");
+          setCommState(commRows[2], "pending", "Skipped");
+        } else {
+          // idle
+          commRows.forEach((r) => setCommState(r, "pending", "Waiting"));
+        }
+
+        // code highlights
+        document.querySelectorAll(".comm-line-1, .comm-line-2, .comm-line-3").forEach((el) => el.classList.remove("step-highlight"));
+        if (state === "step1") document.querySelector(".comm-line-1")?.classList.add("step-highlight");
+        if (state === "waiting") document.querySelector(".comm-line-2")?.classList.add("step-highlight");
+        if (state === "step2") document.querySelector(".comm-line-3")?.classList.add("step-highlight");
+
+        // outcome badge
+        const outcome = document.getElementById("comm-outcome");
+        if (state === "completed") {
+          outcome.style.display = "block";
+          outcome.style.color = "var(--status-success)";
+          outcome.textContent = "✓ Approved — step 2 executed successfully.";
+        } else if (state === "denied") {
+          outcome.style.display = "block";
+          outcome.style.color = "var(--status-error)";
+          outcome.textContent = "✗ Denied — workflow ended without executing step 2.";
+        } else if (state === "timeout") {
+          outcome.style.display = "block";
+          outcome.style.color = "var(--status-warning)";
+          outcome.textContent = "⏱ Timed out — no decision received within 2 minutes.";
+        } else {
+          outcome.style.display = "none";
+        }
+
+        // buttons
+        const waiting = state === "waiting";
+        document.getElementById("btn-comm-approve").disabled = !waiting;
+        document.getElementById("btn-comm-deny").disabled = !waiting;
+        document.getElementById("btn-comm-start").disabled = false;
+      }
+
+      const COMM_TERMINAL = new Set(["completed", "denied", "timeout"]);
+
+      function startCommPolling() {
+        if (commPollInterval) clearInterval(commPollInterval);
+        commPollInterval = setInterval(async () => {
+          await pollCommStatus();
+        }, 800);
+      }
+
+      function stopCommPolling() {
+        if (commPollInterval) { clearInterval(commPollInterval); commPollInterval = null; }
+      }
+
+      async function pollCommStatus() {
+        if (!currentCommWfId) { updateCommDiagram("idle"); return; }
+        try {
+          const res = await fetch(`/comm/status/${currentCommWfId}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          updateCommDiagram(data.state);
+          if (COMM_TERMINAL.has(data.state)) stopCommPolling();
+        } catch (e) { console.error("pollCommStatus error:", e); }
+      }
+
+      async function startCommWorkflow() {
+        const res = await fetch("/comm/start", { method: "POST" });
+        const data = await res.json();
+        currentCommWfId = data.workflow_id;
+        const p = new URLSearchParams(window.location.search);
+        p.set("comm_id", currentCommWfId);
+        window.history.replaceState({}, "", `${window.location.pathname}?${p.toString()}`);
+        startCommPolling();
+        await pollCommStatus();
+      }
+
+      async function commApprove() {
+        document.getElementById("btn-comm-approve").disabled = true;
+        document.getElementById("btn-comm-deny").disabled = true;
+        await fetch(`/comm/approve/${currentCommWfId}`, { method: "POST" });
+        await pollCommStatus();
+      }
+
+      async function commDeny() {
+        document.getElementById("btn-comm-approve").disabled = true;
+        document.getElementById("btn-comm-deny").disabled = true;
+        await fetch(`/comm/deny/${currentCommWfId}`, { method: "POST" });
+        await pollCommStatus();
       }
     </script>
   </body>

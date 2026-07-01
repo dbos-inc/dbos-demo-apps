@@ -217,6 +217,70 @@ def update_queue_concurrency(body: dict):
     return {"ok": True}
 
 
+# ---- Workflow Communication ----
+
+APPROVAL_TOPIC = "approval"
+COMM_STATUS_EVENT = "comm_status"
+
+@DBOS.step()
+def comm_step_one():
+    time.sleep(2)
+    DBOS.logger.info("Communication workflow: step 1 complete.")
+
+
+@DBOS.step()
+def comm_step_two():
+    time.sleep(2)
+    DBOS.logger.info("Communication workflow: step 2 complete.")
+
+
+@DBOS.workflow()
+def communication_workflow():
+    comm_step_one()
+    DBOS.set_event(COMM_STATUS_EVENT, "waiting")
+    decision = DBOS.recv(APPROVAL_TOPIC, timeout_seconds=120)
+    if decision == "approve":
+        DBOS.set_event(COMM_STATUS_EVENT, "step2")
+        comm_step_two()
+        DBOS.set_event(COMM_STATUS_EVENT, "completed")
+    elif decision == "deny":
+        DBOS.set_event(COMM_STATUS_EVENT, "denied")
+        DBOS.logger.info("Communication workflow: denied.")
+    else:
+        DBOS.set_event(COMM_STATUS_EVENT, "timeout")
+        DBOS.logger.info("Communication workflow: timed out waiting for approval.")
+
+
+@app.get("/comm/status/{workflow_id}")
+def get_comm_status(workflow_id: str):
+    try:
+        status = DBOS.get_event(workflow_id, COMM_STATUS_EVENT, timeout_seconds=0)
+    except Exception:
+        status = None
+    return {"state": status or "step1"}
+
+
+@app.post("/comm/start")
+def start_comm_workflow():
+    import uuid
+    wf_id = str(uuid.uuid4()).replace("-", "")[:12]
+    with SetWorkflowID(wf_id):
+        DBOS.start_workflow(communication_workflow)
+    return {"workflow_id": wf_id}
+
+
+@app.post("/comm/approve/{workflow_id}")
+def approve_comm(workflow_id: str):
+    DBOS.send(workflow_id, "approve", APPROVAL_TOPIC)
+    return {"ok": True}
+
+
+@app.post("/comm/deny/{workflow_id}")
+def deny_comm(workflow_id: str):
+    DBOS.send(workflow_id, "deny", APPROVAL_TOPIC)
+    return {"ok": True}
+
+
 if __name__ == "__main__":
     DBOS.launch()
     DBOS.register_queue(QUEUE_NAME, worker_concurrency=DEFAULT_WORKER_CONCURRENCY, on_conflict="never_update")
