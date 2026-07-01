@@ -26,6 +26,9 @@ steps_event = "steps_event"
 SCHEDULE_NAME = "scheduled-workflow"
 DEFAULT_CRON = "*/5 * * * * *"
 
+QUEUE_NAME = "demo-queue"
+DEFAULT_WORKER_CONCURRENCY = 3
+
 
 # This endpoint uses DBOS to launch a durable workflow.
 @app.get("/workflow/{task_id}")
@@ -166,8 +169,57 @@ def trigger_schedule():
     return {"ok": True}
 
 
+# ---- Queue workflow ----
+
+@DBOS.workflow()
+def enqueued_workflow():
+    DBOS.logger.info("Enqueued workflow starting.")
+    DBOS.sleep(5)
+    DBOS.logger.info("Enqueued workflow ending.")
+
+
+# ---- Queue endpoints ----
+
+@app.get("/queue/status")
+def get_queue_status():
+    queue = DBOS.retrieve_queue(QUEUE_NAME)
+    worker_concurrency = queue.worker_concurrency if queue else DEFAULT_WORKER_CONCURRENCY
+
+    since = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+    all_wfs = DBOS.list_workflows(
+        name="enqueued_workflow",
+        start_time=since,
+        limit=500,
+        load_input=False,
+        load_output=False,
+    )
+
+    counts: dict[str, int] = {}
+    for wf in all_wfs:
+        counts[wf.status] = counts.get(wf.status, 0) + 1
+
+    return {
+        "worker_concurrency": worker_concurrency,
+        "workflow_counts": counts,
+    }
+
+
+@app.post("/queue/enqueue")
+def enqueue_workflow_endpoint():
+    DBOS.enqueue_workflow(QUEUE_NAME, enqueued_workflow)
+    return {"ok": True}
+
+
+@app.post("/queue/concurrency")
+def update_queue_concurrency(body: dict):
+    concurrency = int(body.get("concurrency", DEFAULT_WORKER_CONCURRENCY))
+    DBOS.register_queue(QUEUE_NAME, worker_concurrency=concurrency, on_conflict="always_update")
+    return {"ok": True}
+
+
 if __name__ == "__main__":
     DBOS.launch()
+    DBOS.register_queue(QUEUE_NAME, worker_concurrency=DEFAULT_WORKER_CONCURRENCY, on_conflict="never_update")
     DBOS.apply_schedules([{
         "schedule_name": SCHEDULE_NAME,
         "workflow_fn": scheduled_workflow,

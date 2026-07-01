@@ -531,6 +531,10 @@
         color: var(--status-success);
         background: rgba(86, 166, 75, 0.1);
       }
+      .wf-count-value.enqueued {
+        color: var(--lily);
+        background: rgba(154, 181, 229, 0.12);
+      }
       .wf-count-value.other {
         color: var(--muted);
         background: rgba(163, 165, 170, 0.08);
@@ -648,6 +652,7 @@
       <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('workflows', this)">Workflows</button>
         <button class="tab-btn" onclick="switchTab('schedules', this)">Schedules</button>
+        <button class="tab-btn" onclick="switchTab('queues', this)">Queues</button>
       </div>
 
       <!-- ===== WORKFLOWS TAB ===== -->
@@ -801,6 +806,68 @@
           </span>
         </p>
       </div>
+      <!-- ===== QUEUES TAB ===== -->
+      <div id="tab-queues" class="tab-content">
+        <p class="lede">
+          DBOS <strong>queues</strong> let you run workflow fan-outs and control concurrency.
+          The <code>worker_concurrency</code> parameter controls how many workflows one process may run simultaneously.
+          You can adjust it without restarting the app.
+          Press "Enqueue Workflow" repeatedly to put workflows on the queue.
+        </p>
+
+        <div class="grid">
+          <!-- code editor showing enqueued_workflow -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">app/main.py</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="decorator">@DBOS.workflow</span><span class="punct">()</span></span><span class="code-line"><span class="keyword">def</span> <span class="function">enqueued_workflow</span><span class="punct">():</span></span><span class="code-block-step queue-line-1"><span class="code-line indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Enqueued workflow starting."</span><span class="punct">)</span></span></span><span class="code-block-step queue-line-2"><span class="code-line indent"><span class="function">DBOS.sleep</span><span class="punct">(</span><span class="num-lit">5</span><span class="punct">)</span></span></span><span class="code-block-step queue-line-3"><span class="code-line indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Enqueued workflow ending."</span><span class="punct">)</span></span></span><span class="code-line"> </span><span class="code-line"><span class="function">DBOS.register_queue</span><span class="punct">(</span><span class="string">"demo-queue"</span><span class="punct">,</span></span><span class="code-line indent"><span class="string">worker_concurrency</span><span class="punct">=</span><span class="num-lit">3</span><span class="punct">)</span></span><span class="code-line"> </span><span class="code-line"><span class="function">DBOS.enqueue_workflow</span><span class="punct">(</span><span class="string">"demo-queue"</span><span class="punct">,</span></span><span class="code-line indent"><span class="function">enqueued_workflow</span><span class="punct">)</span></span></pre>
+          </div>
+
+          <!-- queue controls -->
+          <div class="card controls">
+            <h2>Queue</h2>
+
+            <div class="cron-row">
+              <input
+                id="concurrency-input"
+                class="cron-input"
+                type="number"
+                min="1"
+                value="3"
+                style="max-width:80px"
+              />
+              <span style="font-size:12.5px;color:var(--muted);align-self:center;white-space:nowrap">worker_concurrency</span>
+              <button onclick="applyQueueConcurrency()" class="btn btn-flashy" style="margin-left:auto">Apply</button>
+            </div>
+
+            <button onclick="enqueueWorkflow()" class="btn btn-flashy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+              Enqueue workflow
+            </button>
+
+            <div class="divider"></div>
+
+            <h2>Workflows in the last 10 minutes:</h2>
+            <div id="queue-wf-counts" class="wf-counts"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            DBOS queues offer many additional controls for rate limiting, deduplication, debouncing, partitioning, prioritization and more.
+            See the <a href="https://docs.dbos.dev/python/tutorials/queue-tutorial" target="_blank">queue tutorial</a> for details.
+          </span>
+          <span class="line">
+            To manage and monitor your queues, visit the
+            <a href="https://console.dbos.dev" target="_blank">DBOS Console</a>.
+          </span>
+        </p>
+      </div>
     </div>
 
     <script>
@@ -839,8 +906,12 @@
         enableCrashButton();
       }
 
+      function activeTab() {
+        return document.querySelector(".tab-btn.active")?.textContent?.trim().toLowerCase();
+      }
+
       checkProgress();
-      setInterval(checkProgress, 1667);
+      setInterval(() => { if (activeTab() === "workflows") checkProgress(); }, 1667);
 
       function showReconnecting() {
         document.getElementById("reconnecting").classList.add("show");
@@ -943,6 +1014,7 @@
       const STATUS_ORDER = ["ENQUEUED", "PENDING", "SUCCESS", "ERROR", "CANCELLED", "MAX_RECOVERY_ATTEMPTS_EXCEEDED"];
 
       function countClass(status) {
+        if (status === "ENQUEUED") return "enqueued";
         if (status === "PENDING") return "pending";
         if (status === "SUCCESS") return "success";
         return "other";
@@ -1019,7 +1091,7 @@
         }
       }
 
-      setInterval(pollScheduleStatus, 800);
+      setInterval(() => { if (activeTab() === "schedules") pollScheduleStatus(); }, 800);
       pollScheduleStatus();
 
       async function applySchedule() {
@@ -1045,6 +1117,59 @@
       async function triggerSchedule() {
         await fetch("/schedule/trigger", { method: "POST" });
         await pollScheduleStatus();
+      }
+      // ============================================================
+      // QUEUES TAB logic
+      // ============================================================
+      async function pollQueueStatus() {
+        try {
+          const res = await fetch("/queue/status");
+          if (!res.ok) return;
+          const data = await res.json();
+
+          const input = document.getElementById("concurrency-input");
+          if (document.activeElement !== input) {
+            input.value = data.worker_concurrency;
+          }
+
+          const countsEl = document.getElementById("queue-wf-counts");
+          const counts = data.workflow_counts;
+          const allStatuses = [...new Set([...STATUS_ORDER, ...Object.keys(counts)])].filter((s) => counts[s]);
+          if (allStatuses.length === 0) {
+            countsEl.innerHTML = '<span style="font-size:12.5px;color:var(--muted)">No workflows yet</span>';
+          } else {
+            countsEl.innerHTML = allStatuses
+              .map((s) => `
+                <div class="wf-count-row">
+                  <span class="wf-count-label">${s}</span>
+                  <span class="wf-count-value ${countClass(s)}">${formatCount(counts[s])}</span>
+                </div>`)
+              .join("");
+          }
+
+          const running = (counts["PENDING"] || 0) + (counts["ENQUEUED"] || 0) >= 1;
+          document.querySelectorAll(".queue-line-1, .queue-line-2, .queue-line-3").forEach((el) => {
+            el.classList.toggle("step-highlight", running);
+          });
+        } catch (e) {}
+      }
+
+      setInterval(() => { if (activeTab() === "queues") pollQueueStatus(); }, 800);
+      pollQueueStatus();
+
+      async function enqueueWorkflow() {
+        await fetch("/queue/enqueue", { method: "POST" });
+        await pollQueueStatus();
+      }
+
+      async function applyQueueConcurrency() {
+        const concurrency = parseInt(document.getElementById("concurrency-input").value, 10);
+        await fetch("/queue/concurrency", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ concurrency }),
+        });
+        await pollQueueStatus();
       }
     </script>
   </body>
