@@ -648,7 +648,7 @@
         />
       </div>
 
-      <h1>Make applications <span class="grad">resilient to any failure</span></h1>
+      <h1>Build reliable software <span class="grad">effortlessly</span></h1>
       <!-- Tab navigation -->
       <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('workflows', this)">Workflows</button>
@@ -738,10 +738,6 @@
             <a href="https://docs.dbos.dev/python/programming-guide" target="_blank">programming guide</a>
             to learn how to build with DBOS.
           </span>
-          <span class="line">
-            To manage and monitor your workflows, visit the
-            <a href="https://console.dbos.dev" target="_blank">DBOS Console</a>.
-          </span>
         </p>
       </div>
 
@@ -802,10 +798,6 @@
             <a href="https://docs.dbos.dev/python/tutorials/scheduled-workflows" target="_blank">scheduling guide</a>
             to learn how to run workflows on a cron schedule.
           </span>
-          <span class="line">
-            To manage and monitor your schedules, visit the
-            <a href="https://console.dbos.dev" target="_blank">DBOS Console</a>.
-          </span>
         </p>
       </div>
       <!-- ===== QUEUES TAB ===== -->
@@ -849,7 +841,7 @@
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <polyline points="19 12 12 19 5 12"></polyline>
               </svg>
-              Enqueue workflow
+              Enqueue 5 workflows
             </button>
 
             <div class="divider"></div>
@@ -863,10 +855,6 @@
           <span class="line">
             DBOS queues offer many additional controls for rate limiting, deduplication, debouncing, partitioning, prioritization and more.
             See the <a href="https://docs.dbos.dev/python/tutorials/queue-tutorial" target="_blank">queue tutorial</a> for details.
-          </span>
-          <span class="line">
-            To manage and monitor your queues, visit the
-            <a href="https://console.dbos.dev" target="_blank">DBOS Console</a>.
           </span>
         </p>
       </div>
@@ -954,7 +942,7 @@
           <span class="line">
             Check out the
             <a href="https://docs.dbos.dev/python/tutorials/workflow-communication" target="_blank">workflow communication guide</a>
-            to learn more about messages, events, and human-in-the-loop patterns.
+            to learn more about messages, events, streams, and their usage patterns.
           </span>
         </p>
       </div>
@@ -1249,7 +1237,7 @@
       pollQueueStatus();
 
       async function enqueueWorkflow() {
-        await fetch("/queue/enqueue", { method: "POST" });
+        await Promise.all(Array.from({length: 5}, () => fetch("/queue/enqueue", { method: "POST" })));
         await pollQueueStatus();
       }
 
