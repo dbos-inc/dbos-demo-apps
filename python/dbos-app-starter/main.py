@@ -1,5 +1,7 @@
 import os
 import time
+from datetime import datetime, timezone, timedelta
+from typing import Any
 
 import uvicorn
 from dbos import DBOS, DBOSConfig, SetWorkflowID
@@ -20,6 +22,12 @@ config: DBOSConfig = {
 DBOS(config=config)
 
 steps_event = "steps_event"
+
+SCHEDULE_NAME = "scheduled-workflow"
+DEFAULT_CRON = "*/5 * * * * *"
+
+QUEUE_NAME = "demo-queue"
+DEFAULT_WORKER_CONCURRENCY = 3
 
 
 # This endpoint uses DBOS to launch a durable workflow.
@@ -62,6 +70,14 @@ def workflow():
     DBOS.set_event(steps_event, 3)
 
 
+# Scheduled workflow: runs on a cron schedule, sleeps 5 seconds between log lines.
+@DBOS.workflow()
+def scheduled_workflow(scheduled_time: datetime, context: Any):
+    DBOS.logger.info("Scheduled workflow starting.")
+    DBOS.sleep(1)
+    DBOS.logger.info("Scheduled workflow ending.")
+
+
 # This endpoint retrieves the status of a workflow.
 @app.get("/last_step/{task_id}")
 def get_last_completed_step(task_id: str):
@@ -86,6 +102,191 @@ def readme():
     return HTMLResponse(html)
 
 
+# ---- Schedule endpoints ----
+
+@app.get("/schedule/status")
+def get_schedule_status():
+    try:
+        sched = DBOS.get_schedule(SCHEDULE_NAME)
+        cron = sched["schedule"]
+        schedule_status = sched["status"]
+    except Exception:
+        cron = DEFAULT_CRON
+        schedule_status = "UNKNOWN"
+
+    since = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+    all_wfs = DBOS.list_workflows(
+        name="scheduled_workflow",
+        start_time=since,
+        limit=500,
+        load_input=False,
+        load_output=False,
+    )
+
+    counts: dict[str, int] = {}
+    for wf in all_wfs:
+        counts[wf.status] = counts.get(wf.status, 0) + 1
+
+    return {
+        "cron": cron,
+        "schedule_status": schedule_status,
+        "workflow_counts": counts,
+    }
+
+
+@app.post("/schedule/apply")
+def apply_schedule_endpoint(body: dict):
+    cron = body.get("cron", DEFAULT_CRON)
+    DBOS.apply_schedules([{
+        "schedule_name": SCHEDULE_NAME,
+        "workflow_fn": scheduled_workflow,
+        "schedule": cron,
+        "context": None,
+    }])
+     # explicitly resume so Apply always leaves the schedule active.
+    try:
+        DBOS.resume_schedule(SCHEDULE_NAME)
+    except Exception:
+        pass
+    return {"ok": True}
+
+@app.post("/schedule/pause")
+def pause_schedule():
+    DBOS.pause_schedule(SCHEDULE_NAME)
+    return {"ok": True}
+
+
+@app.post("/schedule/resume")
+def resume_schedule():
+    DBOS.resume_schedule(SCHEDULE_NAME)
+    return {"ok": True}
+
+
+@app.post("/schedule/trigger")
+def trigger_schedule():
+    DBOS.trigger_schedule(SCHEDULE_NAME)
+    return {"ok": True}
+
+
+# ---- Queue workflow ----
+
+@DBOS.workflow()
+def enqueued_workflow():
+    DBOS.logger.info("Enqueued workflow starting.")
+    DBOS.sleep(5)
+    DBOS.logger.info("Enqueued workflow ending.")
+
+
+# ---- Queue endpoints ----
+
+@app.get("/queue/status")
+def get_queue_status():
+    queue = DBOS.retrieve_queue(QUEUE_NAME)
+    worker_concurrency = queue.worker_concurrency if queue else DEFAULT_WORKER_CONCURRENCY
+
+    since = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+    all_wfs = DBOS.list_workflows(
+        name="enqueued_workflow",
+        start_time=since,
+        limit=500,
+        load_input=False,
+        load_output=False,
+    )
+
+    counts: dict[str, int] = {}
+    for wf in all_wfs:
+        counts[wf.status] = counts.get(wf.status, 0) + 1
+
+    return {
+        "worker_concurrency": worker_concurrency,
+        "workflow_counts": counts,
+    }
+
+
+@app.post("/queue/enqueue")
+def enqueue_workflow_endpoint():
+    DBOS.enqueue_workflow(QUEUE_NAME, enqueued_workflow)
+    return {"ok": True}
+
+
+@app.post("/queue/concurrency")
+def update_queue_concurrency(body: dict):
+    concurrency = int(body.get("concurrency", DEFAULT_WORKER_CONCURRENCY))
+    DBOS.register_queue(QUEUE_NAME, worker_concurrency=concurrency, on_conflict="always_update")
+    return {"ok": True}
+
+
+# ---- Workflow Communication ----
+
+APPROVAL_TOPIC = "approval"
+COMM_STATUS_EVENT = "comm_status"
+
+@DBOS.step()
+def comm_step_one():
+    time.sleep(2)
+    DBOS.logger.info("Communication workflow: step 1 complete.")
+
+
+@DBOS.step()
+def comm_step_two():
+    time.sleep(2)
+    DBOS.logger.info("Communication workflow: step 2 complete.")
+
+
+@DBOS.workflow()
+def communication_workflow():
+    comm_step_one()
+    DBOS.set_event(COMM_STATUS_EVENT, "waiting")
+    decision = DBOS.recv(APPROVAL_TOPIC, timeout_seconds=120)
+    if decision == "approve":
+        DBOS.set_event(COMM_STATUS_EVENT, "step2")
+        comm_step_two()
+        DBOS.set_event(COMM_STATUS_EVENT, "completed")
+    elif decision == "deny":
+        DBOS.set_event(COMM_STATUS_EVENT, "denied")
+        DBOS.logger.info("Communication workflow: denied.")
+    else:
+        DBOS.set_event(COMM_STATUS_EVENT, "timeout")
+        DBOS.logger.info("Communication workflow: timed out waiting for approval.")
+
+
+@app.get("/comm/status/{workflow_id}")
+def get_comm_status(workflow_id: str):
+    try:
+        status = DBOS.get_event(workflow_id, COMM_STATUS_EVENT, timeout_seconds=0)
+    except Exception:
+        status = None
+    return {"state": status or "step1"}
+
+
+@app.post("/comm/start")
+def start_comm_workflow():
+    import uuid
+    wf_id = str(uuid.uuid4()).replace("-", "")[:12]
+    with SetWorkflowID(wf_id):
+        DBOS.start_workflow(communication_workflow)
+    return {"workflow_id": wf_id}
+
+
+@app.post("/comm/approve/{workflow_id}")
+def approve_comm(workflow_id: str):
+    DBOS.send(workflow_id, "approve", APPROVAL_TOPIC)
+    return {"ok": True}
+
+
+@app.post("/comm/deny/{workflow_id}")
+def deny_comm(workflow_id: str):
+    DBOS.send(workflow_id, "deny", APPROVAL_TOPIC)
+    return {"ok": True}
+
+
 if __name__ == "__main__":
     DBOS.launch()
+    DBOS.register_queue(QUEUE_NAME, worker_concurrency=DEFAULT_WORKER_CONCURRENCY, on_conflict="never_update")
+    DBOS.apply_schedules([{
+        "schedule_name": SCHEDULE_NAME,
+        "workflow_fn": scheduled_workflow,
+        "schedule": DEFAULT_CRON,
+        "context": None,
+    }])
     uvicorn.run(app, host="0.0.0.0", port=8000)
