@@ -135,7 +135,7 @@ def get_schedule_status():
 
 
 @app.post("/schedule/apply")
-async def apply_schedule_endpoint(body: dict):
+def apply_schedule_endpoint(body: dict):
     cron = body.get("cron", DEFAULT_CRON)
     DBOS.apply_schedules([{
         "schedule_name": SCHEDULE_NAME,
@@ -149,7 +149,6 @@ async def apply_schedule_endpoint(body: dict):
     except Exception:
         pass
     return {"ok": True}
-
 
 @app.post("/schedule/pause")
 def pause_schedule():
