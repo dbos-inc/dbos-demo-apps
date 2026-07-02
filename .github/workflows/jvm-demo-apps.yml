@@ -8,7 +8,7 @@ on:
       - 'kotlin/**'
       - 'scala/**'
       - 'clojure/**'
-      - '.github/workflows/jvm-dbos-starters.yml'
+      - '.github/workflows/jvm-demo-apps.yml'
   pull_request:
     types:
       - ready_for_review
@@ -20,7 +20,7 @@ on:
       - 'kotlin/**'
       - 'scala/**'
       - 'clojure/**'
-      - '.github/workflows/jvm-dbos-starters.yml'
+      - '.github/workflows/jvm-demo-apps.yml'
   workflow_dispatch:
 
 jobs:
