@@ -655,6 +655,7 @@
         <button class="tab-btn" onclick="switchTab('schedules', this)">Schedules</button>
         <button class="tab-btn" onclick="switchTab('queues', this)">Queues</button>
         <button class="tab-btn" onclick="switchTab('communication', this)">Communication</button>
+        <button class="tab-btn" onclick="switchTab('conductor', this)">Conductor</button>
       </div>
 
       <!-- ===== WORKFLOWS TAB ===== -->
@@ -944,6 +945,18 @@
             <a href="https://docs.dbos.dev/python/tutorials/workflow-communication" target="_blank">workflow communication guide</a>
             to learn more about messages, events, streams, and their usage patterns.
           </span>
+        </p>
+      </div>
+
+      <!-- ===== CONDUCTOR TAB ===== -->
+      <div id="tab-conductor" class="tab-content">
+        <p class="lede">
+          To run DBOS apps in production, connect to <strong>Conductor</strong> — the workflow control plane.
+          Conductor provides cluster-wide observability, distributed workflow recovery, team management,
+          workflow metrics, alerts, and more.
+        </p>
+        <p class="lede">
+          <a href="https://docs.dbos.dev/production/conductor#connecting-to-conductor" target="_blank" style="color: var(--splice); font-weight: 700;">Click here</a> to connect this app to Conductor. 
         </p>
       </div>
     </div>
