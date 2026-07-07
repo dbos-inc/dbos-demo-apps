@@ -11,6 +11,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dbos-inc/dbos-transact-golang v0.18.0 h1:jTBSlGZPYzjWlGUyoBwUyycqRxk9+gNlmjY4J7Yg1go=
 github.com/dbos-inc/dbos-transact-golang v0.18.0/go.mod h1:5xIQ05nJ2VLJajHlvFUx230Qj7pue3GJkbWcKzjN1TU=
+github.com/dbos-inc/dbos-transact-golang v0.19.0 h1:gO5WaW7HRs2Bx4jynBdywANNDPQi7vGTVBq9yjmExMM=
+github.com/dbos-inc/dbos-transact-golang v0.19.0/go.mod h1:5xIQ05nJ2VLJajHlvFUx230Qj7pue3GJkbWcKzjN1TU=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/gabriel-vasile/mimetype v1.4.13 h1:46nXokslUBsAJE/wMsp5gtO500a4F3Nkz9Ufpk2AcUM=
