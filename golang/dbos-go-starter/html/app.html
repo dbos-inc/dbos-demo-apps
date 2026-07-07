@@ -1,210 +1,983 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Welcome to DBOS!</title>
     <link
       rel="icon"
       href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico"
       type="image/x-icon"
     />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      .code-block {
-        background: #f6f8fa;
-        padding: 0.75em 0.25em 0.75em 0.75em;
-        font-size: 14px;
-        line-height: 1.5;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      /* Color tokens from the DBOS Cloud Console theme (src/theme.ts). */
+      :root {
+        --ink-bg: #16181d;
+        --ink-border: #3a3d44;
+        --fg: #d8d9dc;
+        --muted: #a3a5aa;
+
+        --splice: #c8f62e;
+        --yellow: #ecfaa0;
+        --cyan: #44e3ee;
+        --lily: #9ab5e5;
+        --lily-light: #ced7f8;
+
+        --code-bg: #0e1014;
+        --code-fg: #f8f8f8;
+        --syntax-string: #ecc48d;
+        --syntax-keyword: #c792ea;
+        --syntax-type: #82aaff;
+
+        --status-error: #dc5848;
+        --status-warning: #e5a82f;
+        --status-success: #56a64b;
+
+        --dbos-gradient: linear-gradient(90deg, var(--splice), var(--yellow) 33%, var(--cyan) 66%, var(--lily-light));
+        /* "Flashy" olive-green glow (#678406), faded into the surface. */
+        --flashy-bg: radial-gradient(ellipse 50% 100% at 50% 130%, rgba(103, 132, 6, 0.9), var(--ink-bg));
+        --flashy-bg-hover: radial-gradient(ellipse 50% 100% at 50% 110%, rgba(103, 132, 6, 0.9), var(--ink-bg));
+
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
-      .step-highlight {
-        background-color: #fff3b4;
+
+      * {
+        box-sizing: border-box;
       }
-      .function-block {
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Open Sans", system-ui, -apple-system, sans-serif;
+        color: var(--fg);
+        background-color: var(--ink-bg);
+        min-height: 100vh;
+        position: relative;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Subtle brand glow at the bottom, echoing the console's "flashy" radial. */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse 60% 45% at 50% 118%, rgba(103, 132, 6, 0.16), transparent 72%);
+      }
+
+      .wrap {
+        position: relative;
+        z-index: 1;
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 56px 24px 64px;
+      }
+
+      /* ---- header ---- */
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 30px;
+      }
+      .brand .logo-img {
         display: block;
-        padding-left: 1em;
+        height: 32px;
+        width: auto;
+        border-radius: 4px;
+        border: 1px solid var(--ink-border);
+      }
+
+      h1 {
+        font-size: clamp(28px, 4.6vw, 44px);
+        line-height: 1.12;
+        font-weight: 600;
+        letter-spacing: -0.6px;
+        margin: 0 0 16px;
+        max-width: 760px;
+      }
+      h1 .grad {
+        background: var(--dbos-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .lede {
+        color: var(--muted);
+        font-size: 15.5px;
+        line-height: 1.7;
+        max-width: 640px;
+        margin: 0 0 10px;
+      }
+      .lede strong {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      .lede code {
+        font-family: var(--mono);
+        font-size: 0.85em;
+        color: var(--lily-light);
+        background: rgba(154, 181, 229, 0.09);
+        border: 1px solid var(--ink-border);
+        padding: 1px 6px;
+        border-radius: 2px;
+      }
+
+      /* ---- reconnecting toast ---- */
+      #reconnecting {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-200%);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(229, 168, 47, 0.12);
+        border: 1px solid rgba(229, 168, 47, 0.45);
+        color: var(--status-warning);
+        padding: 9px 18px;
+        border-radius: 4px;
+        font-size: 13.5px;
+        font-weight: 600;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      }
+      #reconnecting.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .spinner {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        border: 2px solid rgba(229, 168, 47, 0.3);
+        border-top-color: var(--status-warning);
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* ---- tabs ---- */
+      .tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid var(--ink-border);
+        margin-bottom: 34px;
+      }
+      .tab-btn {
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        padding: 10px 20px;
+        transition: color 0.2s, border-color 0.2s;
+      }
+      .tab-btn:hover {
+        color: var(--fg);
+      }
+      .tab-btn.active {
+        color: var(--splice);
+        border-bottom-color: var(--splice);
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      /* ---- layout grid ---- */
+      .grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 20px;
+      }
+      @media (max-width: 860px) {
+        .grid { grid-template-columns: 1fr; }
+      }
+
+      /* outlined surfaces, flat (matches MuiPaper variant="outlined") */
+      .card {
+        background: var(--ink-bg);
+        border: 1px solid var(--ink-border);
+        border-radius: 4px;
+      }
+
+      /* ---- code editor window ---- */
+      .editor {
+        overflow: hidden;
+      }
+      .editor .chrome {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--ink-border);
+        background: rgba(255, 255, 255, 0.015);
+      }
+      .dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        opacity: 0.85;
+      }
+      .dot.r { background: var(--status-error); }
+      .dot.y { background: var(--status-warning); }
+      .dot.g { background: var(--status-success); }
+      .editor .filename {
+        margin-left: 10px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      pre.code {
+        margin: 0;
+        padding: 18px 20px 20px;
+        background: var(--code-bg);
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.7;
+        overflow-x: auto;
+        color: var(--code-fg);
       }
       .code-line {
         display: block;
         white-space: pre;
       }
-      .keyword {
-        color: #e03444;
-      }
-      .decorator {
-        color: #953800;
-      }
-      .function {
-        color: #8957e5;
-      }
-      .string {
-        color: #0550ae;
-      }
-      .comment {
-        color: #6e7781;
-      }
-      .punctuation {
-        color: #24292f;
-      }
+      .indent { padding-left: 1.6em; }
+      .indent2 { padding-left: 3.2em; }
+      .keyword { color: var(--syntax-keyword); }
+      .decorator { color: var(--syntax-keyword); }
+      .function { color: var(--syntax-type); }
+      .string { color: var(--syntax-string); }
+      .num-lit { color: var(--cyan); }
+      .punct { color: var(--muted); }
 
-      .status-text {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        transition: all 0.2s;
-      }
-
-      .status-text .step {
+      .code-block-step {
         display: block;
-        padding: 0.375rem 0.75rem;
-        border-left: 3px solid transparent;
-        transition: all 0.2s;
+        border-radius: 3px;
+        padding: 2px 4px;
+        margin: 2px -4px;
+        transition: background 0.35s, box-shadow 0.35s;
+      }
+      .step-highlight {
+        background: rgba(200, 246, 46, 0.12);
+        box-shadow: inset 3px 0 0 var(--splice);
       }
 
-      .status-text .step.pending {
-        color: #6b7280;
-        border-left-color: #e5e7eb;
+      /* ---- controls panel ---- */
+      .controls {
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .controls h2 {
+        margin: 0;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
       }
 
-      .status-text .step.active {
-        color: #2563eb;
-        border-left-color: #3b82f6;
-        background-color: #eff6ff;
+      /* ---- buttons (mirror MUI "flashy" / "basic" variants) ---- */
+      .btn {
+        position: relative;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 9px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: var(--fg);
+        background: var(--ink-bg);
       }
+      .btn:active { transform: translateY(1px); }
+      .btn svg { width: 16px; height: 16px; }
 
-      .status-text .step.recover {
-        color: #dc2626;
-        border-left-color: #ef4444;
-        background-color: #fef2f2;
+      /* flashy = primary launch action */
+      .btn-flashy {
+        z-index: 0;
+        border: 1px solid transparent;
+        border-image: var(--dbos-gradient);
+        border-image-slice: 1;
+        background: var(--flashy-bg);
+        transition: all 0.4s ease;
       }
-
-      .status-text .step.complete {
-        color: #059669;
-        border-left-color: #10b981;
+      .btn-flashy:hover {
+        background-image: var(--flashy-bg-hover);
       }
-
-      @keyframes typing {
-        0% {
-          content: "";
-        }
-        25% {
-          content: ".";
-        }
-        50% {
-          content: "..";
-        }
-        75% {
-          content: "...";
-        }
-        100% {
-          content: "";
-        }
-      }
-
-      .status-text .step.active::after {
+      .btn-flashy:hover::before {
         content: "";
-        animation: typing 2s infinite;
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        background: var(--dbos-gradient);
+        filter: blur(10px);
+      }
+      .btn-flashy:hover::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: inherit;
+        border: inherit;
       }
 
-      .status-text .step.recover::after {
+      /* basic, danger-tinted = crash action */
+      .btn-danger {
+        border: 1px solid rgba(220, 88, 72, 0.45);
+        border-radius: 2px;
+        color: var(--status-error);
+        transition: border-color 0.4s, background-color 0.4s;
+      }
+      .btn-danger:hover:not(:disabled) {
+        border-color: var(--status-error);
+        background-color: rgba(220, 88, 72, 0.08);
+      }
+
+      /* basic outline, neutral */
+      .btn-basic {
+        border: 1px solid var(--ink-border);
+        border-radius: 2px;
+        color: var(--fg);
+        transition: border-color 0.4s, background-color 0.4s;
+      }
+      .btn-basic:hover:not(:disabled) {
+        border-color: var(--muted);
+        background-color: rgba(255, 255, 255, 0.04);
+      }
+
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--ink-border);
+        margin: 2px 0;
+      }
+
+      /* ---- progress timeline ---- */
+      .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .step {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 4px;
+      }
+      .step:not(:last-child) .node::after {
         content: "";
-        animation: typing 2s infinite;
+        position: absolute;
+        left: 50%;
+        top: 33px;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 26px;
+        background: var(--ink-border);
+        transition: background 0.4s;
+      }
+      .step.complete .node::after {
+        background: var(--status-success);
+      }
+      .node {
+        position: relative;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: var(--mono);
+        border: 2px solid var(--ink-border);
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.02);
+        transition: all 0.35s;
+      }
+      .node .num { transition: opacity 0.2s; }
+      .node .check {
+        position: absolute;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.3s;
+        width: 15px;
+        height: 15px;
+      }
+      .step-label {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      .step-title {
+        font-size: 13.5px;
+        font-weight: 600;
+        font-family: var(--mono);
+        color: var(--fg);
+      }
+      .step-state {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+
+      /* pending */
+      .step.pending .node { border-color: var(--ink-border); }
+      /* active */
+      .step.active .node {
+        border-color: var(--cyan);
+        color: var(--cyan);
+        box-shadow: 0 0 0 4px rgba(68, 227, 238, 0.14);
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+      .step.active .step-state { color: var(--cyan); }
+      /* Animated "..." trail on the in-progress / disconnected step. */
+      .step.active .step-state::after,
+      .step.recover .step-state::after {
+        content: "";
+        animation: dots 1.4s steps(1) infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 4px rgba(68, 227, 238, 0.12); }
+        50% { box-shadow: 0 0 0 8px rgba(68, 227, 238, 0.03); }
+      }
+      @keyframes dots {
+        0% { content: ""; }
+        25% { content: "."; }
+        50% { content: ".."; }
+        75% { content: "..."; }
+      }
+      /* complete */
+      .step.complete .node {
+        background: var(--status-success);
+        border-color: transparent;
+        color: var(--ink-bg);
+      }
+      .step.complete .node .num { opacity: 0; }
+      .step.complete .node .check { opacity: 1; transform: scale(1); color: var(--ink-bg); }
+      .step.complete .step-state { color: var(--status-success); }
+      /* recover / disconnected */
+      .step.recover .node {
+        border-color: var(--status-error);
+        color: var(--status-error);
+        box-shadow: 0 0 0 4px rgba(220, 88, 72, 0.15);
+        animation: pulse-red 1.4s ease-in-out infinite;
+      }
+      .step.recover .step-state { color: var(--status-error); }
+      @keyframes pulse-red {
+        0%, 100% { box-shadow: 0 0 0 4px rgba(220, 88, 72, 0.12); }
+        50% { box-shadow: 0 0 0 8px rgba(220, 88, 72, 0.03); }
+      }
+
+      /* ---- workflow counts ---- */
+      .wf-counts {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .wf-count-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      .wf-count-label {
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.05em;
+      }
+      .wf-count-value {
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 2px;
+      }
+      .wf-count-value.pending {
+        color: var(--cyan);
+        background: rgba(68, 227, 238, 0.1);
+      }
+      .wf-count-value.success {
+        color: var(--status-success);
+        background: rgba(86, 166, 75, 0.1);
+      }
+      .wf-count-value.enqueued {
+        color: var(--lily);
+        background: rgba(154, 181, 229, 0.12);
+      }
+      .wf-count-value.other {
+        color: var(--muted);
+        background: rgba(163, 165, 170, 0.08);
+      }
+
+      /* ---- schedule-specific styles ---- */
+      .cron-row {
+        display: flex;
+        gap: 8px;
+        align-items: stretch;
+      }
+      .cron-input {
+        flex: 1;
+        background: var(--code-bg);
+        border: 1px solid var(--ink-border);
+        border-radius: 2px;
+        color: var(--code-fg);
+        font-family: var(--mono);
+        font-size: 13px;
+        padding: 8px 12px;
+        outline: none;
+        transition: border-color 0.2s;
+        min-width: 0;
+      }
+      .cron-input:focus {
+        border-color: var(--muted);
+      }
+      .cron-row .btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .sched-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .sched-actions .btn {
+        flex: 1;
+        padding: 8px 10px;
+        font-size: 0.72rem;
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 2px;
+        border: 1px solid currentColor;
+        align-self: flex-start;
+      }
+      .status-badge.active {
+        color: var(--status-success);
+        background: rgba(86, 166, 75, 0.1);
+      }
+      .status-badge.paused {
+        color: var(--status-warning);
+        background: rgba(229, 168, 47, 0.1);
+      }
+      .status-badge.unknown {
+        color: var(--muted);
+        background: rgba(163, 165, 170, 0.1);
+      }
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .footer {
+        margin-top: 40px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .footer .line {
+        display: block;
+      }
+      .footer .line + .line {
+        margin-top: 10px;
+      }
+      .footer a {
+        color: var(--lily);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .footer a:hover {
+        color: var(--lily-light);
+        text-decoration: underline;
       }
     </style>
   </head>
-  <body class="font-sans text-gray-800 p-6">
-    <!-- Regular width container for header content -->
-    <div class="max-w-3xl mx-auto">
-      <h1 class="text-xl font-semibold mb-4">Welcome to DBOS!</h1>
-      <div
-        id="reconnecting"
-        class="hidden mb-4 bg-yellow-100 p-2 rounded-md text-center flex items-center justify-center gap-2"
-      >
-        <svg
-          class="animate-spin h-5 w-5 text-yellow-700"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        <span class="text-yellow-700">Reconnecting...</span>
-      </div>
-      <p class="mb-4">DBOS helps you build applications that are <strong>resilient to any failure</strong>.</p>
-
-      <p class="mb-4">
-        Simply add DBOS to your existing Go program by registering ordinary functions as workflows and steps. These <b>durably execute</b> your program, persisting its state to a Postgres database. If your
-        program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
-      </p>
-      <p class="mb-4">
-        Try it: Launch a durable workflow, then crash the application. When your application restarts, your workflow will always recover from the last
-        completed step!
-      </p>
+  <body>
+    <div id="reconnecting">
+      <div class="spinner"></div>
+      <span>Application offline — reconnecting…</span>
     </div>
 
-    <!-- Compact container for the side-by-side section -->
-    <div class="max-w-3xl mx-auto mb-8">
-      <div class="flex gap-16 items-center justify-center">
-        <!-- Code section -->
-        <div class="w-[500px]">
-          <div class="rounded-lg shadow-lg overflow-hidden">
-            <pre class="code-block"><div class="step-1"><span class="code-line"><span class="keyword">func</span> <span class="function">stepOne</span><span class="punctuation">(</span>ctx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">  time.<span class="function">Sleep</span><span class="punctuation">(</span>5 <span class="punctuation">*</span> time.Second<span class="punctuation">)</span></span><span class="code-line function-block">  fmt.<span class="function">Println</span><span class="punctuation">(</span><span class="string">"Step one completed!"</span><span class="punctuation">)</span></span><span class="code-line function-block">  <span class="keyword">return</span> <span class="string">"Step 1 completed"</span><span class="punctuation">,</span> <span class="keyword">nil</span></span><span class="code-line"><span class="punctuation">}</span></span></div><div> </div><div class="step-2"><span class="code-line"><span class="keyword">func</span> <span class="function">stepTwo</span><span class="punctuation">(</span>ctx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">  time.<span class="function">Sleep</span><span class="punctuation">(</span>5 <span class="punctuation">*</span> time.Second<span class="punctuation">)</span></span><span class="code-line function-block">  fmt.<span class="function">Println</span><span class="punctuation">(</span><span class="string">"Step two completed!"</span><span class="punctuation">)</span></span><span class="code-line function-block">  <span class="keyword">return</span> <span class="string">"Step 2 completed"</span><span class="punctuation">,</span> <span class="keyword">nil</span></span><span class="code-line"><span class="punctuation">}</span></span></div><div> </div><div class="step-3"><span class="code-line"><span class="keyword">func</span> <span class="function">stepThree</span><span class="punctuation">(</span>ctx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">  time.<span class="function">Sleep</span><span class="punctuation">(</span>5 <span class="punctuation">*</span> time.Second<span class="punctuation">)</span></span><span class="code-line function-block">  fmt.<span class="function">Println</span><span class="punctuation">(</span><span class="string">"Step three completed!"</span><span class="punctuation">)</span></span><span class="code-line function-block">  <span class="keyword">return</span> <span class="string">"Step 3 completed"</span><span class="punctuation">,</span> <span class="keyword">nil</span></span><span class="code-line"><span class="punctuation">}</span></span></div><div> </div><span class="code-line"><span class="keyword">func</span> <span class="function">ExampleWorkflow</span><span class="punctuation">(</span>ctx dbos.DBOSContext<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block workflow-step-1">  dbos.<span class="function">RunAsStep</span><span class="punctuation">(</span>ctx<span class="punctuation">,</span></span><span class="code-line function-block">    <span class="keyword">func</span><span class="punctuation">(</span>stepCtx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">      <span class="keyword">return</span> <span class="function">stepOne</span><span class="punctuation">(</span>stepCtx<span class="punctuation">)</span></span><span class="code-line function-block">    <span class="punctuation">})</span></span><span class="code-line function-block workflow-step-2">  dbos.<span class="function">RunAsStep</span><span class="punctuation">(</span>ctx<span class="punctuation">,</span></span><span class="code-line function-block">    <span class="keyword">func</span><span class="punctuation">(</span>stepCtx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">      <span class="keyword">return</span> <span class="function">stepTwo</span><span class="punctuation">(</span>stepCtx<span class="punctuation">)</span></span><span class="code-line function-block">    <span class="punctuation">})</span></span><span class="code-line function-block workflow-step-3">  dbos.<span class="function">RunAsStep</span><span class="punctuation">(</span>ctx<span class="punctuation">,</span></span><span class="code-line function-block">    <span class="keyword">func</span><span class="punctuation">(</span>stepCtx context.Context<span class="punctuation">)</span> <span class="punctuation">(</span>string<span class="punctuation">,</span> error<span class="punctuation">)</span> <span class="punctuation">{</span></span><span class="code-line function-block">      <span class="keyword">return</span> <span class="function">stepThree</span><span class="punctuation">(</span>stepCtx<span class="punctuation">)</span></span><span class="code-line function-block">    <span class="punctuation">})</span></span><span class="code-line"><span class="punctuation">}</span></span></pre>
-          </div>
-        </div>
+    <div class="wrap">
+      <div class="brand">
+        <img
+          class="logo-img"
+          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/white_logotype%2Bblack_bg_h1000px.png"
+          alt="DBOS"
+        />
+      </div>
 
-        <!-- Controls section -->
-        <div class="w-1/3 flex flex-col justify-center items-start">
-          <div class="flex flex-col gap-4 mb-4">
-            <button
-              onclick="startBackgroundJob()"
-              class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded shadow transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-            >
-              Launch a durable workflow
+      <h1>Build reliable software <span class="grad">effortlessly</span></h1>
+      <!-- Tab navigation -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('workflows', this)">Workflows</button>
+        <button class="tab-btn" onclick="switchTab('schedules', this)">Schedules</button>
+        <button class="tab-btn" onclick="switchTab('queues', this)">Queues</button>
+        <button class="tab-btn" onclick="switchTab('communication', this)">Communication</button>
+        <button class="tab-btn" onclick="switchTab('conductor', this)">Conductor</button>
+      </div>
+
+      <!-- ===== WORKFLOWS TAB ===== -->
+      <div id="tab-workflows" class="tab-content active">
+        <p class="lede">
+          DBOS adds <strong>durable execution</strong> to your applications, checkpointing their workflows and steps to Postgres.
+          If your apps ever crash, DBOS recovers them from their last completed steps.
+        </p>
+        <p class="lede">
+          <strong>Try it:</strong> launch a workflow, then crash this app.
+          When you restart, the workflow always resumes from exactly where it left off.
+        </p>
+        <div class="grid">
+          <!-- code editor -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.go</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">func</span> <span class="function">ExampleWorkflow</span><span class="punct">(</span>ctx dbos.DBOSContext<span class="punct">)</span> <span class="punct">{</span></span><span class="code-line indent workflow-step-1"><span class="function">dbos.RunAsStep</span><span class="punct">(</span>ctx, <span class="function">stepOne</span><span class="punct">)</span></span><span class="code-line indent workflow-step-2"><span class="function">dbos.RunAsStep</span><span class="punct">(</span>ctx, <span class="function">stepTwo</span><span class="punct">)</span></span><span class="code-line indent workflow-step-3"><span class="function">dbos.RunAsStep</span><span class="punct">(</span>ctx, <span class="function">stepThree</span><span class="punct">)</span></span><span class="code-line"><span class="punct">}</span></span><span class="code-line"> </span><span class="code-block-step step-1"><span class="code-line"><span class="keyword">func</span> <span class="function">stepOne</span><span class="punct">(</span>ctx context.Context<span class="punct">)</span> <span class="punct">(</span>string<span class="punct">,</span> error<span class="punct">)</span> <span class="punct">{</span></span><span class="code-line indent"><span class="function">time.Sleep</span><span class="punct">(</span><span class="num-lit">5</span> <span class="punct">*</span> time.Second<span class="punct">)</span></span><span class="code-line indent"><span class="function">fmt.Println</span><span class="punct">(</span><span class="string">"Completed step 1!"</span><span class="punct">)</span></span><span class="code-line indent"><span class="keyword">return</span> <span class="string">"Step 1 completed"</span><span class="punct">,</span> <span class="keyword">nil</span></span><span class="code-line"><span class="punct">}</span></span></span><span class="code-line"> </span><span class="code-block-step step-2"><span class="code-line"><span class="keyword">func</span> <span class="function">stepTwo</span><span class="punct">(</span>ctx context.Context<span class="punct">)</span> <span class="punct">(</span>string<span class="punct">,</span> error<span class="punct">)</span> <span class="punct">{</span></span><span class="code-line indent"><span class="function">time.Sleep</span><span class="punct">(</span><span class="num-lit">5</span> <span class="punct">*</span> time.Second<span class="punct">)</span></span><span class="code-line indent"><span class="function">fmt.Println</span><span class="punct">(</span><span class="string">"Completed step 2!"</span><span class="punct">)</span></span><span class="code-line indent"><span class="keyword">return</span> <span class="string">"Step 2 completed"</span><span class="punct">,</span> <span class="keyword">nil</span></span><span class="code-line"><span class="punct">}</span></span></span><span class="code-line"> </span><span class="code-block-step step-3"><span class="code-line"><span class="keyword">func</span> <span class="function">stepThree</span><span class="punct">(</span>ctx context.Context<span class="punct">)</span> <span class="punct">(</span>string<span class="punct">,</span> error<span class="punct">)</span> <span class="punct">{</span></span><span class="code-line indent"><span class="function">time.Sleep</span><span class="punct">(</span><span class="num-lit">5</span> <span class="punct">*</span> time.Second<span class="punct">)</span></span><span class="code-line indent"><span class="function">fmt.Println</span><span class="punct">(</span><span class="string">"Completed step 3!"</span><span class="punct">)</span></span><span class="code-line indent"><span class="keyword">return</span> <span class="string">"Step 3 completed"</span><span class="punct">,</span> <span class="keyword">nil</span></span><span class="code-line"><span class="punct">}</span></span></span></pre>
+          </div>
+
+          <!-- controls -->
+          <div class="card controls">
+            <h2>Run the demo</h2>
+            <button onclick="startBackgroundJob()" class="btn btn-flashy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"></polygon>
+              </svg>
+              Launch durable workflow
             </button>
-            <button
-              onclick="crashApp()"
-              id="crash-button"
-              disabled
-              class="inline-block bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded shadow transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:bg-red-600"
-            >
+            <button onclick="crashApp()" id="crash-button" disabled class="btn btn-danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
               Crash the application
             </button>
-          </div>
-          <div
-            id="status"
-            class="text-gray-600 bg-white rounded-lg shadow-sm border border-gray-100 p-2 mt-4 w-full status-text"
-          >
-            <div class="step" id="step-1">▶</div>
-            <div class="step" id="step-2">▶</div>
-            <div class="step" id="step-3">▶</div>
+
+            <div class="divider"></div>
+
+            <div class="timeline" id="status">
+              <div class="step pending" id="step-row-1">
+                <div class="node">
+                  <span class="num">1</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">stepOne</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+              <div class="step pending" id="step-row-2">
+                <div class="node">
+                  <span class="num">2</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">stepTwo</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+              <div class="step pending" id="step-row-3">
+                <div class="node">
+                  <span class="num">3</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">stepThree</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Regular width container for remaining content -->
-    <div class="max-w-3xl mx-auto">
-      <p class="mb-4">
-        To see it's really working, check your app's logs. When you crash your app, its process is forcibly exited.
-        When the process restarts, it recovers any active workflows from their last completed step
-        <code class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700">(Recovered pending workflows...)</code>,
-        then runs the recovered workflows <code
-          class="bg-gray-100 px-2 py-1 rounded-md font-mono text-sm text-gray-700"
-          >(Step completed...)</code
-        >.
-      </p>
-      <p class="mb-4">
-        Check out the
-        <a href="https://docs.dbos.dev/golang/programming-guide" target="_blank" class="text-blue-600 hover:underline"
-          >programming guide</a
-        >
-        to learn how to build with DBOS!
-      </p>
+        <p class="footer">
+          <span class="line">
+            Check out the
+            <a href="https://docs.dbos.dev/golang/programming-guide" target="_blank">programming guide</a>
+            to learn how to build with DBOS.
+          </span>
+        </p>
+      </div>
+
+      <!-- ===== SCHEDULES TAB ===== -->
+      <div id="tab-schedules" class="tab-content">
+        <p class="lede">
+          DBOS durable workflows can be started on a cron-style <strong>schedule</strong>.
+          The schedule can be adjusted while the app is running.
+          It may take up to a minute for changes to propagate.
+        </p>
+        <div class="grid">
+          <!-- code editor showing scheduled_workflow -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.go</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">func</span> <span class="function">ScheduledWorkflow</span><span class="punct">(</span>ctx dbos.DBOSContext<span class="punct">,</span></span><span class="code-line indent">input dbos.ScheduledWorkflowInput<span class="punct">)</span> <span class="punct">{</span></span><span class="code-block-step sched-line-1"><span class="code-line indent"><span class="function">fmt.Println</span><span class="punct">(</span><span class="string">"Scheduled workflow starting."</span><span class="punct">)</span></span></span><span class="code-block-step sched-line-2"><span class="code-line indent"><span class="function">dbos.Sleep</span><span class="punct">(</span>ctx, <span class="num-lit">1</span> <span class="punct">*</span> time.Second<span class="punct">)</span></span></span><span class="code-block-step sched-line-3"><span class="code-line indent"><span class="function">fmt.Println</span><span class="punct">(</span><span class="string">"Scheduled workflow ending."</span><span class="punct">)</span></span></span><span class="code-line"><span class="punct">}</span></span><span class="code-line"> </span><span class="code-line"><span class="function">dbos.ApplySchedules</span><span class="punct">(</span>ctx, <span class="punct">[]</span>dbos.ApplySchedulesRequest<span class="punct">{{</span></span><span class="code-line indent">ScheduleName<span class="punct">:</span> <span class="string">"scheduled-workflow"</span><span class="punct">,</span></span><span class="code-line indent">WorkflowFn<span class="punct">:</span>   <span class="function">ScheduledWorkflow</span><span class="punct">,</span></span><span class="code-line indent">Schedule<span class="punct">:</span>     <span class="string">"*/5 * * * * *"</span><span class="punct">,</span></span><span class="code-line"><span class="punct">}})</span></span></pre>
+          </div>
+
+          <!-- schedule controls -->
+          <div class="card controls">
+            <h2>Schedule</h2>
+
+            <div class="cron-row">
+              <input
+                id="cron-input"
+                class="cron-input"
+                type="text"
+                value="*/5 * * * * *"
+                placeholder="cron expression"
+                spellcheck="false"
+              />
+              <button onclick="applySchedule()" class="btn btn-flashy">Apply</button>
+            </div>
+
+            <div id="sched-status-badge" class="status-badge unknown">
+              <span class="status-dot"></span>
+              <span id="sched-status-text">—</span>
+            </div>
+
+            <div class="sched-actions">
+              <button onclick="pauseSchedule()" id="btn-pause" class="btn btn-basic" disabled>Pause</button>
+              <button onclick="resumeSchedule()" id="btn-resume" class="btn btn-basic" disabled>Resume</button>
+              <button onclick="triggerSchedule()" id="btn-trigger" class="btn btn-basic" disabled>Trigger</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>Workflows in the last 10 minutes:</h2>
+            <div id="sched-wf-counts" class="wf-counts"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            Check out the
+            <a href="https://docs.dbos.dev/golang/tutorials/workflow-tutorial#scheduled-workflows" target="_blank">scheduling guide</a>
+            to learn how to run workflows on a cron schedule.
+          </span>
+        </p>
+      </div>
+      <!-- ===== QUEUES TAB ===== -->
+      <div id="tab-queues" class="tab-content">
+        <p class="lede">
+          DBOS <strong>queues</strong> let you run workflow fan-outs and control concurrency.
+          The <code>worker_concurrency</code> parameter controls how many workflows one process may run simultaneously.
+          You can adjust it without restarting the app.
+          Press "Enqueue 5 Workflows" repeatedly to put workflows on the queue.
+        </p>
+
+        <div class="grid">
+          <!-- code editor showing enqueued_workflow -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.go</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">func</span> <span class="function">EnqueuedWorkflow</span><span class="punct">(</span>ctx dbos.DBOSContext<span class="punct">)</span> <span class="punct">{</span></span><span class="code-block-step queue-line-1"><span class="code-line indent"><span class="function">fmt.Println</span><span class="punct">(</span><span class="string">"Enqueued workflow starting."</span><span class="punct">)</span></span></span><span class="code-block-step queue-line-2"><span class="code-line indent"><span class="function">dbos.Sleep</span><span class="punct">(</span>ctx, <span class="num-lit">5</span> <span class="punct">*</span> time.Second<span class="punct">)</span></span></span><span class="code-block-step queue-line-3"><span class="code-line indent"><span class="function">fmt.Println</span><span class="punct">(</span><span class="string">"Enqueued workflow ending."</span><span class="punct">)</span></span></span><span class="code-line"><span class="punct">}</span></span><span class="code-line"> </span><span class="code-line"><span class="function">dbos.RegisterQueue</span><span class="punct">(</span>ctx, <span class="string">"demo-queue"</span><span class="punct">,</span></span><span class="code-line indent"><span class="function">dbos.WithWorkerConcurrency</span><span class="punct">(</span><span class="num-lit">3</span><span class="punct">))</span></span><span class="code-line"> </span><span class="code-line"><span class="function">dbos.RunWorkflow</span><span class="punct">(</span>ctx, <span class="function">EnqueuedWorkflow</span><span class="punct">,</span> <span class="string">""</span><span class="punct">,</span></span><span class="code-line indent"><span class="function">dbos.WithQueue</span><span class="punct">(</span><span class="string">"demo-queue"</span><span class="punct">))</span></span></pre>
+          </div>
+
+          <!-- queue controls -->
+          <div class="card controls">
+            <h2>Queue</h2>
+
+            <div class="cron-row">
+              <input
+                id="concurrency-input"
+                class="cron-input"
+                type="number"
+                min="1"
+                value="3"
+                style="max-width:80px"
+              />
+              <span style="font-size:12.5px;color:var(--muted);align-self:center;white-space:nowrap">worker_concurrency</span>
+              <button onclick="applyQueueConcurrency()" class="btn btn-flashy" style="margin-left:auto">Apply</button>
+            </div>
+
+            <button onclick="enqueueWorkflow()" class="btn btn-flashy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+              Enqueue 5 workflows
+            </button>
+
+            <div class="divider"></div>
+
+            <h2>Workflows in the last 10 minutes:</h2>
+            <div id="queue-wf-counts" class="wf-counts"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            DBOS queues offer many additional controls for rate limiting, deduplication, debouncing, partitioning, prioritization and more.
+            See the <a href="https://docs.dbos.dev/golang/tutorials/queue-tutorial" target="_blank">queue tutorial</a> for details.
+          </span>
+        </p>
+      </div>
+
+      <!-- ===== WORKFLOW COMMUNICATION TAB ===== -->
+      <div id="tab-communication" class="tab-content">
+        <p class="lede">
+          DBOS workflows can <strong>receive messages</strong> while running, enabling inter-workflow communication and human-in-the-loop patterns.
+          <code>dbos.Recv()</code> durably waits for a message, surviving crashes and restarts.
+          Here we use <code>dbos.Send()</code> to deliver a decision from an endpoint.
+        </p>
+
+        <div class="grid">
+          <!-- code editor -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.go</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">func</span> <span class="function">CommunicationWorkflow</span><span class="punct">(</span>ctx dbos.DBOSContext<span class="punct">)</span> <span class="punct">{</span></span><span class="code-block-step comm-line-1"><span class="code-line indent"><span class="function">dbos.RunAsStep</span><span class="punct">(</span>ctx, <span class="function">commStepOne</span><span class="punct">)</span></span></span><span class="code-line indent"><span class="function">dbos.SetEvent</span><span class="punct">(</span>ctx, <span class="string">"comm_status"</span><span class="punct">,</span> <span class="string">"waiting"</span><span class="punct">)</span></span><span class="code-block-step comm-line-2"><span class="code-line indent">decision, _ <span class="punct">:=</span> <span class="function">dbos.Recv</span><span class="punct">[</span>string<span class="punct">](</span>ctx,</span><span class="code-line indent">    <span class="string">"approval"</span><span class="punct">,</span> <span class="num-lit">120</span> <span class="punct">*</span> time.Second<span class="punct">)</span></span></span><span class="code-line indent"><span class="keyword">if</span> decision <span class="punct">==</span> <span class="string">"approve"</span> <span class="punct">{</span></span><span class="code-block-step comm-line-3"><span class="code-line indent2"><span class="function">dbos.RunAsStep</span><span class="punct">(</span>ctx, <span class="function">commStepTwo</span><span class="punct">)</span></span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else if</span> decision <span class="punct">==</span> <span class="string">"deny"</span> <span class="punct">{</span></span><span class="code-line indent2"><span class="function">fmt.Println</span><span class="punct">(</span><span class="string">"Denied."</span><span class="punct">)</span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else</span> <span class="punct">{</span>  <span class="punct">// timeout</span></span><span class="code-line indent2"><span class="function">fmt.Println</span><span class="punct">(</span><span class="string">"Timed out!"</span><span class="punct">)</span></span><span class="code-line indent"><span class="punct">}</span></span><span class="code-line"><span class="punct">}</span></span></pre>
+          </div>
+
+          <!-- controls -->
+          <div class="card controls">
+            <h2>Run the demo</h2>
+
+            <button onclick="startCommWorkflow()" id="btn-comm-start" class="btn btn-flashy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"></polygon>
+              </svg>
+              Start workflow
+            </button>
+
+            <div class="sched-actions">
+              <button onclick="commApprove()" id="btn-comm-approve" class="btn btn-basic" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Approve
+              </button>
+              <button onclick="commDeny()" id="btn-comm-deny" class="btn btn-danger" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Deny
+              </button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="timeline" id="comm-timeline">
+              <div class="step pending" id="comm-row-1">
+                <div class="node">
+                  <span class="num">1</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">commStepOne()</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+              <div class="step pending" id="comm-row-2">
+                <div class="node">
+                  <span class="num">2</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">dbos.Recv("approval")</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+              <div class="step pending" id="comm-row-3">
+                <div class="node">
+                  <span class="num">3</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">commStepTwo()</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="comm-outcome" style="display:none;margin-top:4px;font-size:13px;font-weight:600;padding:8px 4px;"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            Check out the
+            <a href="https://docs.dbos.dev/golang/tutorials/workflow-communication" target="_blank">workflow communication guide</a>
+            to learn more about messages, events, streams, and their usage patterns.
+          </span>
+        </p>
+      </div>
+
+      <!-- ===== CONDUCTOR TAB ===== -->
+      <div id="tab-conductor" class="tab-content">
+        <p class="lede">
+          To run DBOS apps in production, connect to <strong>Conductor</strong> — the workflow control plane.
+          Conductor provides cluster-wide observability, distributed workflow recovery, team management,
+          workflow metrics, alerts, and more.
+        </p>
+        <p class="lede">
+          <a href="https://docs.dbos.dev/production/conductor#connecting-to-conductor" target="_blank" style="color: var(--splice); font-weight: 700;">Click here</a> to connect this app to Conductor. 
+        </p>
+      </div>
     </div>
 
     <script>
+      // ---- Tab switching ----
+      let _activeTab = "workflows";
+
+      function switchTab(name, btn) {
+        document.querySelectorAll(".tab-content").forEach((el) => el.classList.remove("active"));
+        document.querySelectorAll(".tab-btn").forEach((el) => el.classList.remove("active"));
+        document.getElementById("tab-" + name).classList.add("active");
+        btn.classList.add("active");
+        _activeTab = name;
+      }
+
+      function activeTab() { return _activeTab; }
+
+      // ============================================================
+      // WORKFLOWS TAB logic (unchanged)
+      // ============================================================
       function generateRandomString() {
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         return Array.from(crypto.getRandomValues(new Uint8Array(6)))
@@ -213,8 +986,15 @@
       }
 
       let currentId = null;
+      let lastStep = 0;
 
-      // Check URL for existing ID on page load
+      const rows = [
+        document.getElementById("step-row-1"),
+        document.getElementById("step-row-2"),
+        document.getElementById("step-row-3"),
+      ];
+
+      // Restore an in-flight run from the URL on page load
       const urlParams = new URLSearchParams(window.location.search);
       const urlId = urlParams.get("id");
       if (urlId && urlId.length > 0) {
@@ -223,45 +1003,44 @@
       }
 
       checkProgress();
-      setInterval(checkProgress, 1667);
+      setInterval(() => { if (activeTab() === "workflows") checkProgress(); }, 1667);
 
       function showReconnecting() {
-        document.getElementById("reconnecting").classList.remove("hidden");
+        document.getElementById("reconnecting").classList.add("show");
       }
-
       function hideReconnecting() {
-        document.getElementById("reconnecting").classList.add("hidden");
+        document.getElementById("reconnecting").classList.remove("show");
       }
-
-      async function crashApp() {
-        // Make the HTTP request with a 100ms timeout and ignore errors
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 100);
-
-          await fetch("/crash", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            signal: controller.signal,
-          });
-
-          clearTimeout(timeoutId);
-        } catch (error) {}
-
-        await checkProgress();
-      }
-
       function enableCrashButton() {
         document.getElementById("crash-button").disabled = false;
       }
 
+      function setState(row, state, text) {
+        row.className = "step " + state;
+        row.querySelector(".step-state").textContent = text;
+      }
+
+      // step = the 1-indexed step currently executing (lastStep + 1)
+      function updateStatusBox(step, error = false) {
+        rows.forEach((row, index) => {
+          const stepNum = index + 1;
+          if (stepNum < step) {
+            setState(row, "complete", "Completed");
+          } else if (stepNum === step && error) {
+            setState(row, "recover", "Disconnected");
+          } else if (stepNum === step) {
+            setState(row, "active", "Executing");
+          } else {
+            setState(row, "pending", "Waiting");
+          }
+        });
+      }
+
       async function startBackgroundJob() {
         const randomString = generateRandomString();
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set("id", randomString);
-        window.history.replaceState({}, "", `${window.location.pathname}?${urlParams.toString()}`);
+        const params = new URLSearchParams(window.location.search);
+        params.set("id", randomString);
+        window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
 
         currentId = randomString;
         await fetch(`/workflow/${currentId}`, { method: "GET" });
@@ -269,63 +1048,48 @@
         enableCrashButton();
       }
 
-      function updateStatusBox(step, error = false) {
-        document.querySelectorAll(".status-text .step").forEach((stepEl, index) => {
-          const stepNum = index + 1;
-
-          if (stepNum < step) {
-            stepEl.className = "step complete";
-            stepEl.textContent = `✓ Completed step ${stepNum}`;
-          } else if (stepNum === step && error) {
-            stepEl.className = "step recover";
-            stepEl.textContent = `■ Disconnected`;
-          } else if (stepNum === step) {
-            stepEl.className = "step active";
-            stepEl.textContent = `▶ Executing step ${stepNum}`;
-          } else {
-            stepEl.className = "step pending";
-            stepEl.textContent = `▶`;
-          }
-        });
+      async function crashApp() {
+        // Fire the crash request and ignore the inevitable connection error
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 100);
+          await fetch("/crash", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+        } catch (error) {}
+        await checkProgress();
       }
 
-      let lastStep = 0;
+      function highlightCode(step) {
+        document.querySelectorAll(".step-highlight").forEach((el) => el.classList.remove("step-highlight"));
+        if (step >= 1 && step <= 3) {
+          const stepBlock = document.querySelector(`.step-${step}`);
+          if (stepBlock) stepBlock.classList.add("step-highlight");
+          const workflowLine = document.querySelector(`.workflow-step-${step}`);
+          if (workflowLine) workflowLine.classList.add("step-highlight");
+        }
+      }
 
       async function checkProgress() {
-        if (!currentId) {
-          return;
-        }
+        if (!currentId) return;
 
         try {
           const response = await fetch(`/last_step/${currentId}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
           const step = Number(await response.text()) + 1;
-
-          // Remove all highlights from code
-          document.querySelectorAll(".step-highlight").forEach((el) => {
-            el.classList.remove("step-highlight");
-          });
-
-          // Update status text
-          updateStatusBox(step);
           lastStep = step;
 
           if (step <= 3) {
-            // Keep original code highlighting
-            const stepBlock = document.querySelector(`.step-${step}`);
-            if (stepBlock) {
-              stepBlock.classList.add("step-highlight");
-            }
-            const workflowLine = document.querySelector(`.workflow-step-${step}`);
-            if (workflowLine) {
-              workflowLine.classList.add("step-highlight");
-            }
+            updateStatusBox(step);
+            highlightCode(step);
           } else {
-            document.querySelectorAll(".status-text .step").forEach((step) => {
-              step.className = "step complete";
-            });
+            // All steps done
+            rows.forEach((row) => setState(row, "complete", "Completed"));
+            highlightCode(0);
             currentId = null;
           }
           hideReconnecting();
@@ -334,6 +1098,303 @@
           showReconnecting();
           updateStatusBox(lastStep, true);
         }
+      }
+
+      // ============================================================
+      // SCHEDULES TAB logic
+      // ============================================================
+      const STATUS_ORDER = ["ENQUEUED", "PENDING", "SUCCESS", "ERROR", "CANCELLED", "MAX_RECOVERY_ATTEMPTS_EXCEEDED"];
+
+      function countClass(status) {
+        if (status === "ENQUEUED") return "enqueued";
+        if (status === "PENDING") return "pending";
+        if (status === "SUCCESS") return "success";
+        return "other";
+      }
+
+      function formatCount(n) {
+        return n >= 500 ? "500+" : String(n);
+      }
+
+      function updateSchedCounts(counts) {
+        const el = document.getElementById("sched-wf-counts");
+        const allStatuses = [...new Set([...STATUS_ORDER, ...Object.keys(counts)])].filter((s) => counts[s]);
+        if (allStatuses.length === 0) {
+          el.innerHTML = '<span style="font-size:12.5px;color:var(--muted)">No workflows yet</span>';
+          return;
+        }
+        el.innerHTML = allStatuses
+          .map((s) => `
+            <div class="wf-count-row">
+              <span class="wf-count-label">${s}</span>
+              <span class="wf-count-value ${countClass(s)}">${formatCount(counts[s])}</span>
+            </div>`)
+          .join("");
+      }
+
+      function updateSchedCodeHighlight(counts) {
+        const running = (counts["PENDING"] || 0) >= 1;
+        document.querySelectorAll(".sched-line-1, .sched-line-2, .sched-line-3").forEach((el) => {
+          el.classList.toggle("step-highlight", running);
+        });
+      }
+
+      function updateSchedBadge(status) {
+        const badge = document.getElementById("sched-status-badge");
+        const text = document.getElementById("sched-status-text");
+        badge.className = "status-badge";
+        if (status === "ACTIVE") {
+          badge.classList.add("active");
+          text.textContent = "Active";
+        } else if (status === "PAUSED") {
+          badge.classList.add("paused");
+          text.textContent = "Paused";
+        } else {
+          badge.classList.add("unknown");
+          text.textContent = status || "Unknown";
+        }
+      }
+
+      function updateSchedButtons(status) {
+        const known = status === "ACTIVE" || status === "PAUSED";
+        document.getElementById("btn-pause").disabled = !known || status !== "ACTIVE";
+        document.getElementById("btn-resume").disabled = !known || status !== "PAUSED";
+        document.getElementById("btn-trigger").disabled = !known;
+      }
+
+      async function pollScheduleStatus() {
+        try {
+          const res = await fetch("/schedule/status");
+          if (!res.ok) return;
+          const data = await res.json();
+
+          // Sync cron input only if field is not focused
+          const cronInput = document.getElementById("cron-input");
+          if (document.activeElement !== cronInput) {
+            cronInput.value = data.cron;
+          }
+
+          updateSchedBadge(data.schedule_status);
+          updateSchedButtons(data.schedule_status);
+          updateSchedCounts(data.workflow_counts);
+          updateSchedCodeHighlight(data.workflow_counts);
+        } catch (e) {
+          // silently ignore poll errors
+        }
+      }
+
+      setInterval(() => { if (activeTab() === "schedules") pollScheduleStatus(); }, 800);
+      pollScheduleStatus();
+
+      async function applySchedule() {
+        const cron = document.getElementById("cron-input").value.trim();
+        await fetch("/schedule/apply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cron }),
+        });
+        await pollScheduleStatus();
+      }
+
+      async function pauseSchedule() {
+        await fetch("/schedule/pause", { method: "POST" });
+        await pollScheduleStatus();
+      }
+
+      async function resumeSchedule() {
+        await fetch("/schedule/resume", { method: "POST" });
+        await pollScheduleStatus();
+      }
+
+      async function triggerSchedule() {
+        await fetch("/schedule/trigger", { method: "POST" });
+        await pollScheduleStatus();
+      }
+      // ============================================================
+      // QUEUES TAB logic
+      // ============================================================
+      async function pollQueueStatus() {
+        try {
+          const res = await fetch("/queue/status");
+          if (!res.ok) return;
+          const data = await res.json();
+
+          const input = document.getElementById("concurrency-input");
+          if (document.activeElement !== input) {
+            input.value = data.worker_concurrency;
+          }
+
+          const countsEl = document.getElementById("queue-wf-counts");
+          const counts = data.workflow_counts;
+          const allStatuses = [...new Set([...STATUS_ORDER, ...Object.keys(counts)])].filter((s) => counts[s]);
+          if (allStatuses.length === 0) {
+            countsEl.innerHTML = '<span style="font-size:12.5px;color:var(--muted)">No workflows yet</span>';
+          } else {
+            countsEl.innerHTML = allStatuses
+              .map((s) => `
+                <div class="wf-count-row">
+                  <span class="wf-count-label">${s}</span>
+                  <span class="wf-count-value ${countClass(s)}">${formatCount(counts[s])}</span>
+                </div>`)
+              .join("");
+          }
+
+          const running = (counts["PENDING"] || 0) + (counts["ENQUEUED"] || 0) >= 1;
+          document.querySelectorAll(".queue-line-1, .queue-line-2, .queue-line-3").forEach((el) => {
+            el.classList.toggle("step-highlight", running);
+          });
+        } catch (e) {}
+      }
+
+      setInterval(() => { if (activeTab() === "queues") pollQueueStatus(); }, 800);
+      pollQueueStatus();
+
+      async function enqueueWorkflow() {
+        await Promise.all(Array.from({length: 5}, () => fetch("/queue/enqueue", { method: "POST" })));
+        await pollQueueStatus();
+      }
+
+      async function applyQueueConcurrency() {
+        const concurrency = parseInt(document.getElementById("concurrency-input").value, 10);
+        await fetch("/queue/concurrency", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ concurrency }),
+        });
+        await pollQueueStatus();
+      }
+      // ============================================================
+      // WORKFLOW COMMUNICATION TAB logic
+      // ============================================================
+      const commUrlParams = new URLSearchParams(window.location.search);
+      let currentCommWfId = commUrlParams.get("comm_id") || null;
+      let commPollInterval = null;
+
+      if (currentCommWfId) startCommPolling();
+
+      const commRows = [
+        document.getElementById("comm-row-1"),
+        document.getElementById("comm-row-2"),
+        document.getElementById("comm-row-3"),
+      ];
+
+      function setCommState(row, state, text) {
+        row.className = "step " + state;
+        row.querySelector(".step-state").textContent = text;
+      }
+
+      function updateCommDiagram(state) {
+        const TERMINAL = ["completed", "denied", "timeout"];
+        const isTerminal = TERMINAL.includes(state);
+
+        // node 1: step1=active, else complete if past it
+        if (state === "step1") {
+          setCommState(commRows[0], "active", "Executing");
+          setCommState(commRows[1], "pending", "Waiting");
+          setCommState(commRows[2], "pending", "Waiting");
+        } else if (state === "waiting") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "active", "Waiting for input");
+          setCommState(commRows[2], "pending", "Waiting");
+        } else if (state === "step2") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "complete", "Approved");
+          setCommState(commRows[2], "active", "Executing");
+        } else if (state === "completed") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "complete", "Approved");
+          setCommState(commRows[2], "complete", "Completed");
+        } else if (state === "denied") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "recover", "Denied");
+          setCommState(commRows[2], "pending", "Skipped");
+        } else if (state === "timeout") {
+          setCommState(commRows[0], "complete", "Completed");
+          setCommState(commRows[1], "recover", "Timed out");
+          setCommState(commRows[2], "pending", "Skipped");
+        } else {
+          // idle
+          commRows.forEach((r) => setCommState(r, "pending", "Waiting"));
+        }
+
+        // code highlights
+        document.querySelectorAll(".comm-line-1, .comm-line-2, .comm-line-3").forEach((el) => el.classList.remove("step-highlight"));
+        if (state === "step1") document.querySelector(".comm-line-1")?.classList.add("step-highlight");
+        if (state === "waiting") document.querySelector(".comm-line-2")?.classList.add("step-highlight");
+        if (state === "step2") document.querySelector(".comm-line-3")?.classList.add("step-highlight");
+
+        // outcome badge
+        const outcome = document.getElementById("comm-outcome");
+        if (state === "completed") {
+          outcome.style.display = "block";
+          outcome.style.color = "var(--status-success)";
+          outcome.textContent = "✓ Approved — step 2 executed successfully.";
+        } else if (state === "denied") {
+          outcome.style.display = "block";
+          outcome.style.color = "var(--status-error)";
+          outcome.textContent = "✗ Denied — workflow ended without executing step 2.";
+        } else if (state === "timeout") {
+          outcome.style.display = "block";
+          outcome.style.color = "var(--status-warning)";
+          outcome.textContent = "⏱ Timed out — no decision received within 2 minutes.";
+        } else {
+          outcome.style.display = "none";
+        }
+
+        // buttons
+        const waiting = state === "waiting";
+        document.getElementById("btn-comm-approve").disabled = !waiting;
+        document.getElementById("btn-comm-deny").disabled = !waiting;
+        document.getElementById("btn-comm-start").disabled = false;
+      }
+
+      const COMM_TERMINAL = new Set(["completed", "denied", "timeout"]);
+
+      function startCommPolling() {
+        if (commPollInterval) clearInterval(commPollInterval);
+        commPollInterval = setInterval(async () => {
+          await pollCommStatus();
+        }, 800);
+      }
+
+      function stopCommPolling() {
+        if (commPollInterval) { clearInterval(commPollInterval); commPollInterval = null; }
+      }
+
+      async function pollCommStatus() {
+        if (!currentCommWfId) { updateCommDiagram("idle"); return; }
+        try {
+          const res = await fetch(`/comm/status/${currentCommWfId}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          updateCommDiagram(data.state);
+          if (COMM_TERMINAL.has(data.state)) stopCommPolling();
+        } catch (e) { console.error("pollCommStatus error:", e); }
+      }
+
+      async function startCommWorkflow() {
+        const res = await fetch("/comm/start", { method: "POST" });
+        const data = await res.json();
+        currentCommWfId = data.workflow_id;
+        const p = new URLSearchParams(window.location.search);
+        p.set("comm_id", currentCommWfId);
+        window.history.replaceState({}, "", `${window.location.pathname}?${p.toString()}`);
+        startCommPolling();
+        await pollCommStatus();
+      }
+
+      async function commApprove() {
+        document.getElementById("btn-comm-approve").disabled = true;
+        document.getElementById("btn-comm-deny").disabled = true;
+        await fetch(`/comm/approve/${currentCommWfId}`, { method: "POST" });
+        await pollCommStatus();
+      }
+
+      async function commDeny() {
+        document.getElementById("btn-comm-approve").disabled = true;
+        document.getElementById("btn-comm-deny").disabled = true;
+        await fetch(`/comm/deny/${currentCommWfId}`, { method: "POST" });
+        await pollCommStatus();
       }
     </script>
   </body>
