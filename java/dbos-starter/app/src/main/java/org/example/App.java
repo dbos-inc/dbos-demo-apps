@@ -86,9 +86,9 @@ class DurableStarterServiceImpl implements DurableStarterService {
   @Workflow
   @Override
   public void scheduledWorkflow(Instant scheduledTime, Object context) {
-    logger.info("Scheduled workflow starting.");
+    logger.info("{}: Scheduled workflow starting.", Instant.now());
     dbos.sleep(Duration.ofSeconds(1));
-    logger.info("Scheduled workflow ending.");
+    logger.info("{}: Scheduled workflow ending.", Instant.now());
   }
 
   // ---- Queues tab: a queue-based workflow with adjustable worker concurrency ----
@@ -96,9 +96,9 @@ class DurableStarterServiceImpl implements DurableStarterService {
   @Workflow
   @Override
   public void enqueuedWorkflow() {
-    logger.info("Enqueued workflow starting.");
+    logger.info("{}: Enqueued workflow starting.", Instant.now());
     dbos.sleep(Duration.ofSeconds(5));
-    logger.info("Enqueued workflow ending.");
+    logger.info("{}: Enqueued workflow ending.", Instant.now());
   }
 
   // ---- Communication tab: a human-in-the-loop workflow ----

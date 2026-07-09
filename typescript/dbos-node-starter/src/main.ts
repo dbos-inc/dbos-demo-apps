@@ -102,9 +102,9 @@ router.post("/crash", (_ctx: Context): void => {
 // ============================================================
 
 async function scheduledWorkflowFn(_scheduledTime: Date, _context: unknown) {
-  DBOS.logger.info("Scheduled workflow starting.");
+  DBOS.logger.info(`${new Date().toISOString()}: Scheduled workflow starting.`);
   await DBOS.sleep(1000);
-  DBOS.logger.info("Scheduled workflow ending.");
+  DBOS.logger.info(`${new Date().toISOString()}: Scheduled workflow ending.`);
 }
 
 const scheduledWorkflow = DBOS.registerWorkflow(scheduledWorkflowFn, { name: "scheduledWorkflow" });
@@ -174,9 +174,9 @@ router.post("/schedule/trigger", async (ctx: Context) => {
 // ============================================================
 
 async function enqueuedWorkflowFn() {
-  DBOS.logger.info("Enqueued workflow starting.");
+  DBOS.logger.info(`${new Date().toISOString()}: Enqueued workflow starting.`);
   await DBOS.sleep(5000);
-  DBOS.logger.info("Enqueued workflow ending.");
+  DBOS.logger.info(`${new Date().toISOString()}: Enqueued workflow ending.`);
 }
 
 const enqueuedWorkflow = DBOS.registerWorkflow(enqueuedWorkflowFn, { name: "enqueuedWorkflow" });
