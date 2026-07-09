@@ -89,11 +89,11 @@ func stepThree(ctx context.Context) (string, error) {
 // A workflow that runs on a cron schedule. The schedule can be created,
 // paused, resumed, and triggered at runtime.
 func ScheduledWorkflow(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (any, error) {
-	fmt.Println("Scheduled workflow starting.")
+	fmt.Printf("%s: Scheduled workflow starting.\n", time.Now().Format(time.RFC3339))
 	if _, err := dbos.Sleep(ctx, 1*time.Second); err != nil {
 		return nil, err
 	}
-	fmt.Println("Scheduled workflow ending.")
+	fmt.Printf("%s: Scheduled workflow ending.\n", time.Now().Format(time.RFC3339))
 	return nil, nil
 }
 
@@ -103,11 +103,11 @@ func ScheduledWorkflow(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) 
 
 // A workflow that runs on a queue with adjustable worker concurrency.
 func EnqueuedWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
-	fmt.Println("Enqueued workflow starting.")
+	fmt.Printf("%s: Enqueued workflow starting.\n", time.Now().Format(time.RFC3339))
 	if _, err := dbos.Sleep(ctx, 5*time.Second); err != nil {
 		return "", err
 	}
-	fmt.Println("Enqueued workflow ending.")
+	fmt.Printf("%s: Enqueued workflow ending.\n", time.Now().Format(time.RFC3339))
 	return "Enqueued workflow completed", nil
 }
 
@@ -199,13 +199,6 @@ func main() {
 		dbos.WithQueueOnConflict(dbos.QueueConflictNeverUpdate),
 	); err != nil {
 		fmt.Printf("Error registering queue: %s\n", err)
-	}
-	if err := dbos.ApplySchedules(dbosCtx, []dbos.ApplySchedulesRequest{{
-		ScheduleName: SCHEDULE_NAME,
-		WorkflowFn:   ScheduledWorkflow,
-		Schedule:     DEFAULT_CRON,
-	}}); err != nil {
-		fmt.Printf("Error applying schedule: %s\n", err)
 	}
 
 	// Initialize Gin router

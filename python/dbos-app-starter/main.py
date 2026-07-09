@@ -283,10 +283,4 @@ def deny_comm(workflow_id: str):
 if __name__ == "__main__":
     DBOS.launch()
     DBOS.register_queue(QUEUE_NAME, worker_concurrency=DEFAULT_WORKER_CONCURRENCY, on_conflict="never_update")
-    DBOS.apply_schedules([{
-        "schedule_name": SCHEDULE_NAME,
-        "workflow_fn": scheduled_workflow,
-        "schedule": DEFAULT_CRON,
-        "context": None,
-    }])
     uvicorn.run(app, host="0.0.0.0", port=8000)

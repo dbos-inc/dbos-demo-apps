@@ -199,6 +199,15 @@
         color: var(--splice);
         border-bottom-color: var(--splice);
       }
+      /* After 20 seconds, gently pulse tabs the user hasn't opened yet to draw
+         attention to the other demos. */
+      @keyframes tabNudge {
+        0%, 100% { color: var(--muted); text-shadow: none; }
+        50% { color: var(--cyan); text-shadow: 0 0 12px rgba(68, 227, 238, 0.55); }
+      }
+      .tab-btn.nudge:not(.active) {
+        animation: tabNudge 1.04s ease-in-out infinite;
+      }
       .tab-content {
         display: none;
       }
@@ -747,7 +756,7 @@
         <p class="lede">
           DBOS durable workflows can be started on a cron-style <strong>schedule</strong>.
           The schedule can be adjusted while the app is running.
-          It may take up to a minute for changes to propagate.
+          <strong>It may take up to a minute for changes to propagate.</strong>
         </p>
         <div class="grid">
           <!-- code editor showing scheduled_workflow -->
@@ -965,15 +974,28 @@
       // ---- Tab switching ----
       let _activeTab = "workflows";
 
+      // Tabs the user has opened. After a minute we pulse the ones they haven't,
+      // to draw attention to the other demos (Schedules, Queues, etc.).
+      const _visitedTabs = new Set([document.querySelector(".tab-btn.active")]);
+
       function switchTab(name, btn) {
         document.querySelectorAll(".tab-content").forEach((el) => el.classList.remove("active"));
         document.querySelectorAll(".tab-btn").forEach((el) => el.classList.remove("active"));
         document.getElementById("tab-" + name).classList.add("active");
         btn.classList.add("active");
         _activeTab = name;
+        _visitedTabs.add(btn);
+        btn.classList.remove("nudge");
       }
 
       function activeTab() { return _activeTab; }
+
+      // Nudge any still-unopened tabs after 5 seconds.
+      setTimeout(() => {
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+          if (!_visitedTabs.has(btn)) btn.classList.add("nudge");
+        });
+      }, 20000);
 
       // ============================================================
       // WORKFLOWS TAB logic (unchanged)
