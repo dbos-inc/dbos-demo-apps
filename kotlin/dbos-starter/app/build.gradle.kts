@@ -12,6 +12,8 @@ dependencies {
   implementation("io.javalin:javalin:7.2.2")
   implementation("org.slf4j:slf4j-simple:2.0.18")
 
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.9")
+
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.junit.jupiter:junit-jupiter:6.1.0")
   testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
