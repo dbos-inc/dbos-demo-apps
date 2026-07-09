@@ -200,13 +200,6 @@ func main() {
 	); err != nil {
 		fmt.Printf("Error registering queue: %s\n", err)
 	}
-	if err := dbos.ApplySchedules(dbosCtx, []dbos.ApplySchedulesRequest{{
-		ScheduleName: SCHEDULE_NAME,
-		WorkflowFn:   ScheduledWorkflow,
-		Schedule:     DEFAULT_CRON,
-	}}); err != nil {
-		fmt.Printf("Error applying schedule: %s\n", err)
-	}
 
 	// Initialize Gin router
 	router := gin.Default()

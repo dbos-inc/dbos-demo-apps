@@ -195,12 +195,6 @@ public class App {
                         QUEUE_NAME,
                         QueueOptions.setWorkerConcurrency(DEFAULT_WORKER_CONCURRENCY),
                         QueueConflictResolution.NEVER_UPDATE);
-                    dbos.applySchedules(
-                        new WorkflowSchedule(
-                            SCHEDULE_NAME,
-                            "scheduledWorkflow",
-                            DurableStarterServiceImpl.class.getName(),
-                            DEFAULT_CRON));
                   });
               config.events.serverStopping(dbos::shutdown);
 

@@ -309,11 +309,6 @@ async function main() {
     workerConcurrency: DEFAULT_WORKER_CONCURRENCY,
     onConflict: "never_update",
   });
-  await DBOS.applySchedules([{
-    scheduleName: SCHEDULE_NAME,
-    workflowFn: scheduledWorkflow,
-    schedule: DEFAULT_CRON,
-  }]);
 
   const PORT = parseInt(process.env.NODE_PORT || '3000');
   app.listen(PORT, () => {
