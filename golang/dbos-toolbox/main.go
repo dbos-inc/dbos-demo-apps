@@ -18,13 +18,14 @@ type Config struct {
 }
 
 // Global variables
-var dbosCtx dbos.DBOSContext
+var dbosCtx dbos.Context
+var exampleQueue dbos.Queue
 
 /*****************************/
 /**** WORKFLOWS AND STEPS ****/
 /*****************************/
 
-func ExampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func ExampleWorkflow(ctx dbos.Context, _ string) (string, error) {
 	_, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
 		return stepOne(stepCtx)
 	})
@@ -50,16 +51,16 @@ func stepTwo(ctx context.Context) (string, error) {
 /**** QUEUES *****************/
 /*****************************/
 
-func QueuedStepWorkflow(ctx dbos.DBOSContext, i int) (int, error) {
+func QueuedStepWorkflow(ctx dbos.Context, i int) (int, error) {
 	dbos.Sleep(ctx, 5*time.Second)
 	fmt.Printf("Step %d completed!\n", i)
 	return i, nil
 }
 
-func QueueWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func QueueWorkflow(ctx dbos.Context, _ string) (string, error) {
 	handles := make([]dbos.WorkflowHandle[int], 10)
 	for i := range 10 {
-		handle, err := dbos.RunWorkflow(ctx, QueuedStepWorkflow, i, dbos.WithQueue("example-queue"))
+		handle, err := dbos.RunWorkflow(ctx, QueuedStepWorkflow, i, dbos.WithQueue(exampleQueue))
 		if err != nil {
 			return "", fmt.Errorf("failed to enqueue step %d: %w", i, err)
 		}
@@ -81,15 +82,15 @@ func QueueWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 /**** SCHEDULED WORKFLOWS ****/
 /*****************************/
 
-func ScheduledWorkflow(ctx dbos.DBOSContext, scheduledTime time.Time) (string, error) {
-	fmt.Printf("I am a scheduled workflow scheduled at %v and running at %v\n", scheduledTime, time.Now())
+func ScheduledWorkflow(ctx dbos.Context, input dbos.ScheduledWorkflowInput) (string, error) {
+	fmt.Printf("I am a scheduled workflow scheduled at %v and running at %v\n", input.ScheduledTime, time.Now())
 	return "", nil
 }
 
 func main() {
 	// Create DBOS context
 	var err error
-	dbosCtx, err = dbos.NewDBOSContext(context.Background(), dbos.Config{
+	dbosCtx, err = dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AppName:            "dbos-toolbox",
 		AdminServer:        true,
@@ -104,17 +105,30 @@ func main() {
 	dbos.RegisterWorkflow(dbosCtx, ExampleWorkflow)
 	dbos.RegisterWorkflow(dbosCtx, QueueWorkflow)
 	dbos.RegisterWorkflow(dbosCtx, QueuedStepWorkflow)
-	dbos.RegisterWorkflow(dbosCtx, ScheduledWorkflow, dbos.WithSchedule("*/15 * * * * *"))
+	dbos.RegisterWorkflow(dbosCtx, ScheduledWorkflow)
 
 	// Create queue
-	dbos.NewWorkflowQueue(dbosCtx, "example-queue")
+	exampleQueue, err = dbos.RegisterQueue(dbosCtx, "example-queue")
+	if err != nil {
+		panic(err)
+	}
 
 	// Launch DBOS
 	err = dbosCtx.Launch()
 	if err != nil {
 		panic(err)
 	}
-	defer dbosCtx.Shutdown(10 * time.Second)
+	defer dbos.Shutdown(dbosCtx, 10 * time.Second)
+
+	// Create schedule
+	err = dbos.CreateSchedule(dbosCtx, dbos.ScheduleSpec{
+		ScheduleName: "scheduled-workflow",
+		Schedule:     "*/15 * * * * *",
+		Workflow:     ScheduledWorkflow,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	// HTTP Handlers
 	http.HandleFunc("/", homepageHandler)

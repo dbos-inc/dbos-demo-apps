@@ -15,7 +15,7 @@ import (
 const STEPS_EVENT = "steps_event"
 
 // ExampleWorkflow runs three sequential steps, reporting progress via events.
-func ExampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func ExampleWorkflow(ctx dbos.Context, _ string) (string, error) {
 	for i, step := range []func(context.Context) (string, error){stepOne, stepTwo, stepThree} {
 		_, err := dbos.RunAsStep(ctx, step)
 		if err != nil {
@@ -47,13 +47,13 @@ func stepThree(ctx context.Context) (string, error) {
 }
 
 // SleepWorkflow is a queue-friendly workflow for KEDA scaling demos.
-func SleepWorkflow(ctx dbos.DBOSContext, durationSeconds int) (string, error) {
+func SleepWorkflow(ctx dbos.Context, durationSeconds int) (string, error) {
 	dbos.Sleep(ctx, time.Duration(durationSeconds)*time.Second)
 	return fmt.Sprintf("Slept for %d seconds", durationSeconds), nil
 }
 
 func main() {
-	dbosCtx, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+	dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
 		AppName:            "dbos-app",
 		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		ConductorURL:       os.Getenv("DBOS_CONDUCTOR_URL"),
@@ -64,7 +64,10 @@ func main() {
 		panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
 	}
 
-	queue := dbos.NewWorkflowQueue(dbosCtx, "taskQueue", dbos.WithWorkerConcurrency(2))
+	queue, err := dbos.RegisterQueue(dbosCtx, "taskQueue", dbos.WithWorkerConcurrency(2))
+	if err != nil {
+		panic(fmt.Sprintf("Registering queue failed: %v", err))
+	}
 
 	dbos.RegisterWorkflow(dbosCtx, ExampleWorkflow)
 	dbos.RegisterWorkflow(dbosCtx, SleepWorkflow)
@@ -110,7 +113,7 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid duration"})
 			return
 		}
-		handle, err := dbos.RunWorkflow(dbosCtx, SleepWorkflow, duration, dbos.WithQueue(queue.Name))
+		handle, err := dbos.RunWorkflow(dbosCtx, SleepWorkflow, duration, dbos.WithQueue(queue))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -121,7 +124,7 @@ func main() {
 	// Metrics endpoint for KEDA — returns current queue length
 	r.GET("/metrics/:queueName", func(c *gin.Context) {
 		queueName := c.Param("queueName")
-		workflows, err := dbos.ListWorkflows(dbosCtx, dbos.WithQueuesOnly(), dbos.WithQueueName(queueName))
+		workflows, err := dbos.ListWorkflows(dbosCtx, dbos.WithFilterQueuesOnly(), dbos.WithFilterQueueName(queueName))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

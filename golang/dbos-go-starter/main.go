@@ -24,13 +24,14 @@ const DEFAULT_WORKER_CONCURRENCY = 3
 const APPROVAL_TOPIC = "approval"
 const COMM_STATUS_EVENT = "comm_status"
 
-var dbosCtx dbos.DBOSContext
+var dbosCtx dbos.Context
+var demoQueue dbos.Queue
 
 /*****************************/
 /**** WORKFLOWS AND STEPS ****/
 /*****************************/
 
-func ExampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func ExampleWorkflow(ctx dbos.Context, _ string) (string, error) {
 	_, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
 		return stepOne(stepCtx)
 	})
@@ -88,7 +89,7 @@ func stepThree(ctx context.Context) (string, error) {
 
 // A workflow that runs on a cron schedule. The schedule can be created,
 // paused, resumed, and triggered at runtime.
-func ScheduledWorkflow(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (any, error) {
+func ScheduledWorkflow(ctx dbos.Context, input dbos.ScheduledWorkflowInput) (any, error) {
 	fmt.Printf("%s: Scheduled workflow starting.\n", time.Now().Format(time.RFC3339))
 	if _, err := dbos.Sleep(ctx, 1*time.Second); err != nil {
 		return nil, err
@@ -102,7 +103,7 @@ func ScheduledWorkflow(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) 
 /*****************************/
 
 // A workflow that runs on a queue with adjustable worker concurrency.
-func EnqueuedWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func EnqueuedWorkflow(ctx dbos.Context, _ string) (string, error) {
 	fmt.Printf("%s: Enqueued workflow starting.\n", time.Now().Format(time.RFC3339))
 	if _, err := dbos.Sleep(ctx, 5*time.Second); err != nil {
 		return "", err
@@ -129,7 +130,7 @@ func commStepTwo(ctx context.Context) (string, error) {
 
 // A human-in-the-loop workflow: it runs step one, then durably waits for an
 // approval message before deciding whether to run step two.
-func CommunicationWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func CommunicationWorkflow(ctx dbos.Context, _ string) (string, error) {
 	if _, err := dbos.RunAsStep(ctx, commStepOne); err != nil {
 		return "", err
 	}
@@ -170,7 +171,7 @@ func CommunicationWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 func main() {
 	// Create DBOS context
 	var err error
-	dbosCtx, err = dbos.NewDBOSContext(context.Background(), dbos.Config{
+	dbosCtx, err = dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AppName:            "dbos-toolbox",
 		AdminServer:        true,
@@ -191,13 +192,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer dbosCtx.Shutdown(10 * time.Second)
+	defer dbos.Shutdown(dbosCtx, 10 * time.Second)
 
 	// Register the demo queue and apply the default schedule (after launch).
-	if _, err := dbos.RegisterQueue(dbosCtx, QUEUE_NAME,
+	demoQueue, err = dbos.RegisterQueue(dbosCtx, QUEUE_NAME,
 		dbos.WithWorkerConcurrency(DEFAULT_WORKER_CONCURRENCY),
 		dbos.WithQueueOnConflict(dbos.QueueConflictNeverUpdate),
-	); err != nil {
+	)
+	if err != nil {
 		fmt.Printf("Error registering queue: %s\n", err)
 	}
 
@@ -295,17 +297,17 @@ func countByStatus(wfs []dbos.WorkflowStatus) map[string]int {
 func scheduleStatusHandler(c *gin.Context) {
 	cron := DEFAULT_CRON
 	scheduleStatus := "UNKNOWN"
-	if sched, err := dbos.GetSchedule(dbosCtx, SCHEDULE_NAME); err == nil && sched != nil {
+	if sched, err := dbos.GetSchedule(dbosCtx, SCHEDULE_NAME); err == nil {
 		cron = sched.Schedule
 		scheduleStatus = string(sched.Status)
 	}
 
 	wfs, _ := dbos.ListWorkflows(dbosCtx,
-		dbos.WithName("ScheduledWorkflow"),
-		dbos.WithStartTime(time.Now().Add(-10*time.Minute)),
-		dbos.WithLimit(500),
-		dbos.WithLoadInput(false),
-		dbos.WithLoadOutput(false),
+		dbos.WithFilterName("ScheduledWorkflow"),
+		dbos.WithFilterCreatedAfter(time.Now().Add(-10*time.Minute)),
+		dbos.WithFilterLimit(500),
+		dbos.WithFilterLoadInput(false),
+		dbos.WithFilterLoadOutput(false),
 	)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -325,9 +327,9 @@ func scheduleApplyHandler(c *gin.Context) {
 		cron = DEFAULT_CRON
 	}
 
-	if err := dbos.ApplySchedules(dbosCtx, []dbos.ApplySchedulesRequest{{
+	if err := dbos.ApplySchedules(dbosCtx, []dbos.ScheduleSpec{{
 		ScheduleName: SCHEDULE_NAME,
-		WorkflowFn:   ScheduledWorkflow,
+		Workflow:     ScheduledWorkflow,
 		Schedule:     cron,
 	}}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -355,7 +357,7 @@ func scheduleResumeHandler(c *gin.Context) {
 }
 
 func scheduleTriggerHandler(c *gin.Context) {
-	if _, err := dbos.TriggerSchedule(dbosCtx, SCHEDULE_NAME); err != nil {
+	if _, err := dbos.TriggerSchedule[any](dbosCtx, SCHEDULE_NAME); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -375,11 +377,11 @@ func queueStatusHandler(c *gin.Context) {
 	}
 
 	wfs, _ := dbos.ListWorkflows(dbosCtx,
-		dbos.WithName("EnqueuedWorkflow"),
-		dbos.WithStartTime(time.Now().Add(-10*time.Minute)),
-		dbos.WithLimit(500),
-		dbos.WithLoadInput(false),
-		dbos.WithLoadOutput(false),
+		dbos.WithFilterName("EnqueuedWorkflow"),
+		dbos.WithFilterCreatedAfter(time.Now().Add(-10*time.Minute)),
+		dbos.WithFilterLimit(500),
+		dbos.WithFilterLoadInput(false),
+		dbos.WithFilterLoadOutput(false),
 	)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -389,7 +391,7 @@ func queueStatusHandler(c *gin.Context) {
 }
 
 func queueEnqueueHandler(c *gin.Context) {
-	_, err := dbos.RunWorkflow(dbosCtx, EnqueuedWorkflow, "", dbos.WithQueue(QUEUE_NAME))
+	_, err := dbos.RunWorkflow(dbosCtx, EnqueuedWorkflow, "", dbos.WithQueue(demoQueue))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

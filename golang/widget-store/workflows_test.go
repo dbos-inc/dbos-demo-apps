@@ -36,7 +36,7 @@ func TestCheckoutWorkflow(t *testing.T) {
 
 	t.Run("Payment success without dispatch", func(t *testing.T) {
 		// Test the happy path but with payment failure to avoid RunAsWorkflow
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		wfID := "test-workflow-123"
 		orderID := 1
 
@@ -56,7 +56,7 @@ func TestCheckoutWorkflow(t *testing.T) {
 	})
 
 	t.Run("Inventory reservation fails", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		wfID := "test-workflow-456"
 		orderID := 2
 
@@ -83,7 +83,7 @@ func TestCheckoutWorkflow(t *testing.T) {
 	})
 
 	t.Run("Payment timeout", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		wfID := "test-workflow-789"
 		orderID := 3
 
@@ -113,7 +113,7 @@ func TestCheckoutWorkflow(t *testing.T) {
 	})
 
 	t.Run("Payment failed status", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		wfID := "test-workflow-101"
 		orderID := 4
 
@@ -143,7 +143,7 @@ func TestCheckoutWorkflow(t *testing.T) {
 	})
 
 	t.Run("CreateOrder step fails", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		wfID := "test-workflow-111"
 
 		dbosCtx.On("GetWorkflowID").Return(wfID, nil)
@@ -159,7 +159,7 @@ func TestCheckoutWorkflow(t *testing.T) {
 	})
 
 	t.Run("GetWorkflowID fails", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 
 		dbosCtx.On("GetWorkflowID").Return("", errors.New("workflow ID error"))
 
@@ -176,7 +176,7 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 	defer db.Close()
 
 	t.Run("Happy path - successful dispatch", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		orderID := 1
 
 		// Mock 10 iterations of sleep and progress updates
@@ -192,7 +192,7 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 	})
 
 	t.Run("Sleep fails", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		orderID := 2
 
 		// First sleep fails
@@ -206,7 +206,7 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 	})
 
 	t.Run("UpdateOrderProgress step fails", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		orderID := 3
 
 		// First sleep succeeds, but progress update fails
@@ -221,7 +221,7 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 	})
 
 	t.Run("Partial execution - fails mid-way", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		orderID := 4
 
 		// Successfully complete 5 iterations, fail on 6th
@@ -242,7 +242,7 @@ func TestDispatchOrderWorkflow(t *testing.T) {
 	})
 
 	t.Run("Multiple orderIDs different behavior", func(t *testing.T) {
-		dbosCtx := mocks.NewMockDBOSContext(t)
+		dbosCtx := mocks.NewMockContext(t)
 		orderID := 999
 
 		// Test with a different orderID to ensure it's passed correctly

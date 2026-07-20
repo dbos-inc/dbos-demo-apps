@@ -16,7 +16,7 @@ import (
 var reports embed.FS
 
 // ScanWorkflow processes reports from the specified reports folder
-func ScanWorkflow(ctx dbos.DBOSContext, _ string) ([]string, error) {
+func ScanWorkflow(ctx dbos.Context, _ string) ([]string, error) {
 	// Step 1: Read all report files from reports folder
 	reportFiles, err := dbos.RunAsStep(ctx, func(ctx context.Context) ([]string, error) {
 		return ReadReportFiles()

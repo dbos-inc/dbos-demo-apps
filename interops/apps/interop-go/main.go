@@ -59,7 +59,7 @@ type InteropService struct {
 
 func (s *InteropService) ConfigName() string { return s.configName }
 
-func (s *InteropService) EchoWorkflow(ctx dbos.DBOSContext, input EchoInput) (map[string]any, error) {
+func (s *InteropService) EchoWorkflow(ctx dbos.Context, input EchoInput) (map[string]any, error) {
 	parsedDate, err := time.Parse("2006-01-02", input.Date)
 	if err != nil {
 		return nil, fmt.Errorf("echoWorkflow: invalid date %q: %w", input.Date, err)
@@ -93,7 +93,7 @@ func (s *InteropService) EchoWorkflow(ctx dbos.DBOSContext, input EchoInput) (ma
 // HTTP handlers
 // ---------------------------------------------------------------------------
 
-var dbosCtx dbos.DBOSContext
+var dbosCtx dbos.Context
 var dbosClient dbos.Client
 
 func healthzHandler(w http.ResponseWriter, _ *http.Request) {
@@ -115,7 +115,7 @@ func enqueueHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handle, err := dbos.Enqueue[dbos.PortableWorkflowArgs, map[string]any](
+	handle, err := dbos.Enqueue[map[string]any](
 		dbosClient,
 		queueName,
 		"echoWorkflow",
@@ -131,7 +131,7 @@ func enqueueHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send a date message to the enqueued workflow using portable serialisation.
 	msgDate := time.Date(2025, 3, 15, 0, 0, 0, 0, time.UTC)
-	if err := dbosClient.Send(handle.GetWorkflowID(), msgDate, "date-msg", dbos.WithPortableSend()); err != nil {
+	if err := dbos.Send(dbosClient, handle.GetWorkflowID(), msgDate, "date-msg", dbos.WithPortableSend()); err != nil {
 		http.Error(w, fmt.Sprintf("send failed: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -159,7 +159,7 @@ func main() {
 	}
 
 	var err error
-	dbosCtx, err = dbos.NewDBOSContext(context.Background(), dbos.Config{
+	dbosCtx, err = dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL:        sysDBURL,
 		AppName:            "interop-go",
 		ApplicationVersion: "interop-v1",
@@ -173,13 +173,16 @@ func main() {
 	dbos.RegisterWorkflow(dbosCtx, service.EchoWorkflow,
 		dbos.WithWorkflowName("echoWorkflow"),
 		dbos.WithInstance(service))
-	dbos.NewWorkflowQueue(dbosCtx, "interop-queue-go")
+	if _, err = dbos.RegisterQueue(dbosCtx, "interop-queue-go"); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to register queue: %v\n", err)
+		os.Exit(1)
+	}
 
 	if err = dbosCtx.Launch(); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to launch DBOS: %v\n", err)
 		os.Exit(1)
 	}
-	defer dbosCtx.Shutdown(10 * time.Second)
+	defer dbos.Shutdown(dbosCtx, 10 * time.Second)
 
 	dbosClient, err = dbos.NewClient(context.Background(), dbos.ClientConfig{
 		DatabaseURL: sysDBURL,
@@ -188,7 +191,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "failed to create DBOS client: %v\n", err)
 		os.Exit(1)
 	}
-	defer dbosClient.Shutdown(10 * time.Second)
+	defer dbos.Shutdown(dbosClient, 10 * time.Second)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", healthzHandler)

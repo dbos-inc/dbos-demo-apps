@@ -103,8 +103,7 @@ The issue should:
 - Be formatted in Markdown
 
 Security scan report:
-%s`, "prout")
-	// %s`, repoName, report)
+%s`, repoName, report)
 
 	reqBody := ollamaRequest{
 		Model:  c.model,

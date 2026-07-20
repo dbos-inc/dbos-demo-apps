@@ -16,7 +16,7 @@ import (
 )
 
 // Run starts the TUI
-func Run(dbosCtx dbos.DBOSContext, db *sql.DB) error {
+func Run(dbosCtx dbos.Context, db *sql.DB) error {
 	model := initialModel(dbosCtx, db)
 	p := tea.NewProgram(model)
 	if _, err := p.Run(); err != nil {
@@ -45,7 +45,7 @@ const (
 
 // App holds the TUI application state
 type App struct {
-	dbosCtx                  dbos.DBOSContext
+	dbosCtx                  dbos.Context
 	db                       *sql.DB
 	selectedMenuOption       int
 	menuOptions              []string
@@ -95,7 +95,7 @@ var baseViewOptions = []string{
 	" Reset issues and reports database",
 }
 
-func initialModel(dbosCtx dbos.DBOSContext, db *sql.DB) App {
+func initialModel(dbosCtx dbos.Context, db *sql.DB) App {
 	const defaultWidth = 40
 
 	prog := progress.New(progress.WithDefaultGradient())
