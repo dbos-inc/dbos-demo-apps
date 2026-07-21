@@ -177,6 +177,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "failed to register queue: %v\n", err)
 		os.Exit(1)
 	}
+	// The queue is database-backed and thus visible to every worker on this
+	// system database; restrict this process to its own queue so the other
+	// language runtimes' workers don't dequeue Go-targeted workflows.
+	dbos.ListenQueues(dbosCtx, "interop-queue-go")
 
 	if err = dbosCtx.Launch(); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to launch DBOS: %v\n", err)

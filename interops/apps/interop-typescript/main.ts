@@ -115,7 +115,9 @@ async function main() {
     throw new Error('DBOS_SYSTEM_DATABASE_URL is required');
   }
 
-  DBOS.setConfig({ name: 'interop-typescript', systemDatabaseUrl: SYS_DB_URL, applicationVersion: 'interop-v1' });
+  // listenQueues: only serve our own queue — database-backed queues (e.g. the
+  // Go app's) are visible to every worker on the shared system database.
+  DBOS.setConfig({ name: 'interop-typescript', systemDatabaseUrl: SYS_DB_URL, applicationVersion: 'interop-v1', listenQueues: ['interop-queue-typescript'] });
   await DBOS.launch();
 
   expressApp.listen(PORT, () => {
