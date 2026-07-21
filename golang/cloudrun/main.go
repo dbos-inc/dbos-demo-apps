@@ -18,14 +18,14 @@ import (
 const STEPS_EVENT = "steps_event"
 const WORKER_CONCURRENCY = 5
 
-var dbosCtx dbos.DBOSContext
-var taskQueue dbos.WorkflowQueue
+var dbosCtx dbos.Context
+var taskQueue dbos.Queue
 
 /*****************************/
 /**** WORKFLOWS AND STEPS ****/
 /*****************************/
 
-func ExampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func ExampleWorkflow(ctx dbos.Context, _ string) (string, error) {
 	_, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
 		return stepOne(stepCtx)
 	})
@@ -59,10 +59,10 @@ func ExampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 	return "Workflow completed", nil
 }
 
-func ScheduledWorkflow(ctx dbos.DBOSContext, scheduledTime time.Time) (string, error) {
-	fmt.Printf("Scheduled workflow triggered at: %s\n", scheduledTime.Format(time.RFC3339))
+func ScheduledWorkflow(ctx dbos.Context, input dbos.ScheduledWorkflowInput) (string, error) {
+	fmt.Printf("Scheduled workflow triggered at: %s\n", input.ScheduledTime.Format(time.RFC3339))
 	for i := 0; i < 20; i++ {
-		_, err := dbos.RunWorkflow(ctx, ExampleWorkflow, "", dbos.WithQueue(taskQueue.Name))
+		_, err := dbos.RunWorkflow(ctx, ExampleWorkflow, "", dbos.WithQueue(taskQueue))
 		if err != nil {
 			return "", err
 		}
@@ -74,11 +74,11 @@ func ScheduledWorkflow(ctx dbos.DBOSContext, scheduledTime time.Time) (string, e
 /**** AUTOSCALING ************/
 /*****************************/
 
-func ScalingWorkflow(ctx dbos.DBOSContext, scheduledTime time.Time) (string, error) {
-	fmt.Printf("Scaling workflow triggered at: %s\n", scheduledTime.Format(time.RFC3339))
+func ScalingWorkflow(ctx dbos.Context, input dbos.ScheduledWorkflowInput) (string, error) {
+	fmt.Printf("Scaling workflow triggered at: %s\n", input.ScheduledTime.Format(time.RFC3339))
 
 	// 1. Read queue length by listing all enqueued/pending workflows on our queue
-	workflows, err := dbos.ListWorkflows(ctx, dbos.WithQueuesOnly(), dbos.WithQueueName(taskQueue.Name))
+	workflows, err := dbos.ListWorkflows(ctx, dbos.WithFilterQueuesOnly(), dbos.WithFilterQueueName(taskQueue.GetName()))
 	if err != nil {
 		return "", fmt.Errorf("failed to list workflows: %w", err)
 	}
@@ -275,7 +275,7 @@ func main() {
 		os.Getenv("INSTANCE_UNIX_SOCKET"),
 	)
 
-	dbosCtx, err = dbos.NewDBOSContext(context.Background(), dbos.Config{
+	dbosCtx, err = dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL:        dsn,
 		AppName:            "cloudrun-go",
 		AdminServer:        true,
@@ -287,17 +287,38 @@ func main() {
 	}
 
 	// Create queue and register workflows
-	taskQueue = dbos.NewWorkflowQueue(dbosCtx, "task_queue", dbos.WithWorkerConcurrency(WORKER_CONCURRENCY))
+	taskQueue, err = dbos.RegisterQueue(dbosCtx, "task_queue", dbos.WithWorkerConcurrency(WORKER_CONCURRENCY))
+	if err != nil {
+		panic(err)
+	}
 	dbos.RegisterWorkflow(dbosCtx, ExampleWorkflow)
-	dbos.RegisterWorkflow(dbosCtx, ScheduledWorkflow, dbos.WithSchedule("0 */1 * * * *"))
-	dbos.RegisterWorkflow(dbosCtx, ScalingWorkflow, dbos.WithSchedule("*/30 * * * * *"))
+	dbos.RegisterWorkflow(dbosCtx, ScheduledWorkflow)
+	dbos.RegisterWorkflow(dbosCtx, ScalingWorkflow)
 
 	// Launch DBOS
 	err = dbosCtx.Launch()
 	if err != nil {
 		panic(err)
 	}
-	defer dbosCtx.Shutdown(10 * time.Second)
+	defer dbos.Shutdown(dbosCtx, 10 * time.Second)
+
+	// Create schedules
+	err = dbos.CreateSchedule(dbosCtx, dbos.ScheduleSpec{
+		ScheduleName: "scheduled-workflow",
+		Schedule:     "0 */1 * * * *",
+		Workflow:     ScheduledWorkflow,
+	})
+	if err != nil {
+		panic(err)
+	}
+	err = dbos.CreateSchedule(dbosCtx, dbos.ScheduleSpec{
+		ScheduleName: "scaling-workflow",
+		Schedule:     "*/30 * * * * *",
+		Workflow:     ScalingWorkflow,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	// Initialize Gin router
 	gin.SetMode(gin.ReleaseMode)

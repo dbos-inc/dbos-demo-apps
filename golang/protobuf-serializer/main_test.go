@@ -16,7 +16,7 @@ import (
 	pb "protobuf-serializer/pb"
 )
 
-var senderWorkflow = dbos.Workflow[*pb.Task, *pb.Task](func(ctx dbos.DBOSContext, task *pb.Task) (*pb.Task, error) {
+var senderWorkflow = dbos.Workflow[*pb.Task, *pb.Task](func(ctx dbos.Context, task *pb.Task) (*pb.Task, error) {
 	wfID, err := dbos.GetWorkflowID(ctx)
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ var senderWorkflow = dbos.Workflow[*pb.Task, *pb.Task](func(ctx dbos.DBOSContext
 	return task, nil
 })
 
-var receiverWorkflow = dbos.Workflow[*pb.Task, *pb.Task](func(ctx dbos.DBOSContext, _ *pb.Task) (*pb.Task, error) {
+var receiverWorkflow = dbos.Workflow[*pb.Task, *pb.Task](func(ctx dbos.Context, _ *pb.Task) (*pb.Task, error) {
 	received, err := dbos.Recv[*pb.Task](ctx, "test-topic", 10*time.Second)
 	if err != nil {
 		return nil, err
@@ -36,14 +36,14 @@ var receiverWorkflow = dbos.Workflow[*pb.Task, *pb.Task](func(ctx dbos.DBOSConte
 	return received, nil
 })
 
-var setEventWorkflow = dbos.Workflow[*pb.Task, *pb.Task](func(ctx dbos.DBOSContext, task *pb.Task) (*pb.Task, error) {
+var setEventWorkflow = dbos.Workflow[*pb.Task, *pb.Task](func(ctx dbos.Context, task *pb.Task) (*pb.Task, error) {
 	if err := dbos.SetEvent(ctx, "test-key", task); err != nil {
 		return nil, err
 	}
 	return task, nil
 })
 
-var getEventWorkflow = dbos.Workflow[*pb.WorkflowRef, *pb.Task](func(ctx dbos.DBOSContext, ref *pb.WorkflowRef) (*pb.Task, error) {
+var getEventWorkflow = dbos.Workflow[*pb.WorkflowRef, *pb.Task](func(ctx dbos.Context, ref *pb.WorkflowRef) (*pb.Task, error) {
 	event, err := dbos.GetEvent[*pb.Task](ctx, ref.WorkflowId, "test-key", 10*time.Second)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ var getEventWorkflow = dbos.Workflow[*pb.WorkflowRef, *pb.Task](func(ctx dbos.DB
 	return event, nil
 })
 
-func setupTest(t *testing.T) dbos.DBOSContext {
+func setupTest(t *testing.T) dbos.Context {
 	t.Helper()
 
 	databaseURL := os.Getenv("DBOS_SYSTEM_DATABASE_URL")
@@ -71,7 +71,7 @@ func setupTest(t *testing.T) dbos.DBOSContext {
 	require.NoError(t, err)
 	conn.Close(context.Background())
 
-	dbosCtx, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+	dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL: databaseURL,
 		AppName:     "proto-test",
 		Serializer:  &ProtoSerializer{},
@@ -88,7 +88,7 @@ func setupTest(t *testing.T) dbos.DBOSContext {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		dbosCtx.Shutdown(10 * time.Second)
+		dbos.Shutdown(dbosCtx, 10 * time.Second)
 	})
 
 	return dbosCtx
@@ -165,9 +165,9 @@ func TestProtobuf(t *testing.T) {
 		require.NoError(t, err)
 
 		workflows, err := dbos.ListWorkflows(executor,
-			dbos.WithWorkflowIDs([]string{"proto-list-wf"}),
-			dbos.WithLoadInput(true),
-			dbos.WithLoadOutput(true),
+			dbos.WithFilterWorkflowIDs("proto-list-wf"),
+			dbos.WithFilterLoadInput(true),
+			dbos.WithFilterLoadOutput(true),
 		)
 		require.NoError(t, err)
 		require.Len(t, workflows, 1)

@@ -69,7 +69,10 @@ public class App {
             .withDatabaseUrl(jdbcUrl)
             .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
             .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-            .withAppVersion("interop-v1");
+            .withAppVersion("interop-v1")
+            // Only serve our own queue: database-backed queues (e.g. the Go
+            // app's) are visible to every worker on the shared system database.
+            .withListenQueue("interop-queue-java");
 
     var dbos = new DBOS(dbosConfig);
 

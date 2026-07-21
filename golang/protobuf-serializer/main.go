@@ -12,7 +12,7 @@ import (
 
 var processTask = dbos.Workflow[*pb.Task, *pb.TaskResult](ProcessTask)
 
-func ProcessTask(ctx dbos.DBOSContext, task *pb.Task) (*pb.TaskResult, error) {
+func ProcessTask(ctx dbos.Context, task *pb.Task) (*pb.TaskResult, error) {
 	return dbos.RunAsStep(ctx, func(_ context.Context) (*pb.TaskResult, error) {
 		return &pb.TaskResult{
 			TaskId:  task.Id,
@@ -27,7 +27,7 @@ func ProcessTask(ctx dbos.DBOSContext, task *pb.Task) (*pb.TaskResult, error) {
 }
 
 func main() {
-	dbosCtx, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+	dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AppName:     "protobuf-serializer-demo",
 		Serializer:  &ProtoSerializer{},
@@ -42,7 +42,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer dbosCtx.Shutdown(10 * time.Second)
+	defer dbos.Shutdown(dbosCtx, 10 * time.Second)
 
 	task := &pb.Task{
 		Id:          "task-1",

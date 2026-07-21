@@ -9,7 +9,7 @@ import (
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
-func checkoutWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func checkoutWorkflow(ctx dbos.Context, _ string) (string, error) {
 	workflowID, err := ctx.GetWorkflowID()
 	if err != nil {
 		logger.Error("workflow ID retrieval failed", "error", err)
@@ -70,7 +70,7 @@ func checkoutWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 	return "", nil
 }
 
-func dispatchOrderWorkflow(ctx dbos.DBOSContext, orderID int) (string, error) {
+func dispatchOrderWorkflow(ctx dbos.Context, orderID int) (string, error) {
 	fmt.Println("Dispatching order", orderID)
 	for range 10 {
 		_, err := dbos.Sleep(ctx, time.Second)

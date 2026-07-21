@@ -27,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+	dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 		AppName:            "gogogo",
 		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AdminServer:        true,
@@ -47,7 +47,7 @@ func main() {
 		logger.Error("DBOS service start failed", "error", err)
 		os.Exit(1)
 	}
-	defer dbosContext.Shutdown(10 * time.Second)
+	defer dbos.Shutdown(dbosContext, 10 * time.Second)
 
 	db, err = pgxpool.New(context.Background(), dbURL)
 	if err != nil {

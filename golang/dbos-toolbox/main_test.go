@@ -10,18 +10,18 @@ import (
 )
 
 func TestExampleWorkflow(t *testing.T) {
-	ctx, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+	ctx, err := dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AppName:     "dbos-toolbox-test",
 	})
 	if err != nil {
-		t.Fatalf("NewDBOSContext: %v", err)
+		t.Fatalf("NewContext: %v", err)
 	}
 	dbos.RegisterWorkflow(ctx, ExampleWorkflow)
 	if err := ctx.Launch(); err != nil {
 		t.Fatalf("Launch: %v", err)
 	}
-	t.Cleanup(func() { ctx.Shutdown(10 * time.Second) })
+	t.Cleanup(func() { dbos.Shutdown(ctx, 10 * time.Second) })
 
 	handle, err := dbos.RunWorkflow(ctx, ExampleWorkflow, "")
 	if err != nil {

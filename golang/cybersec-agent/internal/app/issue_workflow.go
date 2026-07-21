@@ -14,7 +14,7 @@ type IssueWorkflowInput struct {
 }
 
 // IssueWorkflow generates an issue for a report and waits for approval
-func IssueWorkflow(ctx dbos.DBOSContext, input IssueWorkflowInput) (string, error) {
+func IssueWorkflow(ctx dbos.Context, input IssueWorkflowInput) (string, error) {
 	// Step 0: Read report from database
 	var report *Report
 	var err error

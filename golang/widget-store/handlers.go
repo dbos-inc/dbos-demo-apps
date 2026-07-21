@@ -98,7 +98,7 @@ func restock(c *gin.Context, db *pgxpool.Pool, logger *slog.Logger) {
 
 // XXX can we fold our context inside the gin context?
 // and more generally, how do funky contexts play together
-func checkoutEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *slog.Logger) {
+func checkoutEndpoint(c *gin.Context, dbosCtx dbos.Context, logger *slog.Logger) {
 	idempotencyKey := c.Param("idempotency_key")
 
 	// Start the checkout workflow with the idempotency key
@@ -119,7 +119,7 @@ func checkoutEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *slog.Log
 	c.String(http.StatusOK, payment_id)
 }
 
-func paymentEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *slog.Logger) {
+func paymentEndpoint(c *gin.Context, dbosCtx dbos.Context, logger *slog.Logger) {
 	paymentID := c.Param("payment_id")
 	paymentStatus := c.Param("payment_status")
 

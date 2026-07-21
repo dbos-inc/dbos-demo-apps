@@ -98,6 +98,9 @@ _service = InteropService()
 @app.on_event("startup")
 async def _startup() -> None:
     global _client
+    # Only serve our own queue: database-backed queues (e.g. the Go app's) are
+    # visible to every worker on the shared system database.
+    DBOS.listen_queues(["interop-queue-python"])
     DBOS.launch()
     _client = DBOSClient(system_database_url=SYS_DB_URL)
 
