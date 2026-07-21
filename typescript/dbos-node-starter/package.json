@@ -20,8 +20,8 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^4.22.6",
-    "@dbos-inc/otel": "^4.22.6",
+    "@dbos-inc/dbos-sdk": "^4.24.16",
+    "@dbos-inc/otel": "^4.24.16",
     "@koa/router": "^13.1.1",
     "koa": "^3.0.0",
     "koa-bodyparser": "^4.4.1",
