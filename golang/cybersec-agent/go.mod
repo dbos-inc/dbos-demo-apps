@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/glamour v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.1-0.20250404203927-76690c660834
-	github.com/dbos-inc/dbos-transact-golang v0.20.1-0.20260721201606-b2f95740ef78
+	github.com/dbos-inc/dbos-transact-golang v1.0.0-rc.1
 	github.com/lib/pq v1.12.3
 	github.com/openai/openai-go/v3 v3.33.0
 )

@@ -3,7 +3,7 @@ module dbos-toolbox
 go 1.25.0
 
 require (
-	github.com/dbos-inc/dbos-transact-golang v0.20.1-0.20260721201606-b2f95740ef78
+	github.com/dbos-inc/dbos-transact-golang v1.0.0-rc.1
 	github.com/gin-gonic/gin v1.12.0
 )
 
