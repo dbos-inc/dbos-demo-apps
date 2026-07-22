@@ -173,9 +173,10 @@ func main() {
 	var err error
 	dbosCtx, err = dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-		AppName:            "dbos-toolbox",
+		AppName:            "dbos-go-starter",
 		AdminServer:        true,
 		ApplicationVersion: "0.1.0",
+		ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_KEY"),
 	})
 	if err != nil {
 		panic(err)
