@@ -1,4 +1,4 @@
-module dbos-toolbox
+module dbos-go-starter
 
 go 1.25.0
 
