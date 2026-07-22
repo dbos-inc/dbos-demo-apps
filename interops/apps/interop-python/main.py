@@ -9,6 +9,8 @@ Workflow signature (mix of positional and named args):
 
 POST /enqueue/{target}  — accepts {positionalArgs, namedArgs} body, relays via
                           portable enqueue to interop-queue-{target}, returns result.
+POST /debounce/{target} — accepts {first, final} payloads, debounces echoWorkflow
+                          twice on one key so the calls coalesce, returns result.
 GET  /healthz           — liveness probe.
 """
 
@@ -20,7 +22,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi import Body
 
-from dbos import DBOS, DBOSConfiguredInstance, Queue
+from dbos import DBOS, DBOSConfiguredInstance, DebouncerClient, Queue
 from dbos._client import DBOSClient
 from dbos._serialization import WorkflowSerializationFormat
 
@@ -146,6 +148,52 @@ async def enqueue(target: str, payload: Dict[str, Any] = Body(...)):
     )
 
     return await handle.get_result()
+
+
+@app.post("/debounce/{target}")
+def debounce(target: str, payload: Dict[str, Any] = Body(...)):
+    """Debounce echoWorkflow on interop-queue-{target} twice with one key.
+
+    The body carries two {positionalArgs, namedArgs} payloads: "first" is
+    submitted with a long debounce period, then "final" replaces it with a
+    short one. Both calls must coalesce on a single workflow that runs with
+    the final payload.
+    """
+    if target not in QUEUE_NAMES:
+        raise HTTPException(status_code=400, detail=f"unknown target: {target!r}")
+
+    first, final = payload["first"], payload["final"]
+    key = f"interop-python-{target}"
+
+    debouncer = DebouncerClient(
+        _client,
+        {
+            "queue_name":         QUEUE_NAMES[target],
+            "workflow_name":      "echoWorkflow",
+            "class_name":         "interop",
+            "instance_name":      "default",
+            "serialization_type": WorkflowSerializationFormat.PORTABLE,
+        },
+    )
+    h1 = debouncer.debounce(
+        key, 10.0, *first.get("positionalArgs", []), **first.get("namedArgs", {})
+    )
+    h2 = debouncer.debounce(
+        key, 1.0, *final.get("positionalArgs", []), **final.get("namedArgs", {})
+    )
+
+    # Send the date message to the (single) coalesced workflow.
+    _client.send(
+        h2.get_workflow_id(),
+        _date(2025, 3, 15),
+        "date-msg",
+        serialization_type=WorkflowSerializationFormat.PORTABLE,
+    )
+
+    return {
+        "coalesced": h1.get_workflow_id() == h2.get_workflow_id(),
+        "result": h2.get_result(),
+    }
 
 
 # ---------------------------------------------------------------------------

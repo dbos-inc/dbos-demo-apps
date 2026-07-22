@@ -8,7 +8,7 @@ dependencies = [
     "requests",
     "psycopg[binary]",
     # interop-python app (published SDK, mirrors apps/interop-python/requirements.txt)
-    "dbos>=2.14",
+    "dbos>=2.27",
     "fastapi[standard]",
     "uvicorn[standard]",
 ]

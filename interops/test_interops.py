@@ -10,6 +10,8 @@ it via portable enqueue and returns the workflow result.
     uv run pytest -s test_interops.py
 """
 
+import json
+
 import pytest
 import requests
 
@@ -45,4 +47,35 @@ def test_cross_language_enqueue(interop_apps, source: str, target: str):
     resp.raise_for_status()
     assert resp.json() == EXPECTED, (
         f"{source} -> {target}: expected {EXPECTED}, got {resp.json()}"
+    )
+
+
+# Debounce sources: languages whose client debouncer implements the DB-backed
+# delayed-workflow scheme and can target a configured-instance workflow.
+#   - typescript is excluded: its DebouncerClient cannot set a workflow config
+#     name yet, so it cannot address class "interop" / instance "default".
+#   - java is excluded as a source (its debouncer still uses the old internal
+#     workflow design) but participates as a target like any other runtime.
+DEBOUNCE_SOURCES = ["python", "go"]
+DEBOUNCE_PAIRS = [(s, t) for s in DEBOUNCE_SOURCES for t in PORTS if s != t]
+
+
+@pytest.mark.parametrize("source,target", DEBOUNCE_PAIRS, ids=[f"{s}To{t.title()}" for s, t in DEBOUNCE_PAIRS])
+def test_cross_language_debounce(interop_apps, source: str, target: str):
+    """The source's client debouncer debounces the target's echoWorkflow twice
+    with one key: both calls must coalesce on a single workflow (the debounced
+    enqueue is shared DB state), and the run must use the latest input — the
+    first call submits a payload with "stale-input" as the text, so the echoed
+    "hello-interop" proves the second payload won."""
+    final = TARGET_PAYLOADS[target]
+    first = json.loads(json.dumps(final).replace("hello-interop", "stale-input"))
+    url = f"http://localhost:{PORTS[source]}/debounce/{target}"
+    resp = requests.post(url, json={"first": first, "final": final}, timeout=30)
+    resp.raise_for_status()
+    body = resp.json()
+    assert body["coalesced"] is True, (
+        f"{source} -> {target}: the two debounce calls did not coalesce on one workflow"
+    )
+    assert body["result"] == EXPECTED, (
+        f"{source} -> {target}: expected {EXPECTED}, got {body['result']}"
     )
