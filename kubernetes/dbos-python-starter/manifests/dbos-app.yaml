@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dbos-k8s-app
+  namespace: dbos-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dbos-k8s-app
+  template:
+    metadata:
+      labels:
+        app: dbos-k8s-app
+    spec:
+      containers:
+        - name: dbos-k8s-app
+          image: 500883621673.dkr.ecr.us-east-1.amazonaws.com/dbos-python-k8s-integration-app:latest
+          imagePullPolicy: Always
+          env:
+            - name: DBOS_SYSTEM_DATABASE_URL
+              value: postgres://postgres:dbos@postgres:5432/dbos_python
+            - name: DBOS_CONDUCTOR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: conductor-api-key
+                  key: token
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dbos-k8s-app
+  namespace: dbos-demo
+spec:
+  selector:
+    app: dbos-k8s-app
+  ports:
+    - port: 8000
+      targetPort: 8000

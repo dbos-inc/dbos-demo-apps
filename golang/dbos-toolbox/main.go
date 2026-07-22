@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
+	_ "github.com/dbos-inc/dbos-transact-golang/dbos/driver/sqlite"
 )
 
 // Configuration structure
