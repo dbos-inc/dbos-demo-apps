@@ -24,7 +24,22 @@ from fastapi import Body
 
 from dbos import DBOS, DBOSConfiguredInstance, DebouncerClient, Queue
 from dbos._client import DBOSClient
-from dbos._serialization import WorkflowSerializationFormat
+from dbos._serialization import PortableWorkflowError, WorkflowSerializationFormat
+
+
+class InteropError(Exception):
+    """App error whose class name becomes the portable envelope's ``name``.
+
+    Python's portable serializer derives ``name`` from ``type(err).__name__``
+    (unlike Go/TS/Java, which take an explicit name), so the class is named
+    ``InteropError`` to produce the canonical cross-language envelope. The
+    ``code`` and ``data`` attributes are picked up into the envelope too.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("interop boom")
+        self.code = 418
+        self.data = {"detail": "teapot"}
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -89,6 +104,13 @@ class InteropService(DBOSConfiguredInstance):
             "msg_date":    msg_date,
         }
 
+    @DBOS.workflow(
+        name="failWorkflow",
+        serialization_type=WorkflowSerializationFormat.PORTABLE,
+    )
+    def fail_workflow(self, msg: str) -> Dict[str, Any]:
+        raise InteropError()
+
 
 # Create instance — auto-registers in instance_info_map["interop/default"]
 _service = InteropService()
@@ -148,6 +170,31 @@ async def enqueue(target: str, payload: Dict[str, Any] = Body(...)):
     )
 
     return await handle.get_result()
+
+
+@app.post("/error/{target}")
+async def error(target: str):
+    """Enqueue the target's failWorkflow and return the deserialized portable
+    error envelope. The target serializes the error as cross-language JSON; this
+    runtime reads it back into a PortableWorkflowError."""
+    if target not in QUEUE_NAMES:
+        raise HTTPException(status_code=400, detail=f"unknown target: {target!r}")
+
+    handle = await _client.enqueue_async(
+        {
+            "queue_name":        QUEUE_NAMES[target],
+            "workflow_name":     "failWorkflow",
+            "class_name":        "interop",
+            "instance_name":     "default",
+            "serialization_type": WorkflowSerializationFormat.PORTABLE,
+        },
+        "trigger",
+    )
+    try:
+        await handle.get_result()
+    except PortableWorkflowError as e:
+        return {"name": e.name, "message": e.message, "code": e.code, "data": e.data}
+    raise HTTPException(status_code=500, detail="expected failWorkflow to fail")
 
 
 @app.post("/debounce/{target}")

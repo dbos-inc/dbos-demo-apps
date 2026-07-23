@@ -50,6 +50,45 @@ def test_cross_language_enqueue(interop_apps, source: str, target: str):
     )
 
 
+# The canonical portable error envelope every runtime's failWorkflow produces.
+# Each raises it natively (Go/Java via their PortableWorkflowError type, TS via an
+# Error whose name/code/data the portable serializer records, Python via a class
+# named InteropError since its serializer derives the envelope name from the
+# class). Whichever runtime deserializes it must recover the same four fields.
+EXPECTED_ERROR = {
+    "name":    "InteropError",
+    "message": "interop boom",
+    "code":    418,
+    "data":    {"detail": "teapot"},
+}
+
+
+@pytest.mark.parametrize("source,target", PAIRS, ids=[f"{s}To{t.title()}" for s, t in PAIRS])
+def test_cross_language_portable_error(interop_apps, source: str, target: str):
+    """The source enqueues the target's failWorkflow, which always fails with the
+    canonical portable error envelope. The target serializes the error as
+    cross-language JSON; the source must deserialize the same name/message/code/data
+    regardless of which runtime raised it."""
+    url = f"http://localhost:{PORTS[source]}/error/{target}"
+    resp = requests.post(url, timeout=15)
+    resp.raise_for_status()
+    body = resp.json()
+
+    assert body["name"] == EXPECTED_ERROR["name"], (
+        f"{source} -> {target}: name {body.get('name')!r}"
+    )
+    assert body["message"] == EXPECTED_ERROR["message"], (
+        f"{source} -> {target}: message {body.get('message')!r}"
+    )
+    # Code crosses the wire as a JSON number; normalize float/int before comparing.
+    assert int(body["code"]) == EXPECTED_ERROR["code"], (
+        f"{source} -> {target}: code {body.get('code')!r}"
+    )
+    assert body["data"] == EXPECTED_ERROR["data"], (
+        f"{source} -> {target}: data {body.get('data')!r}"
+    )
+
+
 # Debounce sources: languages whose client debouncer implements the DB-backed
 # delayed-workflow scheme and can target a configured-instance workflow.
 #   - typescript is excluded: its DebouncerClient cannot set a workflow config
