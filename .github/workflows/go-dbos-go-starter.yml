@@ -21,19 +21,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: dbos
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - uses: actions/checkout@v5
 
@@ -48,5 +35,4 @@ jobs:
           go mod download
           go test -v -timeout 5m ./...
         env:
-          PGPASSWORD: dbos
-          DBOS_SYSTEM_DATABASE_URL: postgres://postgres:dbos@localhost:5432/dbos_go_starter_test?sslmode=disable
+          DBOS_SYSTEM_DATABASE_URL: sqlite:dbos_go_starter_test.db

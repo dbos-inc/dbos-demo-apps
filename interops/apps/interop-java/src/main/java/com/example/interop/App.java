@@ -3,6 +3,7 @@ package com.example.interop;
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.DBOSClient;
 import dev.dbos.transact.config.DBOSConfig;
+import dev.dbos.transact.json.PortableWorkflowException;
 import dev.dbos.transact.workflow.Queue;
 import dev.dbos.transact.workflow.SerializationStrategy;
 import dev.dbos.transact.workflow.Workflow;
@@ -20,6 +21,8 @@ import io.javalin.Javalin;
 interface InteropService {
   Map<String, Object> echoWorkflow(
       String text, int num, double floatVal, List<String> items, String date);
+
+  Map<String, Object> failWorkflow(String msg);
 }
 
 @WorkflowClassName("interop")
@@ -46,6 +49,16 @@ class InteropServiceImpl implements InteropService {
     result.put("echo_date", date);
     result.put("msg_date", msgDate);
     return result;
+  }
+
+  // Always fails with the canonical interop error envelope. Under portable
+  // serialization the PortableWorkflowException is stored as cross-language JSON,
+  // so callers in any language deserialize the same name/message/code/data.
+  @Override
+  @Workflow(name = "failWorkflow", serializationStrategy = SerializationStrategy.PORTABLE)
+  public Map<String, Object> failWorkflow(String msg) {
+    throw new PortableWorkflowException(
+        "interop boom", "InteropError", 418, Map.of("detail", "teapot"));
   }
 }
 
@@ -142,6 +155,56 @@ public class App {
                       @SuppressWarnings("unchecked")
                       Map<String, Object> result = (Map<String, Object>) handle.getResult();
                       ctx.json(result);
+                    } finally {
+                      client.close();
+                    }
+                  });
+
+              config.routes.post(
+                  "/error/{target}",
+                  ctx -> {
+                    var target = ctx.pathParam("target");
+                    var queueName = QUEUE_NAMES.get(target);
+                    if (queueName == null) {
+                      ctx.status(400).result("unknown target: " + target);
+                      return;
+                    }
+
+                    String sysJdbcUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
+                    if (sysJdbcUrl == null || sysJdbcUrl.isBlank()) {
+                      ctx.status(500).result("DBOS_SYSTEM_JDBC_URL not set");
+                      return;
+                    }
+                    String user = Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres");
+                    String password =
+                        Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos");
+
+                    var client = new DBOSClient(sysJdbcUrl, user, password);
+                    try {
+                      var options =
+                          new DBOSClient.EnqueueOptions("failWorkflow", "interop", queueName)
+                              .withInstanceName("default")
+                              .withSerialization(SerializationStrategy.PORTABLE)
+                              .withTimeout(Duration.ofSeconds(30))
+                              .withAppVersion("interop-v1");
+
+                      var handle =
+                          client.enqueuePortableWorkflow(
+                              options, new Object[] {"trigger"}, null);
+
+                      try {
+                        handle.getResult();
+                        ctx.status(500).result("expected failWorkflow to fail");
+                      } catch (PortableWorkflowException e) {
+                        // The target serialized the error as portable JSON; read
+                        // it back into the same fields on this runtime.
+                        var body = new LinkedHashMap<String, Object>();
+                        body.put("name", e.getErrorName());
+                        body.put("message", e.getMessage());
+                        body.put("code", e.getCode());
+                        body.put("data", e.getData());
+                        ctx.json(body);
+                      }
                     } finally {
                       client.close();
                     }

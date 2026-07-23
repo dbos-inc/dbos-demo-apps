@@ -1,0 +1,6 @@
+manifests/
+__pycache__/
+*.pyc
+.env
+.env.sh
+README.md
