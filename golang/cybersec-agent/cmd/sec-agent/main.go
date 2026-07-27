@@ -13,6 +13,7 @@ import (
 	"sec-agent/internal/tui"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
+	_ "github.com/dbos-inc/dbos-transact-golang/dbos/driver/sqlite"
 )
 
 func main() {

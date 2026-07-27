@@ -1,0 +1,61 @@
+# HPA for the dbos-k8s-app deployment, driven by the External Metrics API
+# served by the dbos-k8s-operator (in namespace dbos-operator).
+#
+# Math (per queue):
+#   load_q = (ENQUEUED + PENDING) / worker_concurrency_q
+# The operator collapses an app's queues into a single value via max:
+#   reportedValue   = max(load_q for q in queues with worker_concurrency)
+#   averageValue    = 1
+#   desiredReplicas = ceil(reportedValue / averageValue)
+# So: replicas scale to the busiest queue's full-slot count. To enable
+# queue-based autoscaling for your app, just reference the metric below — no
+# queue label is required.
+#
+# Prereqs:
+#   - dbos-k8s-operator running and APIService Available
+#   - operator's ConfigMap polling app=dbos-k8s-app (any number of queues)
+#   - the matching HPA-controller→external-metrics RBAC binding the operator ships
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: dbos-k8s-app
+  namespace: dbos-demo
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dbos-k8s-app
+  minReplicas: 1
+  maxReplicas: 50
+  metrics:
+    - type: External
+      external:
+        metric:
+          name: dbos_queue_load
+          selector:
+            matchLabels:
+              app: dbos-k8s-app
+        target:
+          type: AverageValue
+          averageValue: "1"
+  behavior:
+    # Scale up reasonably fast: the load metric is sub-second-fresh, so we can
+    # respond to bursts without much smoothing.
+    scaleUp:
+      stabilizationWindowSeconds: 15
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      selectPolicy: Max
+    # Scale down conservatively: workflows are long-running (~11s in the demo),
+    # we don't want to thrash. Wait 2 min of sustained low load before shrinking.
+    scaleDown:
+      stabilizationWindowSeconds: 120
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60

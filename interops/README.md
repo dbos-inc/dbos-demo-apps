@@ -38,6 +38,20 @@ Each `echoWorkflow` has a different native signature (Go takes one typed struct;
 Python mixes positional/keyword args; TS/Java take five positional args). Portable
 serialization maps the caller's `{positionalArgs, namedArgs}` envelope onto it.
 
+## Cross-language debouncing
+
+Python and Go additionally expose `POST /debounce/{target}`: the source's client
+debouncer submits a stale payload with a long debounce period, then the real
+payload with a short one. Because a debounced workflow is plain shared-database
+state (enqueued `DELAYED`, holding its debounce key as its deduplication ID),
+both calls coalesce on a single workflow that any target runtime dequeues and
+runs with the latest input. `test_cross_language_debounce` covers every
+source → target pair.
+
+TypeScript is not yet a debounce source (its `DebouncerClient` cannot address a
+configured-instance workflow — no config-name parameter), and Java's debouncer
+still uses the old internal-workflow design; both still participate as targets.
+
 ## Run it
 
 Prereqs: PostgreSQL on `localhost:5432`, plus the toolchains for the apps you run

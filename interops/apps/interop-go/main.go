@@ -9,12 +9,18 @@
 //	unmarshals into PortableWorkflowArgs and enqueues
 //	echoWorkflow to interop-queue-{target}.
 //
+// POST /debounce/{target} — accepts {first, final} payloads, debounces
+//
+//	echoWorkflow twice on one key so the calls coalesce,
+//	and returns the result of the single run.
+//
 // GET  /healthz           — liveness probe.
 package main
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -89,6 +95,19 @@ func (s *InteropService) EchoWorkflow(ctx dbos.Context, input EchoInput) (map[st
 	}, nil
 }
 
+// FailWorkflow always fails with a PortableWorkflowError carrying the canonical
+// interop error envelope (name/message/code/data). A workflow run under portable
+// serialization stores this as the cross-language JSON envelope, letting callers
+// in any language deserialize the same fields.
+func (s *InteropService) FailWorkflow(_ dbos.Context, _ string) (map[string]any, error) {
+	return nil, &dbos.PortableWorkflowError{
+		Name:    "InteropError",
+		Message: "interop boom",
+		Code:    418,
+		Data:    map[string]any{"detail": "teapot"},
+	}
+}
+
 // ---------------------------------------------------------------------------
 // HTTP handlers
 // ---------------------------------------------------------------------------
@@ -148,6 +167,117 @@ func enqueueHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// debounceRequest carries the two payloads for a coalescing check: "first" is
+// debounced with a long period, then "final" replaces it with a short one.
+type debounceRequest struct {
+	First dbos.PortableWorkflowArgs `json:"first"`
+	Final dbos.PortableWorkflowArgs `json:"final"`
+}
+
+func debounceHandler(w http.ResponseWriter, r *http.Request) {
+	target := r.PathValue("target")
+	queueName, ok := queueNames[target]
+	if !ok {
+		http.Error(w, fmt.Sprintf("unknown target: %s", target), http.StatusBadRequest)
+		return
+	}
+
+	var req debounceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("invalid body: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	debouncer := dbos.NewDebouncerClient[map[string]any, dbos.PortableWorkflowArgs](
+		"echoWorkflow", dbosClient,
+		dbos.WithDebouncerQueue(queueName),
+		dbos.WithDebouncerClassName("interop"),
+		dbos.WithDebouncerConfigName("default"),
+	)
+
+	key := "interop-go-" + target
+	h1, err := debouncer.Debounce(key, 10*time.Second, req.First, dbos.WithApplicationVersion("interop-v1"))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("first debounce failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+	h2, err := debouncer.Debounce(key, 1*time.Second, req.Final, dbos.WithApplicationVersion("interop-v1"))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("second debounce failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Send the date message to the (single) coalesced workflow.
+	msgDate := time.Date(2025, 3, 15, 0, 0, 0, 0, time.UTC)
+	if err := dbos.Send(dbosClient, h2.GetWorkflowID(), msgDate, "date-msg", dbos.WithPortableSend()); err != nil {
+		http.Error(w, fmt.Sprintf("send failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	result, err := h2.GetResult()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]any{
+		"coalesced": h1.GetWorkflowID() == h2.GetWorkflowID(),
+		"result":    result,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// errorHandler enqueues the target's failWorkflow, awaits its (failed) result,
+// and returns the deserialized portable error envelope. This exercises portable
+// error deserialization: the target serializes the error as cross-language JSON,
+// and this runtime reads it back into a *dbos.PortableWorkflowError.
+func errorHandler(w http.ResponseWriter, r *http.Request) {
+	target := r.PathValue("target")
+	queueName, ok := queueNames[target]
+	if !ok {
+		http.Error(w, fmt.Sprintf("unknown target: %s", target), http.StatusBadRequest)
+		return
+	}
+
+	handle, err := dbos.Enqueue[map[string]any](
+		dbosClient,
+		queueName,
+		"failWorkflow",
+		dbos.PortableWorkflowArgs{PositionalArgs: []any{"trigger"}},
+		dbos.WithEnqueueClassName("interop"),
+		dbos.WithEnqueueConfigName("default"),
+		dbos.WithEnqueueApplicationVersion("interop-v1"),
+	)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = handle.GetResult()
+	if err == nil {
+		http.Error(w, "expected failWorkflow to fail", http.StatusInternalServerError)
+		return
+	}
+
+	var pe *dbos.PortableWorkflowError
+	if !errors.As(err, &pe) {
+		http.Error(w, fmt.Sprintf("expected PortableWorkflowError, got %T: %v", err, err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]any{
+		"name":    pe.Name,
+		"message": pe.Message,
+		"code":    pe.Code,
+		"data":    pe.Data,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -172,6 +302,9 @@ func main() {
 	service := &InteropService{configName: "default"}
 	dbos.RegisterWorkflow(dbosCtx, service.EchoWorkflow,
 		dbos.WithWorkflowName("echoWorkflow"),
+		dbos.WithInstance(service))
+	dbos.RegisterWorkflow(dbosCtx, service.FailWorkflow,
+		dbos.WithWorkflowName("failWorkflow"),
 		dbos.WithInstance(service))
 	if _, err = dbos.RegisterQueue(dbosCtx, "interop-queue-go"); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to register queue: %v\n", err)
@@ -200,6 +333,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", healthzHandler)
 	mux.HandleFunc("POST /enqueue/{target}", enqueueHandler)
+	mux.HandleFunc("POST /debounce/{target}", debounceHandler)
+	mux.HandleFunc("POST /error/{target}", errorHandler)
 
 	addr := fmt.Sprintf(":%d", port)
 	fmt.Printf("interop-go listening on %s\n", addr)

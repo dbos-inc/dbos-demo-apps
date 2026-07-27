@@ -12,15 +12,19 @@ To learn more about how to program with DBOS, check out the [DBOS programming gu
 go mod tidy
 ```
 
-2. Install the DBOS Go CLI and start Postgres in a local Docker container:
+2. Set the `DBOS_SYSTEM_DATABASE_URL` environment variable to point DBOS to a system database.
+
+The simplest option is SQLite, which requires no database server&mdash;DBOS stores its state in a local file:
+
+```bash
+export DBOS_SYSTEM_DATABASE_URL="sqlite:dbos_go_toolbox.db"
+```
+
+Alternatively, use Postgres. Install the DBOS Go CLI, start Postgres in a local Docker container, and point the variable at it:
 
 ```bash
 go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
 dbos postgres start
-```
-
-3. Set the `DBOS_SYSTEM_DATABASE_URL` environment variable to point to it.
-```bash
 export DBOS_SYSTEM_DATABASE_URL="postgres://postgres:dbos@localhost:5432/dbos_go_toolbox"
 ```
 

@@ -53,6 +53,18 @@ class InteropService extends ConfiguredInstance {
       msg_date,
     };
   }
+
+  // Always fails with the canonical interop error envelope. The portable
+  // serializer records name/message/code/data off the thrown error, so callers
+  // in any language can deserialize the same fields.
+  @DBOS.workflow({ serialization: 'portable', name: 'failWorkflow' })
+  async failWorkflow(_msg: string): Promise<never> {
+    const err = new Error('interop boom');
+    err.name = 'InteropError';
+    (err as { code?: unknown }).code = 418;
+    (err as { data?: unknown }).data = { detail: 'teapot' };
+    throw err;
+  }
 }
 
 // Create instance with name "default"
@@ -98,6 +110,44 @@ expressApp.post('/enqueue/:target', async (req, res) => {
 
       const result = await handle.getResult();
       res.json(result);
+    } finally {
+      await client.destroy();
+    }
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+expressApp.post('/error/:target', async (req, res) => {
+  const { target } = req.params;
+  const queueName  = QUEUE_NAMES[target];
+  if (!queueName) {
+    res.status(400).json({ error: `unknown target: ${target}` });
+    return;
+  }
+
+  try {
+    const client = await DBOSClient.create({ systemDatabaseUrl: SYS_DB_URL });
+    try {
+      const handle = await client.enqueuePortable<never>(
+        {
+          queueName,
+          workflowName:       'failWorkflow',
+          workflowClassName:  'interop',
+          workflowConfigName: 'default',
+        },
+        ['trigger'],
+      );
+
+      try {
+        await handle.getResult();
+        res.status(500).json({ error: 'expected failWorkflow to fail' });
+      } catch (err) {
+        // The SDK re-raises a PortableWorkflowError carrying the deserialized
+        // envelope fields; read them without importing the (unexported) class.
+        const e = err as { name?: string; message?: string; code?: unknown; data?: unknown };
+        res.json({ name: e.name, message: e.message, code: e.code, data: e.data });
+      }
     } finally {
       await client.destroy();
     }
