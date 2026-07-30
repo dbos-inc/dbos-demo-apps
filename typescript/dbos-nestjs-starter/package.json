@@ -21,8 +21,6 @@
   },
   "dependencies": {
     "@dbos-inc/dbos-sdk": "^4.25.14",
-    "@dbos-inc/knex-datasource": "^4.24.16",
-    "@dbos-inc/otel": "^4.25.14",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
