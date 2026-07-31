@@ -8,7 +8,7 @@ dependencies = [
     "dbos==2.29.0",
     "fastapi[standard]>=0.128.0",
     "logfire>=4.16.0",
-    "pydantic-ai==1.40.0",
+    "pydantic-ai==1.107.1",
 ]
 
 [dependency-groups]

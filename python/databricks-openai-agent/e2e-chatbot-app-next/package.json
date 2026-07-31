@@ -37,8 +37,14 @@
   "dependencies": {
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.5",
-    "drizzle-orm": "^0.44.6",
+    "drizzle-orm": "^0.45.2",
     "tsx": "^4.19.1"
+  },
+  "overrides": {
+    "prismjs": "^1.30.0",
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.12"
+    }
   },
   "devDependencies": {
     "@ai-sdk/provider": "^3.0.5",

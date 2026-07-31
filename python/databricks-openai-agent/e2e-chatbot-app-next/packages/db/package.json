@@ -35,7 +35,7 @@
     "@ai-sdk/provider": "^3.0.5",
     "@chat-template/auth": "*",
     "@chat-template/utils": "*",
-    "drizzle-orm": "^0.44.6",
+    "drizzle-orm": "^0.45.2",
     "drizzle-kit": "^0.31.5",
     "postgres": "^3.4.4"
   }

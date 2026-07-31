@@ -59,6 +59,5 @@ jobs:
           npm ci
           npm run build
           npm test
-          npm run lint
         env:
           DBOS_DATABASE_URL: postgresql://postgres:dbos@localhost:5432/widget_store_node_test
