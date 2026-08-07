@@ -1,0 +1,53 @@
+name: CI for Rust dbos-rust-starter
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'rust/dbos-rust-starter/**'
+      - '.github/workflows/rust-dbos-rust-starter.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'rust/dbos-rust-starter/**'
+      - '.github/workflows/rust-dbos-rust-starter.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: dbos
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Create database
+        run: PGPASSWORD=dbos psql -h localhost -U postgres -c "CREATE DATABASE dbos_rust_starter_test"
+
+      - name: Build and test
+        working-directory: rust/dbos-rust-starter/
+        run: |
+          cargo build --locked
+          cargo test --locked
+        env:
+          PGPASSWORD: dbos
+          DBOS_SYSTEM_DATABASE_URL: postgres://postgres:dbos@localhost:5432/dbos_rust_starter_test?sslmode=disable

@@ -1,0 +1,13 @@
+[package]
+name = "dbos-toolbox"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+# recover_on_launch needs 0.3.2.
+durare = { version = "0.3.2", features = ["admin"] }
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+chrono = "0.4"

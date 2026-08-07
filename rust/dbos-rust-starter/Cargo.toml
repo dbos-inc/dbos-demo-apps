@@ -1,0 +1,19 @@
+[package]
+name = "dbos-rust-starter"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "A DBOS starter app on the durare durable-execution SDK for Rust."
+
+[dependencies]
+# The durable-execution SDK, from crates.io. `admin` enables the DBOS admin
+# HTTP server, `conductor` the DBOS console link (inert unless
+# DBOS_CONDUCTOR_KEY is set); the Postgres backend is on by default.
+durare = { version = "0.3", features = ["admin", "conductor"] }
+
+axum = "0.7"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4"] }
