@@ -69,8 +69,12 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # The conftest.py session fixture builds all four apps, migrates the
-      # system database, launches the runtimes, health-checks them, and tears
-      # them down afterward.
+      # The conftest.py session fixtures build all four apps, migrate the shared
+      # system database with both the Python and TypeScript CLIs, launch the
+      # runtimes, health-check them, and tear them down afterward.
+      #   test_interops.py     — all 12 cross-language enqueue pairs
+      #   test_shared_sysdb.py — the semantics of sharing one system database:
+      #                          parent/child links across applications, and
+      #                          migrations that compose in either order
       - name: Run interop tests
-        run: uv run pytest -s test_interops.py
+        run: uv run pytest -s test_interops.py test_shared_sysdb.py
