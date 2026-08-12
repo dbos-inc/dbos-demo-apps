@@ -7,8 +7,10 @@ dependencies = [
     "pytest",
     "requests",
     "psycopg[binary]",
-    # interop-python app (published SDK, mirrors apps/interop-python/requirements.txt)
-    "dbos>=2.14",
+    # interop-python app (published SDK, mirrors apps/interop-python/requirements.txt).
+    # 2.30 is the first release in which applications sharing a system database own
+    # their workflows, queues and versions by name.
+    "dbos>=2.30.0a6",
     "fastapi[standard]",
     "uvicorn[standard]",
 ]

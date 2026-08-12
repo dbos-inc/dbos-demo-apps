@@ -36,6 +36,18 @@ var queueNames = map[string]string{
 	"java":       "interop-queue-java",
 }
 
+// All four runtimes share one system database, so each is a distinct DBOS
+// application. Application version names are unique across every application
+// sharing a system database, so each runtime carries its own rather than a
+// common "interop-v1", and an enqueue targets the version of the runtime that
+// will run the workflow.
+var appVersions = map[string]string{
+	"python":     "interop-python-v1",
+	"typescript": "interop-typescript-v1",
+	"go":         "interop-go-v1",
+	"java":       "interop-java-v1",
+}
+
 // ---------------------------------------------------------------------------
 // EchoInput — typed struct received by echoWorkflow (positionalArgs[0]).
 // ---------------------------------------------------------------------------
@@ -122,7 +134,7 @@ func enqueueHandler(w http.ResponseWriter, r *http.Request) {
 		args,
 		dbos.WithEnqueueClassName("interop"),
 		dbos.WithEnqueueConfigName("default"),
-		dbos.WithEnqueueApplicationVersion("interop-v1"),
+		dbos.WithEnqueueApplicationVersion(appVersions[target]),
 	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -162,7 +174,7 @@ func main() {
 	dbosCtx, err = dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL:        sysDBURL,
 		AppName:            "interop-go",
-		ApplicationVersion: "interop-v1",
+		ApplicationVersion: appVersions["go"],
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create DBOS context: %v\n", err)

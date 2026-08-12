@@ -58,6 +58,18 @@ public class App {
           "go", "interop-queue-go",
           "java", "interop-queue-java");
 
+  // All four runtimes share one system database, so each is a distinct DBOS
+  // application. Application version names are unique across every application
+  // sharing a system database, so each runtime carries its own rather than a
+  // common "interop-v1", and an enqueue targets the version of the runtime that
+  // will run the workflow.
+  private static final Map<String, String> APP_VERSIONS =
+      Map.of(
+          "python", "interop-python-v1",
+          "typescript", "interop-typescript-v1",
+          "go", "interop-go-v1",
+          "java", "interop-java-v1");
+
   public static void main(String[] args) {
     String jdbcUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
     if (jdbcUrl == null || jdbcUrl.isBlank()) {
@@ -69,7 +81,7 @@ public class App {
             .withDatabaseUrl(jdbcUrl)
             .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
             .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-            .withAppVersion("interop-v1")
+            .withAppVersion(APP_VERSIONS.get("java"))
             // Only serve our own queue: database-backed queues (e.g. the Go
             // app's) are visible to every worker on the shared system database.
             .withListenQueue("interop-queue-java");
@@ -124,7 +136,7 @@ public class App {
                               .withInstanceName("default")
                               .withSerialization(SerializationStrategy.PORTABLE)
                               .withTimeout(Duration.ofSeconds(30))
-                              .withAppVersion("interop-v1");
+                              .withAppVersion(APP_VERSIONS.get(target));
 
                       var handle =
                           client.enqueuePortableWorkflow(
