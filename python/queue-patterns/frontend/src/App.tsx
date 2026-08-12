@@ -56,7 +56,7 @@ const OTHER_COLOR = '#94a3b8';
 const DEBOUNCE_TENANTS = ['alice', 'bob', 'clark'];
 // Jobs a tenant might repeatedly trigger: debouncing runs the job once after the
 // triggers stop, with only the last argument submitted.
-const DEBOUNCE_INPUTS = ['reindex', 'rebuild-cache', 'export-csv', 'send-digest'];
+const DEBOUNCE_INPUTS = ['input_1', 'input_2', 'input_3', 'input_4'];
 
 function formatTime(epochMs: number): string {
   const date = new Date(epochMs);
