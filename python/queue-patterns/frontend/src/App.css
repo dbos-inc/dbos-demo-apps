@@ -154,6 +154,83 @@
   color: var(--text-secondary);
 }
 
+/* Fair-queue submit controls: tenant dropdown + count selector on one row */
+.submit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.submit-row .form-group {
+  margin-bottom: 0;
+}
+
+.tenant-group {
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Wrap rather than crush: when a "custom…" text box appears next to a select in
+   a narrow card, the two stack instead of shrinking to unusable widths. */
+.tenant-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.form-select {
+  flex: 1;
+  min-width: 120px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+}
+
+.form-select option {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.custom-tenant-input {
+  flex: 1;
+  min-width: 120px;
+}
+
+.enqueue-group {
+  flex: 0 0 auto;
+}
+
+/* Small solid button that sits inline beside the tenant dropdown */
+.btn-enqueue {
+  width: auto;
+  white-space: nowrap;
+  background: var(--primary);
+  color: white;
+}
+
+.btn-enqueue:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-enqueue:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Prominent full-width button for the randomized batch */
+.btn-mix {
+  margin-top: 0.25rem;
+  padding: 0.9rem 1.5rem;
+  font-size: 1.05rem;
+}
+
 /* Button Styles */
 .btn {
   display: inline-flex;
@@ -464,4 +541,209 @@
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+/* ---- Fair Queue Pipeline ---- */
+.pipeline {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.pipeline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  max-width: 200px;
+}
+.legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.legend-chip > :last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pipeline-flow {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.pipe-section {
+  flex: 1 1 0;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+}
+.pipe-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.pipe-sublabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 3px 0 10px;
+}
+.pipe-arrow {
+  align-self: center;
+  color: var(--text-secondary);
+  font-size: 18px;
+  opacity: 0.5;
+  padding: 0 2px;
+  margin-top: 34px;
+  flex-shrink: 0;
+}
+
+.count-box {
+  flex: 1;
+  min-height: 200px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.count-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.count-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.count-tenant {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.count-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pill-stack {
+  flex: 1;
+  min-height: 200px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.pill {
+  height: 34px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  transition: filter 0.1s ease;
+  cursor: default;
+}
+.pill:hover {
+  filter: brightness(1.2);
+}
+.pipe-empty {
+  margin: auto;
+  color: var(--text-secondary);
+  opacity: 0.45;
+  font-size: 18px;
+}
+
+@media (max-width: 720px) {
+  .pipeline-flow {
+    flex-direction: column;
+  }
+  .pipe-arrow {
+    margin-top: 0;
+    transform: rotate(90deg);
+  }
+}
+
+/* Debouncer pipeline: color-coded per-tenant rows of tenant + input */
+.debounce-list {
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.debounce-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 24px;
+  flex-shrink: 0;
+}
+
+.debounce-tenant {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.debounce-input {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.debounce-time {
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.debounce-countdown {
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.debounce-completed {
+  margin-top: 1rem;
+}
+
+.debounce-completed-list {
+  min-height: 0;
+  max-height: 240px;
 }
