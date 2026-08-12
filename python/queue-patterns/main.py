@@ -38,11 +38,11 @@ def submit_fair_queue_random_mix():
     # Enqueue a batch of workflows spread across tenants, but skewed toward one
     # randomly chosen tenant, in randomized order. This shows fair queueing in
     # action: even the over-represented tenant only ever runs one at a time.
-    total = 50
+    total = 100
     favored = random.choice(FAIR_QUEUE_TENANTS[0:4])  
     # The favored tenant is weighted to roughly half the batch; the rest split
     # the remainder. random.choices already yields the picks in random order.
-    weights = [4 if t == favored else 1 for t in FAIR_QUEUE_TENANTS[0:4]]
+    weights = [3 if t == favored else 1 for t in FAIR_QUEUE_TENANTS[0:4]]
     picks = random.choices(FAIR_QUEUE_TENANTS[0:4], weights=weights, k=total)
     for tenant in picks:
         with SetEnqueueOptions(queue_partition_key=tenant):

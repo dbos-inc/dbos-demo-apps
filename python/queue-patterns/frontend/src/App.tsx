@@ -292,13 +292,13 @@ function App() {
           </div>
           <div className="pipe-arrow" aria-hidden="true">→</div>
           <div className="pipe-section">
-            <div className="pipe-label">Running</div>
+            <div className="pipe-label">Pending</div>
             <div className="pipe-sublabel">concurrency queue</div>
             <div className="pill-stack">{pillStack(pendConc)}</div>
           </div>
           <div className="pipe-arrow" aria-hidden="true">→</div>
           <div className="pipe-section">
-            <div className="pipe-label">Succeeded</div>
+            <div className="pipe-label">Success</div>
             <div className="pipe-sublabel">last 30 min</div>
             <div className="count-box">{countBox(success)}</div>
           </div>
@@ -349,8 +349,8 @@ function App() {
             {activeTab === 'fair-queue' && (
               <form onSubmit={handleFairQueueSubmit}>
                 <p className="form-hint">
-                  This queue is configured to run at most 2 workflows per tenant, and up to 4 workflows total per process.
-                  It prevents busy tenants from monopolizing capacity, allowing minority tenants to get service even when there is a backlog. 
+                  This queue runs up to 2 workflows per tenant, up to 4 workflows per process, and allocates capacity fairly across tenants.
+                  For example, press "Enqueue a randomized mix" to saturate the queue. Then, add a workflow for "ed" and observe it run in a few seconds.
                 </p>
                 <button
                   type="button"
@@ -363,7 +363,7 @@ function App() {
                 <div className="submit-row" style={{ marginTop: '1rem' }}>
                   <div className="form-group tenant-group">
                     <label htmlFor="tenantSelect" className="form-label">
-                      Enqueue a task for one tenant
+                      Enqueue a single task
                     </label>
                     <div className="tenant-controls">
                       <select
@@ -408,7 +408,7 @@ function App() {
             {activeTab === 'rate-limited' && (
               <div>
                 <p className="form-hint">
-                  Rate limiting ensures no more than 2 workflows start per 10 seconds.
+                  This queue starts no more than 2 workflows per 10 seconds.
                 </p>
                 <button
                   type="button"
