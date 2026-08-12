@@ -566,6 +566,11 @@ function App() {
             )}
             {activeTab === 'debouncer' && (
               <form onSubmit={handleDebouncerSubmit}>
+                <p className="form-hint">
+                  This debouncer waits 10 seconds after the last input before enqueuing the workflow.
+                  Consecutive triggers for the same tenant replace earlier pending instances.
+                  This pattern is used for cases like delaying processing until a user stops typing.
+                </p>
                 <div className="submit-row">
                   <div className="form-group tenant-group">
                     <label htmlFor="debouncerTenantId" className="form-label">
@@ -628,11 +633,6 @@ function App() {
                     </div>
                   </div>
                 </div>
-                <p className="form-hint">
-                  This debouncer waits 10 seconds after the last input before enqueuing the workflow. 
-                  Consecutive triggers for the same tenant replace earlier pending instances. 
-                  This pattern is used for cases like delaying processing until a user stops typing.
-                </p>
                 <div className="submit-row">
                   <button
                     type="submit"
