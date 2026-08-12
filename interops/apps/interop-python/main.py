@@ -18,7 +18,7 @@ GET  /healthz           — liveness probe.
 
 import os
 from datetime import date as _date
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
@@ -192,6 +192,49 @@ def interop(target: str, payload: Dict[str, Any] = Body(...)):
     return _drive(target, payload)
 
 
+@app.post("/enqueue-async/{target}")
+def enqueue_async(
+    target: str, owner: Optional[str] = None, payload: Dict[str, Any] = Body(...)
+):
+    """Enqueue onto {target}'s queue without waiting for the result.
+
+    `owner` defaults to {target}, so the application that polls the queue is also
+    the one that owns the workflow. Naming a different application hands the
+    workflow to one that isn't polling this queue — nobody runs it, which is what
+    makes ownership visible as its own gate on dequeue.
+    """
+    if target not in QUEUE_NAMES:
+        raise HTTPException(status_code=400, detail=f"unknown target: {target!r}")
+    if owner is not None and owner not in APP_NAMES:
+        raise HTTPException(status_code=400, detail=f"unknown owner: {owner!r}")
+
+    options: EnqueueOptions = {
+        "queue_name":         QUEUE_NAMES[target],
+        "workflow_name":      "echoWorkflow",
+        "class_name":         "interop",
+        "instance_name":      "default",
+        "serialization_type": WorkflowSerializationFormat.PORTABLE,
+        "application_name":   APP_NAMES[owner or target],
+        # Always the version of the runtime that polls this queue, so ownership
+        # is the only thing that can keep it from being dequeued.
+        "app_version":        APP_VERSIONS[target],
+    }
+    handle = DBOS.enqueue_workflow_with_options(
+        options, *payload.get("positionalArgs", []), **payload.get("namedArgs", {})
+    )
+    child_id = handle.get_workflow_id()
+
+    # Send the date message echoWorkflow waits on, so a workflow that does get
+    # dequeued runs to completion rather than timing out in recv.
+    DBOS.send(
+        child_id,
+        _date(2025, 3, 15),
+        "date-msg",
+        serialization_type=WorkflowSerializationFormat.PORTABLE,
+    )
+    return {"childId": child_id}
+
+
 @app.get("/workflow/{workflow_id}")
 def workflow_status(workflow_id: str):
     status = DBOS.get_workflow_status(workflow_id)
@@ -205,7 +248,28 @@ def workflow_status(workflow_id: str):
         "applicationName":    status.application_name,
         "applicationVersion": status.app_version,
         "parentWorkflowId":   status.parent_workflow_id,
+        # The process that ran the workflow — different from the caller's when
+        # another application dequeued it.
+        "executorId":         status.executor_id,
     }
+
+
+@app.get("/workflows")
+def list_workflows(application_name: Optional[str] = None):
+    """Workflows visible to this application.
+
+    With no `application_name` this lists only workflows *this* application owns:
+    listings on a shared system database are scoped to the caller by default.
+    """
+    kwargs = {} if application_name is None else {"application_name": application_name}
+    return [
+        {
+            "workflowId":      status.workflow_id,
+            "name":            status.name,
+            "applicationName": status.application_name,
+        }
+        for status in DBOS.list_workflows(load_input=False, load_output=False, **kwargs)
+    ]
 
 
 @app.get("/steps/{workflow_id}")

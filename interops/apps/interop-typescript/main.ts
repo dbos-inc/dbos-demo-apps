@@ -198,7 +198,88 @@ expressApp.get('/workflow/:id', async (req, res) => {
       applicationName:    status.applicationName ?? null,
       applicationVersion: status.applicationVersion ?? null,
       parentWorkflowId:   status.parentWorkflowID ?? null,
+      // The process that ran the workflow — different from the caller's when
+      // another application dequeued it.
+      executorId:         status.executorId ?? null,
     });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+/**
+ * Workflows visible to this application.
+ *
+ * With no `application_name` this lists only workflows *this* application owns:
+ * listings on a shared system database are scoped to the caller by default.
+ */
+expressApp.get('/workflows', async (req, res) => {
+  try {
+    const applicationName = req.query.application_name;
+    const rows = await DBOS.listWorkflows({
+      ...(applicationName ? { applicationName: String(applicationName) } : {}),
+      loadInput: false,
+      loadOutput: false,
+    });
+    res.json(
+      rows.map((status) => ({
+        workflowId:      status.workflowID,
+        name:            status.workflowName,
+        applicationName: status.applicationName ?? null,
+      })),
+    );
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+/**
+ * Enqueue onto {target}'s queue without waiting for the result.
+ *
+ * `owner` defaults to {target}, so the application that polls the queue is also
+ * the one that owns the workflow. Naming a different application hands the
+ * workflow to one that isn't polling this queue — nobody runs it, which is what
+ * makes ownership visible as its own gate on dequeue.
+ */
+expressApp.post('/enqueue-async/:target', async (req, res) => {
+  const { target } = req.params;
+  const owner = req.query.owner ? String(req.query.owner) : target;
+  if (!QUEUE_NAMES[target]) {
+    res.status(400).json({ error: `unknown target: ${target}` });
+    return;
+  }
+  if (!APP_NAMES[owner]) {
+    res.status(400).json({ error: `unknown owner: ${owner}` });
+    return;
+  }
+
+  const { positionalArgs, namedArgs } = req.body as {
+    positionalArgs: unknown[];
+    namedArgs?: Record<string, unknown>;
+  };
+
+  try {
+    const handle = await DBOS.enqueueWorkflowWithOptionsPortable<EchoResult>(
+      {
+        queueName:          QUEUE_NAMES[target],
+        workflowName:       'echoWorkflow',
+        workflowClassName:  'interop',
+        workflowConfigName: 'default',
+        applicationName:    APP_NAMES[owner],
+        // Always the version of the runtime that polls this queue, so ownership
+        // is the only thing that can keep it from being dequeued.
+        appVersion:         APP_VERSIONS[target],
+      },
+      positionalArgs ?? [],
+      namedArgs ?? {},
+    );
+
+    // Send the date message echoWorkflow waits on, so a workflow that does get
+    // dequeued runs to completion rather than timing out in recv.
+    await DBOS.send(handle.workflowID, new Date('2025-03-15T00:00:00.000Z'), 'date-msg', undefined, {
+      serializationType: 'portable',
+    });
+    res.json({ childId: handle.workflowID });
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }

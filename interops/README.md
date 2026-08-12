@@ -68,11 +68,22 @@ Python and TypeScript expose a little more of this:
 | --- | --- |
 | `POST /enqueue/{target}` | Enqueue `{target}`'s `echoWorkflow`; return its result. |
 | `POST /interop/{target}` | The same call, returning `{result, parentId, childId}`. |
+| `POST /enqueue-async/{target}?owner=` | Enqueue without waiting, optionally handing ownership to an application that isn't polling that queue. |
 | `GET /workflow/{id}` | Any workflow's status, with its owning application and parent. |
 | `GET /steps/{id}` | A workflow's recorded steps, with child workflow IDs. |
+| `GET /workflows?application_name=` | Workflows this application owns, or a named peer's. |
 
 Workflow IDs are unique across the whole system database, so `GET /workflow/{id}`
-answers for workflows either application owns.
+answers for workflows either application owns. Listings, by contrast, are scoped to
+the calling application unless they name a peer.
+
+An ownership-aware runtime stamps its own name and version onto a workflow row as it
+claims it, so for Python and TypeScript a completed workflow's `applicationName`
+names whoever actually ran it rather than echoing what the enqueuer asked for. The
+Go and Java SDKs pinned here predate ownership: they neither claim the workflows
+they dequeue nor stamp the steps they run, so those rows keep whatever the enqueuer
+set — `NULL` when the enqueuer was Go or Java. That's the "unowned rows" case, and
+it's why every app still restricts itself to its own queue.
 
 ## Run it
 
@@ -143,7 +154,9 @@ uv run pytest -s test_interops.py test_shared_sysdb.py
 
 - `test_interops.py` — all 12 cross-language enqueue pairs.
 - `test_shared_sysdb.py` — that parent/child relationships survive the application
-  boundary, that both applications see the same workflow by ID, and that Python and
+  boundary; that all four applications really do live in one database; that an
+  application will not run a workflow it does not own, even when it is polling that
+  queue at that version; that listings are scoped to the caller; and that Python and
   TypeScript migrate a shared system database to the same schema in either order.
 
 The `interop_builds` and `interop_apps` fixtures in `conftest.py` build all four apps,
