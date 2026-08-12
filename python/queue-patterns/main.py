@@ -210,8 +210,8 @@ if __name__ == "__main__":
     }
     DBOS(config=config)
     DBOS.launch()
-    DBOS.register_queue("concurrency-queue", worker_concurrency=4, polling_interval_sec=0.25)
-    DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=2, polling_interval_sec=0.25)
+    DBOS.register_queue("concurrency-queue", worker_concurrency=4)
+    DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=2)
     DBOS.register_queue("rate-limited-queue", limiter={"limit": 2, "period": 10})
     DBOS.register_queue("debouncer-queue")
     uvicorn.run(app, host="0.0.0.0", port=8000)

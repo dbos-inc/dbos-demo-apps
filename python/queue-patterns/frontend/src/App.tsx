@@ -363,7 +363,7 @@ function App() {
                 <div className="submit-row" style={{ marginTop: '1rem' }}>
                   <div className="form-group tenant-group">
                     <label htmlFor="tenantSelect" className="form-label">
-                      Enqueue a single task
+                      Add a single task
                     </label>
                     <div className="tenant-controls">
                       <select
@@ -399,7 +399,7 @@ function App() {
                       className="btn btn-enqueue"
                       disabled={isSubmitting || (tenantSelect === 'custom' && !customTenant.trim())}
                     >
-                      {isSubmitting ? 'Enqueuing…' : 'Enqueue'}
+                      {'Enqueue'}
                     </button>
                   </div>
                 </div>
