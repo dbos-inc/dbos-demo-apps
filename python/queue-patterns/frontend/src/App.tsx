@@ -342,16 +342,28 @@ function App() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              Submit Workflow
+              Enqueue Workflows
             </h2>
           </div>
           <div className="card-body">
             {activeTab === 'fair-queue' && (
               <form onSubmit={handleFairQueueSubmit}>
-                <div className="submit-row">
+                <p className="form-hint">
+                  This queue is configured to run at most 2 workflows per tenant, and up to 4 workflows total per process.
+                  It prevents busy tenants from monopolizing capacity, allowing minority tenants to get service even when there is a backlog. 
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-mix"
+                  onClick={handleRandomMix}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Enqueuing…' : 'Enqueue a randomized mix'}
+                </button>
+                <div className="submit-row" style={{ marginTop: '1rem' }}>
                   <div className="form-group tenant-group">
                     <label htmlFor="tenantSelect" className="form-label">
-                      Tenant
+                      Enqueue a task for one tenant
                     </label>
                     <div className="tenant-controls">
                       <select
@@ -391,18 +403,6 @@ function App() {
                     </button>
                   </div>
                 </div>
-                <p className="form-hint">
-                  This Fair Queue is configured to run at most 2 workflows per tenant, and up to 4 workflows total per process.
-                  It prevents busy tenants from monopolizing capacity, allowing minority tenants to get service even when there is a backlog. 
-                </p>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-mix"
-                  onClick={handleRandomMix}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Enqueuing…' : 'Enqueue a randomized mix'}
-                </button>
               </form>
             )}
             {activeTab === 'rate-limited' && (
