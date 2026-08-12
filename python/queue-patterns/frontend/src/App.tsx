@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 
 type TabType = 'fair-queue' | 'rate-limited' | 'debouncer';
@@ -12,6 +12,30 @@ interface Workflow {
   input: string | null;
 }
 
+interface TenantCount {
+  tenant_id: string;
+  count: number;
+}
+
+interface PendingWorkflow {
+  workflow_id: string;
+  tenant_id: string;
+}
+
+interface Pipeline {
+  enqueued: TenantCount[];
+  pending_concurrency: PendingWorkflow[];
+  success: TenantCount[];
+}
+
+// Categorical palette validated for the app's dark surface. Tenants are assigned a
+// color the first time they're seen and never reshuffled; a 9th+ tenant folds to "Other".
+const TENANT_PALETTE = [
+  '#3987e5', '#d95926', '#199e70', '#c98500',
+  '#d55181', '#008300', '#9085e9', '#e66767',
+];
+const OTHER_COLOR = '#94a3b8';
+
 function formatTime(epochMs: number): string {
   const date = new Date(epochMs);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -24,10 +48,13 @@ interface Toast {
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('fair-queue');
-  const [tenantId, setTenantId] = useState('');
+  const [tenantSelect, setTenantSelect] = useState('alice');
+  const [customTenant, setCustomTenant] = useState('');
   const [debouncerTenantId, setDebouncerTenantId] = useState('');
   const [debouncerInput, setDebouncerInput] = useState('');
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [pipeline, setPipeline] = useState<Pipeline | null>(null);
+  const tenantOrderRef = useRef<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
 
@@ -49,11 +76,37 @@ function App() {
     }
   }, [workflowName]);
 
+  // Assign each tenant a stable color the first time it appears (never reshuffled).
+  const colorForTenant = (tenant: string): string => {
+    const i = tenantOrderRef.current.indexOf(tenant);
+    return i >= 0 && i < TENANT_PALETTE.length ? TENANT_PALETTE[i] : OTHER_COLOR;
+  };
+
+  const fetchPipeline = useCallback(async () => {
+    try {
+      const response = await fetch('/api/fair_queue/pipeline');
+      if (!response.ok) return;
+      const data: Pipeline = await response.json();
+      const seen = [
+        ...data.enqueued,
+        ...data.success,
+        ...data.pending_concurrency,
+      ].map((x) => x.tenant_id);
+      const known = tenantOrderRef.current;
+      const fresh = [...new Set(seen)].filter((t) => !known.includes(t)).sort();
+      if (fresh.length) tenantOrderRef.current = [...known, ...fresh];
+      setPipeline(data);
+    } catch (error) {
+      console.error('Failed to fetch pipeline:', error);
+    }
+  }, []);
+
   useEffect(() => {
-    fetchWorkflows();
-    const interval = setInterval(fetchWorkflows, 2000);
+    const load = activeTab === 'fair-queue' ? fetchPipeline : fetchWorkflows;
+    load();
+    const interval = setInterval(load, 2000);
     return () => clearInterval(interval);
-  }, [fetchWorkflows]);
+  }, [activeTab, fetchPipeline, fetchWorkflows]);
 
   useEffect(() => {
     if (toast) {
@@ -64,20 +117,43 @@ function App() {
 
   const handleFairQueueSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tenantId.trim()) return;
+    const tenant = tenantSelect === 'custom' ? customTenant.trim() : tenantSelect;
+    if (!tenant) return;
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/workflows/fair_queue?tenant_id=${encodeURIComponent(tenantId)}`, {
-        method: 'POST',
-      });
+      const response = await fetch(
+        `/api/workflows/fair_queue?tenant_id=${encodeURIComponent(tenant)}`,
+        { method: 'POST' },
+      );
 
       if (response.ok) {
-        setToast({ message: `Workflow queued for tenant "${tenantId}"`, type: 'success' });
-        setTenantId('');
-        fetchWorkflows();
+        setToast({ message: `Enqueued workflow for "${tenant}"`, type: 'success' });
+        fetchPipeline();
       } else {
-        setToast({ message: 'Failed to submit workflow', type: 'error' });
+        setToast({ message: 'Failed to enqueue workflow', type: 'error' });
+      }
+    } catch (error) {
+      setToast({ message: 'Network error', type: 'error' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRandomMix = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/workflows/fair_queue/random_mix', { method: 'POST' });
+
+      if (response.ok) {
+        const data = await response.json();
+        setToast({
+          message: `Enqueued ${data.total} workflows, skewed toward "${data.favored}"`,
+          type: 'success',
+        });
+        fetchPipeline();
+      } else {
+        setToast({ message: 'Failed to enqueue mix', type: 'error' });
       }
     } catch (error) {
       setToast({ message: 'Network error', type: 'error' });
@@ -154,6 +230,83 @@ function App() {
   const showTenantBadge = activeTab === 'fair-queue' || activeTab === 'debouncer';
   const showInputBadge = activeTab === 'debouncer';
 
+  const renderPipeline = () => {
+    const p = pipeline ?? { enqueued: [], pending_concurrency: [], success: [] };
+    const order = tenantOrderRef.current;
+    const byOrder = (a: string, b: string) => order.indexOf(a) - order.indexOf(b);
+
+    const tenantsInView = [...new Set([
+      ...p.enqueued.map((x) => x.tenant_id),
+      ...p.pending_concurrency.map((x) => x.tenant_id),
+      ...p.success.map((x) => x.tenant_id),
+    ])].sort(byOrder);
+
+    const enqueued = [...p.enqueued].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
+    const success = [...p.success].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
+    const pendConc = [...p.pending_concurrency].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
+
+    const countBox = (rows: TenantCount[]) =>
+      rows.length === 0 ? (
+        <div className="pipe-empty">—</div>
+      ) : (
+        rows.map((r) => (
+          <div className="count-row" key={r.tenant_id}>
+            <span className="count-dot" style={{ background: colorForTenant(r.tenant_id) }} />
+            <span className="count-tenant" title={r.tenant_id}>{r.tenant_id}</span>
+            <span className="count-num">{r.count}</span>
+          </div>
+        ))
+      );
+
+    const pillStack = (items: PendingWorkflow[]) =>
+      items.length === 0 ? (
+        <div className="pipe-empty">—</div>
+      ) : (
+        items.map((w) => (
+          <div
+            key={w.workflow_id}
+            className="pill"
+            style={{ background: colorForTenant(w.tenant_id) }}
+            title={`${w.tenant_id} · ${w.workflow_id}`}
+          />
+        ))
+      );
+
+    return (
+      <div className="pipeline">
+        {tenantsInView.length > 0 && (
+          <div className="pipeline-legend">
+            {tenantsInView.map((t) => (
+              <span className="legend-chip" key={t}>
+                <span className="legend-dot" style={{ background: colorForTenant(t) }} />
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="pipeline-flow">
+          <div className="pipe-section">
+            <div className="pipe-label">Enqueued</div>
+            <div className="pipe-sublabel">partition queue</div>
+            <div className="count-box">{countBox(enqueued)}</div>
+          </div>
+          <div className="pipe-arrow" aria-hidden="true">→</div>
+          <div className="pipe-section">
+            <div className="pipe-label">Running</div>
+            <div className="pipe-sublabel">concurrency queue</div>
+            <div className="pill-stack">{pillStack(pendConc)}</div>
+          </div>
+          <div className="pipe-arrow" aria-hidden="true">→</div>
+          <div className="pipe-section">
+            <div className="pipe-label">Succeeded</div>
+            <div className="pipe-sublabel">last 30 min</div>
+            <div className="count-box">{countBox(success)}</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="app">
       <header className="header">
@@ -195,29 +348,60 @@ function App() {
           <div className="card-body">
             {activeTab === 'fair-queue' && (
               <form onSubmit={handleFairQueueSubmit}>
-                <div className="form-group">
-                  <label htmlFor="tenantId" className="form-label">
-                    Tenant ID
-                  </label>
-                  <input
-                    type="text"
-                    id="tenantId"
-                    className="form-input"
-                    placeholder="Enter tenant identifier..."
-                    value={tenantId}
-                    onChange={(e) => setTenantId(e.target.value)}
-                    disabled={isSubmitting}
-                  />
+                <div className="submit-row">
+                  <div className="form-group tenant-group">
+                    <label htmlFor="tenantSelect" className="form-label">
+                      Tenant
+                    </label>
+                    <div className="tenant-controls">
+                      <select
+                        id="tenantSelect"
+                        className="form-input form-select"
+                        value={tenantSelect}
+                        onChange={(e) => setTenantSelect(e.target.value)}
+                        disabled={isSubmitting}
+                      >
+                        <option value="alice">alice</option>
+                        <option value="bob">bob</option>
+                        <option value="clark">clark</option>
+                        <option value="dave">dave</option>
+                        <option value="ed">ed</option>
+                        <option value="custom">custom…</option>
+                      </select>
+                      {tenantSelect === 'custom' && (
+                        <input
+                          type="text"
+                          className="form-input custom-tenant-input"
+                          placeholder="Enter tenant identifier..."
+                          value={customTenant}
+                          onChange={(e) => setCustomTenant(e.target.value)}
+                          disabled={isSubmitting}
+                          autoFocus
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="form-group enqueue-group">
+                    <button
+                      type="submit"
+                      className="btn btn-enqueue"
+                      disabled={isSubmitting || (tenantSelect === 'custom' && !customTenant.trim())}
+                    >
+                      {isSubmitting ? 'Enqueuing…' : 'Enqueue'}
+                    </button>
+                  </div>
                 </div>
                 <p className="form-hint">
-                  Fair queueing ensures at most 5 workflows run concurrently, with max 1 per tenant.
+                  This Fair Queue is configured to run at most 2 workflows per tenant, and up to 4 workflows total per process.
+                  It prevents busy tenants from monopolizing capacity, allowing minority tenants to get service even when there is a backlog. 
                 </p>
                 <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={isSubmitting || !tenantId.trim()}
+                  type="button"
+                  className="btn btn-primary btn-mix"
+                  onClick={handleRandomMix}
+                  disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Submitting...' : 'Queue Workflow'}
+                  {isSubmitting ? 'Enqueuing…' : 'Enqueue a randomized mix'}
                 </button>
               </form>
             )}
@@ -287,7 +471,7 @@ function App() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-              Queued Workflows
+              {activeTab === 'fair-queue' ? 'Fair Queue Pipeline' : 'Queued Workflows'}
             </h2>
             <div className="refresh-indicator">
               <span className="refresh-dot"></span>
@@ -295,6 +479,8 @@ function App() {
             </div>
           </div>
           <div className="card-body">
+            {activeTab === 'fair-queue' ? renderPipeline() : (
+            <>
             <div className="stats">
               <div className="stat">
                 <div className="stat-value">{stats.enqueued}</div>
@@ -361,6 +547,8 @@ function App() {
                   ))}
                 </div>
               </div>
+            )}
+            </>
             )}
           </div>
         </div>

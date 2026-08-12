@@ -1,5 +1,7 @@
 import os
+import random
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
 
@@ -19,12 +21,34 @@ api = APIRouter(prefix="/api")
 #######################
 
 
+# The set of tenants the UI offers and the randomized batch draws from.
+FAIR_QUEUE_TENANTS = ["alice", "bob", "clark", "dave", "ed"]
+
+
 @api.post("/workflows/fair_queue")
 def submit_fair_queue(tenant_id: str):
-    # First, enqueue a "concurrency manager" workflow to the partitioned
+    # Enqueue a single "concurrency manager" workflow to the partitioned
     # queue to enforce per-partition limits.
     with SetEnqueueOptions(queue_partition_key=tenant_id):
         DBOS.enqueue_workflow("partitioned-queue", fair_queue_concurrency_manager)
+
+
+@api.post("/workflows/fair_queue/random_mix")
+def submit_fair_queue_random_mix():
+    # Enqueue a batch of workflows spread across tenants, but skewed toward one
+    # randomly chosen tenant, in randomized order. This shows fair queueing in
+    # action: even the over-represented tenant only ever runs one at a time.
+    total = 50
+    favored = random.choice(FAIR_QUEUE_TENANTS[0:4])  
+    # The favored tenant is weighted to roughly half the batch; the rest split
+    # the remainder. random.choices already yields the picks in random order.
+    weights = [4 if t == favored else 1 for t in FAIR_QUEUE_TENANTS[0:4]]
+    picks = random.choices(FAIR_QUEUE_TENANTS[0:4], weights=weights, k=total)
+    for tenant in picks:
+        with SetEnqueueOptions(queue_partition_key=tenant):
+            DBOS.enqueue_workflow("partitioned-queue", fair_queue_concurrency_manager)
+            time.sleep(0.01)
+    return {"total": total, "favored": favored}
 
 
 @DBOS.workflow()
@@ -121,6 +145,41 @@ def list_workflows(workflow_name: str) -> List[WorkflowStatus]:
     return statuses
 
 
+@api.get("/fair_queue/pipeline")
+def fair_queue_pipeline():
+    # The "concurrency manager" workflows run on the partitioned queue and carry the
+    # partition key (tenant_id) natively.
+    enqueued_mgrs = DBOS.list_workflows(name="fair_queue_concurrency_manager", status=["ENQUEUED", "PENDING"])
+    since = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
+    success_mgrs = DBOS.list_workflows(
+        name="fair_queue_concurrency_manager", status="SUCCESS", start_time=since
+    )
+
+    # The actual work runs on the concurrency queue. Those workflows have no partition
+    # key of their own, so we inherit it from the parent manager that enqueued them.
+    pending_work = DBOS.list_workflows(name="fair_queue_workflow", status="PENDING")
+    mgr_key = {m.workflow_id: m.queue_partition_key for m in enqueued_mgrs}
+
+    def counts_by_tenant(wfs):
+        counts: dict[str, int] = {}
+        for w in wfs:
+            tenant = w.queue_partition_key or "unknown"
+            counts[tenant] = counts.get(tenant, 0) + 1
+        return [{"tenant_id": t, "count": c} for t, c in counts.items()]
+
+    return {
+        "enqueued": counts_by_tenant(enqueued_mgrs),
+        "pending_concurrency": [
+            {
+                "workflow_id": w.workflow_id,
+                "tenant_id": mgr_key.get(w.parent_workflow_id, "unknown"),
+            }
+            for w in pending_work
+        ],
+        "success": counts_by_tenant(success_mgrs),
+    }
+
+
 #######################
 ## Configuration
 #######################
@@ -151,8 +210,8 @@ if __name__ == "__main__":
     }
     DBOS(config=config)
     DBOS.launch()
-    DBOS.register_queue("concurrency-queue", concurrency=5)
-    DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=1)
+    DBOS.register_queue("concurrency-queue", worker_concurrency=4, polling_interval_sec=0.25)
+    DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=2, polling_interval_sec=0.25)
     DBOS.register_queue("rate-limited-queue", limiter={"limit": 2, "period": 10})
     DBOS.register_queue("debouncer-queue")
     uvicorn.run(app, host="0.0.0.0", port=8000)
