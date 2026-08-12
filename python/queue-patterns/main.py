@@ -35,14 +35,9 @@ def submit_fair_queue(tenant_id: str):
 
 @api.post("/workflows/fair_queue/random_mix")
 def submit_fair_queue_random_mix():
-    # Enqueue a batch of workflows spread across tenants, but skewed toward one
-    # randomly chosen tenant, in randomized order. This shows fair queueing in
-    # action: even the over-represented tenant only ever runs one at a time.
-    total = 100
+    total = 50
     favored = random.choice(FAIR_QUEUE_TENANTS[0:4])  
-    # The favored tenant is weighted to roughly half the batch; the rest split
-    # the remainder. random.choices already yields the picks in random order.
-    weights = [3 if t == favored else 1 for t in FAIR_QUEUE_TENANTS[0:4]]
+    weights = [2 if t == favored else 1 for t in FAIR_QUEUE_TENANTS[0:4]]
     picks = random.choices(FAIR_QUEUE_TENANTS[0:4], weights=weights, k=total)
     for tenant in picks:
         with SetEnqueueOptions(queue_partition_key=tenant):
@@ -102,7 +97,7 @@ debouncer = Debouncer.create(debouncer_workflow, queue="debouncer-queue")
 @api.post("/workflows/debouncer")
 def submit_debounced_workflow(tenant_id: str, input: str):
     debounce_key = tenant_id
-    debounce_period_sec = 5
+    debounce_period_sec = 10
     debouncer.debounce(debounce_key, debounce_period_sec, tenant_id, input)
 
 
@@ -177,6 +172,47 @@ def fair_queue_pipeline():
             for w in pending_work
         ],
         "success": counts_by_tenant(success_mgrs),
+    }
+
+
+@api.get("/debouncer/pipeline")
+def debouncer_pipeline():
+    # A debounced workflow is DELAYED while its debounce window is still open,
+    # then ENQUEUED when it fires, PENDING while running, then SUCCESS. We
+    # surface the tenant and its (latest) input for each stage. Deduplication on
+    # the tenant key means there is at most one DELAYED workflow per tenant —
+    # i.e. the last input submitted wins.
+    delayed = DBOS.list_workflows(name="debouncer_workflow", status="DELAYED", sort_desc=True)
+    pending = DBOS.list_workflows(name="debouncer_workflow", status="PENDING", sort_desc=True)
+    since = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
+    completed = DBOS.list_workflows(
+        name="debouncer_workflow", status="SUCCESS", start_time=since, sort_desc=True
+    )
+
+    def to_items(wfs):
+        items = []
+        for w in wfs:
+            args = (w.input or {}).get("args", [])
+            items.append(
+                {
+                    "workflow_id": w.workflow_id,
+                    "tenant_id": args[0] if len(args) > 0 else "unknown",
+                    "input": args[1] if len(args) > 1 else "",
+                    "start_time": w.created_at,
+                    # For DELAYED workflows this is when the debounce window closes
+                    # and the workflow will run; null once it has left DELAYED.
+                    "delay_until": w.delay_until_epoch_ms,
+                    # When the workflow actually started running (it left the
+                    # debounce window), which is what the completed list sorts by.
+                    "ran_at": w.dequeued_at or w.created_at,
+                }
+            )
+        return items
+
+    return {
+        "delayed": to_items(delayed),
+        "pending": to_items(pending),
+        "completed": to_items(completed),
     }
 
 

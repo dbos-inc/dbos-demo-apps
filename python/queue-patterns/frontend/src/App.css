@@ -157,6 +157,7 @@
 /* Fair-queue submit controls: tenant dropdown + count selector on one row */
 .submit-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   align-items: flex-end;
   margin-bottom: 1rem;
@@ -168,17 +169,20 @@
 
 .tenant-group {
   flex: 1;
-  min-width: 0;
+  min-width: 150px;
 }
 
+/* Wrap rather than crush: when a "custom…" text box appears next to a select in
+   a narrow card, the two stack instead of shrinking to unusable widths. */
 .tenant-controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
 .form-select {
   flex: 1;
-  min-width: 0;
+  min-width: 120px;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
@@ -195,7 +199,7 @@
 
 .custom-tenant-input {
   flex: 1;
-  min-width: 0;
+  min-width: 120px;
 }
 
 .enqueue-group {
@@ -684,4 +688,62 @@
     margin-top: 0;
     transform: rotate(90deg);
   }
+}
+
+/* Debouncer pipeline: color-coded per-tenant rows of tenant + input */
+.debounce-list {
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.debounce-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 24px;
+  flex-shrink: 0;
+}
+
+.debounce-tenant {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.debounce-input {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.debounce-time {
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.debounce-countdown {
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.debounce-completed {
+  margin-top: 1rem;
+}
+
+.debounce-completed-list {
+  min-height: 0;
+  max-height: 240px;
 }
