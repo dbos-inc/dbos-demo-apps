@@ -1,0 +1,23 @@
+{
+  "name": "dbos-queue-patterns",
+  "version": "0.0.1",
+  "//": [
+    "DBOS Cloud runs the `build` and `start` scripts and prunes devDependencies before running `start`.",
+    "The `launch` script builds the frontend and the server, then runs the application locally."
+  ],
+  "scripts": {
+    "build": "npm --prefix frontend install && npm --prefix frontend run build && tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "prelaunch": "npm run build",
+    "launch": "npm run start"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@dbos-inc/dbos-sdk": "^4.25.14",
+    "express": "^5.1.0"
+  }
+}

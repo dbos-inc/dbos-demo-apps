@@ -152,6 +152,7 @@ fun main(args: Array<String>) {
       .withDbUser(dbUser)
       .withDbPassword(dbPassword)
       .withAppVersion("0.2.0")
+      .withConductorKey(System.getenv("DBOS_CONDUCTOR_KEY"))
 
   val dbos = DBOS(dbosConfig)
 
