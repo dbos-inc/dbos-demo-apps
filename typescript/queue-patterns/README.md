@@ -19,6 +19,7 @@ npx dbos postgres start
 3. Start the application.
 
 ```shell
+npm run build
 ./launch_app.sh
 ```
 

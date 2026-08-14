@@ -181,16 +181,11 @@ public class App {
   // The Java debouncer coalesces inside an internal "waiter" workflow: the first call
   // enqueues it on the SDK's internal queue holding "<workflowName>-<key>" as its
   // deduplication ID, and later calls send it the new input. The debounced workflow
-  // itself is not created until the window closes, so -- unlike the Python, TypeScript,
-  // and Go SDKs, where it sits in DELAYED with a delay_until column -- there is no
-  // workflow to list for this stage.
-  //
-  // The waiter is a durable, fully checkpointed workflow, so we reconstruct the stage
-  // from its recorded steps: each loop iteration records the wait it is sleeping through
-  // (DBOS.sleep, whose output is the wake time) and the input it received, if any
-  // (DBOS.recv). The last of each is the deadline being counted down to and the input
-  // that will actually run.
+  // itself is not created until the window closes. We use the waiter workflow to monitor
+  // workflows due to start.
   private static final String INTERNAL_QUEUE = "_dbos_internal_queue";
+  private static final String DEBOUNCE_WAITER_NAME = "debouncerWorkflow";
+  private static final String DEBOUNCE_WAITER_CLASS = "DBOS.InternalWorkflows";
   private static final String DEBOUNCE_KEY_PREFIX = "debouncer_workflow-";
 
   private static String messageArg(Object candidate, int index) {
@@ -204,9 +199,12 @@ public class App {
   }
 
   private static List<Map<String, Object>> delayedDebounces(DBOS dbos) {
+    // Search for the special "debouncer" workflow
     var waiters =
         dbos.listWorkflows(
             new ListWorkflowsInput()
+                .withWorkflowName(List.of(DEBOUNCE_WAITER_NAME))
+                .withClassName(DEBOUNCE_WAITER_CLASS)
                 .withQueueName(List.of(INTERNAL_QUEUE))
                 .withStatus(List.of(WorkflowState.PENDING))
                 .withLoadInput(true)
@@ -232,6 +230,7 @@ public class App {
         }
       }
 
+      //locate the last "sleep" step and use its deadline to determine when the debounce window closes
       Long deadline = null;
       for (var step : dbos.listWorkflowSteps(waiter.workflowId())) {
         if ("DBOS.sleep".equals(step.functionName()) && step.output() instanceof Long wakeAt) {
@@ -270,7 +269,6 @@ public class App {
   }
 
   public static void main(String[] args) {
-
     var dbUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
     if (dbUrl == null || dbUrl.isEmpty()) {
       dbUrl = "jdbc:postgresql://localhost:5432/dbos_queue_patterns_java";
@@ -283,6 +281,7 @@ public class App {
             .withDatabaseUrl(dbUrl)
             .withDbUser(dbUser)
             .withDbPassword(dbPassword)
+            .withConductorKey(System.getenv("DBOS_CONDUCTOR_KEY"))
             .withAppVersion("0.1.0");
 
     var dbos = new DBOS(dbosConfig);
