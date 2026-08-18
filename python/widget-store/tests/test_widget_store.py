@@ -25,14 +25,18 @@ def test_checkout_workflow(dbos):
         widget_store.update_order_status: mock_update_order_status,
     }
 
-    # Run each transaction against its mock instead of against the database
+    # Run each transaction against its mock instead of against the database.
+    # The app assigns `ds` at startup, so the test supplies its own datasource.
     def run_mocked_tx_step(ds_options, func, *args, **kwargs):
         return mocks[func](*args, **kwargs)
+
+    mock_ds = MagicMock()
+    mock_ds.run_tx_step.side_effect = run_mocked_tx_step
 
     # Also mock the payment message the workflow waits for and the
     # dispatch workflow it starts, then run the workflow.
     with (
-        patch.object(widget_store.ds, "run_tx_step", side_effect=run_mocked_tx_step),
+        patch.object(widget_store, "ds", mock_ds, create=True),
         patch.object(DBOS, "recv", return_value="paid") as mock_recv,
         patch.object(DBOS, "start_workflow") as mock_start_workflow,
     ):

@@ -1,5 +1,0 @@
-dbos[otel]==2.0.0
-streamlit>=1.41.1
-plotly>=6.0.0
-fastapi[standard]
-alembic

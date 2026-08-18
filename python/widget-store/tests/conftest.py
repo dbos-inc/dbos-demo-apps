@@ -1,20 +1,7 @@
 import os
 
 import pytest
-import sqlalchemy as sa
-from dbos import DBOS, DBOSConfig, SQLAlchemyDatasource
-from sqlalchemy.engine.url import make_url
-
-import widget_store.main as widget_store
-
-
-def create_database(test_database_url: str):
-    url = make_url(test_database_url)
-    postgres_db_url = url.set(database="postgres")
-    engine = sa.create_engine(postgres_db_url, isolation_level="AUTOCOMMIT")
-    with engine.connect() as conn:
-        conn.execute(sa.text(f"CREATE DATABASE {url.database}"))
-    engine.dispose()
+from dbos import DBOS, DBOSConfig
 
 
 @pytest.fixture()
@@ -35,6 +22,4 @@ def dbos(test_database_url):
     }
     DBOS(config=config)
     DBOS.reset_system_database()
-    create_database(test_database_url)
-    widget_store.ds = SQLAlchemyDatasource.create(test_database_url)
     DBOS.launch()
