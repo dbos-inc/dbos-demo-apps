@@ -21,5 +21,5 @@ def dbos(test_database_url):
         "application_version": "0.1.0",
     }
     DBOS(config=config)
-    DBOS.reset_system_database()
+    DBOS.reset_system_database(truncate=True)
     DBOS.launch()
