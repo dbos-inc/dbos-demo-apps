@@ -8,3 +8,12 @@ dependencies = [
     "dbos[otel]==2.30.0",
     "fastapi[standard]>=0.117.1",
 ]
+
+[tool.pytest.ini_options]
+addopts = "-s"
+log_cli_format = "%(asctime)s [%(levelname)8s] (%(name)s:%(filename)s:%(lineno)s) %(message)s"
+log_cli_level = "INFO"
+log_cli = true
+
+[dependency-groups]
+dev = ["pytest>=8.3.4"]

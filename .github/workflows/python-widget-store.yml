@@ -1,11 +1,11 @@
-name: CI for Earthquake Tracker
+name: CI for Python Widget Store
 
 on:
   push:
     branches: [ "main" ]
     paths:
-        - 'python/earthquake-tracker/**'
-        - '.github/workflows/earthquake_tracker.yml'
+        - 'python/widget-store/**'
+        - '.github/workflows/python-widget-store.yml'
   pull_request:
     types:
       - ready_for_review
@@ -13,8 +13,8 @@ on:
       - reopened
       - synchronize
     paths:
-      - 'python/earthquake-tracker/**'
-      - '.github/workflows/earthquake_tracker.yml'
+      - 'python/widget-store/**'
+      - '.github/workflows/python-widget-store.yml'
   workflow_dispatch:
 
 jobs:
@@ -51,10 +51,10 @@ jobs:
 
       - name: Install Dependencies
         run: uv sync
-        working-directory: python/earthquake-tracker
+        working-directory: python/widget-store
 
       - name: Run Unit Tests
         run: uv run pytest
-        working-directory: python/earthquake-tracker
+        working-directory: python/widget-store
         env:
-          DBOS_TEST_DATABASE_URL: postgresql+psycopg://postgres:dbos@localhost:5432/earthquake_tracker_test
+          DBOS_TEST_DATABASE_URL: postgresql+psycopg://postgres:dbos@localhost:5432/widget_store_test
