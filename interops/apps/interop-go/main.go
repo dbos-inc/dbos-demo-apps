@@ -4,18 +4,25 @@
 // (class=InteropService, instance="default").
 // The workflow receives a single typed EchoInput struct (positionalArgs[0]).
 //
-// POST /enqueue/{target}  — accepts {positionalArgs, namedArgs} body,
+// POST /enqueue/{target}       — accepts {positionalArgs, namedArgs} body,
 //
 //	unmarshals into PortableWorkflowArgs and enqueues
 //	echoWorkflow to interop-queue-{target}.
 //
-// GET  /healthz           — liveness probe.
+// POST /interop/{target}       — the same call, returning {result, parentId, childId} so
+//
+//	the caller can inspect the cross-application parent/child link.
+//
+// GET  /workflow/{id}          — status of any workflow in the shared system database.
+// GET  /steps/{id}             — the recorded steps of a workflow, with child workflow IDs.
+// GET  /healthz                — liveness probe.
 package main
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -37,10 +44,19 @@ var queueNames = map[string]string{
 }
 
 // All four runtimes share one system database, so each is a distinct DBOS
-// application. Application version names are unique across every application
-// sharing a system database, so each runtime carries its own rather than a
-// common "interop-v1", and an enqueue targets the version of the runtime that
-// will run the workflow.
+// application. An application's name decides what it owns — its workflows,
+// queues and versions — and it only runs its own work.
+var appNames = map[string]string{
+	"python":     "interop-python",
+	"typescript": "interop-typescript",
+	"go":         "interop-go",
+	"java":       "interop-java",
+}
+
+// Application version names are unique across every application sharing a
+// system database, so each runtime carries its own rather than a common
+// "interop-v1", and an enqueue targets the version of the runtime that will
+// run the workflow.
 var appVersions = map[string]string{
 	"python":     "interop-python-v1",
 	"typescript": "interop-typescript-v1",
@@ -102,6 +118,64 @@ func (s *InteropService) EchoWorkflow(ctx dbos.Context, input EchoInput) (map[st
 }
 
 // ---------------------------------------------------------------------------
+// Interop driver — a workflow that enqueues another application's echoWorkflow
+// through the runtime itself, so the enqueued workflow is recorded as a child
+// of this one even though a different application owns and runs it.
+// ---------------------------------------------------------------------------
+
+type driveInput struct {
+	Target string
+	Body   []byte
+}
+
+func interopDriver(ctx dbos.Context, in driveInput) (string, error) {
+	var args dbos.PortableWorkflowArgs
+	if err := json.Unmarshal(in.Body, &args); err != nil {
+		return "", fmt.Errorf("interopDriver: invalid body: %w", err)
+	}
+
+	handle, err := dbos.Enqueue[map[string]any](
+		ctx,
+		queueNames[in.Target],
+		"echoWorkflow",
+		args,
+		dbos.WithEnqueueClassName("interop"),
+		dbos.WithEnqueueConfigName("default"),
+		// Hand the workflow to the target application, which dequeues and runs
+		// it on the version it is deployed at.
+		dbos.WithEnqueueApplicationName(appNames[in.Target]),
+		dbos.WithEnqueueApplicationVersion(appVersions[in.Target]),
+	)
+	if err != nil {
+		return "", err
+	}
+	childID := handle.GetWorkflowID()
+
+	// Send the date message the child workflow is waiting on. Workflow IDs are
+	// unique across the whole system database, so this reaches the child no
+	// matter which application runs it.
+	msgDate := time.Date(2025, 3, 15, 0, 0, 0, 0, time.UTC)
+	if err := dbos.Send(ctx, childID, msgDate, "date-msg", dbos.WithPortableSend()); err != nil {
+		return "", err
+	}
+
+	result, err := handle.GetResult()
+	if err != nil {
+		return "", err
+	}
+	parentID, err := dbos.GetWorkflowID(ctx)
+	if err != nil {
+		return "", err
+	}
+	envelope, err := json.Marshal(map[string]any{
+		"result":   result,
+		"parentId": parentID,
+		"childId":  childID,
+	})
+	return string(envelope), err
+}
+
+// ---------------------------------------------------------------------------
 // HTTP handlers
 // ---------------------------------------------------------------------------
 
@@ -113,51 +187,107 @@ func healthzHandler(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprint(w, `{"status":"ok"}`)
 }
 
-func enqueueHandler(w http.ResponseWriter, r *http.Request) {
+// drive runs interopDriver for the request's target and returns the decoded
+// {result, parentId, childId} envelope, or false after writing an error.
+func drive(w http.ResponseWriter, r *http.Request) (map[string]any, bool) {
 	target := r.PathValue("target")
-	queueName, ok := queueNames[target]
-	if !ok {
+	if _, ok := queueNames[target]; !ok {
 		http.Error(w, fmt.Sprintf("unknown target: %s", target), http.StatusBadRequest)
-		return
+		return nil, false
 	}
-
-	var args dbos.PortableWorkflowArgs
-	if err := json.NewDecoder(r.Body).Decode(&args); err != nil {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
 		http.Error(w, fmt.Sprintf("invalid body: %v", err), http.StatusBadRequest)
-		return
+		return nil, false
 	}
+	handle, err := dbos.RunWorkflow(dbosCtx, interopDriver, driveInput{Target: target, Body: body})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil, false
+	}
+	out, err := handle.GetResult()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil, false
+	}
+	var envelope map[string]any
+	if err := json.Unmarshal([]byte(out), &envelope); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil, false
+	}
+	return envelope, true
+}
 
-	handle, err := dbos.Enqueue[map[string]any](
-		dbosClient,
-		queueName,
-		"echoWorkflow",
-		args,
-		dbos.WithEnqueueClassName("interop"),
-		dbos.WithEnqueueConfigName("default"),
-		dbos.WithEnqueueApplicationVersion(appVersions[target]),
-	)
+func enqueueHandler(w http.ResponseWriter, r *http.Request) {
+	if envelope, ok := drive(w, r); ok {
+		writeJSON(w, envelope["result"])
+	}
+}
+
+func interopHandler(w http.ResponseWriter, r *http.Request) {
+	if envelope, ok := drive(w, r); ok {
+		writeJSON(w, envelope)
+	}
+}
+
+func stepsHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	steps, err := dbos.GetWorkflowSteps(dbosClient, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// Send a date message to the enqueued workflow using portable serialisation.
-	msgDate := time.Date(2025, 3, 15, 0, 0, 0, 0, time.UTC)
-	if err := dbos.Send(dbosClient, handle.GetWorkflowID(), msgDate, "date-msg", dbos.WithPortableSend()); err != nil {
-		http.Error(w, fmt.Sprintf("send failed: %v", err), http.StatusInternalServerError)
-		return
+	out := make([]map[string]any, 0, len(steps))
+	for _, step := range steps {
+		out = append(out, map[string]any{
+			"functionId":      step.StepID,
+			"functionName":    step.StepName,
+			"childWorkflowId": nullable(step.ChildWorkflowID),
+		})
 	}
+	writeJSON(w, out)
+}
 
-	result, err := handle.GetResult()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+// nullable maps an empty string to JSON null: these payloads are compared field
+// for field against the Python and TypeScript apps' answers for the same workflow.
+func nullable(s string) any {
+	if s == "" {
+		return nil
 	}
+	return s
+}
 
+func writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(result); err != nil {
+	if err := json.NewEncoder(w).Encode(v); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func workflowHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	handle, err := dbos.RetrieveWorkflow[any](dbosClient, id)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("no such workflow: %s", id), http.StatusNotFound)
+		return
+	}
+	status, err := handle.GetStatus()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]any{
+		"workflowId":         status.ID,
+		"name":               status.Name,
+		"status":             string(status.Status),
+		"queueName":          nullable(status.QueueName),
+		"applicationName":    nullable(status.ApplicationName),
+		"applicationVersion": nullable(status.ApplicationVersion),
+		"parentWorkflowId":   nullable(status.ParentWorkflowID),
+		// The process that ran the workflow — different from the caller's when
+		// another application dequeued it.
+		"executorId": nullable(status.ExecutorID),
+	})
 }
 
 // ---------------------------------------------------------------------------
@@ -185,6 +315,8 @@ func main() {
 	dbos.RegisterWorkflow(dbosCtx, service.EchoWorkflow,
 		dbos.WithWorkflowName("echoWorkflow"),
 		dbos.WithInstance(service))
+	dbos.RegisterWorkflow(dbosCtx, interopDriver,
+		dbos.WithWorkflowName("interopDriver"))
 	if _, err = dbos.RegisterQueue(dbosCtx, "interop-queue-go"); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to register queue: %v\n", err)
 		os.Exit(1)
@@ -212,6 +344,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", healthzHandler)
 	mux.HandleFunc("POST /enqueue/{target}", enqueueHandler)
+	mux.HandleFunc("POST /interop/{target}", interopHandler)
+	mux.HandleFunc("GET /workflow/{id}", workflowHandler)
+	mux.HandleFunc("GET /steps/{id}", stepsHandler)
 
 	addr := fmt.Sprintf(":%d", port)
 	fmt.Printf("interop-go listening on %s\n", addr)
