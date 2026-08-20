@@ -2,7 +2,7 @@ module interop-go
 
 go 1.26.0
 
-require github.com/dbos-inc/dbos-transact-golang v1.1.1-0.20260820181732-4b5d696734a8
+require github.com/dbos-inc/dbos-transact-golang v1.1.1-0.20260820193351-fe1d839f0664
 
 require (
 	github.com/google/uuid v1.6.0 // indirect
