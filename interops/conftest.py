@@ -12,9 +12,11 @@ enqueue another's workflows and wait for their results.
 
 Each app is built against its *published* DBOS SDK (PyPI, the Go module proxy,
 Maven Central) as pinned in its own manifest — except TypeScript, which is
-built from tip-of-main (cloned, built, packed, and installed). The shared
-system-database schema is migrated by both the Python and the TypeScript CLI,
-and the TypeScript one ships inside the TypeScript SDK; building TS from source
+built from tip-of-main (cloned, built, packed, and installed), and Go, whose
+manifest pins a tip-of-main pseudo-version until application-name ownership
+and within-workflow enqueue lineage ship in a release. The shared
+system-database schema is migrated by the Python, TypeScript and Go CLIs; the
+TypeScript one ships inside the TypeScript SDK, and building TS from source
 keeps that migration (and thus the schema all four apps share) current.
 
 Run the suites with:
@@ -307,23 +309,40 @@ def migrate_typescript(url: str) -> None:
     _run(["npx", "dbos", "schema", url], APPS_DIR / "interop-typescript")
 
 
+def migrate_go(url: str) -> None:
+    """Migrate a system database with the Go runtime's CLI, at the SDK version
+    interop-go pins. `go run pkg@version` ignores the local go.mod, which lacks
+    go.sum entries for the CLI's own dependencies."""
+    version = subprocess.run(
+        ["go", "list", "-m", "-f", "{{.Version}}",
+         "github.com/dbos-inc/dbos-transact-golang"],
+        cwd=APPS_DIR / "interop-go", capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    _run(
+        ["go", "run", f"github.com/dbos-inc/dbos-transact-golang/cmd/dbos@{version}",
+         "migrate", "--db-url", url],
+        APPS_DIR / "interop-go",
+    )
+
+
 MIGRATORS = {
     "python":     migrate_python,
     "typescript": migrate_typescript,
+    "go":         migrate_go,
 }
 
 
 def _migrate() -> None:
-    """Migrate the shared system database with *both* runtimes' CLIs.
+    """Migrate the shared system database with every migrating runtime's CLI.
 
     Applications sharing a system database share its schema, so their migrations
     have to compose: whichever runtime gets there first creates the schema, and
-    the rest have to accept what they find. Running both here does explicitly
+    the rest have to accept what they find. Running them all here does explicitly
     what the four apps would otherwise do implicitly at launch, and leaves the
-    database on the newest schema either runtime knows about.
+    database on the newest schema any runtime knows about.
     """
-    migrate_python(SYS_DB_URL)
-    migrate_typescript(SYS_DB_URL)
+    for migrate in MIGRATORS.values():
+        migrate(SYS_DB_URL)
 
 
 # ---------------------------------------------------------------------------
