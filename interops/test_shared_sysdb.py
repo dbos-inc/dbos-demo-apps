@@ -4,8 +4,8 @@ Shared-system-database interop tests.
 The four runtimes in this suite are four DBOS *applications* sharing one system
 database. Each is identified by its configured name and owns what it creates —
 its workflows, queues and application versions — running only its own work. They
-still interoperate directly: the Python, TypeScript and Go runtimes enqueue
-each other's workflows from inside their own workflows, with no DBOS client in
+still interoperate directly: the Python, TypeScript and Go runtimes enqueue each
+other's workflows from inside their own workflows, with no DBOS client in
 between, naming the application that owns the target workflow.
 
 What the enqueue crossing an application boundary must not cost you:
@@ -44,10 +44,8 @@ from conftest import (
     sibling_database_url,
 )
 
-# The runtimes with full shared-database support: they enqueue through their own
-# runtime rather than a DBOS client (recording a parent/child relationship across
-# the application boundary), claim the workflows, steps and queues they create,
-# and answer GET /workflow for any workflow ID. Java's SDK here predates all this.
+# The runtimes that enqueue through their own runtime rather than a DBOS client,
+# and so record a parent/child relationship across the application boundary.
 DRIVERS = ["python", "typescript", "go"]
 
 PAIRS = [(s, t) for s in DRIVERS for t in LANGUAGES if s != t]
@@ -147,12 +145,12 @@ def test_parent_child_preserved_across_applications(interop_apps, source: str, t
         f"{source} -> {target}: child {child_id} lost its link to parent {parent_id}"
     )
 
-    # For ownership-aware targets these are evidence rather than an echo of the
-    # enqueue: the runtime overwrites both with its own as it claims the row.
-    # The Java SDK here predates ownership and leaves the row as the enqueuer
-    # wrote it — but a workflow is only ever dequeued by an executor running
-    # `applicationVersion`, and only the target runs that version, so reaching
-    # SUCCESS still pins down which runtime ran it.
+    # For Python, TypeScript and Go targets these are evidence rather than an echo
+    # of the enqueue: an ownership-aware runtime overwrites both with its own as it
+    # claims the row. The Java SDK here predates ownership and leaves the
+    # row as the enqueuer wrote it — but a workflow is only ever dequeued by an
+    # executor running `applicationVersion`, and only the target runs that
+    # version, so reaching SUCCESS still pins down which runtime ran it.
     assert child["applicationName"] == APP_NAMES[target]
     assert child["applicationVersion"] == APP_VERSIONS[target]
     assert child["queueName"] == QUEUE_NAMES[target]
@@ -233,18 +231,18 @@ def test_all_four_applications_share_one_system_database(interop_apps):
     )
 
     # The invariant that matters is that no application is ever credited with
-    # another's work. Java leaves its steps unowned — its SDK here predates
-    # ownership — which is the "unowned rows" case the shared-database model
-    # allows for, and is why this is a subset rather than an equality.
+    # another's work. Java leaves its steps unowned — its SDK here
+    # predates ownership — which is the "unowned rows" case the shared-database
+    # model allows for, and is why this is a subset rather than an equality.
     for target, step_owner in step_owners.items():
         assert step_owner <= {None, APP_NAMES[target]}, (
             f"{target}'s child workflow recorded steps owned by {step_owner}"
         )
 
-    # The driver runtimes must claim every step they run, though.
-    for lang in DRIVERS:
-        assert step_owners[lang] == {APP_NAMES[lang]}, (
-            f"{lang} did not claim the steps it ran: {step_owners[lang]}"
+    # The ownership-aware runtimes must claim every step they run, though.
+    for driver in DRIVERS:
+        assert step_owners[driver] == {APP_NAMES[driver]}, (
+            f"{driver} did not claim the steps it ran: {step_owners[driver]}"
         )
 
 

@@ -14,10 +14,10 @@ Each app is built against its *published* DBOS SDK (PyPI, the Go module proxy,
 Maven Central) as pinned in its own manifest — except TypeScript, which is
 built from tip-of-main (cloned, built, packed, and installed), and Go, whose
 manifest pins a tip-of-main pseudo-version until application-name ownership
-and within-workflow enqueue lineage ship in a release. The shared system-database schema is migrated by the
-Python, TypeScript and Go CLIs; the TypeScript one ships inside the TypeScript
-SDK, and building TS from source keeps that migration (and thus the schema all
-four apps share) current.
+and within-workflow enqueue lineage ship in a release. The shared
+system-database schema is migrated by the Python, TypeScript and Go CLIs; the
+TypeScript one ships inside the TypeScript SDK, and building TS from source
+keeps that migration (and thus the schema all four apps share) current.
 
 Run the suites with:
     uv run pytest -s test_interops.py test_shared_sysdb.py
