@@ -4,14 +4,20 @@ plugins {
   id("com.gradleup.shadow") version "9.3.2"
 }
 
-repositories { mavenCentral() }
+// TEMPORARY — drop this commit once the SDK fixes are published.
+// dbos-transact-java `skip-unrecognized-serialization` fixes two bugs this demo hit:
+// getWorkflowStatus threw on a peer application's payload, and on the empty
+// error column the Go SDK writes. Until that is released, the app builds
+// against a local `./gradlew :transact:publishToMavenLocal` of that branch.
+// The version is pinned rather than resolved: a branch build is `1.1.0-aN-gHASH`,
+// which sorts *below* main's `1.1.0-mN`, so `+` would ignore it.
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
 
 dependencies {
-  // `+` is the latest version published, prereleases included — every build of
-  // the SDK's main branch publishes one (1.1.0-mN). This app needs application
-  // names and DBOS.enqueuePortableWorkflow, which are in a prerelease ahead of
-  // the 1.0.0 release, so resolving releases only would not see them.
-  implementation("dev.dbos:transact:+")
+  implementation("dev.dbos:transact:1.1.0-a11-g11897bc")
   implementation("io.javalin:javalin-bundle:7.0.1")
   implementation("org.slf4j:slf4j-simple:2.0.17")
 }

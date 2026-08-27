@@ -279,24 +279,12 @@ public class App {
                   "/workflow/{id}",
                   ctx -> {
                     var id = ctx.pathParam("id");
-                    // Read by ID through the listing, asking for neither input
-                    // nor output. This endpoint reports metadata and returns
-                    // neither, and on a shared system database it is routinely
-                    // asked about a peer's workflow — whose input and output are
-                    // in that peer's own serialization format, which this
-                    // runtime has no deserializer for. `DBOS.getWorkflowStatus`
-                    // always deserializes both and would throw.
-                    var found =
-                        dbos.listWorkflows(
-                            new ListWorkflowsInput()
-                                .withWorkflowIds(id)
-                                .withLoadInput(false)
-                                .withLoadOutput(false));
+                    var found = dbos.getWorkflowStatus(id);
                     if (found.isEmpty()) {
                       ctx.status(404).result("no such workflow: " + id);
                       return;
                     }
-                    var status = found.get(0);
+                    var status = found.get();
                     // A LinkedHashMap rather than Map.of: these payloads carry
                     // nulls, and are compared field for field against the Python
                     // and TypeScript apps' answers for the same workflow.
