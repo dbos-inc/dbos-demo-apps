@@ -10,22 +10,25 @@ Each owns what it creates — its workflows, queues and application versions —
 and runs only its own work, while still interoperating: an application can
 enqueue another's workflows and wait for their results.
 
-Each app is built against its *published* DBOS SDK (PyPI, the Go module proxy,
-Maven Central) as pinned in its own manifest — except TypeScript, which is
-built from tip-of-main (cloned, built, packed, and installed), and Go, whose
-manifest pins a tip-of-main pseudo-version until application-name ownership
-and within-workflow enqueue lineage ship in a release. The shared
-system-database schema is migrated by the Python, TypeScript and Go CLIs; the
-TypeScript one ships inside the TypeScript SDK, and building TS from source
-keeps that migration (and thus the schema all four apps share) current.
+Each app is built against its *published* DBOS SDK as pinned in its own
+manifest — except TypeScript, which is built from tip-of-main (cloned, built,
+packed, and installed). Java resolves `dev.dbos:transact:+` and Go pins a
+pseudo-version, both of which land on a prerelease: application-name ownership
+and within-workflow enqueue lineage are published ahead of a tagged release.
+
+The shared system-database schema is migrated by `dbosctl sysdb migrate`. The
+system schema is shared by every DBOS SDK and dbosctl vendors the migrations,
+so provisioning the database the four apps share does not mean picking one of
+their SDKs and running its CLI.
 
 Run the suites with:
-    uv run pytest -s test_interops.py test_shared_sysdb.py
+    uv run pytest -s test_interops.py test_shared_sysdb.py test_dbosctl.py
 
 Python/TypeScript/Go read DBOS_SYSTEM_DATABASE_URL; Java reads DBOS_SYSTEM_JDBC_URL.
 """
 
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -41,11 +44,18 @@ ROOT     = Path(__file__).parent
 APPS_DIR = ROOT / "apps"
 
 # The TypeScript SDK is built from tip-of-main rather than the published npm
-# release: the `dbos schema` migration that provisions the shared system DB
-# ships inside this SDK, and the published release can lag behind newer
-# columns the other runtimes already expect (e.g. workflow_status.attributes).
+# release: the published release can lag behind newer columns the other
+# runtimes already expect (e.g. workflow_status.attributes).
 TS_REPO_URL = "https://github.com/dbos-inc/dbos-transact-ts.git"
 TS_SDK_SRC  = ROOT / ".ts-sdk-src"
+
+# dbosctl migrates the shared system database. Pinned to a release: it is the
+# tool under test in test_dbosctl.py, not a moving dependency, and `go install`
+# fetches it from the module proxy without a checkout.
+DBOSCTL_PKG     = "github.com/dbos-inc/dbos-ctl/cmd/dbosctl"
+DBOSCTL_VERSION = "v0.10.1"
+BIN_DIR         = ROOT / ".bin"
+DBOSCTL         = BIN_DIR / "dbosctl"
 
 SYS_DB_URL = os.environ.get(
     "DBOS_SYSTEM_DATABASE_URL",
@@ -60,6 +70,10 @@ PORTS = {
     "go":         8003,
     "java":       8004,
 }
+
+# Ports for apps launched against a system database of their own, by tests that
+# need to empty or rename an application without disturbing the shared one.
+PRIVATE_PORTS = {lang: port + 100 for lang, port in PORTS.items()}
 
 # Each runtime is a separate DBOS application on the shared system database.
 # Its name is what the system database records as the owner of every workflow,
@@ -118,12 +132,8 @@ TARGET_PAYLOADS: dict = {
 }
 
 
-def app_url(lang: str) -> str:
-    return f"http://localhost:{PORTS[lang]}"
-
-
-# Backwards-compatible private alias used within this module.
-_app_url = app_url
+def app_url(lang: str, port: int | None = None) -> str:
+    return f"http://localhost:{PORTS[lang] if port is None else port}"
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +156,20 @@ def _run(cmd: list[str], cwd: Path, env: dict | None = None) -> None:
         )
 
 
+def _build_dbosctl() -> None:
+    """Install the pinned dbosctl release into .bin.
+
+    GOBIN rather than the caller's: the version this suite migrates and renames
+    with should not depend on what happens to be on $PATH.
+    """
+    BIN_DIR.mkdir(exist_ok=True)
+    _run(
+        ["go", "install", f"{DBOSCTL_PKG}@{DBOSCTL_VERSION}"],
+        ROOT,
+        env={"GOBIN": str(BIN_DIR)},
+    )
+
+
 def _build_python() -> None:
     """Sync the test-runner environment, which also installs the published
     dbos/fastapi/uvicorn the interop-python app needs (see pyproject.toml)."""
@@ -155,9 +179,8 @@ def _build_python() -> None:
 def _build_ts_sdk_tarball() -> Path:
     """Clone @dbos-inc/dbos-sdk at tip-of-main, build it, and `npm pack` it.
 
-    Returns the path to the produced .tgz. Installing this into the
-    interop-typescript app upgrades both the runtime SDK and the bundled
-    `dbos` CLI that migrate_typescript runs.
+    Returns the path to the produced .tgz, which is installed into the
+    interop-typescript app in place of the published release.
     """
     if (TS_SDK_SRC / ".git").exists():
         _run(["git", "fetch", "--depth", "1", "origin", "main"], TS_SDK_SRC)
@@ -184,9 +207,8 @@ def _build_typescript() -> None:
     app_dir = APPS_DIR / "interop-typescript"
     tarball = _build_ts_sdk_tarball()
     _run(["npm", "install"], app_dir)
-    # Override the published SDK with the tip-of-main pack. This also replaces
-    # node_modules/.bin/dbos, so migrate_typescript's `npx dbos schema` runs the
-    # current migration. --no-save leaves the app's package.json untouched.
+    # Override the published SDK with the tip-of-main pack. --no-save leaves
+    # the app's package.json untouched.
     _run(["npm", "install", str(tarball), "--no-save"], app_dir)
     _run(["npm", "run", "build"], app_dir)
 
@@ -197,16 +219,15 @@ def _build_go() -> None:
 
 
 def _build_java() -> None:
-    app_dir = APPS_DIR / "interop-java"
-    _run(["./gradlew", "shadowJar"], app_dir)
+    _run(["./gradlew", "shadowJar"], APPS_DIR / "interop-java")
 
 
 # ---------------------------------------------------------------------------
 # Health / readiness helpers
 # ---------------------------------------------------------------------------
 
-def _wait_healthy(lang: str, timeout: int = 60) -> None:
-    url = f"{app_url(lang)}/healthz"
+def wait_healthy(lang: str, port: int | None = None, timeout: int = 60) -> None:
+    url = f"{app_url(lang, port)}/healthz"
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
@@ -231,18 +252,25 @@ def _with_database(url: str, db_name: str) -> str:
 def sibling_database_url(suffix: str) -> str:
     """A URL for a throwaway database next to the shared system database.
 
-    Used by tests that need a system database of their own — checking that both
-    runtimes migrate an empty database to the same schema, for instance.
+    Used by tests that need a system database of their own — emptying or
+    renaming an application without disturbing the shared four, for instance.
     """
     db_name = up.urlparse(SYS_DB_URL).path.lstrip("/")
     return _with_database(SYS_DB_URL, f"{db_name}_{suffix}")
 
 
-def recreate_database(url: str) -> None:
-    """Drop and recreate the database `url` points at."""
+def drop_database(url: str) -> None:
+    """Drop the database `url` points at, if it is there."""
     db_name = up.urlparse(url).path.lstrip("/")
     with psycopg.connect(_with_database(url, "postgres"), connect_timeout=5, autocommit=True) as conn:
         conn.execute(f'DROP DATABASE IF EXISTS "{db_name}" WITH (FORCE)')
+
+
+def recreate_database(url: str) -> None:
+    """Drop and recreate the database `url` points at."""
+    db_name = up.urlparse(url).path.lstrip("/")
+    drop_database(url)
+    with psycopg.connect(_with_database(url, "postgres"), connect_timeout=5, autocommit=True) as conn:
         conn.execute(f'CREATE DATABASE "{db_name}"')
 
 
@@ -296,53 +324,37 @@ def schema_snapshot(url: str) -> dict:
 # Schema migration
 # ---------------------------------------------------------------------------
 
-def migrate_python(url: str) -> None:
-    """Migrate a system database with the Python runtime's CLI."""
-    _run(["uv", "run", "dbos", "migrate", "-s", url], ROOT)
+def dbosctl(*args: str, check: bool = True) -> subprocess.CompletedProcess:
+    """Run dbosctl, returning the completed process.
 
-
-def migrate_typescript(url: str) -> None:
-    """Migrate a system database with the TypeScript runtime's CLI.
-
-    Uses the tip-of-main `dbos` CLI installed into interop-typescript by
-    _build_typescript, not the published npm release."""
-    _run(["npx", "dbos", "schema", url], APPS_DIR / "interop-typescript")
-
-
-def migrate_go(url: str) -> None:
-    """Migrate a system database with the Go runtime's CLI, at the SDK version
-    interop-go pins. `go run pkg@version` ignores the local go.mod, which lacks
-    go.sum entries for the CLI's own dependencies."""
-    version = subprocess.run(
-        ["go", "list", "-m", "-f", "{{.Version}}",
-         "github.com/dbos-inc/dbos-transact-golang"],
-        cwd=APPS_DIR / "interop-go", capture_output=True, text=True, check=True,
-    ).stdout.strip()
-    _run(
-        ["go", "run", f"github.com/dbos-inc/dbos-transact-golang/cmd/dbos@{version}",
-         "migrate", "--db-url", url],
-        APPS_DIR / "interop-go",
-    )
-
-
-MIGRATORS = {
-    "python":     migrate_python,
-    "typescript": migrate_typescript,
-    "go":         migrate_go,
-}
-
-
-def _migrate() -> None:
-    """Migrate the shared system database with every migrating runtime's CLI.
-
-    Applications sharing a system database share its schema, so their migrations
-    have to compose: whichever runtime gets there first creates the schema, and
-    the rest have to accept what they find. Running them all here does explicitly
-    what the four apps would otherwise do implicitly at launch, and leaves the
-    database on the newest schema any runtime knows about.
+    stdout carries the result — migration progress, the counts a reset or a
+    rename moved — and stderr the progress log, so tests read the two apart.
     """
-    for migrate in MIGRATORS.values():
-        migrate(SYS_DB_URL)
+    print(f"\n[dbosctl] {' '.join(args)}")
+    result = subprocess.run(
+        [str(DBOSCTL), *args], cwd=ROOT, capture_output=True, text=True
+    )
+    if result.stdout:
+        print(result.stdout)
+    if result.stderr:
+        print(result.stderr)
+    if check and result.returncode != 0:
+        raise RuntimeError(
+            f"dbosctl {' '.join(args)} failed (exit {result.returncode})\n"
+            f"stdout: {result.stdout}\nstderr: {result.stderr}"
+        )
+    return result
+
+
+def migrate(url: str) -> None:
+    """Create or upgrade a DBOS system database.
+
+    The four applications share one system database, and therefore one schema.
+    dbosctl vendors the migrations the SDKs share, so the database they meet on
+    is provisioned once, by a tool that is none of their runtimes — rather than
+    by whichever application happened to launch first.
+    """
+    dbosctl("sysdb", "migrate", "-D", url)
 
 
 # ---------------------------------------------------------------------------
@@ -350,8 +362,16 @@ def _migrate() -> None:
 # ---------------------------------------------------------------------------
 
 def _kill_ports() -> None:
-    """Kill any processes still bound to the interop ports (from a previous run)."""
-    for port in PORTS.values():
+    """Kill any processes still bound to the interop ports (from a previous run).
+
+    Best effort: this clears a previous run's leftovers, and a machine without
+    lsof simply does not get that. The apps still fail to bind, loudly, if a
+    port really is taken.
+    """
+    if shutil.which("lsof") is None:
+        print("[ports] lsof not found; skipping cleanup of any leftover processes")
+        return
+    for port in (*PORTS.values(), *PRIVATE_PORTS.values()):
         result = subprocess.run(
             ["lsof", "-ti", f":{port}"], capture_output=True, text=True
         )
@@ -366,54 +386,51 @@ def _kill_ports() -> None:
 # Process launchers
 # ---------------------------------------------------------------------------
 
-def _start_python() -> subprocess.Popen:
-    env = {**os.environ, "DBOS_SYSTEM_DATABASE_URL": SYS_DB_URL, "PORT": str(PORTS["python"])}
-    return subprocess.Popen(
-        ["uv", "run", "python", "main.py"],
-        cwd=APPS_DIR / "interop-python",
-        env=env,
-    )
-
-
-def _start_typescript() -> subprocess.Popen:
-    env = {**os.environ, "DBOS_SYSTEM_DATABASE_URL": SYS_DB_URL, "PORT": str(PORTS["typescript"])}
-    return subprocess.Popen(
-        ["node", "dist/main.js"],
-        cwd=APPS_DIR / "interop-typescript",
-        env=env,
-    )
-
-
-def _start_go() -> subprocess.Popen:
-    env = {**os.environ, "DBOS_SYSTEM_DATABASE_URL": SYS_DB_URL, "PORT": str(PORTS["go"])}
-    return subprocess.Popen(
-        ["./main"],
-        cwd=APPS_DIR / "interop-go",
-        env=env,
-    )
-
-
 def _postgres_to_jdbc(url: str) -> str:
     """Convert postgresql://user:pass@host:port/db  →  jdbc:postgresql://host:port/db."""
     u = up.urlparse(url)
     return f"jdbc:postgresql://{u.hostname}:{u.port or 5432}{u.path}"
 
 
-def _start_java() -> subprocess.Popen:
-    app_dir = APPS_DIR / "interop-java"
-    u = up.urlparse(SYS_DB_URL)
-    env = {
-        **os.environ,
-        "DBOS_SYSTEM_JDBC_URL": _postgres_to_jdbc(SYS_DB_URL),
-        "PGUSER":    u.username or "postgres",
-        "PGPASSWORD": u.password or "dbos",
-        "SERVER_PORT": str(PORTS["java"]),
+def start_app(
+    lang: str,
+    sys_db_url: str = SYS_DB_URL,
+    port: int | None = None,
+    app_name: str | None = None,
+) -> subprocess.Popen:
+    """Launch one runtime.
+
+    The database, port and application name are arguments rather than constants
+    so a test can stand an application up on a system database of its own — to
+    empty or rename it without disturbing the four the rest of the suite drives.
+
+    `app_name` is honoured by the Java app alone, which is the one the rename
+    test restarts under its new name; the others take the name they are
+    configured with.
+    """
+    port = PORTS[lang] if port is None else port
+    env = {**os.environ, "PORT": str(port)}
+    if app_name is not None:
+        env["INTEROP_APP_NAME"] = app_name
+
+    if lang == "java":
+        u = up.urlparse(sys_db_url)
+        env |= {
+            "DBOS_SYSTEM_JDBC_URL": _postgres_to_jdbc(sys_db_url),
+            "PGUSER":      u.username or "postgres",
+            "PGPASSWORD":  u.password or "dbos",
+            "SERVER_PORT": str(port),
+        }
+    else:
+        env["DBOS_SYSTEM_DATABASE_URL"] = sys_db_url
+
+    commands = {
+        "python":     ["uv", "run", "python", "main.py"],
+        "typescript": ["node", "dist/main.js"],
+        "go":         ["./main"],
+        "java":       ["java", "-jar", "build/libs/interop-java-all.jar"],
     }
-    return subprocess.Popen(
-        ["java", "-jar", "build/libs/interop-java-all.jar"],
-        cwd=app_dir,
-        env=env,
-    )
+    return subprocess.Popen(commands[lang], cwd=APPS_DIR / f"interop-{lang}", env=env)
 
 
 _BUILDERS = {
@@ -423,12 +440,19 @@ _BUILDERS = {
     "java":       _build_java,
 }
 
-_STARTERS = {
-    "python":     _start_python,
-    "typescript": _start_typescript,
-    "go":         _start_go,
-    "java":       _start_java,
-}
+def stop_app(proc: subprocess.Popen, timeout: int = 10) -> None:
+    """Stop a launched runtime, hard if it will not go quietly.
+
+    `dbosctl sysdb rename-application` says to stop the application being
+    renamed first, and means it: nothing locks a running one out, and it goes
+    on dequeuing under its old name.
+    """
+    proc.terminate()
+    try:
+        proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=timeout)
 
 
 # ---------------------------------------------------------------------------
@@ -439,9 +463,10 @@ _STARTERS = {
 def interop_builds():
     """Build all four language runtimes.
 
-    Split out from `interop_apps` so tests that only need a runtime's tooling —
-    the migration CLIs, say — don't have to launch the apps.
+    Split out from `interop_apps` so tests that stand an application up on a
+    system database of their own don't launch the shared four to do it.
     """
+    _build_dbosctl()
     for lang in LANGUAGES:
         _BUILDERS[lang]()
 
@@ -450,22 +475,18 @@ def interop_builds():
 def interop_apps(interop_builds):
     """
     Session-scoped fixture.  Waits for Postgres, migrates the shared system
-    database with both runtimes' CLIs, starts the four processes, and tears
-    them down after the session.
+    database with dbosctl, starts the four processes, and tears them down
+    after the session.
     """
     _wait_postgres()
-    _migrate()
+    migrate(SYS_DB_URL)
     _kill_ports()
 
     procs: dict[str, subprocess.Popen] = {}
 
     def _teardown() -> None:
-        for lang, proc in procs.items():
-            proc.terminate()
-            try:
-                proc.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                proc.kill()
+        for proc in procs.values():
+            stop_app(proc)
 
     def _signal_handler(signum, frame):
         _teardown()
@@ -477,10 +498,10 @@ def interop_apps(interop_builds):
 
     try:
         for lang in LANGUAGES:
-            procs[lang] = _STARTERS[lang]()
+            procs[lang] = start_app(lang)
 
         for lang in LANGUAGES:
-            _wait_healthy(lang)
+            wait_healthy(lang)
 
         yield
     finally:
