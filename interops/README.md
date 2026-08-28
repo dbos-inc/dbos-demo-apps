@@ -174,7 +174,7 @@ Four applications sharing a system database share one schema, so something has t
 create it before any of them launches. Every DBOS SDK ships a CLI that can, and any
 of them would do — which is the problem: the schema belongs to none of these four
 languages, and picking one makes the other three depend on its toolchain to stand
-the demo up. [`dbosctl`](https://github.com/dbos-inc/dbos-ctl) vendors the
+the demo up. [`dbosctl`](https://docs.dbos.dev/production/dbosctl#system-database-commands) vendors the
 migrations the SDKs share, so it provisions the database as none of the runtimes:
 
 ```bash
