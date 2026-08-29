@@ -206,14 +206,6 @@ silently skipping a table they have never heard of — so a database newer than 
 
 ## SDK versions
 
-> **Temporary:** the Java app is pinned to a local
-> `./gradlew :transact:publishToMavenLocal` build of dbos-transact-java's
-> `skip-unrecognized-serialization` branch, which fixes two bugs this demo hit — a
-> status read throwing on a peer application's payload, and on the empty error
-> column the Go SDK writes for a successful workflow. Drop that commit and restore
-> `dev.dbos:transact:+` once those are released.
-
-
 `interop-java` needs application names and `DBOS.enqueuePortableWorkflow`, and
 `interop-go` needs the same; both landed after those SDKs' latest tagged
 releases. Neither app builds from source for it — every build of an SDK's main
