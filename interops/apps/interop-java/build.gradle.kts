@@ -7,10 +7,6 @@ plugins {
 repositories { mavenCentral() }
 
 dependencies {
-  // `+` is the latest version published, prereleases included — every build of
-  // the SDK's main branch publishes one (1.1.0-mN). This app needs application
-  // names and DBOS.enqueuePortableWorkflow, which are in a prerelease ahead of
-  // the 1.0.0 release, so resolving releases only would not see them.
   implementation("dev.dbos:transact:+")
   implementation("io.javalin:javalin-bundle:7.0.1")
   implementation("org.slf4j:slf4j-simple:2.0.17")
