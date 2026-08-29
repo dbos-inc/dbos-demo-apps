@@ -28,7 +28,6 @@ Python/TypeScript/Go read DBOS_SYSTEM_DATABASE_URL; Java reads DBOS_SYSTEM_JDBC_
 """
 
 import os
-import re
 import shutil
 import signal
 import subprocess
@@ -74,6 +73,10 @@ PORTS = {
 # Ports for apps launched against a system database of their own, by tests that
 # need to empty or rename an application without disturbing the shared one.
 PRIVATE_PORTS = {lang: port + 100 for lang, port in PORTS.items()}
+
+# The renamed application gets a java app of its own, so it can be stopped and
+# restarted under a new name without touching the pair the reset test drives.
+RENAME_PORT = PRIVATE_PORTS["java"] + 10
 
 # Each runtime is a separate DBOS application on the shared system database.
 # Its name is what the system database records as the owner of every workflow,
@@ -371,7 +374,7 @@ def _kill_ports() -> None:
     if shutil.which("lsof") is None:
         print("[ports] lsof not found; skipping cleanup of any leftover processes")
         return
-    for port in (*PORTS.values(), *PRIVATE_PORTS.values()):
+    for port in (*PORTS.values(), *PRIVATE_PORTS.values(), RENAME_PORT):
         result = subprocess.run(
             ["lsof", "-ti", f":{port}"], capture_output=True, text=True
         )
@@ -380,6 +383,18 @@ def _kill_ports() -> None:
                 subprocess.run(["kill", "-9", pid], check=False)
             except Exception:
                 pass
+
+
+@pytest.fixture(scope="session", autouse=True)
+def clear_ports() -> None:
+    """Clear leftover processes off every interop port, once per session.
+
+    Autouse rather than folded into `interop_apps`, because the suites that
+    launch apps on the private ports never request that fixture: a leftover
+    process there would keep answering health checks while the app under test
+    failed to bind, and the test would drive the stale one.
+    """
+    _kill_ports()
 
 
 # ---------------------------------------------------------------------------
@@ -480,7 +495,6 @@ def interop_apps(interop_builds):
     """
     _wait_postgres()
     migrate(SYS_DB_URL)
-    _kill_ports()
 
     procs: dict[str, subprocess.Popen] = {}
 

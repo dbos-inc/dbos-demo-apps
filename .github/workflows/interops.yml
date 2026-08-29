@@ -70,11 +70,14 @@ jobs:
           distribution: 'temurin'
 
       # The conftest.py session fixtures build all four apps, migrate the shared
-      # system database with both the Python and TypeScript CLIs, launch the
-      # runtimes, health-check them, and tear them down afterward.
+      # system database with dbosctl, launch the runtimes, health-check them, and
+      # tear them down afterward.
       #   test_interops.py     — all 12 cross-language enqueue pairs
       #   test_shared_sysdb.py — the semantics of sharing one system database:
-      #                          parent/child links across applications, and
-      #                          migrations that compose in either order
+      #                          parent/child links across applications, listings
+      #                          scoped to the caller, and an application refusing
+      #                          work it does not own
+      #   test_dbosctl.py      — dbosctl provisioning and maintaining that database:
+      #                          migrate, per-application reset, rename-application
       - name: Run interop tests
-        run: uv run pytest -s test_interops.py test_shared_sysdb.py
+        run: uv run pytest -s test_interops.py test_shared_sysdb.py test_dbosctl.py

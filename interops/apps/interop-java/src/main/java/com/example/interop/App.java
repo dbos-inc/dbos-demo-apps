@@ -148,6 +148,13 @@ public class App {
     return override == null || override.isBlank() ? APP_NAMES.get("java") : override;
   }
 
+  // The application name to hand a workflow to. For every language but this one
+  // that is the fixed name in APP_NAMES; for "java" it is whatever this process
+  // is currently called, which a rename can have moved away from "interop-java".
+  private static String appNameOf(String owner) {
+    return "java".equals(owner) ? appName() : APP_NAMES.get(owner);
+  }
+
   /**
    * Options describing {@code target}'s echoWorkflow.
    *
@@ -160,7 +167,7 @@ public class App {
         .withInstanceName("default")
         .withSerialization(SerializationStrategy.PORTABLE)
         .withTimeout(Duration.ofSeconds(30))
-        .withApplicationName(APP_NAMES.get(owner))
+        .withApplicationName(appNameOf(owner))
         .withAppVersion(APP_VERSIONS.get(target));
   }
 
@@ -256,12 +263,13 @@ public class App {
                     }
                     @SuppressWarnings("unchecked")
                     Map<String, Object> payload = ctx.bodyAsClass(Map.class);
+                    var named = namedArgs(payload);
 
                     var handle =
                         dbos.<Map<String, Object>>enqueuePortableWorkflow(
                             enqueueOptions(target, owner),
                             positionalArgs(payload).toArray(),
-                            namedArgs(payload).isEmpty() ? null : namedArgs(payload));
+                            named.isEmpty() ? null : named);
 
                     // Send the date message echoWorkflow waits on, so a workflow
                     // that does get dequeued runs to completion rather than

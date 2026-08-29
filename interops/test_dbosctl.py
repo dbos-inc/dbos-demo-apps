@@ -35,6 +35,7 @@ from conftest import (
     APP_VERSIONS,
     EXPECTED_ECHO,
     PRIVATE_PORTS,
+    RENAME_PORT,
     TARGET_PAYLOADS,
     app_url,
     dbosctl,
@@ -47,11 +48,6 @@ from conftest import (
     stop_app,
     wait_healthy,
 )
-
-# The application that is renamed gets a java app of its own, so it can be
-# stopped and restarted under a new name without touching the pair the reset
-# test is driving.
-RENAME_PORT = PRIVATE_PORTS["java"] + 10
 
 # The owner-carrying tables these apps reach. `workflow_schedules` carries an
 # owner too, and both commands work through it, but nothing here registers a
