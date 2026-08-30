@@ -4,9 +4,9 @@ Shared-system-database interop tests.
 The four runtimes in this suite are four DBOS *applications* sharing one system
 database. Each is identified by its configured name and owns what it creates —
 its workflows, queues and application versions — running only its own work. They
-still interoperate directly: the Python, TypeScript and Go runtimes enqueue each
-other's workflows from inside their own workflows, with no DBOS client in
-between, naming the application that owns the target workflow.
+still interoperate directly: every runtime enqueues the others' workflows from
+inside its own workflows, with no DBOS client in between, naming the application
+that owns the target workflow.
 
 What the enqueue crossing an application boundary must not cost you:
 
@@ -14,8 +14,9 @@ What the enqueue crossing an application boundary must not cost you:
     workflow that enqueued it, even though another application runs it;
   * addressability — workflow IDs are unique across the whole system database,
     so either application can read the same workflow's status by ID;
-  * a common schema — either runtime can migrate the shared database, and both
-    have to agree on what they migrate it to.
+  * addressability of the schema itself — `dbosctl sysdb migrate` provisions the
+    database all four meet on, so no one runtime's CLI owns the shared schema
+    (see test_dbosctl.py).
 
     uv run pytest -s test_shared_sysdb.py
 
@@ -23,7 +24,6 @@ What the enqueue crossing an application boundary must not cost you:
 """
 
 import time
-from itertools import permutations
 
 import psycopg
 import pytest
@@ -34,26 +34,20 @@ from conftest import (
     APP_VERSIONS,
     EXPECTED_ECHO,
     LANGUAGES,
-    MIGRATORS,
     QUEUE_NAMES,
     SYS_DB_URL,
     TARGET_PAYLOADS,
     app_url,
-    recreate_database,
     schema_snapshot,
-    sibling_database_url,
 )
 
-# The runtimes that enqueue through their own runtime rather than a DBOS client,
-# and so record a parent/child relationship across the application boundary.
-DRIVERS = ["python", "typescript", "go"]
+# Every runtime enqueues through itself rather than a DBOS client, and so records
+# a parent/child relationship across the application boundary. All four also
+# claim what they run, so there is no longer an unowned corner of this database.
+DRIVERS = LANGUAGES
 
 PAIRS = [(s, t) for s in DRIVERS for t in LANGUAGES if s != t]
 PAIR_IDS = [f"{s}To{t.title()}" for s, t in PAIRS]
-
-# The pairs whose target also exposes the introspection endpoints below.
-BOTH_WAYS = [(s, t) for s, t in PAIRS if t in DRIVERS]
-BOTH_WAYS_IDS = [f"{s}To{t.title()}" for s, t in BOTH_WAYS]
 
 # The columns that record ownership. Without them, applications sharing a system
 # database could not tell their own workflows from their peers'.
@@ -145,12 +139,8 @@ def test_parent_child_preserved_across_applications(interop_apps, source: str, t
         f"{source} -> {target}: child {child_id} lost its link to parent {parent_id}"
     )
 
-    # For Python, TypeScript and Go targets these are evidence rather than an echo
-    # of the enqueue: an ownership-aware runtime overwrites both with its own as it
-    # claims the row. The Java SDK here predates ownership and leaves the
-    # row as the enqueuer wrote it — but a workflow is only ever dequeued by an
-    # executor running `applicationVersion`, and only the target runs that
-    # version, so reaching SUCCESS still pins down which runtime ran it.
+    # These are evidence rather than an echo of the enqueue: every runtime here
+    # is ownership-aware and overwrites both with its own as it claims the row.
     assert child["applicationName"] == APP_NAMES[target]
     assert child["applicationVersion"] == APP_VERSIONS[target]
     assert child["queueName"] == QUEUE_NAMES[target]
@@ -178,7 +168,7 @@ def test_cross_application_enqueue_is_a_step_of_the_parent(
     )
 
 
-@pytest.mark.parametrize("source,target", BOTH_WAYS, ids=BOTH_WAYS_IDS)
+@pytest.mark.parametrize("source,target", PAIRS, ids=PAIR_IDS)
 def test_both_applications_see_the_same_workflow(interop_apps, source: str, target: str):
     """Workflow IDs address the whole system database, not one application."""
     envelope = _interop(source, target)
@@ -230,19 +220,12 @@ def test_all_four_applications_share_one_system_database(interop_apps):
         f"not every application's workflows are in this system database: {owners}"
     )
 
-    # The invariant that matters is that no application is ever credited with
-    # another's work. Java leaves its steps unowned — its SDK here
-    # predates ownership — which is the "unowned rows" case the shared-database
-    # model allows for, and is why this is a subset rather than an equality.
+    # No application is ever credited with another's work, and every runtime here
+    # claims the steps it runs — an equality rather than a subset, which it could
+    # not have been while an SDK that predated ownership left its steps unclaimed.
     for target, step_owner in step_owners.items():
-        assert step_owner <= {None, APP_NAMES[target]}, (
+        assert step_owner == {APP_NAMES[target]}, (
             f"{target}'s child workflow recorded steps owned by {step_owner}"
-        )
-
-    # The ownership-aware runtimes must claim every step they run, though.
-    for driver in DRIVERS:
-        assert step_owners[driver] == {APP_NAMES[driver]}, (
-            f"{driver} did not claim the steps it ran: {step_owners[driver]}"
         )
 
 
@@ -290,45 +273,20 @@ def test_workflow_listings_are_scoped_to_the_calling_application(interop_apps):
 
 
 # ---------------------------------------------------------------------------
-# Migrations
+# The schema they share
 # ---------------------------------------------------------------------------
 
-def test_migrations_from_any_runtime_agree(interop_builds):
-    """Every migrating runtime takes a shared system database to the same schema.
+def test_the_shared_schema_records_ownership(interop_apps):
+    """The database the four meet on has somewhere to write an owner.
 
-    Whichever application reaches a shared system database first migrates it,
-    and the others have to accept what they find — so the order the runtimes
-    migrate in must not change where the database ends up.
+    Ownership is a property of the schema before it is a property of any
+    runtime: without these columns the four applications here could not tell
+    their own workflows, steps, queues and schedules from their peers'. The
+    schema is provisioned by dbosctl rather than by any of their SDKs, which is
+    what test_dbosctl.py is about; this is the part the rest of this file leans
+    on.
     """
-    finals = {}
-    for order in permutations(sorted(MIGRATORS), 2):
-        url = sibling_database_url("_".join(order))
-        recreate_database(url)
-
-        MIGRATORS[order[0]](url)
-        first = schema_snapshot(url)
-        # A runtime that has never seen this database migrates it on top of
-        # whatever the first one left behind.
-        MIGRATORS[order[1]](url)
-        finals[order] = schema_snapshot(url)
-
-        assert first["version"], f"{order[0]} recorded no migration version"
-        assert finals[order]["version"] >= first["version"], (
-            f"{order[1]} rolled the schema back from under {order[0]}"
-        )
-        # Any runtime alone must be able to bootstrap a database the others
-        # will join, so each has to know about ownership on its own.
-        for column in OWNERSHIP_COLUMNS:
-            assert column in first["columns"], (
-                f"{order[0]} alone did not create {column}"
-            )
-
-    # Runtimes may know different schema versions (a fresh-from-main SDK can be
-    # a migration ahead of the published ones), so only the same set of
-    # migrators must converge — in either order.
-    for order, final in finals.items():
-        reverse = (order[1], order[0])
-        assert final == finals[reverse], (
-            "the runtimes migrate a shared system database to different schemas "
-            f"depending on which one goes first: {order} vs {reverse}"
-        )
+    snapshot = schema_snapshot(SYS_DB_URL)
+    assert snapshot["version"], "the shared system database recorded no migration version"
+    missing = [column for column in OWNERSHIP_COLUMNS if column not in snapshot["columns"]]
+    assert not missing, f"the shared schema cannot record ownership: {missing} are absent"
