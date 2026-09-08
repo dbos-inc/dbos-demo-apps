@@ -2,13 +2,13 @@ import { DBOS } from "npm:@dbos-inc/dbos-sdk@4.27.6";
 import { APP_NAME, APP_VERSION, QUEUE, systemDatabaseUrl } from "../_shared/config.ts";
 import "../_shared/workflows.ts"; // registers processTask; must be imported before launch
 
-// The worker drains the queue and exits; it never idles. An idle launched worker still
-// burns CPU against the edge function's 2s CPU cap, so waiting around is the one thing
-// that cannot work here.
+// The worker processes every enqueued workflow, then exits; it never idles. An idle
+// launched worker still burns CPU against the edge function's 2s CPU cap, so waiting
+// around is the one thing that cannot work here.
 //
 // It also imposes no CPU or wall budget on itself, deliberately: the platform's caps are
 // not observable from inside the function anyway (process.cpuUsage() returns zeroes and
-// EdgeRuntime exposes only waitUntil). So the worker runs until the queue is drained or
+// EdgeRuntime exposes only waitUntil). So the worker runs until the queue is empty or
 // Supabase kills it. A kill leaves workflows PENDING; Conductor pushes RECOVERY to the
 // next worker and the work resumes from its last completed step.
 
@@ -44,7 +44,7 @@ async function inFlightCount(): Promise<number> {
   return wfs.length;
 }
 
-export async function drain(): Promise<{ reason: string; wallMs: number }> {
+export async function processWorkflows(): Promise<{ reason: string; wallMs: number }> {
   const t0 = Date.now();
   DBOS.setConfig({
     name: APP_NAME,
@@ -54,8 +54,8 @@ export async function drain(): Promise<{ reason: string; wallMs: number }> {
 
   // Conductor is intentionally not required to start. If it is unreachable the SDK retries
   // the socket every second, but dequeue is pure Postgres polling and needs no Conductor -
-  // only recovery does. So fail open: keep draining, and let recovery wait for a tick that
-  // can reach Conductor.
+  // only recovery does. So fail open: keep processing workflows, and let recovery wait for
+  // a tick that can reach Conductor.
   await DBOS.launch({
     conductorKey: Deno.env.get("DBOS_CONDUCTOR_KEY"),
     conductorExecutorMetadata: {
@@ -78,7 +78,7 @@ export async function drain(): Promise<{ reason: string; wallMs: number }> {
     await DBOS.shutdown();
   }
 
-  const out = { reason: "drained", wallMs: Date.now() - t0 };
+  const out = { reason: "queue-empty", wallMs: Date.now() - t0 };
   log({ event: "worker_exit", ...out });
   return out;
 }
@@ -90,22 +90,22 @@ function runInBackground(p: Promise<unknown>): void {
   else void p;
 }
 
-let draining = false;
+let processing = false;
 
 Deno.serve(() => {
-  if (draining) {
+  if (processing) {
     // Concurrent workers are safe under Conductor, but two launches inside one isolate are
     // not: DBOS is a process-global singleton.
-    return Response.json({ accepted: false, reason: "already-draining" });
+    return Response.json({ accepted: false, reason: "already-processing" });
   }
-  draining = true;
+  processing = true;
   runInBackground(
-    drain()
-      .catch((e) => log({ event: "drain_failed", error: String(e) }))
+    processWorkflows()
+      .catch((e) => log({ event: "process_workflows_failed", error: String(e) }))
       .finally(() => {
-        draining = false;
+        processing = false;
       }),
   );
-  // Answer immediately so pg_net's request is not held open for the life of the drain.
+  // Answer immediately so pg_net's request is not held open while the workflows run.
   return Response.json({ accepted: true });
 });

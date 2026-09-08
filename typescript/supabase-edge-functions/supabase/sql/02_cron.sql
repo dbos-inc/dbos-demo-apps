@@ -7,7 +7,7 @@
 -- The tick: decide whether there is work, and if so wake a worker. The WHERE clause is
 -- what keeps an idle project free - net.http_post is never called when nothing is pending.
 --
--- The probe is deliberately broader than the worker's own drain check. It counts PENDING
+-- The probe is deliberately broader than the worker's own queue check. It counts PENDING
 -- rows, which includes workflows orphaned by a worker that died mid-step. Those need a live
 -- executor to exist before Conductor can push RECOVERY to it, so counting them is precisely
 -- what causes a worker to be launched to receive that push.
