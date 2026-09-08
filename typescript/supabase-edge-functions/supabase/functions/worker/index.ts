@@ -2,20 +2,7 @@ import { DBOS } from "npm:@dbos-inc/dbos-sdk@4.27.6";
 import { APP_NAME, APP_VERSION, QUEUE, systemDatabaseUrl } from "../_shared/config.ts";
 import "../_shared/workflows.ts"; // registers processTask; must be imported before launch
 
-// The worker processes every enqueued workflow, then exits; it never idles. An idle
-// launched worker still burns CPU against the edge function's 2s CPU cap, so waiting
-// around is the one thing that cannot work here.
-//
-// It also imposes no CPU or wall budget on itself, deliberately: the platform's caps are
-// not observable from inside the function anyway (process.cpuUsage() returns zeroes and
-// EdgeRuntime exposes only waitUntil). So the worker runs until the queue is empty or
-// Supabase kills it. A kill leaves workflows PENDING; Conductor pushes RECOVERY to the
-// next worker and the work resumes from its last completed step.
-
-// Conductor hands every launch a fresh executor UUID and pushes RECOVERY for dead
-// executors to whichever executor is live. An orphaned workflow is PENDING and so counts
-// as in-flight below, which already holds this worker open; this grace is the cheap
-// backstop for the race where it does not.
+// Runs until the queue is empty or Supabase kills it; Conductor recovers what was in flight.
 const RECOVERY_GRACE_MS = Number(Deno.env.get("DBOS_RECOVERY_GRACE_MS") ?? 10_000);
 
 const POLL_MS = 1_000;
@@ -24,15 +11,11 @@ const EMPTY_POLLS_TO_EXIT = 2;
 const log = (o: Record<string, unknown>) => console.log(JSON.stringify(o));
 
 addEventListener("beforeunload", (ev) => {
-  // EventLoopCompleted | WallClockTime | CPUTime | Memory | EarlyDrop | TerminationRequested.
-  // Kept purely as observability: CPUTime and WallClockTime are expected outcomes here, and
-  // seeing which one dominates is how you learn whether a workload fits this platform.
   const reason = (ev as unknown as { detail?: { reason?: string } }).detail?.reason;
   log({ event: "isolate_shutdown", reason });
 });
 
-// DELAYED is deliberately excluded: a delayed workflow whose timer has not fired is not
-// work this invocation can do, and cron's probe covers the moment it becomes ready.
+// DELAYED is excluded: cron's probe covers the moment a delayed workflow becomes ready.
 async function inFlightCount(): Promise<number> {
   const wfs = await DBOS.listWorkflows({
     status: ["ENQUEUED", "PENDING"],
@@ -52,10 +35,6 @@ export async function processWorkflows(): Promise<{ reason: string; wallMs: numb
     applicationVersion: APP_VERSION,
   });
 
-  // Conductor is intentionally not required to start. If it is unreachable the SDK retries
-  // the socket every second, but dequeue is pure Postgres polling and needs no Conductor -
-  // only recovery does. So fail open: keep processing workflows, and let recovery wait for
-  // a tick that can reach Conductor.
   await DBOS.launch({
     conductorKey: Deno.env.get("DBOS_CONDUCTOR_KEY"),
     conductorExecutorMetadata: {
@@ -94,8 +73,7 @@ let processing = false;
 
 Deno.serve(() => {
   if (processing) {
-    // Concurrent workers are safe under Conductor, but two launches inside one isolate are
-    // not: DBOS is a process-global singleton.
+    // Only launch DBOS once per isolate
     return Response.json({ accepted: false, reason: "already-processing" });
   }
   processing = true;
@@ -106,6 +84,6 @@ Deno.serve(() => {
         processing = false;
       }),
   );
-  // Answer immediately so pg_net's request is not held open while the workflows run.
+  // Answer immediately so the request is not held open while the workflows run.
   return Response.json({ accepted: true });
 });

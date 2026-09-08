@@ -1,9 +1,7 @@
 project_id = "supabase-edge-functions"
 
 [edge_runtime]
-# Without per_worker, the local runtime enforces per-request CPU limits that kill
-# background workflow processing long before it finishes. Local only; hosted limits
-# still apply.
+# Without per_worker, local per-request CPU limits kill background processing early.
 policy = "per_worker"
 
 [functions.worker]

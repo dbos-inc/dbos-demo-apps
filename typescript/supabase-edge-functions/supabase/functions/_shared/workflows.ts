@@ -14,25 +14,18 @@ function db() {
   return pool;
 }
 
-// Every step here is short, I/O-bound and idempotent, which is not a stylistic choice on
-// this platform. Steps run at least once: a worker killed on its CPU budget re-runs
-// whichever step it was inside. And a step needing real CPU can never finish within the
-// edge function's 2s CPU budget, so it would restart forever and eventually exhaust
-// recovery_attempts (default 100) into MAX_RECOVERY_ATTEMPTS_EXCEEDED.
+// Steps should be short, I/O-bound and idempotent
 async function validate(task: Task): Promise<Task> {
   if (!task?.taskId) throw new Error("task.taskId is required");
   return task;
 }
 
 async function transform(task: Task): Promise<Record<string, unknown>> {
-  // Stands in for the real shape of work here: an outbound API call, not a computation.
   await new Promise((r) => setTimeout(r, 2000));
   return { ...task.payload, taskId: task.taskId, transformedAt: new Date().toISOString() };
 }
 
 async function persist(workflowID: string, taskId: string, result: Record<string, unknown>) {
-  // Upsert keyed on the workflow ID, so a re-run of this step after a mid-step kill
-  // converges instead of inserting twice.
   await db().query(
     `insert into public.task_results (workflow_id, task_id, result)
      values ($1, $2, $3)

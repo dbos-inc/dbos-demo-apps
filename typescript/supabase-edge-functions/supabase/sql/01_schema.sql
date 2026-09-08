@@ -4,8 +4,7 @@
 create extension if not exists pg_net;
 create extension if not exists pg_cron;
 
--- Written by the workflow's `persist` step. Keyed on workflow_id so the step converges
--- when it re-runs after a worker was killed mid-step.
+-- An example table used by the demo code
 create table if not exists public.task_results (
   workflow_id  text primary key,
   task_id      text not null,
