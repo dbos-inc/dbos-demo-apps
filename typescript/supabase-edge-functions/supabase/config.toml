@@ -1,0 +1,13 @@
+project_id = "supabase-edge-functions"
+
+[edge_runtime]
+# Without per_worker, the local runtime enforces per-request CPU limits that kill a
+# background drain long before it finishes. Local only; hosted limits still apply.
+policy = "per_worker"
+
+[functions.worker]
+# Invoked by pg_cron and by the enqueue function, both bearing the service-role key.
+verify_jwt = true
+
+[functions.enqueue]
+verify_jwt = true
