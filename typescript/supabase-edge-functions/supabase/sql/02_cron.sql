@@ -17,6 +17,7 @@ select cron.schedule(
   'dbos-worker-tick',
   '* * * * *', -- one minute is pg_cron's floor; the enqueue function kicks the worker directly for latency
   $$
+  -- Start a worker by POSTing to it with your service role key...
   select net.http_post(
     url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url')
            || '/functions/v1/worker',
@@ -27,6 +28,7 @@ select cron.schedule(
     body := jsonb_build_object('source', 'cron', 'tick', now()),
     timeout_milliseconds := 5000
   )
+  -- ...but only when there are workflows waiting to be executed.
   where exists (
     select 1
       from dbos.workflow_status
