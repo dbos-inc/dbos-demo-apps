@@ -1,0 +1,4 @@
+supabase/.env.local
+supabase/.branches
+supabase/.temp
+deno.lock

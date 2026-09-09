@@ -1,0 +1,12 @@
+project_id = "supabase-edge-functions"
+
+[edge_runtime]
+# Without per_worker, local per-request CPU limits kill background processing early.
+policy = "per_worker"
+
+[functions.worker]
+# Invoked by pg_cron and by the enqueue function, both bearing the service-role key.
+verify_jwt = true
+
+[functions.enqueue]
+verify_jwt = true
