@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
+import { CodeSnippet } from './CodeSnippet';
 
-type TabType = 'fair-queue' | 'rate-limited' | 'debouncer';
+type TabType = 'fair-queue' | 'rate-limited' | 'debouncer' | 'delayed';
 
 interface Workflow {
   workflow_id: string;
@@ -24,7 +25,7 @@ interface PendingWorkflow {
 
 interface Pipeline {
   enqueued: TenantCount[];
-  pending_concurrency: PendingWorkflow[];
+  pending: PendingWorkflow[];
   success: TenantCount[];
 }
 
@@ -43,6 +44,13 @@ interface DebouncePipeline {
   completed: DebounceItem[];
 }
 
+interface DelayedWorkflow {
+  workflow_id: string;
+  workflow_status: string;
+  created_at: number;
+  due_at: number | null;
+}
+
 // Categorical palette validated for the app's dark surface. Tenants are assigned a
 // color the first time they're seen and never reshuffled; a 9th+ tenant folds to "Other".
 const TENANT_PALETTE = [
@@ -58,9 +66,63 @@ const DEBOUNCE_TENANTS = ['alice', 'bob', 'clark'];
 // triggers stop, with only the last argument submitted.
 const DEBOUNCE_INPUTS = ['input_1', 'input_2', 'input_3', 'input_4'];
 
+// Delayed execution tab: the delays a user can enqueue a workflow with, or
+// change a waiting workflow's delay to, in seconds.
+const DELAY_OPTIONS = [5, 15, 30, 60, 300, 3600, 86400];
+
+// Format a duration with its two largest units, e.g. "45s", "4m 12s", "1h", "23h 59m".
+function formatDuration(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const units: [number, string][] = [[86400, 'd'], [3600, 'h'], [60, 'm'], [1, 's']];
+  const found = units.findIndex(([size]) => s >= size);
+  const i = found === -1 ? units.length - 1 : found;
+  const [size, label] = units[i];
+  const whole = Math.floor(s / size);
+  if (i === units.length - 1) return `${whole}${label}`;
+  const [nextSize, nextLabel] = units[i + 1];
+  const rest = Math.floor((s % size) / nextSize);
+  return rest ? `${whole}${label} ${rest}${nextLabel}` : `${whole}${label}`;
+}
+
+// The DBOS code behind each tab, shown in the Code card.
+const CODE_SNIPPETS: Record<TabType, string> = {
+  'fair-queue': `await DBOS.registerQueue('fair-queue', {
+  partitionConcurrency: 2,
+  workerConcurrency: 4,
+});`,
+  'rate-limited': `await DBOS.registerQueue('rate-limited-queue', {
+  rateLimit: { limitPerPeriod: 2, periodSec: 10 },
+});`,
+  debouncer: `await DBOS.registerQueue('debouncer-queue');
+// ...
+const debouncer = new Debouncer({
+  workflow: debouncerWorkflow,
+  startWorkflowParams: { queueName: 'debouncer-queue' },
+});
+// ...
+const debounceKey = tenantId;
+const debouncePeriodMs = 10000;
+await debouncer.debounce(debounceKey, debouncePeriodMs, tenantId, input);`,
+  delayed: `await DBOS.registerQueue('delayed-queue');
+// ...
+await DBOS.startWorkflow(delayedWorkflow, {
+  queueName: 'delayed-queue',
+  enqueueOptions: { delaySeconds },
+})();
+// ...
+await DBOS.setWorkflowDelay(workflowID, { delaySeconds: newDelaySeconds });`,
+};
+
 function formatTime(epochMs: number): string {
   const date = new Date(epochMs);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+// Like formatTime, but prefixed with the date when it isn't today (e.g. a 1d delay).
+function formatDueTime(epochMs: number, nowMs: number): string {
+  const date = new Date(epochMs);
+  if (date.toDateString() === new Date(nowMs).toDateString()) return formatTime(epochMs);
+  return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${formatTime(epochMs)}`;
 }
 
 interface Toast {
@@ -69,7 +131,7 @@ interface Toast {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('fair-queue');
+  const [activeTab, setActiveTab] = useState<TabType>('rate-limited');
   const [tenantSelect, setTenantSelect] = useState('ed');
   const [customTenant, setCustomTenant] = useState('');
   const [debouncerTenantId, setDebouncerTenantId] = useState('alice');
@@ -79,14 +141,20 @@ function App() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [pipeline, setPipeline] = useState<Pipeline | null>(null);
   const [debounce, setDebounce] = useState<DebouncePipeline | null>(null);
+  const [enqueueDelaySeconds, setEnqueueDelaySeconds] = useState(DELAY_OPTIONS[2]);
+  const [delayedWorkflows, setDelayedWorkflows] = useState<DelayedWorkflow[]>([]);
+  // The workflow whose delay change is in flight, so only its pulldown is disabled.
+  const [changingDelayFor, setChangingDelayFor] = useState<string | null>(null);
   const tenantOrderRef = useRef<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
 
   const workflowName = activeTab === 'fair-queue'
-    ? 'fair_queue_concurrency_manager'
+    ? 'fair_queue_workflow'
     : activeTab === 'rate-limited'
     ? 'rate_limited_queue_workflow'
+    : activeTab === 'delayed'
+    ? 'delayed_workflow'
     : 'debouncer_workflow';
 
   const fetchWorkflows = useCallback(async () => {
@@ -115,7 +183,7 @@ function App() {
       const seen = [
         ...data.enqueued,
         ...data.success,
-        ...data.pending_concurrency,
+        ...data.pending,
       ].map((x) => x.tenant_id);
       const known = tenantOrderRef.current;
       const fresh = [...new Set(seen)].filter((t) => !known.includes(t)).sort();
@@ -141,17 +209,29 @@ function App() {
     }
   }, []);
 
+  const fetchDelayed = useCallback(async () => {
+    try {
+      const response = await fetch('/api/delayed/workflows');
+      if (!response.ok) return;
+      setDelayedWorkflows(await response.json());
+    } catch (error) {
+      console.error('Failed to fetch delayed workflows:', error);
+    }
+  }, []);
+
   useEffect(() => {
     const load =
       activeTab === 'fair-queue'
         ? fetchPipeline
         : activeTab === 'debouncer'
         ? fetchDebouncer
+        : activeTab === 'delayed'
+        ? fetchDelayed
         : fetchWorkflows;
     load();
     const interval = setInterval(load, 2000);
     return () => clearInterval(interval);
-  }, [activeTab, fetchPipeline, fetchDebouncer, fetchWorkflows]);
+  }, [activeTab, fetchPipeline, fetchDebouncer, fetchDelayed, fetchWorkflows]);
 
   useEffect(() => {
     if (toast) {
@@ -160,12 +240,12 @@ function App() {
     }
   }, [toast]);
 
-  // Tick every second on the debouncer tab so the "until run" countdown updates
-  // smoothly between the 2s data polls.
-  const [, setTick] = useState(0);
+  // Tick every second on the debouncer and delayed tabs so their countdowns
+  // update smoothly between the 2s data polls.
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (activeTab !== 'debouncer') return;
-    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    if (activeTab !== 'debouncer' && activeTab !== 'delayed') return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [activeTab]);
 
@@ -259,6 +339,42 @@ function App() {
     }
   };
 
+  // Post a delayed-workflow action, then refresh the table right away instead
+  // of waiting for the next poll.
+  const postDelayedAction = async (url: string, successMessage: string) => {
+    try {
+      const response = await fetch(url, { method: 'POST' });
+      if (response.ok) {
+        setToast({ message: successMessage, type: 'success' });
+      } else {
+        const body = await response.json().catch(() => null);
+        setToast({ message: body?.error ?? 'Request failed', type: 'error' });
+      }
+      await fetchDelayed();
+    } catch {
+      setToast({ message: 'Network error', type: 'error' });
+    }
+  };
+
+  const handleEnqueueDelayed = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    await postDelayedAction(
+      `/api/workflows/delayed?delay_seconds=${enqueueDelaySeconds}`,
+      `Enqueued a workflow delayed by ${formatDuration(enqueueDelaySeconds)}`,
+    );
+    setIsSubmitting(false);
+  };
+
+  const handleChangeDelay = async (workflowId: string, delaySeconds: number) => {
+    setChangingDelayFor(workflowId);
+    await postDelayedAction(
+      `/api/workflows/delayed/${encodeURIComponent(workflowId)}/set_delay?delay_seconds=${delaySeconds}`,
+      `${workflowId.slice(0, 8)} now runs in ${formatDuration(delaySeconds)}`,
+    );
+    setChangingDelayFor(null);
+  };
+
   const handleDebouncerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const tenant =
@@ -273,6 +389,8 @@ function App() {
         return 'success';
       case 'enqueued':
         return 'enqueued';
+      case 'delayed':
+        return 'delayed';
       case 'pending':
         return 'pending';
       case 'error':
@@ -293,19 +411,19 @@ function App() {
   const showInputBadge = activeTab === 'debouncer';
 
   const renderPipeline = () => {
-    const p = pipeline ?? { enqueued: [], pending_concurrency: [], success: [] };
+    const p = pipeline ?? { enqueued: [], pending: [], success: [] };
     const order = tenantOrderRef.current;
     const byOrder = (a: string, b: string) => order.indexOf(a) - order.indexOf(b);
 
     const tenantsInView = [...new Set([
       ...p.enqueued.map((x) => x.tenant_id),
-      ...p.pending_concurrency.map((x) => x.tenant_id),
+      ...p.pending.map((x) => x.tenant_id),
       ...p.success.map((x) => x.tenant_id),
     ])].sort(byOrder);
 
     const enqueued = [...p.enqueued].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
     const success = [...p.success].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
-    const pendConc = [...p.pending_concurrency].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
+    const pending = [...p.pending].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
 
     const countBox = (rows: TenantCount[]) =>
       rows.length === 0 ? (
@@ -349,14 +467,14 @@ function App() {
         <div className="pipeline-flow">
           <div className="pipe-section">
             <div className="pipe-label">Enqueued</div>
-            <div className="pipe-sublabel">partition queue</div>
+            <div className="pipe-sublabel">waiting for a slot</div>
             <div className="count-box">{countBox(enqueued)}</div>
           </div>
           <div className="pipe-arrow" aria-hidden="true">→</div>
           <div className="pipe-section">
             <div className="pipe-label">Pending</div>
-            <div className="pipe-sublabel">concurrency queue</div>
-            <div className="pill-stack">{pillStack(pendConc)}</div>
+            <div className="pipe-sublabel">running</div>
+            <div className="pill-stack">{pillStack(pending)}</div>
           </div>
           <div className="pipe-arrow" aria-hidden="true">→</div>
           <div className="pipe-section">
@@ -451,6 +569,81 @@ function App() {
     );
   };
 
+  const renderDelayed = () => {
+    if (delayedWorkflows.length === 0) {
+      return (
+        <div className="empty-state">
+          <h3 className="empty-title">No delayed workflows yet</h3>
+          <p className="empty-text">Enqueue a delayed workflow to get started</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="delayed-table-scroll">
+        <table className="delayed-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Status</th>
+              <th>Due</th>
+              <th className="delayed-action-col">Delay</th>
+            </tr>
+          </thead>
+          <tbody>
+            {delayedWorkflows.map((w) => {
+              const isDelayed = w.workflow_status === 'DELAYED';
+              return (
+                <tr key={w.workflow_id}>
+                  <td className="delayed-id" title={w.workflow_id}>{w.workflow_id.slice(0, 8)}</td>
+                  <td>
+                    <span className={`status-badge ${getStatusClass(w.workflow_status)}`}>
+                      <span className="status-dot"></span>
+                      {w.workflow_status}
+                    </span>
+                  </td>
+                  <td>
+                    {isDelayed && w.due_at ? (
+                      <span className="delayed-due">
+                        {formatDueTime(w.due_at, now)}
+                        <span className="debounce-countdown">
+                          {w.due_at > now ? `in ${formatDuration((w.due_at - now) / 1000)}` : 'due now'}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="delayed-muted">—</span>
+                    )}
+                  </td>
+                  <td className="delayed-action-col">
+                    {isDelayed ? (
+                      // A native select, styled as a button, is the "change delay" pulldown.
+                      <select
+                        className="delay-change"
+                        aria-label={`Change delay for ${w.workflow_id.slice(0, 8)}`}
+                        value=""
+                        disabled={changingDelayFor === w.workflow_id}
+                        onChange={(e) => handleChangeDelay(w.workflow_id, Number(e.target.value))}
+                      >
+                        <option value="" disabled>
+                          {changingDelayFor === w.workflow_id ? 'Changing…' : 'Change delay'}
+                        </option>
+                        {DELAY_OPTIONS.map((s) => (
+                          <option key={s} value={s}>Run in {formatDuration(s)}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="delayed-muted">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   return (
     <div className="app">
       <header className="header">
@@ -458,16 +651,22 @@ function App() {
           <h1 className="logo">DBOS Queue Patterns</h1>
           <nav className="tabs">
             <button
+              className={`tab ${activeTab === 'rate-limited' ? 'active' : ''}`}
+              onClick={() => setActiveTab('rate-limited')}
+            >
+              Rate Limited Queue
+            </button>
+            <button
               className={`tab ${activeTab === 'fair-queue' ? 'active' : ''}`}
               onClick={() => setActiveTab('fair-queue')}
             >
               Fair Queue
             </button>
             <button
-              className={`tab ${activeTab === 'rate-limited' ? 'active' : ''}`}
-              onClick={() => setActiveTab('rate-limited')}
+              className={`tab ${activeTab === 'delayed' ? 'active' : ''}`}
+              onClick={() => setActiveTab('delayed')}
             >
-              Rate Limited Queue
+              Delays
             </button>
             <button
               className={`tab ${activeTab === 'debouncer' ? 'active' : ''}`}
@@ -480,6 +679,20 @@ function App() {
       </header>
 
       <main className="main-content">
+        <div className="card code-card">
+          <div className="card-header">
+            <h2 className="card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+              </svg>
+              Code
+            </h2>
+          </div>
+          <div className="card-body">
+            <CodeSnippet code={CODE_SNIPPETS[activeTab]} />
+          </div>
+        </div>
+
         <div className="card">
           <div className="card-header">
             <h2 className="card-title">
@@ -648,6 +861,36 @@ function App() {
                 </div>
               </form>
             )}
+            {activeTab === 'delayed' && (
+              <form onSubmit={handleEnqueueDelayed}>
+                <p className="form-hint">
+                  Enqueue workflows that wait before running. While a workflow is DELAYED, change its delay from the table to run it sooner or later.
+                  The delay is stored in the database, so a workflow still runs if the app restarts before it is due.
+                </p>
+                <div className="submit-row">
+                  <div className="form-group tenant-group">
+                    <label htmlFor="enqueueDelaySeconds" className="form-label">
+                      Delay
+                    </label>
+                    <div className="tenant-controls">
+                      <select
+                        id="enqueueDelaySeconds"
+                        className="form-input form-select"
+                        value={enqueueDelaySeconds}
+                        onChange={(e) => setEnqueueDelaySeconds(Number(e.target.value))}
+                      >
+                        {DELAY_OPTIONS.map((s) => (
+                          <option key={s} value={s}>{formatDuration(s)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? 'Enqueuing…' : 'Enqueue Delayed Workflow'}
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
@@ -661,6 +904,8 @@ function App() {
                 ? 'Fair Queue Pipeline'
                 : activeTab === 'debouncer'
                 ? 'Debouncer Pipeline'
+                : activeTab === 'delayed'
+                ? 'Delayed Workflows'
                 : 'Queued Workflows'}
             </h2>
             <div className="refresh-indicator">
@@ -669,7 +914,7 @@ function App() {
             </div>
           </div>
           <div className="card-body">
-            {activeTab === 'fair-queue' ? renderPipeline() : activeTab === 'debouncer' ? renderDebouncer() : (
+            {activeTab === 'fair-queue' ? renderPipeline() : activeTab === 'debouncer' ? renderDebouncer() : activeTab === 'delayed' ? renderDelayed() : (
             <>
             <div className="stats">
               <div className="stat">

@@ -1,14 +1,14 @@
-import { DBOS, Debouncer, type WorkflowStatus } from '@dbos-inc/dbos-sdk';
+import { DBOS, Debouncer, type WorkflowStatus, type WorkflowStatusString } from '@dbos-inc/dbos-sdk';
 import express, { type Request, type Response } from 'express';
 import path from 'path';
 
 const app = express();
 
 // Queue names, shared by the workflows and the observability endpoints.
-const CONCURRENCY_QUEUE = 'concurrency-queue';
-const PARTITIONED_QUEUE = 'partitioned-queue';
+const FAIR_QUEUE = 'fair-queue';
 const RATE_LIMITED_QUEUE = 'rate-limited-queue';
 const DEBOUNCER_QUEUE = 'debouncer-queue';
+const DELAYED_QUEUE = 'delayed-queue';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -23,33 +23,21 @@ const FAIR_QUEUE_TENANTS = ['alice', 'bob', 'clark', 'dave', 'ed'];
 
 // The workflow for fair queueing simply sleeps for 5 seconds.
 async function fairQueueWorkflowFn() {
-  await DBOS.sleep(5000);
+  await DBOS.sleep(3000);
 }
 
 const fairQueueWorkflow = DBOS.registerWorkflow(fairQueueWorkflowFn, {
   name: 'fair_queue_workflow',
 });
 
-// The fair queue example uses two queues: 
-// PARTITIONED_QUEUE is split by tenant ID and limits the total number of concurrent tasks per tenant
-// CONCURRENCY_QUEUE limits the number of concurrent tasks per worker
-// These are registered below.
-// Workflows are first enqueued on the former and then to the latter, thus applying the limits of both queues.
+// FAIR_QUEUE (registered below) is partitioned by tenant ID and enforces two limits at once:
+// partitionConcurrency limits the number of concurrent tasks per tenant, across all workers,
+// and workerConcurrency limits the number of concurrent tasks per worker, across all tenants.
 
-async function fairQueueConcurrencyManagerFn() {
-  // This "concurrency manager" workflow holds a slot on PARTITIONED_QUEUE and executes fairQueueWorkflow on the CONCURRENCY_QUEUE. 
-  const handle = await DBOS.startWorkflow(fairQueueWorkflow, { queueName: CONCURRENCY_QUEUE })();
-  return await handle.getResult();
-}
-
-const fairQueueConcurrencyManager = DBOS.registerWorkflow(fairQueueConcurrencyManagerFn, {
-  name: 'fair_queue_concurrency_manager',
-});
-
-// Enqueue a single "concurrency manager" workflow to PARTITIONED_QUEUE
+// Enqueue a single workflow to FAIR_QUEUE, in the tenant's partition
 async function enqueueForTenant(tenantId: string) {
-  await DBOS.startWorkflow(fairQueueConcurrencyManager, {
-    queueName: PARTITIONED_QUEUE,
+  await DBOS.startWorkflow(fairQueueWorkflow, {
+    queueName: FAIR_QUEUE,
     enqueueOptions: { queuePartitionKey: tenantId },
   })();
 }
@@ -127,6 +115,64 @@ app.post('/api/workflows/debouncer', async (req: Request, res: Response) => {
 });
 
 //######################
+//# Delayed Execution
+//######################
+
+// The longest delay the demo accepts, in seconds.
+// In practice, there is no hard limit
+const MAX_DELAY_SECONDS = 24 * 60 * 60;
+
+async function delayedWorkflowFn() {
+  console.log('Executing delayed workflow');
+  await DBOS.sleep(2000);
+}
+
+const delayedWorkflow = DBOS.registerWorkflow(delayedWorkflowFn, {
+  name: 'delayed_workflow',
+});
+
+// Parse the delay_seconds query parameter, or send a 400 and return undefined.
+function parseDelaySeconds(req: Request, res: Response): number | undefined {
+  const delaySeconds = Number(req.query.delay_seconds);
+  if (!Number.isFinite(delaySeconds) || delaySeconds <= 0 || delaySeconds > MAX_DELAY_SECONDS) {
+    res.status(400).json({ error: `delay_seconds must be between 0 and ${MAX_DELAY_SECONDS}` });
+    return undefined;
+  }
+  return delaySeconds;
+}
+
+// Enqueue the workflow with a delay. It stays DELAYED until the delay expires,
+// then becomes ENQUEUED and runs on DELAYED_QUEUE.
+app.post('/api/workflows/delayed', async (req: Request, res: Response) => {
+  const delaySeconds = parseDelaySeconds(req, res);
+  if (delaySeconds === undefined) return;
+  await DBOS.startWorkflow(delayedWorkflow, {
+    queueName: DELAYED_QUEUE,
+    enqueueOptions: { delaySeconds },
+  })();
+  res.json(null);
+});
+
+// Change one workflow's delay, counting from now. DBOS only changes the delay
+// of a workflow that is still DELAYED.
+app.post('/api/workflows/delayed/:workflowId/set_delay', async (req: Request, res: Response) => {
+  const delaySeconds = parseDelaySeconds(req, res);
+  if (delaySeconds === undefined) return;
+  const workflowId = String(req.params.workflowId);
+  const status = await DBOS.getWorkflowStatus(workflowId);
+  if (status?.workflowName !== 'delayed_workflow' || status.queueName !== DELAYED_QUEUE) {
+    res.status(404).json({ error: 'Delayed workflow not found' });
+    return;
+  }
+  if (status.status !== 'DELAYED') {
+    res.status(409).json({ error: `Workflow is ${status.status}, so its delay can no longer change` });
+    return;
+  }
+  await DBOS.setWorkflowDelay(workflowId, { delaySeconds });
+  res.json(null);
+});
+
+//######################
 //# Observability
 //######################
 
@@ -170,39 +216,29 @@ function countsByTenant(wfs: WorkflowStatus[]) {
 }
 
 app.get('/api/fair_queue/pipeline', async (_req: Request, res: Response) => {
-  // The "concurrency manager" workflows run on the partitioned queue and carry the
-  // partition key (tenant_id) natively.
-  const enqueuedMgrs = await DBOS.listWorkflows({
-    workflowName: 'fair_queue_concurrency_manager',
-    status: ['ENQUEUED', 'PENDING'],
-    loadInput: false,
-    loadOutput: false,
-  });
-  const successMgrs = await DBOS.listWorkflows({
-    workflowName: 'fair_queue_concurrency_manager',
-    status: 'SUCCESS',
-    startTime: thirtyMinutesAgo(),
-    loadInput: false,
-    loadOutput: false,
-  });
-
-  // The actual work runs on the concurrency queue. Those workflows have no partition
-  // key of their own, so we inherit it from the parent manager that enqueued them.
-  const pendingWork = await DBOS.listWorkflows({
-    workflowName: 'fair_queue_workflow',
-    status: 'PENDING',
-    loadInput: false,
-    loadOutput: false,
-  });
-  const mgrKey = new Map(enqueuedMgrs.map((m) => [m.workflowID, m.queuePartitionKey]));
+  // Every workflow on the fair queue carries its tenant as its partition key.
+  const listFairQueue = (status: WorkflowStatusString, startTime?: string) =>
+    DBOS.listWorkflows({
+      workflowName: 'fair_queue_workflow',
+      queueName: FAIR_QUEUE,
+      status,
+      startTime,
+      loadInput: false,
+      loadOutput: false,
+    });
+  const [enqueued, pending, success] = await Promise.all([
+    listFairQueue('ENQUEUED'),
+    listFairQueue('PENDING'),
+    listFairQueue('SUCCESS', thirtyMinutesAgo()),
+  ]);
 
   res.json({
-    enqueued: countsByTenant(enqueuedMgrs),
-    pending_concurrency: pendingWork.map((w) => ({
+    enqueued: countsByTenant(enqueued),
+    pending: pending.map((w) => ({
       workflow_id: w.workflowID,
-      tenant_id: (w.parentWorkflowID ? mgrKey.get(w.parentWorkflowID) : undefined) ?? 'unknown',
+      tenant_id: w.queuePartitionKey ?? 'unknown',
     })),
-    success: countsByTenant(successMgrs),
+    success: countsByTenant(success),
   });
 });
 
@@ -253,6 +289,38 @@ app.get('/api/debouncer/pipeline', async (_req: Request, res: Response) => {
   });
 });
 
+app.get('/api/delayed/workflows', async (_req: Request, res: Response) => {
+  // A delayed workflow is DELAYED until its delay expires, then ENQUEUED and
+  // almost immediately PENDING while it runs, then SUCCESS. List every workflow
+  // that is still in progress, plus any created in the last 30 minutes.
+  const listDelayedQueue = (status?: WorkflowStatusString[], startTime?: string) =>
+    DBOS.listWorkflows({
+      workflowName: 'delayed_workflow',
+      queueName: DELAYED_QUEUE,
+      status,
+      startTime,
+      sortDesc: true,
+      loadInput: false,
+      loadOutput: false,
+    });
+  const [active, recent] = await Promise.all([
+    listDelayedQueue(['DELAYED', 'ENQUEUED', 'PENDING']),
+    listDelayedQueue(undefined, thirtyMinutesAgo()),
+  ]);
+
+  const byId = new Map([...recent, ...active].map((w) => [w.workflowID, w]));
+  const workflows = [...byId.values()]
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+    .map((w) => ({
+      workflow_id: w.workflowID,
+      workflow_status: w.status,
+      created_at: w.createdAt,
+      // When the delay expires and the workflow becomes eligible to run.
+      due_at: w.delayUntilEpochMS ?? null,
+    }));
+  res.json(workflows);
+});
+
 //######################
 //# Configuration
 //######################
@@ -267,15 +335,15 @@ async function main() {
   DBOS.setConfig({
     name: 'dbos-queue-patterns',
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
-    applicationVersion: '0.1.0',
+    applicationVersion: '0.2.0',
   });
   await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
-  await DBOS.registerQueue(CONCURRENCY_QUEUE, { workerConcurrency: 4 });
-  await DBOS.registerQueue(PARTITIONED_QUEUE, { partitionQueue: true, concurrency: 2 });
+  await DBOS.registerQueue(FAIR_QUEUE, { partitionConcurrency: 2, workerConcurrency: 4 });
   await DBOS.registerQueue(RATE_LIMITED_QUEUE, {
     rateLimit: { limitPerPeriod: 2, periodSec: 10 },
   });
   await DBOS.registerQueue(DEBOUNCER_QUEUE);
+  await DBOS.registerQueue(DELAYED_QUEUE);
 
   const PORT = parseInt(process.env.NODE_PORT || '8000');
   app.listen(PORT, () => {

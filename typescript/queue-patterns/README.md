@@ -1,7 +1,7 @@
 # Queue Patterns
 
 This example demonstrates how to use several advanced queue patterns in DBOS.
-In particular, it demonstrates **fair queueing**, **rate limits**, and **debouncing**.
+In particular, it demonstrates **fair queueing**, **rate limits**, **debouncing**, and **delayed execution**.
 
 ## Setup
 
