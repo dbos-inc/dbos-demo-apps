@@ -8,6 +8,7 @@ const app = express();
 const FAIR_QUEUE = 'fair-queue';
 const RATE_LIMITED_QUEUE = 'rate-limited-queue';
 const DEBOUNCER_QUEUE = 'debouncer-queue';
+const DELAYED_QUEUE = 'delayed-queue';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -110,6 +111,64 @@ app.post('/api/workflows/debouncer', async (req: Request, res: Response) => {
   const debounceKey = tenantId;
   const debouncePeriodMs = 10000;
   await debouncer.debounce(debounceKey, debouncePeriodMs, tenantId, input);
+  res.json(null);
+});
+
+//######################
+//# Delayed Execution
+//######################
+
+// The longest delay the demo accepts, in seconds.
+// In practice, there is no hard limit
+const MAX_DELAY_SECONDS = 24 * 60 * 60;
+
+async function delayedWorkflowFn() {
+  console.log('Executing delayed workflow');
+  await DBOS.sleep(2000);
+}
+
+const delayedWorkflow = DBOS.registerWorkflow(delayedWorkflowFn, {
+  name: 'delayed_workflow',
+});
+
+// Parse the delay_seconds query parameter, or send a 400 and return undefined.
+function parseDelaySeconds(req: Request, res: Response): number | undefined {
+  const delaySeconds = Number(req.query.delay_seconds);
+  if (!Number.isFinite(delaySeconds) || delaySeconds <= 0 || delaySeconds > MAX_DELAY_SECONDS) {
+    res.status(400).json({ error: `delay_seconds must be between 0 and ${MAX_DELAY_SECONDS}` });
+    return undefined;
+  }
+  return delaySeconds;
+}
+
+// Enqueue the workflow with a delay. It stays DELAYED until the delay expires,
+// then becomes ENQUEUED and runs on DELAYED_QUEUE.
+app.post('/api/workflows/delayed', async (req: Request, res: Response) => {
+  const delaySeconds = parseDelaySeconds(req, res);
+  if (delaySeconds === undefined) return;
+  await DBOS.startWorkflow(delayedWorkflow, {
+    queueName: DELAYED_QUEUE,
+    enqueueOptions: { delaySeconds },
+  })();
+  res.json(null);
+});
+
+// Change one workflow's delay, counting from now. DBOS only changes the delay
+// of a workflow that is still DELAYED.
+app.post('/api/workflows/delayed/:workflowId/set_delay', async (req: Request, res: Response) => {
+  const delaySeconds = parseDelaySeconds(req, res);
+  if (delaySeconds === undefined) return;
+  const workflowId = String(req.params.workflowId);
+  const status = await DBOS.getWorkflowStatus(workflowId);
+  if (status?.workflowName !== 'delayed_workflow' || status.queueName !== DELAYED_QUEUE) {
+    res.status(404).json({ error: 'Delayed workflow not found' });
+    return;
+  }
+  if (status.status !== 'DELAYED') {
+    res.status(409).json({ error: `Workflow is ${status.status}, so its delay can no longer change` });
+    return;
+  }
+  await DBOS.setWorkflowDelay(workflowId, { delaySeconds });
   res.json(null);
 });
 
@@ -230,6 +289,38 @@ app.get('/api/debouncer/pipeline', async (_req: Request, res: Response) => {
   });
 });
 
+app.get('/api/delayed/workflows', async (_req: Request, res: Response) => {
+  // A delayed workflow is DELAYED until its delay expires, then ENQUEUED and
+  // almost immediately PENDING while it runs, then SUCCESS. List every workflow
+  // that is still in progress, plus any created in the last 30 minutes.
+  const listDelayedQueue = (status?: WorkflowStatusString[], startTime?: string) =>
+    DBOS.listWorkflows({
+      workflowName: 'delayed_workflow',
+      queueName: DELAYED_QUEUE,
+      status,
+      startTime,
+      sortDesc: true,
+      loadInput: false,
+      loadOutput: false,
+    });
+  const [active, recent] = await Promise.all([
+    listDelayedQueue(['DELAYED', 'ENQUEUED', 'PENDING']),
+    listDelayedQueue(undefined, thirtyMinutesAgo()),
+  ]);
+
+  const byId = new Map([...recent, ...active].map((w) => [w.workflowID, w]));
+  const workflows = [...byId.values()]
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+    .map((w) => ({
+      workflow_id: w.workflowID,
+      workflow_status: w.status,
+      created_at: w.createdAt,
+      // When the delay expires and the workflow becomes eligible to run.
+      due_at: w.delayUntilEpochMS ?? null,
+    }));
+  res.json(workflows);
+});
+
 //######################
 //# Configuration
 //######################
@@ -252,6 +343,7 @@ async function main() {
     rateLimit: { limitPerPeriod: 2, periodSec: 10 },
   });
   await DBOS.registerQueue(DEBOUNCER_QUEUE);
+  await DBOS.registerQueue(DELAYED_QUEUE);
 
   const PORT = parseInt(process.env.NODE_PORT || '8000');
   app.listen(PORT, () => {
