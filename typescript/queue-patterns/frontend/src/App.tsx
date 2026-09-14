@@ -24,7 +24,7 @@ interface PendingWorkflow {
 
 interface Pipeline {
   enqueued: TenantCount[];
-  pending_concurrency: PendingWorkflow[];
+  pending: PendingWorkflow[];
   success: TenantCount[];
 }
 
@@ -84,7 +84,7 @@ function App() {
   const [toast, setToast] = useState<Toast | null>(null);
 
   const workflowName = activeTab === 'fair-queue'
-    ? 'fair_queue_concurrency_manager'
+    ? 'fair_queue_workflow'
     : activeTab === 'rate-limited'
     ? 'rate_limited_queue_workflow'
     : 'debouncer_workflow';
@@ -115,7 +115,7 @@ function App() {
       const seen = [
         ...data.enqueued,
         ...data.success,
-        ...data.pending_concurrency,
+        ...data.pending,
       ].map((x) => x.tenant_id);
       const known = tenantOrderRef.current;
       const fresh = [...new Set(seen)].filter((t) => !known.includes(t)).sort();
@@ -293,19 +293,19 @@ function App() {
   const showInputBadge = activeTab === 'debouncer';
 
   const renderPipeline = () => {
-    const p = pipeline ?? { enqueued: [], pending_concurrency: [], success: [] };
+    const p = pipeline ?? { enqueued: [], pending: [], success: [] };
     const order = tenantOrderRef.current;
     const byOrder = (a: string, b: string) => order.indexOf(a) - order.indexOf(b);
 
     const tenantsInView = [...new Set([
       ...p.enqueued.map((x) => x.tenant_id),
-      ...p.pending_concurrency.map((x) => x.tenant_id),
+      ...p.pending.map((x) => x.tenant_id),
       ...p.success.map((x) => x.tenant_id),
     ])].sort(byOrder);
 
     const enqueued = [...p.enqueued].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
     const success = [...p.success].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
-    const pendConc = [...p.pending_concurrency].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
+    const pending = [...p.pending].sort((a, b) => byOrder(a.tenant_id, b.tenant_id));
 
     const countBox = (rows: TenantCount[]) =>
       rows.length === 0 ? (
@@ -349,14 +349,14 @@ function App() {
         <div className="pipeline-flow">
           <div className="pipe-section">
             <div className="pipe-label">Enqueued</div>
-            <div className="pipe-sublabel">partition queue</div>
+            <div className="pipe-sublabel">waiting for a slot</div>
             <div className="count-box">{countBox(enqueued)}</div>
           </div>
           <div className="pipe-arrow" aria-hidden="true">→</div>
           <div className="pipe-section">
             <div className="pipe-label">Pending</div>
-            <div className="pipe-sublabel">concurrency queue</div>
-            <div className="pill-stack">{pillStack(pendConc)}</div>
+            <div className="pipe-sublabel">running</div>
+            <div className="pill-stack">{pillStack(pending)}</div>
           </div>
           <div className="pipe-arrow" aria-hidden="true">→</div>
           <div className="pipe-section">

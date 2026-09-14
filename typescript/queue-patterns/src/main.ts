@@ -1,12 +1,11 @@
-import { DBOS, Debouncer, type WorkflowStatus } from '@dbos-inc/dbos-sdk';
+import { DBOS, Debouncer, type WorkflowStatus, type WorkflowStatusString } from '@dbos-inc/dbos-sdk';
 import express, { type Request, type Response } from 'express';
 import path from 'path';
 
 const app = express();
 
 // Queue names, shared by the workflows and the observability endpoints.
-const CONCURRENCY_QUEUE = 'concurrency-queue';
-const PARTITIONED_QUEUE = 'partitioned-queue';
+const FAIR_QUEUE = 'fair-queue';
 const RATE_LIMITED_QUEUE = 'rate-limited-queue';
 const DEBOUNCER_QUEUE = 'debouncer-queue';
 
@@ -30,26 +29,14 @@ const fairQueueWorkflow = DBOS.registerWorkflow(fairQueueWorkflowFn, {
   name: 'fair_queue_workflow',
 });
 
-// The fair queue example uses two queues: 
-// PARTITIONED_QUEUE is split by tenant ID and limits the total number of concurrent tasks per tenant
-// CONCURRENCY_QUEUE limits the number of concurrent tasks per worker
-// These are registered below.
-// Workflows are first enqueued on the former and then to the latter, thus applying the limits of both queues.
+// FAIR_QUEUE (registered below) is partitioned by tenant ID and enforces two limits at once:
+// partitionConcurrency limits the number of concurrent tasks per tenant, across all workers,
+// and workerConcurrency limits the number of concurrent tasks per worker, across all tenants.
 
-async function fairQueueConcurrencyManagerFn() {
-  // This "concurrency manager" workflow holds a slot on PARTITIONED_QUEUE and executes fairQueueWorkflow on the CONCURRENCY_QUEUE. 
-  const handle = await DBOS.startWorkflow(fairQueueWorkflow, { queueName: CONCURRENCY_QUEUE })();
-  return await handle.getResult();
-}
-
-const fairQueueConcurrencyManager = DBOS.registerWorkflow(fairQueueConcurrencyManagerFn, {
-  name: 'fair_queue_concurrency_manager',
-});
-
-// Enqueue a single "concurrency manager" workflow to PARTITIONED_QUEUE
+// Enqueue a single workflow to FAIR_QUEUE, in the tenant's partition
 async function enqueueForTenant(tenantId: string) {
-  await DBOS.startWorkflow(fairQueueConcurrencyManager, {
-    queueName: PARTITIONED_QUEUE,
+  await DBOS.startWorkflow(fairQueueWorkflow, {
+    queueName: FAIR_QUEUE,
     enqueueOptions: { queuePartitionKey: tenantId },
   })();
 }
@@ -170,39 +157,29 @@ function countsByTenant(wfs: WorkflowStatus[]) {
 }
 
 app.get('/api/fair_queue/pipeline', async (_req: Request, res: Response) => {
-  // The "concurrency manager" workflows run on the partitioned queue and carry the
-  // partition key (tenant_id) natively.
-  const enqueuedMgrs = await DBOS.listWorkflows({
-    workflowName: 'fair_queue_concurrency_manager',
-    status: ['ENQUEUED', 'PENDING'],
-    loadInput: false,
-    loadOutput: false,
-  });
-  const successMgrs = await DBOS.listWorkflows({
-    workflowName: 'fair_queue_concurrency_manager',
-    status: 'SUCCESS',
-    startTime: thirtyMinutesAgo(),
-    loadInput: false,
-    loadOutput: false,
-  });
-
-  // The actual work runs on the concurrency queue. Those workflows have no partition
-  // key of their own, so we inherit it from the parent manager that enqueued them.
-  const pendingWork = await DBOS.listWorkflows({
-    workflowName: 'fair_queue_workflow',
-    status: 'PENDING',
-    loadInput: false,
-    loadOutput: false,
-  });
-  const mgrKey = new Map(enqueuedMgrs.map((m) => [m.workflowID, m.queuePartitionKey]));
+  // Every workflow on the fair queue carries its tenant as its partition key.
+  const listFairQueue = (status: WorkflowStatusString, startTime?: string) =>
+    DBOS.listWorkflows({
+      workflowName: 'fair_queue_workflow',
+      queueName: FAIR_QUEUE,
+      status,
+      startTime,
+      loadInput: false,
+      loadOutput: false,
+    });
+  const [enqueued, pending, success] = await Promise.all([
+    listFairQueue('ENQUEUED'),
+    listFairQueue('PENDING'),
+    listFairQueue('SUCCESS', thirtyMinutesAgo()),
+  ]);
 
   res.json({
-    enqueued: countsByTenant(enqueuedMgrs),
-    pending_concurrency: pendingWork.map((w) => ({
+    enqueued: countsByTenant(enqueued),
+    pending: pending.map((w) => ({
       workflow_id: w.workflowID,
-      tenant_id: (w.parentWorkflowID ? mgrKey.get(w.parentWorkflowID) : undefined) ?? 'unknown',
+      tenant_id: w.queuePartitionKey ?? 'unknown',
     })),
-    success: countsByTenant(successMgrs),
+    success: countsByTenant(success),
   });
 });
 
@@ -267,11 +244,10 @@ async function main() {
   DBOS.setConfig({
     name: 'dbos-queue-patterns',
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
-    applicationVersion: '0.1.0',
+    applicationVersion: '0.2.0',
   });
   await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
-  await DBOS.registerQueue(CONCURRENCY_QUEUE, { workerConcurrency: 4 });
-  await DBOS.registerQueue(PARTITIONED_QUEUE, { partitionQueue: true, concurrency: 2 });
+  await DBOS.registerQueue(FAIR_QUEUE, { partitionConcurrency: 2, workerConcurrency: 4 });
   await DBOS.registerQueue(RATE_LIMITED_QUEUE, {
     rateLimit: { limitPerPeriod: 2, periodSec: 10 },
   });
