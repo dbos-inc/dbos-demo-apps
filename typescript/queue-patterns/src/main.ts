@@ -23,7 +23,7 @@ const FAIR_QUEUE_TENANTS = ['alice', 'bob', 'clark', 'dave', 'ed'];
 
 // The workflow for fair queueing simply sleeps for 5 seconds.
 async function fairQueueWorkflowFn() {
-  await DBOS.sleep(5000);
+  await DBOS.sleep(3000);
 }
 
 const fairQueueWorkflow = DBOS.registerWorkflow(fairQueueWorkflowFn, {
