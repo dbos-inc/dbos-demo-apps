@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
+import { CodeSnippet } from './CodeSnippet';
 
 type TabType = 'fair-queue' | 'rate-limited' | 'debouncer';
 
@@ -58,6 +59,27 @@ const DEBOUNCE_TENANTS = ['alice', 'bob', 'clark'];
 // triggers stop, with only the last argument submitted.
 const DEBOUNCE_INPUTS = ['input_1', 'input_2', 'input_3', 'input_4'];
 
+// The DBOS code behind each tab, shown in the Code card.
+const CODE_SNIPPETS: Record<TabType, string> = {
+  'fair-queue': `await DBOS.registerQueue('fair-queue', {
+  partitionConcurrency: 2,
+  workerConcurrency: 4,
+});`,
+  'rate-limited': `await DBOS.registerQueue('rate-limited-queue', {
+  rateLimit: { limitPerPeriod: 2, periodSec: 10 },
+});`,
+  debouncer: `await DBOS.registerQueue('debouncer-queue');
+// ...
+const debouncer = new Debouncer({
+  workflow: debouncerWorkflow,
+  startWorkflowParams: { queueName: 'debouncer-queue' },
+});
+// ...
+const debounceKey = tenantId;
+const debouncePeriodMs = 10000;
+await debouncer.debounce(debounceKey, debouncePeriodMs, tenantId, input);`,
+};
+
 function formatTime(epochMs: number): string {
   const date = new Date(epochMs);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -69,7 +91,7 @@ interface Toast {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('fair-queue');
+  const [activeTab, setActiveTab] = useState<TabType>('rate-limited');
   const [tenantSelect, setTenantSelect] = useState('ed');
   const [customTenant, setCustomTenant] = useState('');
   const [debouncerTenantId, setDebouncerTenantId] = useState('alice');
@@ -458,16 +480,16 @@ function App() {
           <h1 className="logo">DBOS Queue Patterns</h1>
           <nav className="tabs">
             <button
-              className={`tab ${activeTab === 'fair-queue' ? 'active' : ''}`}
-              onClick={() => setActiveTab('fair-queue')}
-            >
-              Fair Queue
-            </button>
-            <button
               className={`tab ${activeTab === 'rate-limited' ? 'active' : ''}`}
               onClick={() => setActiveTab('rate-limited')}
             >
               Rate Limited Queue
+            </button>
+            <button
+              className={`tab ${activeTab === 'fair-queue' ? 'active' : ''}`}
+              onClick={() => setActiveTab('fair-queue')}
+            >
+              Fair Queue
             </button>
             <button
               className={`tab ${activeTab === 'debouncer' ? 'active' : ''}`}
@@ -480,6 +502,20 @@ function App() {
       </header>
 
       <main className="main-content">
+        <div className="card code-card">
+          <div className="card-header">
+            <h2 className="card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+              </svg>
+              Code
+            </h2>
+          </div>
+          <div className="card-body">
+            <CodeSnippet code={CODE_SNIPPETS[activeTab]} />
+          </div>
+        </div>
+
         <div className="card">
           <div className="card-header">
             <h2 className="card-title">

@@ -747,3 +747,30 @@
   min-height: 0;
   max-height: 240px;
 }
+
+/* Code card: spans the full width above the two main cards */
+.code-card {
+  grid-column: 1 / -1;
+}
+
+.code-block {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  tab-size: 2;
+}
+
+.tok-keyword { color: #c792ea; }
+.tok-string { color: #a5d6a7; }
+.tok-number { color: #f78c6c; }
+.tok-function { color: #82aaff; }
+.tok-class { color: #ffcb6b; }
+.tok-property { color: #7fdbca; }
+.tok-comment { color: var(--text-secondary); opacity: 0.7; }
