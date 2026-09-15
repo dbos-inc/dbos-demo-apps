@@ -1,4 +1,4 @@
-import { DBOSClient } from "npm:@dbos-inc/dbos-sdk@4.27.6";
+import { DBOSClient } from "npm:@dbos-inc/dbos-sdk@4.28.15-preview";
 import { APP_NAME, QUEUE, systemDatabaseUrl, WORKFLOW_PROCESS_TASK } from "../_shared/config.ts";
 import type { Task } from "../_shared/workflows.ts";
 
