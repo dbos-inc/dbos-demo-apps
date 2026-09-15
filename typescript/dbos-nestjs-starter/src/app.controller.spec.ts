@@ -13,6 +13,10 @@ describe('AppController', () => {
     }).compile();
 
     appController = app.get<AppController>(AppController);
+    DBOS.setConfig({
+      name: 'dbos-nestjs-starter',
+      systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+    });
     await DBOS.launch();
   });
 
