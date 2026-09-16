@@ -1,4 +1,4 @@
-import { DBOS } from "npm:@dbos-inc/dbos-sdk@4.28.15-preview";
+import { DBOS } from "npm:@dbos-inc/dbos-sdk@5.0.2";
 import { APP_NAME, APP_VERSION, QUEUE, systemDatabaseUrl } from "../_shared/config.ts";
 import "../_shared/workflows.ts"; // registers processTask; must be imported before launch
 

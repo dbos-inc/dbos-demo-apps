@@ -1,4 +1,4 @@
-import { DBOS } from "npm:@dbos-inc/dbos-sdk@4.28.15-preview";
+import { DBOS } from "npm:@dbos-inc/dbos-sdk@5.0.2";
 import pg from "npm:pg@8.16.3";
 import { QUEUE, systemDatabaseUrl, WORKFLOW_PROCESS_TASK } from "./config.ts";
 
