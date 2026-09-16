@@ -1,3 +1,3 @@
-dbos[otel]==2.32.0a19
+dbos[otel]==3.0.0
 fastapi[standard]
 alembic

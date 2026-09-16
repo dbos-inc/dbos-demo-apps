@@ -116,7 +116,7 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "2.32.0a19"
+version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -127,9 +127,9 @@ dependencies = [
     { name = "websockets", version = "16.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "websockets", version = "17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/47/dd/c72f1dfc08284e7aefdd7ddea50bd0b5be74821621b2d8d2e965071d1ebc/dbos-2.32.0a19.tar.gz", hash = "sha256:9f07288136f7fa6d17c3a464442121a7d03fc8134091c8d2d9bdb0f5c7ee710e", size = 537568, upload-time = "2026-09-15T15:37:50.826Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9a/f0/043a3385913f01a19b58631f1fb82cdd44acc87207528e5bd396ca5453ca/dbos-3.0.0.tar.gz", hash = "sha256:d9b8b92ee139b3ef1f707dd054831c4f8db039d2f790975cd0c817ecbd276c1f", size = 537283, upload-time = "2026-09-16T17:14:23.554Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/17/2a/731f0946c5b242adf18e3526d97d571caea7e0c5726a9a7fb958f1b21176/dbos-2.32.0a19-py3-none-any.whl", hash = "sha256:fac3135cbdfe7aa746e743ee4b30a373988a6a94b391427c5e37ef841b0f4cfb", size = 266803, upload-time = "2026-09-15T15:37:49.193Z" },
+    { url = "https://files.pythonhosted.org/packages/33/0b/cb00852815db8bb684f7a5ab10fb53124bc61b0f5e990bc8b14ab6b17f70/dbos-3.0.0-py3-none-any.whl", hash = "sha256:cc552877a11e8d017dbaa7a305a81fbc3c15c3c4d5628f9c2edf42f4de8fb537", size = 266753, upload-time = "2026-09-16T17:14:21.88Z" },
 ]
 
 [[package]]
@@ -487,7 +487,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", specifier = "==2.32.0a19" },
+    { name = "dbos", specifier = "==3.0.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.121.1" },
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "openai", specifier = ">=1.0.0" },
