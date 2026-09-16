@@ -132,5 +132,5 @@ if __name__ == "__main__":
     DBOS(config=config)
     DBOS.launch()
     # Create a queue with concurrency of 1 so only one deployment workflow runs at a time
-    DBOS.register_queue("deploy-tracker-queue", concurrency=1)
+    DBOS.register_queue("deploy-tracker-queue", global_concurrency=1)
     app.start(port=3000)  # POST http://localhost:3000/slack/events

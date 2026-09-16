@@ -7,7 +7,7 @@
 
 ## Architecture & Data Flow
 - **Slack Commands**: `/deploy` triggers a deployment workflow; `/check_status` queries workflow status.
-- **Workflow Queue**: Only one deployment runs at a time (see `Queue(name="deploy-tracker-queue", concurrency=1)`).
+- **Workflow Queue**: Only one deployment runs at a time (see `DBOS.register_queue("deploy-tracker-queue", global_concurrency=1)`).
 - **Workflow Steps**: Each deployment step (build, test, deploy) is a `@DBOS.step()`; status is posted to Slack and tracked via DBOS events.
 - **Event Tracking**: Deployment status is set with `DBOS.set_event()` and retrieved with `DBOS.get_event()`.
 - **Error Handling**: Random failures are simulated in `deploy_step` for demo purposes.

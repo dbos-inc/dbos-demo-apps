@@ -42,7 +42,7 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "2.31.0"
+version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -53,9 +53,9 @@ dependencies = [
     { name = "websockets", version = "16.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "websockets", version = "17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0f/13/d8bb7b92102f98203f1b28aa3fd1b72f84660300a47a7b8a141c6b1b7138/dbos-2.31.0.tar.gz", hash = "sha256:7f5117385526a08aaaffa8c97016f920b9b9c6c8a25b4a08b51dfb15c5bb4fcb", size = 702185, upload-time = "2026-08-25T15:37:16.51Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9a/f0/043a3385913f01a19b58631f1fb82cdd44acc87207528e5bd396ca5453ca/dbos-3.0.0.tar.gz", hash = "sha256:d9b8b92ee139b3ef1f707dd054831c4f8db039d2f790975cd0c817ecbd276c1f", size = 537283, upload-time = "2026-09-16T17:14:23.554Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/21/103dd5b76ce3bda956d171b153440a6a0a9800363b933cfa0f57dd74fc41/dbos-2.31.0-py3-none-any.whl", hash = "sha256:2a84930349ced724cfe2fa00b98b3ac80287ed28f65ee316139b37dae702fb37", size = 278387, upload-time = "2026-08-25T15:37:14.718Z" },
+    { url = "https://files.pythonhosted.org/packages/33/0b/cb00852815db8bb684f7a5ab10fb53124bc61b0f5e990bc8b14ab6b17f70/dbos-3.0.0-py3-none-any.whl", hash = "sha256:cc552877a11e8d017dbaa7a305a81fbc3c15c3c4d5628f9c2edf42f4de8fb537", size = 266753, upload-time = "2026-09-16T17:14:21.88Z" },
 ]
 
 [[package]]
@@ -70,7 +70,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", specifier = "==2.31.0" },
+    { name = "dbos", specifier = "==3.0.0" },
     { name = "django", specifier = ">=5.2" },
 ]
 
