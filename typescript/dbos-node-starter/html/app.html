@@ -301,15 +301,6 @@
         flex-direction: column;
         gap: 16px;
       }
-      .controls h2 {
-        margin: 0;
-        font-size: 0.65rem;
-        font-weight: 700;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-      }
-
       /* ---- buttons (mirror MUI "flashy" / "basic" variants) ---- */
       .btn {
         position: relative;
@@ -618,6 +609,384 @@
         border-radius: 50%;
         background: currentColor;
       }
+      /* Workflow statuses, in the same colors as the workflow counts. */
+      .status-badge.enqueued {
+        color: var(--lily);
+        background: rgba(154, 181, 229, 0.1);
+      }
+      .status-badge.pending {
+        color: var(--cyan);
+        background: rgba(68, 227, 238, 0.08);
+      }
+      .status-badge.pending .status-dot {
+        animation: blink 1.4s ease-in-out infinite;
+      }
+      .status-badge.success {
+        color: var(--status-success);
+        background: rgba(86, 166, 75, 0.1);
+      }
+      .status-badge.delayed {
+        color: var(--yellow);
+        background: rgba(236, 250, 160, 0.08);
+      }
+      .status-badge.error {
+        color: var(--status-error);
+        background: rgba(220, 88, 72, 0.1);
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+      }
+
+      /* ---- queue pattern selector ---- */
+      .subnav {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: -12px 0 28px;
+      }
+      .subnav label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .select {
+        appearance: none;
+        -webkit-appearance: none;
+        background: var(--code-bg)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3a5aa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")
+          no-repeat right 10px center / 14px;
+        border: 1px solid var(--ink-border);
+        border-radius: 2px;
+        color: var(--fg);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 34px 8px 12px;
+        cursor: pointer;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .select:hover,
+      .select:focus {
+        border-color: var(--muted);
+      }
+      .select option {
+        background: var(--ink-bg);
+        color: var(--fg);
+      }
+      .select-sm {
+        font-size: 12px;
+        padding: 5px 30px 5px 10px;
+        background-position: right 8px center;
+        background-size: 12px;
+      }
+      /* A pulldown in the flashy button style: gradient border and olive glow. */
+      .select-flashy {
+        border: 1px solid transparent;
+        border-image: var(--dbos-gradient);
+        border-image-slice: 1;
+        background:
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d8d9dc' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")
+            no-repeat right 12px center / 14px,
+          var(--flashy-bg);
+        transition: box-shadow 0.4s ease;
+      }
+      .select-flashy:hover,
+      .select-flashy:focus {
+        background:
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d8d9dc' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")
+            no-repeat right 12px center / 14px,
+          var(--flashy-bg-hover);
+        box-shadow: 0 0 14px rgba(200, 246, 46, 0.22);
+      }
+      .select-lg {
+        min-width: 230px;
+        font-size: 14px;
+        padding: 9px 38px 9px 14px;
+      }
+      .queue-view {
+        display: none;
+      }
+      .queue-view.active {
+        display: block;
+      }
+
+      /* ---- queue settings (number inputs + Apply) ---- */
+      .settings {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .settings .btn {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        align-self: stretch;
+      }
+      .setting {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+      .setting .cron-input {
+        flex: 0 0 72px;
+        width: 72px;
+      }
+      .setting-name {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      @media (max-width: 480px) {
+        .settings { grid-template-columns: 1fr; }
+        .settings .btn { grid-column: 1; grid-row: auto; }
+      }
+      .cron-row .select {
+        flex-shrink: 0;
+      }
+      /* A one-line result or error under a control. */
+      .note {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      .note.error {
+        color: var(--status-error);
+      }
+      .note:empty {
+        display: none;
+      }
+
+      /* ---- full-width live panel under the code and controls ---- */
+      .panel {
+        margin-top: 20px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .controls h2,
+      .panel h2 {
+        margin: 0;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      /* ---- rate limiting: stat tiles + workflow table ---- */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .stat {
+        border: 1px solid var(--ink-border);
+        border-radius: 4px;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.015);
+      }
+      .stat-value {
+        font-family: var(--mono);
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+      .stat-value.enqueued { color: var(--lily); }
+      .stat-value.pending { color: var(--cyan); }
+      .stat-value.success { color: var(--status-success); }
+      .stat-label {
+        margin-top: 2px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      @media (max-width: 480px) {
+        .stats { gap: 8px; }
+        .stat { padding: 10px 12px; }
+        .stat-label { letter-spacing: 0.06em; }
+      }
+      .table-scroll {
+        max-height: 440px;
+        overflow: auto;
+        border: 1px solid var(--ink-border);
+        border-radius: 4px;
+      }
+      .wf-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .wf-table th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: var(--ink-bg);
+        text-align: left;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--ink-border);
+        white-space: nowrap;
+      }
+      .wf-table td {
+        padding: 8px 14px;
+        border-bottom: 1px solid rgba(58, 61, 68, 0.55);
+        font-family: var(--mono);
+        color: var(--fg);
+        white-space: nowrap;
+      }
+      .wf-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .wf-table tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .wf-table .wf-id {
+        color: var(--lily-light);
+      }
+      .wf-table .dim {
+        color: var(--muted);
+      }
+      .wf-table .wf-empty {
+        text-align: center;
+        color: var(--muted);
+        font-family: inherit;
+        padding: 28px 14px;
+      }
+      .table-caption {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+
+      /* ---- fair queues: per-tenant pipeline ---- */
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+      }
+      .legend:empty {
+        display: none;
+      }
+      .legend-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--fg);
+      }
+      .swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      .pipeline {
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .pipe-section {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .pipe-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--fg);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .pipe-sublabel {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 2px 0 10px;
+      }
+      .pipe-arrow {
+        align-self: center;
+        margin-top: 34px;
+        color: var(--muted);
+        opacity: 0.6;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .pipe-box {
+        flex: 1;
+        min-height: 190px;
+        border: 1px solid var(--ink-border);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.015);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .pipe-box.running {
+        gap: 4px;
+      }
+      .tenant-row {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      .tenant-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tenant-count {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      /* A running workflow, tinted and edged in its tenant's color. */
+      .pill {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 2px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--fg);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      /* A free workerConcurrency slot. */
+      .pill.free {
+        border: 1px dashed var(--ink-border);
+        color: var(--muted);
+        opacity: 0.6;
+      }
+      .pipe-empty {
+        margin: auto;
+        color: var(--muted);
+        opacity: 0.5;
+        font-size: 18px;
+      }
+      @media (max-width: 720px) {
+        .pipeline { flex-direction: column; }
+        .pipe-arrow { margin-top: 0; transform: rotate(90deg); }
+        .pipe-box { min-height: 0; }
+      }
 
       .footer {
         margin-top: 40px;
@@ -765,7 +1134,7 @@
               <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
               <span class="filename">src/main.ts</span>
             </div>
-            <pre class="code"><span class="code-line"><span class="keyword">const</span> <span class="function">scheduledWorkflow</span> <span class="punct">=</span> <span class="function">DBOS.registerWorkflow</span><span class="punct">(</span><span class="keyword">async</span> <span class="punct">(</span>scheduledTime<span class="punct">,</span> context<span class="punct">) =&gt; {</span></span><span class="code-block-step sched-line-1"><span class="code-line indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Scheduled workflow starting."</span><span class="punct">);</span></span></span><span class="code-block-step sched-line-2"><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.sleep</span><span class="punct">(</span><span class="num-lit">1000</span><span class="punct">);</span></span></span><span class="code-block-step sched-line-3"><span class="code-line indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Scheduled workflow ending."</span><span class="punct">);</span></span></span><span class="code-line"><span class="punct">});</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.applySchedules</span><span class="punct">([{</span></span><span class="code-line indent">scheduleName<span class="punct">:</span> <span class="string">"scheduled-workflow"</span><span class="punct">,</span></span><span class="code-line indent">workflowFn<span class="punct">:</span> <span class="function">scheduledWorkflow</span><span class="punct">,</span></span><span class="code-line indent">schedule<span class="punct">:</span> <span class="string">"*/5 * * * * *"</span><span class="punct">,</span></span><span class="code-line"><span class="punct">}]);</span></span></pre>
+            <pre class="code"><span class="code-line"><span class="keyword">const</span> <span class="function">scheduledWorkflow</span> <span class="punct">=</span> <span class="function">DBOS.registerWorkflow</span><span class="punct">(</span><span class="keyword">async</span> <span class="punct">(</span>scheduledTime<span class="punct">,</span> context<span class="punct">) =&gt; {</span></span><span class="code-block-step sched-body"><span class="code-line indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Scheduled workflow starting."</span><span class="punct">);</span></span><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.sleep</span><span class="punct">(</span><span class="num-lit">1000</span><span class="punct">);</span></span><span class="code-line indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Scheduled workflow ending."</span><span class="punct">);</span></span></span><span class="code-line"><span class="punct">});</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.applySchedules</span><span class="punct">([{</span></span><span class="code-line indent">scheduleName<span class="punct">:</span> <span class="string">"scheduled-workflow"</span><span class="punct">,</span></span><span class="code-line indent">workflowFn<span class="punct">:</span> <span class="function">scheduledWorkflow</span><span class="punct">,</span></span><span class="code-line indent">schedule<span class="punct">:</span> <span class="string">"*/5 * * * * *"</span><span class="punct">,</span></span><span class="code-line"><span class="punct">}]);</span></span></pre>
           </div>
 
           <!-- schedule controls -->
@@ -812,61 +1181,334 @@
       </div>
       <!-- ===== QUEUES TAB ===== -->
       <div id="tab-queues" class="tab-content">
-        <p class="lede">
-          DBOS <strong>queues</strong> let you run workflow fan-outs and control concurrency.
-          The <code>workerConcurrency</code> parameter controls how many workflows one process may run simultaneously.
-          You can adjust it without restarting the app.
-          Press "Enqueue 5 Workflows" repeatedly to put workflows on the queue.
-        </p>
-
-        <div class="grid">
-          <!-- code editor showing enqueued_workflow -->
-          <div class="card editor">
-            <div class="chrome">
-              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-              <span class="filename">src/main.ts</span>
-            </div>
-            <pre class="code"><span class="code-line"><span class="keyword">const</span> <span class="function">enqueuedWorkflow</span> <span class="punct">=</span> <span class="function">DBOS.registerWorkflow</span><span class="punct">(</span><span class="keyword">async</span> <span class="punct">() =&gt; {</span></span><span class="code-block-step queue-line-1"><span class="code-line indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Enqueued workflow starting."</span><span class="punct">);</span></span></span><span class="code-block-step queue-line-2"><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.sleep</span><span class="punct">(</span><span class="num-lit">5000</span><span class="punct">);</span></span></span><span class="code-block-step queue-line-3"><span class="code-line indent"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Enqueued workflow ending."</span><span class="punct">);</span></span></span><span class="code-line"><span class="punct">});</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.registerQueue</span><span class="punct">(</span><span class="string">"demo-queue"</span><span class="punct">,</span></span><span class="code-line indent"><span class="punct">{</span> workerConcurrency<span class="punct">:</span> <span class="num-lit">3</span> <span class="punct">});</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.startWorkflow</span><span class="punct">(</span><span class="function">enqueuedWorkflow</span><span class="punct">,</span></span><span class="code-line indent"><span class="punct">{</span> queueName<span class="punct">:</span> <span class="string">"demo-queue"</span> <span class="punct">})();</span></span></pre>
-          </div>
-
-          <!-- queue controls -->
-          <div class="card controls">
-            <h2>Queue</h2>
-
-            <div class="cron-row">
-              <input
-                id="concurrency-input"
-                class="cron-input"
-                type="number"
-                min="1"
-                value="3"
-                style="max-width:80px"
-              />
-              <span style="font-size:12.5px;color:var(--muted);align-self:center;white-space:nowrap">worker_concurrency</span>
-              <button onclick="applyQueueConcurrency()" class="btn btn-flashy" style="margin-left:auto">Apply</button>
-            </div>
-
-            <button onclick="enqueueWorkflow()" class="btn btn-flashy">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <polyline points="19 12 12 19 5 12"></polyline>
-              </svg>
-              Enqueue 5 workflows
-            </button>
-
-            <div class="divider"></div>
-
-            <h2>Workflows in the last 10 minutes:</h2>
-            <div id="queue-wf-counts" class="wf-counts"></div>
-          </div>
+        <div class="subnav">
+          <label for="queue-view-select">Pattern</label>
+          <select id="queue-view-select" class="select select-lg select-flashy" autocomplete="off" onchange="switchQueueView(this.value)">
+            <option value="concurrency">Worker Concurrency</option>
+            <option value="rate">Rate Limiting</option>
+            <option value="fair">Fair Queues</option>
+            <option value="delays">Delays</option>
+          </select>
         </div>
 
-        <p class="footer">
-          <span class="line">
-            DBOS queues offer many additional controls for rate limiting, deduplication, debouncing, partitioning, prioritization and more.
-            See the <a href="https://docs.dbos.dev/typescript/tutorials/queue-tutorial" target="_blank">queue tutorial</a> for details.
-          </span>
-        </p>
+        <!-- ----- Worker Concurrency ----- -->
+        <div id="queue-view-concurrency" class="queue-view active">
+          <p class="lede">
+            DBOS <strong>queues</strong> let you run workflow fan-outs and control concurrency.
+            The <code>workerConcurrency</code> parameter controls how many workflows one process may run simultaneously.
+            You can adjust it without restarting the app.
+            Press "Enqueue 5 Workflows" repeatedly to put workflows on the queue.
+          </p>
+
+          <div class="grid">
+            <!-- code editor showing enqueued_workflow -->
+            <div class="card editor">
+              <div class="chrome">
+                <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                <span class="filename">src/main.ts</span>
+              </div>
+              <pre class="code"><span class="code-line"><span class="keyword">const</span> <span class="function">queueWorkflow</span> <span class="punct">=</span> <span class="function">DBOS.registerWorkflow</span><span class="punct">(</span><span class="keyword">async</span> <span class="punct">() =&gt; {</span></span><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.sleep</span><span class="punct">(</span><span class="num-lit">5000</span><span class="punct">);</span></span><span class="code-line"><span class="punct">});</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.registerQueue</span><span class="punct">(</span><span class="string">"demo-queue"</span><span class="punct">,</span></span><span class="code-line indent"><span class="punct">{</span> workerConcurrency<span class="punct">:</span> <span class="num-lit">3</span> <span class="punct">});</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.startWorkflow</span><span class="punct">(</span><span class="function">queueWorkflow</span><span class="punct">,</span></span><span class="code-line indent"><span class="punct">{</span> queueName<span class="punct">:</span> <span class="string">"demo-queue"</span> <span class="punct">})();</span></span></pre>
+            </div>
+
+            <!-- queue controls -->
+            <div class="card controls">
+              <h2>Queue</h2>
+
+              <div class="cron-row">
+                <input
+                  id="concurrency-input"
+                  class="cron-input"
+                  type="number"
+                  min="1"
+                  value="3"
+                  style="max-width:80px"
+                />
+                <span style="font-size:12.5px;color:var(--muted);align-self:center;white-space:nowrap">workerConcurrency</span>
+                <button onclick="applyQueueConcurrency()" class="btn btn-flashy" style="margin-left:auto">Apply</button>
+              </div>
+
+              <button onclick="enqueueWorkflow()" class="btn btn-flashy">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <polyline points="19 12 12 19 5 12"></polyline>
+                </svg>
+                Enqueue 5 workflows
+              </button>
+
+              <div class="divider"></div>
+
+              <h2>Workflows in the last 10 minutes:</h2>
+              <div id="queue-wf-counts" class="wf-counts"></div>
+            </div>
+          </div>
+
+          <p class="footer">
+            <span class="line">
+              DBOS queues offer many additional controls for rate limiting, deduplication, partitioning, delayed execution, prioritization and more.
+              See the "Pattern" pulldown for other examples.
+            </span>
+          </p>
+        </div>
+
+        <!-- ----- Rate Limiting ----- -->
+        <div id="queue-view-rate" class="queue-view">
+          <p class="lede">
+            A <strong>rate-limited</strong> queue caps how many workflows start in each time period, for example to stay under an external API's rate limit.
+            This queue starts at most <code>limitPerPeriod</code> workflows every <code>periodSec</code> seconds, however many are waiting.
+          </p>
+
+          <div class="grid">
+            <div class="card editor">
+              <div class="chrome">
+                <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                <span class="filename">src/main.ts</span>
+              </div>
+              <pre class="code"><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.registerQueue</span><span class="punct">(</span><span class="string">"rate-limited-queue"</span><span class="punct">, {</span></span><span class="code-line indent">rateLimit<span class="punct">: {</span> limitPerPeriod<span class="punct">:</span> <span class="num-lit">2</span><span class="punct">,</span> periodSec<span class="punct">:</span> <span class="num-lit">10</span> <span class="punct">},</span></span><span class="code-line"><span class="punct">});</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.startWorkflow</span><span class="punct">(</span><span class="function">queueWorkflow</span><span class="punct">,</span></span><span class="code-line indent"><span class="punct">{</span> queueName<span class="punct">:</span> <span class="string">"rate-limited-queue"</span> <span class="punct">})();</span></span></pre>
+            </div>
+
+            <div class="card controls">
+              <h2>Rate limit</h2>
+              <div class="settings">
+                <label class="setting">
+                  <input id="rate-limit-input" class="cron-input" type="number" min="1" step="1" value="2" oninput="this.dataset.dirty = '1'" />
+                  <span class="setting-name">limitPerPeriod</span>
+                </label>
+                <label class="setting">
+                  <input id="rate-period-input" class="cron-input" type="number" min="1" step="1" value="10" oninput="this.dataset.dirty = '1'" />
+                  <span class="setting-name">periodSec</span>
+                </label>
+                <button onclick="applyRateLimit()" class="btn btn-flashy">Apply</button>
+              </div>
+              <div id="rate-limit-note" class="note"></div>
+
+              <button onclick="enqueueRateWorkflow()" id="btn-rate-enqueue" class="btn btn-flashy">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <polyline points="19 12 12 19 5 12"></polyline>
+                </svg>
+                Enqueue a workflow
+              </button>
+            </div>
+          </div>
+
+          <div class="card panel">
+            <h2>Workflows in the last 10 minutes</h2>
+            <div class="stats">
+              <div class="stat">
+                <div id="rate-stat-enqueued" class="stat-value enqueued">0</div>
+                <div class="stat-label">Enqueued</div>
+              </div>
+              <div class="stat">
+                <div id="rate-stat-pending" class="stat-value pending">0</div>
+                <div class="stat-label">Pending</div>
+              </div>
+              <div class="stat">
+                <div id="rate-stat-success" class="stat-value success">0</div>
+                <div class="stat-label">Success</div>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table class="wf-table">
+                <thead>
+                  <tr>
+                    <th>Workflow ID</th>
+                    <th>Enqueued</th>
+                    <th>Started</th>
+                    <th>Wait</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="rate-wf-rows">
+                  <tr><td colspan="5" class="wf-empty">No workflows yet</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="rate-table-note" class="note"></div>
+          </div>
+
+          <p class="footer">
+            <span class="line">
+              Check out the
+              <a href="https://docs.dbos.dev/typescript/tutorials/queue-tutorial" target="_blank">queue tutorial</a>
+              to learn more about rate limiting and other queue controls.
+            </span>
+          </p>
+        </div>
+
+        <!-- ----- Fair Queues ----- -->
+        <div id="queue-view-fair" class="queue-view">
+          <p class="lede">
+            This queue allocates capacity <strong>fairly</strong> across tenants.
+            <code>workerConcurrency</code> caps how many workflows may run per process, while <code>partitionConcurrency</code> sets a limit per tenant.
+            For example, press "enqueue a random mix" and then add a workflow for ed.
+            It will start in a few seconds even though the queue is full.
+          </p>
+
+          <div class="grid">
+            <div class="card editor">
+              <div class="chrome">
+                <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                <span class="filename">src/main.ts</span>
+              </div>
+              <pre class="code"><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.registerQueue</span><span class="punct">(</span><span class="string">"fair-queue"</span><span class="punct">, {</span></span><span class="code-line indent">partitionConcurrency<span class="punct">:</span> <span class="num-lit">1</span><span class="punct">,</span></span><span class="code-line indent">workerConcurrency<span class="punct">:</span> <span class="num-lit">4</span><span class="punct">,</span></span><span class="code-line"><span class="punct">});</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.startWorkflow</span><span class="punct">(</span><span class="function">queueWorkflow</span><span class="punct">, {</span></span><span class="code-line indent">queueName<span class="punct">:</span> <span class="string">"fair-queue"</span><span class="punct">,</span></span><span class="code-line indent">enqueueOptions<span class="punct">: {</span> queuePartitionKey<span class="punct">:</span> tenantId <span class="punct">},</span></span><span class="code-line"><span class="punct">})();</span></span></pre>
+            </div>
+
+            <div class="card controls">
+              <h2>Queue limits</h2>
+              <div class="settings">
+                <label class="setting">
+                  <input id="fair-partition-input" class="cron-input" type="number" min="1" step="1" value="1" oninput="this.dataset.dirty = '1'" />
+                  <span class="setting-name">partitionConcurrency</span>
+                </label>
+                <label class="setting">
+                  <input id="fair-worker-input" class="cron-input" type="number" min="1" step="1" value="4" oninput="this.dataset.dirty = '1'" />
+                  <span class="setting-name">workerConcurrency</span>
+                </label>
+                <button onclick="applyFairLimits()" class="btn btn-flashy">Apply</button>
+              </div>
+              <div id="fair-limits-note" class="note"></div>
+
+              <div class="divider"></div>
+
+              <h2>Enqueue workflows</h2>
+              <button onclick="enqueueFairMix()" id="btn-fair-mix" class="btn btn-flashy">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 3 21 3 21 8"></polyline>
+                  <line x1="4" y1="20" x2="21" y2="3"></line>
+                  <polyline points="21 16 21 21 16 21"></polyline>
+                  <line x1="15" y1="15" x2="21" y2="21"></line>
+                  <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
+                Enqueue a random mix
+              </button>
+              <div class="cron-row">
+                <select id="fair-tenant-select" class="select" autocomplete="off" aria-label="Tenant" onchange="onCustomSelectChange(this, 'fair-custom-tenant')">
+                  <option value="alice">alice</option>
+                  <option value="bob">bob</option>
+                  <option value="clark">clark</option>
+                  <option value="dave">dave</option>
+                  <option value="ed" selected>ed</option>
+                  <option value="custom">custom…</option>
+                </select>
+                <input
+                  id="fair-custom-tenant"
+                  class="cron-input"
+                  type="text"
+                  placeholder="tenant name"
+                  maxlength="40"
+                  spellcheck="false"
+                  style="display:none"
+                  onkeydown="if (event.key === 'Enter') enqueueFairWorkflow()"
+                />
+                <button onclick="enqueueFairWorkflow()" id="btn-fair-enqueue" class="btn btn-flashy" style="margin-left:auto">Enqueue</button>
+              </div>
+              <div id="fair-enqueue-note" class="note"></div>
+            </div>
+          </div>
+
+          <div class="card panel">
+            <h2>Fair queue pipeline</h2>
+            <div id="fair-legend" class="legend"></div>
+            <div class="pipeline">
+              <div class="pipe-section">
+                <div class="pipe-label">Enqueued</div>
+                <div class="pipe-sublabel">waiting for a slot</div>
+                <div id="fair-enqueued" class="pipe-box"><div class="pipe-empty">—</div></div>
+              </div>
+              <div class="pipe-arrow" aria-hidden="true">→</div>
+              <div class="pipe-section">
+                <div class="pipe-label">Pending</div>
+                <div id="fair-running-sublabel" class="pipe-sublabel">running now</div>
+                <div id="fair-running" class="pipe-box running"><div class="pipe-empty">—</div></div>
+              </div>
+              <div class="pipe-arrow" aria-hidden="true">→</div>
+              <div class="pipe-section">
+                <div class="pipe-label">Success</div>
+                <div class="pipe-sublabel">last 10 minutes</div>
+                <div id="fair-success" class="pipe-box"><div class="pipe-empty">—</div></div>
+              </div>
+            </div>
+          </div>
+
+          <p class="footer">
+            <span class="line">
+              Check out the
+              <a href="https://docs.dbos.dev/typescript/tutorials/queue-tutorial" target="_blank">queue tutorial</a>
+              to learn more about partitioned queues and other queue controls.
+            </span>
+          </p>
+        </div>
+
+        <!-- ----- Delays ----- -->
+        <div id="queue-view-delays" class="queue-view">
+          <p class="lede">
+            DBOS can <strong>delay</strong> an enqueued workflow, so it waits before running.
+            While a workflow is DELAYED, you can change its delay to run it sooner or later.
+            The delay is stored in Postgres, so a delayed workflow still runs if your app restarts before it's due.
+          </p>
+
+          <div class="grid">
+            <div class="card editor">
+              <div class="chrome">
+                <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                <span class="filename">src/main.ts</span>
+              </div>
+              <pre class="code"><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.registerQueue</span><span class="punct">(</span><span class="string">"delayed-queue"</span><span class="punct">);</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.startWorkflow</span><span class="punct">(</span><span class="function">queueWorkflow</span><span class="punct">, {</span></span><span class="code-line indent">queueName<span class="punct">:</span> <span class="string">"delayed-queue"</span><span class="punct">,</span></span><span class="code-line indent">enqueueOptions<span class="punct">: {</span> delaySeconds <span class="punct">},</span></span><span class="code-line"><span class="punct">})();</span></span><span class="code-line"> </span><span class="code-line"><span class="punct">// Run it sooner or later while it's still DELAYED</span></span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.setWorkflowDelay</span><span class="punct">(</span>workflowID<span class="punct">, {</span> delaySeconds <span class="punct">});</span></span></pre>
+            </div>
+
+            <div class="card controls">
+              <h2>Enqueue a delayed workflow</h2>
+              <label class="setting">
+                <select id="delay-select" class="select" autocomplete="off">
+                  <option value="5">5s</option>
+                  <option value="15">15s</option>
+                  <option value="30" selected>30s</option>
+                  <option value="60">1m</option>
+                  <option value="300">5m</option>
+                  <option value="3600">1h</option>
+                  <option value="86400">1d</option>
+                </select>
+                <span class="setting-name">initial delay</span>
+              </label>
+              <button onclick="enqueueDelayed()" class="btn btn-flashy">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <polyline points="19 12 12 19 5 12"></polyline>
+                </svg>
+                Enqueue delayed workflow
+              </button>
+              <div id="delay-note" class="note"></div>
+            </div>
+          </div>
+
+          <div class="card panel">
+            <h2>Delayed workflows</h2>
+            <div class="table-scroll">
+              <table class="wf-table">
+                <thead>
+                  <tr>
+                    <th>Workflow ID</th>
+                    <th>Status</th>
+                    <th>Due</th>
+                    <th>Change delay</th>
+                  </tr>
+                </thead>
+                <tbody id="delay-wf-rows">
+                  <tr><td colspan="4" class="wf-empty">No delayed workflows yet</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="delay-table-note" class="note"></div>
+          </div>
+
+          <p class="footer">
+            <span class="line">
+              Check out the
+              <a href="https://docs.dbos.dev/typescript/tutorials/queue-tutorial#delayed-execution" target="_blank">queue tutorial</a>
+              to learn more about delayed workflows.
+            </span>
+          </p>
+        </div>
       </div>
 
       <!-- ===== WORKFLOW COMMUNICATION TAB ===== -->
@@ -884,7 +1526,7 @@
               <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
               <span class="filename">src/main.ts</span>
             </div>
-            <pre class="code"><span class="code-line"><span class="keyword">const</span> <span class="function">communicationWorkflow</span> <span class="punct">=</span> <span class="function">DBOS.registerWorkflow</span><span class="punct">(</span><span class="keyword">async</span> <span class="punct">() =&gt; {</span></span><span class="code-block-step comm-line-1"><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.runStep</span><span class="punct">(</span><span class="function">commStepOne</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.setEvent</span><span class="punct">(</span><span class="string">"comm_status"</span><span class="punct">,</span> <span class="string">"waiting"</span><span class="punct">);</span></span><span class="code-block-step comm-line-2"><span class="code-line indent"><span class="keyword">const</span> decision <span class="punct">=</span> <span class="keyword">await</span> <span class="function">DBOS.recv</span><span class="punct">(</span><span class="string">"approval"</span><span class="punct">,</span></span><span class="code-line indent">    <span class="punct">{</span> timeoutSeconds<span class="punct">:</span> <span class="num-lit">120</span> <span class="punct">});</span></span></span><span class="code-line indent"><span class="keyword">if</span> <span class="punct">(</span>decision <span class="punct">===</span> <span class="string">"approve"</span><span class="punct">) {</span></span><span class="code-block-step comm-line-3"><span class="code-line indent2"><span class="keyword">await</span> <span class="function">DBOS.runStep</span><span class="punct">(</span><span class="function">commStepTwo</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else if</span> <span class="punct">(</span>decision <span class="punct">===</span> <span class="string">"deny"</span><span class="punct">) {</span></span><span class="code-line indent2"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Denied."</span><span class="punct">);</span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else</span> <span class="punct">{</span>  <span class="punct">// timeout</span></span><span class="code-line indent2"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Timed out!"</span><span class="punct">);</span></span><span class="code-line indent"><span class="punct">}</span></span><span class="code-line"><span class="punct">});</span></span></pre>
+            <pre class="code"><span class="code-line"><span class="keyword">const</span> <span class="function">communicationWorkflow</span> <span class="punct">=</span> <span class="function">DBOS.registerWorkflow</span><span class="punct">(</span><span class="keyword">async</span> <span class="punct">() =&gt; {</span></span><span class="code-block-step comm-line-1"><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.runStep</span><span class="punct">(</span><span class="function">commStepOne</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.setEvent</span><span class="punct">(</span><span class="string">"comm_status"</span><span class="punct">,</span> <span class="string">"waiting"</span><span class="punct">);</span></span><span class="code-block-step comm-line-2"><span class="code-line indent"><span class="keyword">const</span> decision <span class="punct">=</span> <span class="keyword">await</span> <span class="function">DBOS.recv</span><span class="punct">(</span><span class="string">"approval"</span><span class="punct">,</span></span><span class="code-line indent">    <span class="punct">{</span> timeoutSeconds<span class="punct">:</span> <span class="num-lit">15</span> <span class="punct">});</span></span></span><span class="code-line indent"><span class="keyword">if</span> <span class="punct">(</span>decision <span class="punct">===</span> <span class="string">"approve"</span><span class="punct">) {</span></span><span class="code-block-step comm-line-3"><span class="code-line indent2"><span class="keyword">await</span> <span class="function">DBOS.runStep</span><span class="punct">(</span><span class="function">commStepTwo</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else if</span> <span class="punct">(</span>decision <span class="punct">===</span> <span class="string">"deny"</span><span class="punct">) {</span></span><span class="code-line indent2"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Denied."</span><span class="punct">);</span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else</span> <span class="punct">{</span>  <span class="punct">// timeout</span></span><span class="code-line indent2"><span class="keyword">throw new</span> <span class="function">Error</span><span class="punct">(</span><span class="string">"Timed out waiting for approval"</span><span class="punct">);</span></span><span class="code-line indent"><span class="punct">}</span></span><span class="code-line"><span class="punct">});</span></span></pre>
           </div>
 
           <!-- controls -->
@@ -1156,9 +1798,7 @@
 
       function updateSchedCodeHighlight(counts) {
         const running = (counts["PENDING"] || 0) >= 1;
-        document.querySelectorAll(".sched-line-1, .sched-line-2, .sched-line-3").forEach((el) => {
-          el.classList.toggle("step-highlight", running);
-        });
+        document.querySelector(".sched-body").classList.toggle("step-highlight", running);
       }
 
       function updateSchedBadge(status) {
@@ -1260,15 +1900,28 @@
                 </div>`)
               .join("");
           }
-
-          const running = (counts["PENDING"] || 0) + (counts["ENQUEUED"] || 0) >= 1;
-          document.querySelectorAll(".queue-line-1, .queue-line-2, .queue-line-3").forEach((el) => {
-            el.classList.toggle("step-highlight", running);
-          });
         } catch (e) {}
       }
 
-      setInterval(() => { if (activeTab() === "queues") pollQueueStatus(); }, 800);
+      // The Queues tab shows one pattern at a time, picked from the pulldown.
+      let _queueView = "concurrency";
+
+      function switchQueueView(name) {
+        document.querySelectorAll(".queue-view").forEach((el) => {
+          el.classList.toggle("active", el.id === "queue-view-" + name);
+        });
+        _queueView = name;
+        pollQueueView();
+      }
+
+      function pollQueueView() {
+        if (_queueView === "rate") return pollRateStatus();
+        if (_queueView === "fair") return pollFairStatus();
+        if (_queueView === "delays") return pollDelays();
+        return pollQueueStatus();
+      }
+
+      setInterval(() => { if (activeTab() === "queues") pollQueueView(); }, 800);
       pollQueueStatus();
 
       async function enqueueWorkflow() {
@@ -1285,6 +1938,359 @@
         });
         await pollQueueStatus();
       }
+
+      // ---- Helpers shared by the rate limiting and fair queue views ----
+
+      // Show the server's value in a settings input, unless the user is editing it.
+      // Inputs are marked dirty on edit and cleaned on Apply, so editing one input
+      // and moving to the next doesn't revert the first.
+      function syncInput(id, value) {
+        const el = document.getElementById(id);
+        if (document.activeElement !== el && !el.dataset.dirty) el.value = value;
+      }
+
+      function cleanInputs(...ids) {
+        ids.forEach((id) => delete document.getElementById(id).dataset.dirty);
+      }
+
+      // Show a one-line message under a control. It clears itself after a few seconds.
+      const _noteTimers = {};
+      function showNote(id, text, isError = false) {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        el.classList.toggle("error", isError);
+        clearTimeout(_noteTimers[id]);
+        _noteTimers[id] = setTimeout(() => { el.textContent = ""; }, 5000);
+      }
+
+      async function postJson(url, body) {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body || {}),
+        });
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok, data };
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+      }
+
+      function formatClock(epochMs) {
+        return new Date(epochMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+      }
+
+      // e.g. "4.2s" or "1m 05s"
+      function formatWait(ms) {
+        const s = Math.max(0, ms / 1000);
+        if (s < 60) return s.toFixed(1) + "s";
+        return `${Math.floor(s / 60)}m ${String(Math.floor(s % 60)).padStart(2, "0")}s`;
+      }
+
+      function statusBadge(status) {
+        const cls = { DELAYED: "delayed", ENQUEUED: "enqueued", PENDING: "pending", SUCCESS: "success", ERROR: "error" }[status] || "unknown";
+        return `<span class="status-badge ${cls}"><span class="status-dot"></span>${escapeHtml(status)}</span>`;
+      }
+
+      // ============================================================
+      // QUEUES TAB: rate limiting
+      // ============================================================
+      async function pollRateStatus() {
+        try {
+          const res = await fetch("/queue/rate/status");
+          if (!res.ok) return;
+          const data = await res.json();
+
+          syncInput("rate-limit-input", data.limit_per_period);
+          syncInput("rate-period-input", data.period_sec);
+
+          const counts = data.workflow_counts;
+          document.getElementById("rate-stat-enqueued").textContent = formatCount(counts["ENQUEUED"] || 0);
+          document.getElementById("rate-stat-pending").textContent = formatCount(counts["PENDING"] || 0);
+          document.getElementById("rate-stat-success").textContent = formatCount(counts["SUCCESS"] || 0);
+
+          renderRateTable(data.workflows);
+          const total = Object.values(counts).reduce((a, b) => a + b, 0);
+          document.getElementById("rate-table-note").textContent =
+            total > data.workflows.length ? `Showing the newest ${data.workflows.length} of ${formatCount(total)} workflows.` : "";
+        } catch (e) {}
+      }
+
+      function renderRateTable(workflows) {
+        const tbody = document.getElementById("rate-wf-rows");
+        if (workflows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="wf-empty">No workflows yet</td></tr>';
+          return;
+        }
+        const now = Date.now();
+        tbody.innerHTML = workflows
+          .map((wf) => {
+            // Wait = time from enqueue to start; still counting for workflows the queue hasn't started.
+            const started = wf.started_at ? formatClock(wf.started_at) : '<span class="dim">—</span>';
+            const wait = wf.started_at
+              ? formatWait(wf.started_at - wf.enqueued_at)
+              : `<span class="dim">${formatWait(now - wf.enqueued_at)}…</span>`;
+            return `
+              <tr>
+                <td class="wf-id" title="${escapeHtml(wf.workflow_id)}">${escapeHtml(wf.workflow_id.slice(0, 8))}</td>
+                <td>${formatClock(wf.enqueued_at)}</td>
+                <td>${started}</td>
+                <td>${wait}</td>
+                <td>${statusBadge(wf.status)}</td>
+              </tr>`;
+          })
+          .join("");
+      }
+
+      async function enqueueRateWorkflow() {
+        await fetch("/queue/rate/enqueue", { method: "POST" });
+        await pollRateStatus();
+      }
+
+      async function applyRateLimit() {
+        const { ok, data } = await postJson("/queue/rate/limit", {
+          limit_per_period: document.getElementById("rate-limit-input").value,
+          period_sec: document.getElementById("rate-period-input").value,
+        });
+        cleanInputs("rate-limit-input", "rate-period-input");
+        if (!ok) showNote("rate-limit-note", data.error || "Could not update the rate limit", true);
+        await pollRateStatus();
+      }
+
+      // ============================================================
+      // QUEUES TAB: fair queues
+      // ============================================================
+
+      // Categorical palette validated against this page's dark surface.
+      // A 9th+ tenant folds to the "other" color rather than a generated hue.
+      const TENANT_PALETTE = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"];
+      const OTHER_TENANT_COLOR = "#a3a5aa";
+      // The preset tenants own the first five colors. Custom tenants take the
+      // next free color the first time they appear, and never get repainted.
+      const tenantOrder = ["alice", "bob", "clark", "dave", "ed"];
+
+      function colorForTenant(tenant) {
+        const i = tenantOrder.indexOf(tenant);
+        return i >= 0 && i < TENANT_PALETTE.length ? TENANT_PALETTE[i] : OTHER_TENANT_COLOR;
+      }
+
+      function byTenantOrder(a, b) {
+        return tenantOrder.indexOf(a.tenant_id) - tenantOrder.indexOf(b.tenant_id);
+      }
+
+      async function pollFairStatus() {
+        try {
+          const res = await fetch("/queue/fair/status");
+          if (!res.ok) return;
+          const data = await res.json();
+
+          syncInput("fair-partition-input", data.partition_concurrency);
+          syncInput("fair-worker-input", data.worker_concurrency);
+          renderFairPipeline(data);
+        } catch (e) {}
+      }
+
+      // Give newly seen tenants their colors, then list the tenants in view in the legend.
+      function renderTenantLegend(legendId, items) {
+        const tenants = [...new Set(items.map((x) => x.tenant_id))];
+        tenantOrder.push(...tenants.filter((t) => !tenantOrder.includes(t)).sort());
+        document.getElementById(legendId).innerHTML = tenants
+          .sort((a, b) => tenantOrder.indexOf(a) - tenantOrder.indexOf(b))
+          .map((t) => `<span class="legend-chip"><span class="swatch" style="background:${colorForTenant(t)}"></span>${escapeHtml(t)}</span>`)
+          .join("");
+      }
+
+      // Show the text box next to a pulldown when its "custom…" option is picked.
+      function onCustomSelectChange(select, inputId) {
+        const custom = select.value === "custom";
+        const input = document.getElementById(inputId);
+        input.style.display = custom ? "" : "none";
+        if (custom) input.focus();
+      }
+
+      // The pulldown's value, or the text box's when "custom…" is picked.
+      function selectedValue(selectId, inputId) {
+        const value = document.getElementById(selectId).value;
+        return value === "custom" ? document.getElementById(inputId).value.trim() : value;
+      }
+
+      function renderFairPipeline(data) {
+        renderTenantLegend("fair-legend", [...data.enqueued, ...data.pending, ...data.success]);
+
+        const empty = '<div class="pipe-empty">—</div>';
+        const countRows = (rows) =>
+          rows.length === 0
+            ? empty
+            : [...rows].sort(byTenantOrder).map((r) => `
+                <div class="tenant-row">
+                  <span class="swatch" style="background:${colorForTenant(r.tenant_id)}"></span>
+                  <span class="tenant-name" title="${escapeHtml(r.tenant_id)}">${escapeHtml(r.tenant_id)}</span>
+                  <span class="tenant-count">${formatCount(r.count)}</span>
+                </div>`).join("");
+        document.getElementById("fair-enqueued").innerHTML = countRows(data.enqueued);
+        document.getElementById("fair-success").innerHTML = countRows(data.success);
+
+        // One pill per running workflow, then dashed placeholders for the free
+        // workerConcurrency slots (when there are few enough to draw).
+        const running = [...data.pending].sort(byTenantOrder);
+        const slots = data.worker_concurrency;
+        const pills = running.map((w) => {
+          const color = colorForTenant(w.tenant_id);
+          return `<div class="pill" style="background:${color}33;box-shadow:inset 3px 0 0 ${color}" title="${escapeHtml(w.tenant_id)} · ${escapeHtml(w.workflow_id)}">${escapeHtml(w.tenant_id)}</div>`;
+        });
+        const free = slots <= 12 ? Math.max(0, slots - running.length) : 0;
+        for (let i = 0; i < free; i++) pills.push('<div class="pill free">free slot</div>');
+        document.getElementById("fair-running").innerHTML = pills.length ? pills.join("") : empty;
+        document.getElementById("fair-running-sublabel").textContent = `running · ${running.length} of ${slots} slots`;
+      }
+
+      async function enqueueFairWorkflow() {
+        const tenant = selectedValue("fair-tenant-select", "fair-custom-tenant");
+        if (!tenant) {
+          document.getElementById("fair-custom-tenant").focus();
+          return;
+        }
+        const btn = document.getElementById("btn-fair-enqueue");
+        btn.disabled = true;
+        try {
+          const { ok, data } = await postJson("/queue/fair/enqueue", { tenant_id: tenant });
+          if (!ok) showNote("fair-enqueue-note", data.error || "Could not enqueue the workflow", true);
+        } finally {
+          btn.disabled = false;
+        }
+        await pollFairStatus();
+      }
+
+      async function enqueueFairMix() {
+        const btn = document.getElementById("btn-fair-mix");
+        btn.disabled = true;
+        try {
+          const { ok, data } = await postJson("/queue/fair/random_mix");
+          if (!ok) showNote("fair-enqueue-note", "Could not enqueue the mix", true);
+        } finally {
+          btn.disabled = false;
+        }
+        await pollFairStatus();
+      }
+
+      async function applyFairLimits() {
+        const { ok, data } = await postJson("/queue/fair/limits", {
+          partition_concurrency: document.getElementById("fair-partition-input").value,
+          worker_concurrency: document.getElementById("fair-worker-input").value,
+        });
+        cleanInputs("fair-partition-input", "fair-worker-input");
+        if (!ok) showNote("fair-limits-note", data.error || "Could not update the limits", true);
+        await pollFairStatus();
+      }
+
+      // ============================================================
+      // QUEUES TAB: delays
+      // ============================================================
+
+      // The delays a workflow's delay can be changed to, in seconds.
+      const DELAY_OPTIONS = [5, 15, 30, 60, 300, 3600, 86400];
+      // The workflow whose delay change is in flight, if any.
+      let _changingDelayFor = null;
+
+      // A duration in its two largest units, e.g. "45s", "4m 12s", "1h", "23h 59m".
+      function formatDuration(totalSeconds) {
+        const s = Math.max(0, Math.round(totalSeconds));
+        const units = [[86400, "d"], [3600, "h"], [60, "m"], [1, "s"]];
+        const found = units.findIndex(([size]) => s >= size);
+        const i = found === -1 ? units.length - 1 : found;
+        const [size, label] = units[i];
+        const whole = Math.floor(s / size);
+        if (i === units.length - 1) return `${whole}${label}`;
+        const [nextSize, nextLabel] = units[i + 1];
+        const rest = Math.floor((s % size) / nextSize);
+        return rest ? `${whole}${label} ${rest}${nextLabel}` : `${whole}${label}`;
+      }
+
+      // Like formatClock, but with the date too when it isn't today (e.g. a 1d delay).
+      function formatDueTime(epochMs, nowMs) {
+        const date = new Date(epochMs);
+        if (date.toDateString() === new Date(nowMs).toDateString()) return formatClock(epochMs);
+        return `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${formatClock(epochMs)}`;
+      }
+
+      // Set an element's HTML only when it changes, so unchanged parts
+      // (like an open pulldown) aren't rebuilt on every poll.
+      function setHtml(el, html) {
+        if (el._html !== html) {
+          el.innerHTML = html;
+          el._html = html;
+        }
+      }
+
+      const CHANGE_DELAY_SELECT = `
+        <select class="select select-sm" autocomplete="off" aria-label="Change delay" onchange="changeDelay(this)">
+          <option value="" selected disabled>Run in…</option>
+          ${DELAY_OPTIONS.map((s) => `<option value="${s}">Run in ${formatDuration(s)}</option>`).join("")}
+        </select>`;
+
+      async function pollDelays() {
+        try {
+          const res = await fetch("/queue/delay/status");
+          if (!res.ok) return;
+          const data = await res.json();
+          renderDelayTable(data.workflows);
+        } catch (e) {}
+      }
+
+      function renderDelayTable(workflows) {
+        const tbody = document.getElementById("delay-wf-rows");
+        if (workflows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="wf-empty">No delayed workflows yet</td></tr>';
+          return;
+        }
+        const now = Date.now();
+        // Reuse each workflow's row, updating only the cells that changed.
+        const existing = new Map([...tbody.querySelectorAll("tr[data-id]")].map((tr) => [tr.dataset.id, tr]));
+        const rows = workflows.map((wf) => {
+          let tr = existing.get(wf.workflow_id);
+          if (!tr) {
+            tr = document.createElement("tr");
+            tr.dataset.id = wf.workflow_id;
+            tr.innerHTML = `<td class="wf-id" title="${escapeHtml(wf.workflow_id)}">${escapeHtml(wf.workflow_id.slice(0, 8))}</td><td></td><td></td><td></td>`;
+          }
+          const delayed = wf.status === "DELAYED";
+          setHtml(tr.cells[1], statusBadge(wf.status));
+          setHtml(
+            tr.cells[2],
+            delayed && wf.due_at
+              ? `${formatDueTime(wf.due_at, now)} <span class="dim">· ${wf.due_at > now ? "in " + formatDuration((wf.due_at - now) / 1000) : "due now"}</span>`
+              : '<span class="dim">—</span>',
+          );
+          setHtml(
+            tr.cells[3],
+            !delayed ? '<span class="dim">—</span>' : _changingDelayFor === wf.workflow_id ? '<span class="dim">Changing…</span>' : CHANGE_DELAY_SELECT,
+          );
+          return tr;
+        });
+        // Only reorder when the rows changed, since moving a row would close its open pulldown.
+        const unchanged = rows.length === tbody.children.length && rows.every((tr, i) => tbody.children[i] === tr);
+        if (!unchanged) tbody.replaceChildren(...rows);
+      }
+
+      async function enqueueDelayed() {
+        const delaySeconds = Number(document.getElementById("delay-select").value);
+        const { ok, data } = await postJson("/queue/delay/enqueue", { delay_seconds: delaySeconds });
+        if (!ok) showNote("delay-note", data.error || "Could not enqueue the workflow", true);
+        await pollDelays();
+      }
+
+      async function changeDelay(select) {
+        const workflowId = select.closest("tr").dataset.id;
+        const delaySeconds = Number(select.value);
+        _changingDelayFor = workflowId;
+        await pollDelays();
+        const { ok, data } = await postJson(`/queue/delay/set/${encodeURIComponent(workflowId)}`, { delay_seconds: delaySeconds });
+        _changingDelayFor = null;
+        if (!ok) showNote("delay-table-note", data.error || "Could not change the delay", true);
+        await pollDelays();
+      }
+
       // ============================================================
       // WORKFLOW COMMUNICATION TAB logic
       // ============================================================
@@ -1305,7 +2311,7 @@
         row.querySelector(".step-state").textContent = text;
       }
 
-      function updateCommDiagram(state) {
+      function updateCommDiagram(state, error) {
         const TERMINAL = ["completed", "denied", "timeout"];
         const isTerminal = TERMINAL.includes(state);
 
@@ -1357,8 +2363,8 @@
           outcome.textContent = "✗ Denied — workflow ended without executing step 2.";
         } else if (state === "timeout") {
           outcome.style.display = "block";
-          outcome.style.color = "var(--status-warning)";
-          outcome.textContent = "⏱ Timed out — no decision received within 2 minutes.";
+          outcome.style.color = "var(--status-error)";
+          outcome.textContent = `⏱ No decision within 15 seconds — the workflow threw "${error || "an error"}" and ended in ERROR.`;
         } else {
           outcome.style.display = "none";
         }
@@ -1389,7 +2395,7 @@
           const res = await fetch(`/comm/status/${currentCommWfId}`);
           if (!res.ok) return;
           const data = await res.json();
-          updateCommDiagram(data.state);
+          updateCommDiagram(data.state, data.error);
           if (COMM_TERMINAL.has(data.state)) stopCommPolling();
         } catch (e) { console.error("pollCommStatus error:", e); }
       }
