@@ -14,7 +14,7 @@
  */
 
 import express from 'express';
-import { DBOS, ConfiguredInstance, WorkflowQueue } from '@dbos-inc/dbos-sdk';
+import { DBOS, ConfiguredInstance } from '@dbos-inc/dbos-sdk';
 
 const SYS_DB_URL = process.env.DBOS_SYSTEM_DATABASE_URL!;
 const PORT       = parseInt(process.env.PORT ?? '8002', 10);
@@ -54,8 +54,6 @@ interface EchoResult {
 // ---------------------------------------------------------------------------
 // Workflow registration — class instance method style
 // ---------------------------------------------------------------------------
-
-const _queue = new WorkflowQueue(QUEUE_NAMES.typescript);
 
 @DBOS.className('interop')
 class InteropService extends ConfiguredInstance {
@@ -319,6 +317,7 @@ async function main() {
     listenQueues: [QUEUE_NAMES.typescript],
   });
   await DBOS.launch();
+  await DBOS.registerQueue(QUEUE_NAMES.typescript);
 
   expressApp.listen(PORT, () => {
     console.log(`interop-typescript listening on :${PORT}`);
