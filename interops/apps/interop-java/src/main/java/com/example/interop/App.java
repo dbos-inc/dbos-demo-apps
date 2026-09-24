@@ -17,10 +17,11 @@
 package com.example.interop;
 
 import dev.dbos.transact.DBOS;
-import dev.dbos.transact.DBOSClient.EnqueueOptions;
+import dev.dbos.transact.EnqueueOptions;
 import dev.dbos.transact.config.DBOSConfig;
 import dev.dbos.transact.workflow.ListWorkflowsInput;
-import dev.dbos.transact.workflow.Queue;
+import dev.dbos.transact.workflow.QueueName;
+import dev.dbos.transact.workflow.QueueOptions;
 import dev.dbos.transact.workflow.SerializationStrategy;
 import dev.dbos.transact.workflow.Workflow;
 import dev.dbos.transact.workflow.WorkflowClassName;
@@ -91,7 +92,7 @@ class InteropDriverImpl implements InteropDriver {
   public Map<String, Object> interopDriver(
       String target, List<Object> positionalArgs, Map<String, Object> namedArgs) {
     var handle =
-        dbos.<Map<String, Object>>enqueuePortableWorkflow(
+        dbos.<Map<String, Object>, RuntimeException>enqueueWorkflow(
             App.enqueueOptions(target, target),
             positionalArgs.toArray(),
             namedArgs.isEmpty() ? null : namedArgs);
@@ -163,8 +164,8 @@ public class App {
    * always the target's, so ownership is the only thing that can keep it from being dequeued.
    */
   static EnqueueOptions enqueueOptions(String target, String owner) {
-    return new EnqueueOptions("echoWorkflow", "interop", QUEUE_NAMES.get(target))
-        .withInstanceName("default")
+    return new EnqueueOptions(
+            "echoWorkflow", "interop", "default", QueueName.of(QUEUE_NAMES.get(target)))
         .withSerialization(SerializationStrategy.PORTABLE)
         .withTimeout(Duration.ofSeconds(30))
         .withApplicationName(appNameOf(owner))
@@ -201,13 +202,16 @@ public class App {
 
     dbos.registerProxy(InteropService.class, new InteropServiceImpl(dbos), "default");
     var driver = dbos.registerProxy(InteropDriver.class, new InteropDriverImpl(dbos));
-    dbos.registerQueue(new Queue(QUEUE_NAMES.get("java")));
 
     var app =
         Javalin.create(
             config -> {
               config.startup.showJavalinBanner = false;
-              config.events.serverStarting(() -> dbos.launch());
+              config.events.serverStarting(
+                  () -> {
+                    dbos.launch();
+                    dbos.registerQueue(QUEUE_NAMES.get("java"), QueueOptions.empty());
+                  });
               config.events.serverStopping(() -> dbos.shutdown());
 
               config.routes.get("/healthz", ctx -> ctx.json(Map.of("status", "ok")));
@@ -266,7 +270,7 @@ public class App {
                     var named = namedArgs(payload);
 
                     var handle =
-                        dbos.<Map<String, Object>>enqueuePortableWorkflow(
+                        dbos.<Map<String, Object>, RuntimeException>enqueueWorkflow(
                             enqueueOptions(target, owner),
                             positionalArgs(payload).toArray(),
                             named.isEmpty() ? null : named);
