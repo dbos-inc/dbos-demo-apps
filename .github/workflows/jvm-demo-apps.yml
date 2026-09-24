@@ -40,8 +40,14 @@ jobs:
           - name: Java Widget Store
             working-directory: java/widget-store
             java-version: '17'
+          - name: Java Queue Patterns
+            working-directory: java/queue-patterns
+            java-version: '21'
           - name: Kotlin DBOS Starter
             working-directory: kotlin/dbos-starter
+            java-version: '21'
+          - name: Kotlin Queue Patterns
+            working-directory: kotlin/queue-patterns
             java-version: '21'
 
     name: ${{ matrix.name }}
