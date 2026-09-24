@@ -103,7 +103,7 @@ Migrate the shared schema with `dbosctl` (see
 [Provisioning the shared database](#provisioning-the-shared-database)):
 
 ```bash
-go install github.com/dbos-inc/dbos-ctl/cmd/dbosctl@v0.10.1
+go install github.com/dbos-inc/dbos-ctl/cmd/dbosctl@main
 dbosctl sysdb migrate -D $SYS_DB_URL
 ```
 

@@ -17,6 +17,8 @@ GET  /healthz           — liveness probe.
 """
 
 import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import date as _date
 from typing import Any, Dict, List, Optional
 
@@ -28,7 +30,6 @@ from dbos import (
     DBOS,
     DBOSConfiguredInstance,
     EnqueueOptions,
-    Queue,
     WorkflowSerializationFormat,
 )
 
@@ -64,15 +65,11 @@ QUEUE_NAMES = {
 # DBOS app
 # ---------------------------------------------------------------------------
 
-app = FastAPI()
-DBOS(fastapi=app, config={
+DBOS(config={
     "name": APP_NAMES["python"],
     "system_database_url": SYS_DB_URL,
     "application_version": APP_VERSIONS["python"],
 })
-
-_queue = Queue(QUEUE_NAMES["python"])
-
 
 @DBOS.dbos_class("interop")
 class InteropService(DBOSConfiguredInstance):
@@ -158,13 +155,21 @@ def interop_driver(target: str, positional: List[Any], named: Dict[str, Any]) ->
 # HTTP endpoints
 # ---------------------------------------------------------------------------
 
-@app.on_event("startup")
-async def _startup() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Only serve our own queue. The Go and Java runtimes register their queues in
     # the database without claiming ownership, and an unowned queue is polled by
     # every application sharing the system database.
     DBOS.listen_queues([QUEUE_NAMES["python"]])
     DBOS.launch()
+    await DBOS.register_queue_async(QUEUE_NAMES["python"])
+    try:
+        yield
+    finally:
+        DBOS.destroy()
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/healthz")
