@@ -62,7 +62,7 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "3.0.0"
+version = "3.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -72,9 +72,9 @@ dependencies = [
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9a/f0/043a3385913f01a19b58631f1fb82cdd44acc87207528e5bd396ca5453ca/dbos-3.0.0.tar.gz", hash = "sha256:d9b8b92ee139b3ef1f707dd054831c4f8db039d2f790975cd0c817ecbd276c1f", size = 537283, upload-time = "2026-09-16T17:14:23.554Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d9/a3/c5245f9c94760ac6042efbd594e08d2fe1efee728e8f156d1ac64855c781/dbos-3.1.0.tar.gz", hash = "sha256:5195e65bfc9f689523bc68c8592a9d0aa925bec1e42059d1e4ea00a12159b63c", size = 559340, upload-time = "2026-09-24T18:02:53.546Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/33/0b/cb00852815db8bb684f7a5ab10fb53124bc61b0f5e990bc8b14ab6b17f70/dbos-3.0.0-py3-none-any.whl", hash = "sha256:cc552877a11e8d017dbaa7a305a81fbc3c15c3c4d5628f9c2edf42f4de8fb537", size = 266753, upload-time = "2026-09-16T17:14:21.88Z" },
+    { url = "https://files.pythonhosted.org/packages/96/fb/a06fb0cc97b3ac92ddbe2228048e9b6d07545e4196adbc7d6f8420b2fddc/dbos-3.1.0-py3-none-any.whl", hash = "sha256:de6b361352b72067e3528b9d80e96eef3521c5a4350651cf640278aec9765f10", size = 272613, upload-time = "2026-09-24T18:02:51.716Z" },
 ]
 
 [[package]]
@@ -94,7 +94,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", specifier = "==3.0.0" },
+    { name = "dbos", specifier = "==3.1.0" },
     { name = "slack-bolt", specifier = ">=1.27.0" },
 ]
 
