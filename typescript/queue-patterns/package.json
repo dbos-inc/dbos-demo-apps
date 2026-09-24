@@ -17,7 +17,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^5.0.2",
+    "@dbos-inc/dbos-sdk": "^5.1.10",
     "express": "^5.1.0"
   }
 }
