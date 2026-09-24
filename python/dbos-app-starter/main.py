@@ -1,12 +1,14 @@
 import os
+import random
 import time
+import uuid
 from datetime import datetime, timezone, timedelta
-from typing import Any
+from typing import Any, Optional
 
 import uvicorn
-from dbos import DBOS, DBOSConfig, SetWorkflowID
+from dbos import DBOS, DBOSConfig, SetEnqueueOptions, SetWorkflowID, WorkflowStatus
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 # Welcome to DBOS!
 # This example shows you how to use DBOS to build applications
@@ -28,6 +30,21 @@ DEFAULT_CRON = "*/5 * * * * *"
 
 QUEUE_NAME = "demo-queue"
 DEFAULT_WORKER_CONCURRENCY = 3
+
+RATE_LIMITED_QUEUE_NAME = "rate-limited-queue"
+DEFAULT_RATE_LIMIT = {"limit": 2, "period": 10}
+
+FAIR_QUEUE_NAME = "fair-queue"
+DEFAULT_PARTITION_CONCURRENCY = 1
+DEFAULT_FAIR_WORKER_CONCURRENCY = 4
+# The tenants the frontend offers. The random mix draws from the first four,
+# leaving "ed" free to show a newcomer isn't stuck behind their backlog.
+FAIR_QUEUE_TENANTS = ["alice", "bob", "clark", "dave", "ed"]
+
+DELAYED_QUEUE_NAME = "delayed-queue"
+# The longest delay the demo accepts: one day. DBOS itself has no hard limit.
+MAX_DELAY_SECONDS = 24 * 60 * 60
+DELAY_ERROR = f"delay_seconds must be a whole number from 1 to {MAX_DELAY_SECONDS}"
 
 
 # This endpoint uses DBOS to launch a durable workflow.
@@ -102,6 +119,67 @@ def readme():
     return HTMLResponse(html)
 
 
+# ---- Helpers ----
+
+# RFC 3339 timestamp for 10 minutes ago.
+def ten_minutes_ago() -> str:
+    return (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+
+
+# Count workflows grouped by status (matches the frontend summary panels).
+def count_by_status(wfs: list[WorkflowStatus]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for wf in wfs:
+        counts[wf.status] = counts.get(wf.status, 0) + 1
+    return counts
+
+
+# Count workflows per tenant. Each workflow's partition key is its tenant.
+def count_by_tenant(wfs: list[WorkflowStatus]) -> list[dict[str, Any]]:
+    counts: dict[str, int] = {}
+    for wf in wfs:
+        tenant = wf.queue_partition_key or "unknown"
+        counts[tenant] = counts.get(tenant, 0) + 1
+    return [{"tenant_id": tenant, "count": count} for tenant, count in counts.items()]
+
+
+# Workflows on the given queue started in the last 10 minutes, newest first.
+def recent_on_queue(queue_name: str) -> list[WorkflowStatus]:
+    return DBOS.list_workflows(
+        queue_name=queue_name,
+        start_time=ten_minutes_ago(),
+        sort_desc=True,
+        limit=500,
+        load_input=False,
+        load_output=False,
+    )
+
+
+# Parse a request field (a JSON number or string) as an integer >= 1, or return None.
+def parse_positive_int(value: Any) -> Optional[int]:
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        return None
+    return int(n) if n >= 1 and n.is_integer() else None
+
+
+# Parse a request field as a trimmed name of 1 to 40 characters, or return None.
+def parse_name(value: Any) -> Optional[str]:
+    s = str(value or "").strip()
+    return s if 0 < len(s) <= 40 else None
+
+
+# Parse a request field as a whole number of seconds from 1 to MAX_DELAY_SECONDS, or return None.
+def parse_delay_seconds(value: Any) -> Optional[int]:
+    n = parse_positive_int(value)
+    return n if n is not None and n <= MAX_DELAY_SECONDS else None
+
+
+def error(status_code: int, message: str) -> JSONResponse:
+    return JSONResponse(status_code=status_code, content={"error": message})
+
+
 # ---- Schedule endpoints ----
 
 @app.get("/schedule/status")
@@ -114,23 +192,18 @@ def get_schedule_status():
         cron = DEFAULT_CRON
         schedule_status = "UNKNOWN"
 
-    since = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
     all_wfs = DBOS.list_workflows(
         name="scheduled_workflow",
-        start_time=since,
+        start_time=ten_minutes_ago(),
         limit=500,
         load_input=False,
         load_output=False,
     )
 
-    counts: dict[str, int] = {}
-    for wf in all_wfs:
-        counts[wf.status] = counts.get(wf.status, 0) + 1
-
     return {
         "cron": cron,
         "schedule_status": schedule_status,
-        "workflow_counts": counts,
+        "workflow_counts": count_by_status(all_wfs),
     }
 
 
@@ -168,44 +241,29 @@ def trigger_schedule():
     return {"ok": True}
 
 
-# ---- Queue workflow ----
+# ---- Queues tab: every sub-page enqueues this same workflow, each on its own
+# queue, so the differences you see come from the queues alone ----
 
 @DBOS.workflow()
-def enqueued_workflow():
-    DBOS.logger.info("Enqueued workflow starting.")
+def queue_workflow():
     DBOS.sleep(5)
-    DBOS.logger.info("Enqueued workflow ending.")
 
 
-# ---- Queue endpoints ----
+# ---- Queues tab, worker concurrency: a queue with adjustable worker concurrency ----
 
 @app.get("/queue/status")
 def get_queue_status():
     queue = DBOS.retrieve_queue(QUEUE_NAME)
     worker_concurrency = queue.worker_concurrency if queue else DEFAULT_WORKER_CONCURRENCY
-
-    since = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
-    all_wfs = DBOS.list_workflows(
-        name="enqueued_workflow",
-        start_time=since,
-        limit=500,
-        load_input=False,
-        load_output=False,
-    )
-
-    counts: dict[str, int] = {}
-    for wf in all_wfs:
-        counts[wf.status] = counts.get(wf.status, 0) + 1
-
     return {
         "worker_concurrency": worker_concurrency,
-        "workflow_counts": counts,
+        "workflow_counts": count_by_status(recent_on_queue(QUEUE_NAME)),
     }
 
 
 @app.post("/queue/enqueue")
 def enqueue_workflow_endpoint():
-    DBOS.enqueue_workflow(QUEUE_NAME, enqueued_workflow)
+    DBOS.enqueue_workflow(QUEUE_NAME, queue_workflow)
     return {"ok": True}
 
 
@@ -213,6 +271,179 @@ def enqueue_workflow_endpoint():
 def update_queue_concurrency(body: dict):
     concurrency = int(body.get("concurrency", DEFAULT_WORKER_CONCURRENCY))
     DBOS.register_queue(QUEUE_NAME, worker_concurrency=concurrency, on_conflict="always_update")
+    return {"ok": True}
+
+
+# ---- Queues tab, rate limiting: a queue that starts at most `limit` workflows
+# every `period` seconds. The rate limit can be changed at runtime. ----
+
+@app.get("/queue/rate/status")
+def get_rate_status():
+    queue = DBOS.retrieve_queue(RATE_LIMITED_QUEUE_NAME)
+    limiter = (queue.limiter if queue else None) or DEFAULT_RATE_LIMIT
+    wfs = recent_on_queue(RATE_LIMITED_QUEUE_NAME)
+    return {
+        "limit_per_period": limiter["limit"],
+        "period_sec": limiter["period"],
+        "workflow_counts": count_by_status(wfs),
+        # The newest workflows. started_at is when the queue let each one start,
+        # so the gaps between start times show the rate limit at work.
+        "workflows": [
+            {
+                "workflow_id": wf.workflow_id,
+                "status": wf.status,
+                "enqueued_at": wf.created_at,
+                "started_at": wf.dequeued_at,
+            }
+            for wf in wfs[:50]
+        ],
+    }
+
+
+@app.post("/queue/rate/enqueue")
+def enqueue_rate_limited():
+    DBOS.enqueue_workflow(RATE_LIMITED_QUEUE_NAME, queue_workflow)
+    return {"ok": True}
+
+
+@app.post("/queue/rate/limit")
+def update_rate_limit(body: dict):
+    limit = parse_positive_int(body.get("limit_per_period"))
+    period = parse_positive_int(body.get("period_sec"))
+    if limit is None or period is None:
+        return error(400, "limit and period must be whole numbers of at least 1")
+    DBOS.retrieve_queue(RATE_LIMITED_QUEUE_NAME).set_limiter({"limit": limit, "period": period})
+    return {"ok": True}
+
+
+# ---- Queues tab, fair queues: a queue partitioned by tenant.
+# partition_concurrency limits how many workflows each tenant runs at once,
+# and worker_concurrency limits how many run on this process in total,
+# so one busy tenant can't starve the others.
+# Both limits can be changed at runtime. ----
+
+# Enqueue one workflow in the tenant's partition of the fair queue.
+def enqueue_for_tenant(tenant_id: str) -> None:
+    with SetEnqueueOptions(queue_partition_key=tenant_id):
+        DBOS.enqueue_workflow(FAIR_QUEUE_NAME, queue_workflow)
+
+
+@app.get("/queue/fair/status")
+def get_fair_status():
+    queue = DBOS.retrieve_queue(FAIR_QUEUE_NAME)
+
+    def list_fair_queue(status: str, start_time: Optional[str] = None) -> list[WorkflowStatus]:
+        return DBOS.list_workflows(
+            queue_name=FAIR_QUEUE_NAME,
+            status=status,
+            start_time=start_time,
+            load_input=False,
+            load_output=False,
+        )
+
+    return {
+        "partition_concurrency": (queue.partition_concurrency if queue else None)
+        or DEFAULT_PARTITION_CONCURRENCY,
+        "worker_concurrency": (queue.worker_concurrency if queue else None)
+        or DEFAULT_FAIR_WORKER_CONCURRENCY,
+        "enqueued": count_by_tenant(list_fair_queue("ENQUEUED")),
+        "pending": [
+            {"workflow_id": wf.workflow_id, "tenant_id": wf.queue_partition_key or "unknown"}
+            for wf in list_fair_queue("PENDING")
+        ],
+        "success": count_by_tenant(list_fair_queue("SUCCESS", ten_minutes_ago())),
+    }
+
+
+@app.post("/queue/fair/enqueue")
+def enqueue_fair(body: dict):
+    tenant_id = parse_name(body.get("tenant_id"))
+    if tenant_id is None:
+        return error(400, "Tenant names must be 1 to 40 characters")
+    enqueue_for_tenant(tenant_id)
+    return {"ok": True}
+
+
+# Enqueue a batch of workflows across four tenants, skewed toward one of them.
+@app.post("/queue/fair/random_mix")
+def enqueue_fair_random_mix():
+    total = 50
+    tenants = FAIR_QUEUE_TENANTS[:4]
+    favored = random.choice(tenants)
+    # The favored tenant is twice as likely to be picked. Picks are made one
+    # at a time, so the workflows arrive in randomized order.
+    weighted = tenants + [favored]
+    for _ in range(total):
+        enqueue_for_tenant(random.choice(weighted))
+        time.sleep(0.01)
+    return {"total": total, "favored": favored}
+
+
+@app.post("/queue/fair/limits")
+def update_fair_limits(body: dict):
+    partition_concurrency = parse_positive_int(body.get("partition_concurrency"))
+    worker_concurrency = parse_positive_int(body.get("worker_concurrency"))
+    if partition_concurrency is None or worker_concurrency is None:
+        return error(400, "partition_concurrency and worker_concurrency must be whole numbers of at least 1")
+    queue = DBOS.retrieve_queue(FAIR_QUEUE_NAME)
+    queue.set_partition_concurrency(partition_concurrency)
+    queue.set_worker_concurrency(worker_concurrency)
+    return {"ok": True}
+
+
+# ---- Queues tab, delays: enqueue a workflow that waits before running.
+# The workflow stays DELAYED until its delay expires, then becomes ENQUEUED and
+# runs. While it's DELAYED, its delay can be changed to run it sooner or later.
+# The delay is stored in the database, so it survives restarts. ----
+
+@app.get("/queue/delay/status")
+def get_delay_status():
+    # List every workflow still in progress, plus any created in the last 10 minutes.
+    active = DBOS.list_workflows(
+        queue_name=DELAYED_QUEUE_NAME,
+        status=["DELAYED", "ENQUEUED", "PENDING"],
+        load_input=False,
+        load_output=False,
+    )
+    by_id = {wf.workflow_id: wf for wf in recent_on_queue(DELAYED_QUEUE_NAME) + active}
+    newest = sorted(by_id.values(), key=lambda wf: wf.created_at or 0, reverse=True)[:50]
+    return {
+        "workflows": [
+            {
+                "workflow_id": wf.workflow_id,
+                "status": wf.status,
+                "enqueued_at": wf.created_at,
+                # When the delay expires and the workflow becomes eligible to run.
+                "due_at": wf.delay_until_epoch_ms,
+            }
+            for wf in newest
+        ]
+    }
+
+
+@app.post("/queue/delay/enqueue")
+def enqueue_delayed(body: dict):
+    delay_seconds = parse_delay_seconds(body.get("delay_seconds"))
+    if delay_seconds is None:
+        return error(400, DELAY_ERROR)
+    with SetEnqueueOptions(delay_seconds=delay_seconds):
+        DBOS.enqueue_workflow(DELAYED_QUEUE_NAME, queue_workflow)
+    return {"ok": True}
+
+
+# Change a workflow's delay, counting from now. DBOS only changes the delay
+# of a workflow that is still DELAYED.
+@app.post("/queue/delay/set/{workflow_id}")
+def set_delay(workflow_id: str, body: dict):
+    delay_seconds = parse_delay_seconds(body.get("delay_seconds"))
+    if delay_seconds is None:
+        return error(400, DELAY_ERROR)
+    status = DBOS.get_workflow_status(workflow_id)
+    if status is None or status.queue_name != DELAYED_QUEUE_NAME:
+        return error(404, "Delayed workflow not found")
+    if status.status != "DELAYED":
+        return error(409, f"The workflow is {status.status}, so its delay can no longer change")
+    DBOS.set_workflow_delay(workflow_id, delay_seconds=delay_seconds)
     return {"ok": True}
 
 
@@ -237,7 +468,7 @@ def comm_step_two():
 def communication_workflow():
     comm_step_one()
     DBOS.set_event(COMM_STATUS_EVENT, "waiting")
-    decision = DBOS.recv(APPROVAL_TOPIC, timeout_seconds=120)
+    decision = DBOS.recv(APPROVAL_TOPIC, timeout_seconds=15)
     if decision == "approve":
         DBOS.set_event(COMM_STATUS_EVENT, "step2")
         comm_step_two()
@@ -246,12 +477,16 @@ def communication_workflow():
         DBOS.set_event(COMM_STATUS_EVENT, "denied")
         DBOS.logger.info("Communication workflow: denied.")
     else:
-        DBOS.set_event(COMM_STATUS_EVENT, "timeout")
-        DBOS.logger.info("Communication workflow: timed out waiting for approval.")
+        # recv returns None on timeout. Raising ends the workflow in the ERROR state.
+        raise TimeoutError("Timed out waiting for approval")
 
 
 @app.get("/comm/status/{workflow_id}")
 def get_comm_status(workflow_id: str):
+    # The workflow raises when it times out waiting for approval, so it ends in ERROR.
+    wf = DBOS.get_workflow_status(workflow_id)
+    if wf is not None and wf.status == "ERROR":
+        return {"state": "timeout", "error": str(wf.error or "")}
     try:
         status = DBOS.get_event(workflow_id, COMM_STATUS_EVENT, timeout_seconds=0)
     except Exception:
@@ -261,7 +496,6 @@ def get_comm_status(workflow_id: str):
 
 @app.post("/comm/start")
 def start_comm_workflow():
-    import uuid
     wf_id = str(uuid.uuid4()).replace("-", "")[:12]
     with SetWorkflowID(wf_id):
         DBOS.start_workflow(communication_workflow)
@@ -282,5 +516,15 @@ def deny_comm(workflow_id: str):
 
 if __name__ == "__main__":
     DBOS.launch()
+    # Register the demo queues (after launch). "never_update" keeps any
+    # settings changed at runtime across restarts.
     DBOS.register_queue(QUEUE_NAME, worker_concurrency=DEFAULT_WORKER_CONCURRENCY, on_conflict="never_update")
+    DBOS.register_queue(RATE_LIMITED_QUEUE_NAME, limiter=DEFAULT_RATE_LIMIT, on_conflict="never_update")
+    DBOS.register_queue(
+        FAIR_QUEUE_NAME,
+        partition_concurrency=DEFAULT_PARTITION_CONCURRENCY,
+        worker_concurrency=DEFAULT_FAIR_WORKER_CONCURRENCY,
+        on_conflict="never_update",
+    )
+    DBOS.register_queue(DELAYED_QUEUE_NAME, on_conflict="never_update")
     uvicorn.run(app, host="0.0.0.0", port=8000)
