@@ -48,11 +48,13 @@ APPS_DIR = ROOT / "apps"
 TS_REPO_URL = "https://github.com/dbos-inc/dbos-transact-ts.git"
 TS_SDK_SRC  = ROOT / ".ts-sdk-src"
 
-# dbosctl migrates the shared system database. Pinned to a release: it is the
-# tool under test in test_dbosctl.py, not a moving dependency, and `go install`
-# fetches it from the module proxy without a checkout.
+# dbosctl migrates the shared system database. Built from tip-of-main rather
+# than a release, like the TypeScript SDK: it refuses to touch a schema newer
+# than the migrations it vendors, and the SDKs here migrate past what the last
+# release knows. `go install ...@main` fetches it from the module proxy without
+# a checkout.
 DBOSCTL_PKG     = "github.com/dbos-inc/dbos-ctl/cmd/dbosctl"
-DBOSCTL_VERSION = "v0.10.1"
+DBOSCTL_VERSION = "main"
 BIN_DIR         = ROOT / ".bin"
 DBOSCTL         = BIN_DIR / "dbosctl"
 
@@ -160,7 +162,7 @@ def _run(cmd: list[str], cwd: Path, env: dict | None = None) -> None:
 
 
 def _build_dbosctl() -> None:
-    """Install the pinned dbosctl release into .bin.
+    """Build dbosctl at tip-of-main into .bin.
 
     GOBIN rather than the caller's: the version this suite migrates and renames
     with should not depend on what happens to be on $PATH.
