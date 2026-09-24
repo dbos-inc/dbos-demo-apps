@@ -1,3 +1,3 @@
-dbos>=2.30.0a6
+dbos>=3.1.0
 fastapi[standard]
 uvicorn[standard]

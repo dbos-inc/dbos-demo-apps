@@ -8,9 +8,9 @@ dependencies = [
     "requests",
     "psycopg[binary]",
     # interop-python app (published SDK, mirrors apps/interop-python/requirements.txt).
-    # 2.30 is the first release in which applications sharing a system database own
-    # their workflows, queues and versions by name.
-    "dbos>=2.30.0a6",
+    # Tracks the latest release: older ones can't dequeue workflows that the
+    # tip-of-main TypeScript and Go SDKs enqueue.
+    "dbos>=3.1.0",
     "fastapi[standard]",
     "uvicorn[standard]",
 ]
