@@ -230,7 +230,8 @@ public class App {
         }
       }
 
-      //locate the last "sleep" step and use its deadline to determine when the debounce window closes
+      // locate the last "sleep" step and use its deadline to determine when the debounce window
+      // closes
       Long deadline = null;
       for (var step : dbos.listWorkflowSteps(waiter.workflowId())) {
         if ("DBOS.sleep".equals(step.functionName()) && step.output() instanceof Long wakeAt) {
@@ -300,8 +301,7 @@ public class App {
                   () -> {
                     dbos.launch();
                     dbos.registerQueue(CONCURRENCY_QUEUE, QueueOptions.setWorkerConcurrency(4));
-                    dbos.registerQueue(
-                        PARTITIONED_QUEUE, QueueOptions.setPartitionQueue(true).andConcurrency(2));
+                    dbos.registerQueue(PARTITIONED_QUEUE, QueueOptions.setPartitionConcurrency(2));
                     dbos.registerQueue(
                         RATE_LIMITED_QUEUE, QueueOptions.setRateLimit(2, Duration.ofSeconds(10)));
                     dbos.registerQueue(DEBOUNCER_QUEUE, QueueOptions.empty());

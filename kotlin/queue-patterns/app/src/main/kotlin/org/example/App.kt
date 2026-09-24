@@ -188,7 +188,8 @@ private fun delayedDebounces(dbos: DBOS): List<Map<String, Any?>> {
     // The input the waiter started with, before any further calls replaced it.
     var input = waiter.input()?.firstNotNullOfOrNull { messageArg(it, 1) }
 
-    //locate the last "sleep" step and use its deadline to determine when the debounce window closes
+    // locate the last "sleep" step and use its deadline to determine when the debounce window
+    // closes
     var deadline: Long? = null
     for (step in dbos.listWorkflowSteps(waiter.workflowId())) {
       val output = step.output()
@@ -245,10 +246,7 @@ fun main() {
       config.events.serverStarting {
         dbos.launch()
         dbos.registerQueue(CONCURRENCY_QUEUE, QueueOptions.setWorkerConcurrency(4))
-        dbos.registerQueue(
-          PARTITIONED_QUEUE,
-          QueueOptions.setPartitionQueue(true).andConcurrency(2),
-        )
+        dbos.registerQueue(PARTITIONED_QUEUE, QueueOptions.setPartitionConcurrency(2))
         dbos.registerQueue(RATE_LIMITED_QUEUE, QueueOptions.setRateLimit(2, Duration.ofSeconds(10)))
         dbos.registerQueue(DEBOUNCER_QUEUE, QueueOptions.empty())
       }
