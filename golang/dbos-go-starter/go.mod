@@ -3,7 +3,7 @@ module dbos-go-starter
 go 1.26.0
 
 require (
-	github.com/dbos-inc/dbos-transact-golang v1.0.0-rc.1
+	github.com/dbos-inc/dbos-transact-golang v1.4.0
 	github.com/gin-gonic/gin v1.12.0
 )
 
