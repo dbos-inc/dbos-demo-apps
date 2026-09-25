@@ -536,6 +536,11 @@ def rewind_comm(workflow_id: str, body: dict):
     if wf.status not in REWINDABLE_STATES:
         return JSONResponse(status_code=409, content={"error": f"The workflow is {wf.status}; only a finished workflow can be rewound"})
     DBOS.rewind_workflow(workflow_id, start_step=start_step)
+    # Record the rewind as part of workflow attributes
+    DBOS.update_workflow_attributes(workflow_id, {
+        "rewind_timestamp": datetime.now(timezone.utc).isoformat(),
+        "rewind_step": start_step,
+    })
     return {"ok": True}
 
 
