@@ -527,10 +527,13 @@ const communicationWorkflow = DBOS.registerWorkflow(communicationWorkflowFn, { n
 
 router.get("/comm/status/:workflowId", async (ctx: Context) => {
   const { workflowId } = ctx.params;
-  // The workflow throws when it times out waiting for approval, so it ends in ERROR.
+  // The workflow's own status (e.g. PENDING, SUCCESS) tells the page when it can be rewound.
   const wf = await DBOS.getWorkflowStatus(workflowId);
+  const workflowStatus = wf?.status ?? null;
+  // The workflow throws when it times out waiting for approval, so it ends in ERROR.
   if (wf?.status === "ERROR") {
-    ctx.body = { state: "timeout", error: wf.error instanceof Error ? wf.error.message : String(wf.error ?? "") };
+    const error = wf.error instanceof Error ? wf.error.message : String(wf.error ?? "");
+    ctx.body = { state: "timeout", error, workflow_status: workflowStatus };
     return;
   }
   let status: string | null = null;
@@ -539,7 +542,56 @@ router.get("/comm/status/:workflowId", async (ctx: Context) => {
   } catch {
     status = null;
   }
-  ctx.body = { state: status || "step1" };
+  ctx.body = { state: status || "step1", workflow_status: workflowStatus };
+});
+
+// ============================================================
+// Rewind: rewinding a finished workflow discards its steps from a chosen step
+// onward and runs it again from there, under the same workflow ID.
+// ============================================================
+
+// The workflow statuses this demo rewinds from. (DBOS can rewind a workflow in any
+// terminal state; this one finishes in SUCCESS, or ERROR if it fails.)
+const REWINDABLE_STATES = new Set(["SUCCESS", "ERROR"]);
+
+// The steps the page offers as rewind points, by the name DBOS records for each.
+// DBOS also records the workflow's other operations (like DBOS.setEvent) as steps.
+const REWIND_POINTS = new Map([
+  ["commStepOne", "commStepOne()"],
+  ["DBOS.recv", 'const decision = await DBOS.recv("approval")'],
+  ["commStepTwo", "commStepTwo()"],
+]);
+
+// The points a workflow can be rewound to, with the step ID rewindWorkflow takes for each.
+router.get("/comm/steps/:workflowId", async (ctx: Context) => {
+  const steps = (await DBOS.listWorkflowSteps(ctx.params.workflowId)) ?? [];
+  ctx.body = steps
+    .filter((s) => REWIND_POINTS.has(s.name))
+    .map((s) => ({ step: s.functionID, label: REWIND_POINTS.get(s.name) }));
+});
+
+router.post("/comm/rewind/:workflowId", async (ctx: Context) => {
+  const { workflowId } = ctx.params;
+  const body = ctx.request.body as { start_step?: unknown };
+  const startStep = body?.start_step;
+  if (typeof startStep !== "number" || !Number.isInteger(startStep) || startStep < 0) {
+    ctx.status = 400;
+    ctx.body = { error: "start_step must be a step ID of at least 0" };
+    return;
+  }
+  const wf = await DBOS.getWorkflowStatus(workflowId);
+  if (!wf) {
+    ctx.status = 404;
+    ctx.body = { error: "Workflow not found" };
+    return;
+  }
+  if (!REWINDABLE_STATES.has(wf.status)) {
+    ctx.status = 409;
+    ctx.body = { error: `The workflow is ${wf.status}; only a finished workflow can be rewound` };
+    return;
+  }
+  await DBOS.rewindWorkflow(workflowId, { startStep });
+  ctx.body = { ok: true };
 });
 
 router.post("/comm/start", async (ctx: Context) => {

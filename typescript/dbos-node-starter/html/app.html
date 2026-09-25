@@ -235,6 +235,13 @@
       /* ---- code editor window ---- */
       .editor {
         overflow: hidden;
+        /* The code fills the card, even when the card is stretched to match
+           a taller controls card beside it. */
+        display: flex;
+        flex-direction: column;
+      }
+      .editor pre.code {
+        flex: 1;
       }
       .editor .chrome {
         display: flex;
@@ -576,6 +583,120 @@
         flex: 1;
         padding: 8px 10px;
         font-size: 0.72rem;
+      }
+
+      /* ---- communication: outcome line ---- */
+      .comm-outcome {
+        display: grid;
+        margin-top: 4px;
+        padding: 8px 4px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .comm-outcome > span {
+        grid-area: 1 / 1;
+        visibility: hidden;
+      }
+      .comm-outcome > span.shown {
+        visibility: visible;
+      }
+
+      /* ---- communication: rewind card, and the paragraph above it ---- */
+      /* Both are as wide as the code card: the first column of .grid (1.15fr of 2fr, less the gap). */
+      .rewind-lede {
+        margin: 24px 0 0;
+        max-width: calc((100% - 20px) * 1.15 / 2);
+      }
+      .rewind {
+        margin-top: 14px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        max-width: calc((100% - 20px) * 1.15 / 2);
+      }
+      @media (max-width: 860px) {
+        .rewind-lede,
+        .rewind { max-width: none; }
+      }
+      .rewind-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .rewind h2 {
+        margin: 0;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .rewind .status-badge.error {
+        color: var(--status-error);
+        background: rgba(220, 88, 72, 0.1);
+      }
+      /* The step selector, Rewind button and call preview are greyed out until
+         the workflow finishes. */
+      .rewind-body {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        transition: opacity 0.3s;
+      }
+      .rewind.locked .rewind-body {
+        opacity: 0.4;
+      }
+      .rewind.locked h2 {
+        opacity: 0.5;
+      }
+      .rewind-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .rewind-select {
+        flex: 1;
+        min-width: 220px;
+        appearance: none;
+        -webkit-appearance: none;
+        background: var(--code-bg)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3a5aa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")
+          no-repeat right 10px center / 14px;
+        border: 1px solid var(--ink-border);
+        border-radius: 2px;
+        color: var(--fg);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 34px 8px 12px;
+        cursor: pointer;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .rewind-select:hover:not(:disabled),
+      .rewind-select:focus {
+        border-color: var(--muted);
+      }
+      .rewind-select:disabled {
+        cursor: not-allowed;
+      }
+      .rewind-select option {
+        background: var(--ink-bg);
+        color: var(--fg);
+      }
+      .rewind-controls .btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      /* Shows only when a rewind fails. */
+      .rewind-note {
+        font-size: 12.5px;
+        color: var(--status-error);
+      }
+      .rewind-note:empty {
+        display: none;
       }
 
       .status-badge {
@@ -1526,7 +1647,7 @@
               <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
               <span class="filename">src/main.ts</span>
             </div>
-            <pre class="code"><span class="code-line"><span class="keyword">const</span> <span class="function">communicationWorkflow</span> <span class="punct">=</span> <span class="function">DBOS.registerWorkflow</span><span class="punct">(</span><span class="keyword">async</span> <span class="punct">() =&gt; {</span></span><span class="code-block-step comm-line-1"><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.runStep</span><span class="punct">(</span><span class="function">commStepOne</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.setEvent</span><span class="punct">(</span><span class="string">"comm_status"</span><span class="punct">,</span> <span class="string">"waiting"</span><span class="punct">);</span></span><span class="code-block-step comm-line-2"><span class="code-line indent"><span class="keyword">const</span> decision <span class="punct">=</span> <span class="keyword">await</span> <span class="function">DBOS.recv</span><span class="punct">(</span><span class="string">"approval"</span><span class="punct">,</span></span><span class="code-line indent">    <span class="punct">{</span> timeoutSeconds<span class="punct">:</span> <span class="num-lit">15</span> <span class="punct">});</span></span></span><span class="code-line indent"><span class="keyword">if</span> <span class="punct">(</span>decision <span class="punct">===</span> <span class="string">"approve"</span><span class="punct">) {</span></span><span class="code-block-step comm-line-3"><span class="code-line indent2"><span class="keyword">await</span> <span class="function">DBOS.runStep</span><span class="punct">(</span><span class="function">commStepTwo</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else if</span> <span class="punct">(</span>decision <span class="punct">===</span> <span class="string">"deny"</span><span class="punct">) {</span></span><span class="code-line indent2"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Denied."</span><span class="punct">);</span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else</span> <span class="punct">{</span>  <span class="punct">// timeout</span></span><span class="code-line indent2"><span class="keyword">throw new</span> <span class="function">Error</span><span class="punct">(</span><span class="string">"Timed out waiting for approval"</span><span class="punct">);</span></span><span class="code-line indent"><span class="punct">}</span></span><span class="code-line"><span class="punct">});</span></span></pre>
+            <pre class="code"><span class="code-line"><span class="keyword">const</span> <span class="function">communicationWorkflow</span> <span class="punct">=</span> <span class="function">DBOS.registerWorkflow</span><span class="punct">(</span><span class="keyword">async</span> <span class="punct">() =&gt; {</span></span><span class="code-block-step comm-line-1"><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.runStep</span><span class="punct">(</span><span class="function">commStepOne</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="keyword">await</span> <span class="function">DBOS.setEvent</span><span class="punct">(</span><span class="string">"comm_status"</span><span class="punct">,</span> <span class="string">"waiting"</span><span class="punct">);</span></span><span class="code-block-step comm-line-2"><span class="code-line indent"><span class="keyword">const</span> decision <span class="punct">=</span> <span class="keyword">await</span> <span class="function">DBOS.recv</span><span class="punct">(</span><span class="string">"approval"</span><span class="punct">,</span></span><span class="code-line indent">    <span class="punct">{</span> timeoutSeconds<span class="punct">:</span> <span class="num-lit">15</span> <span class="punct">});</span></span></span><span class="code-line indent"><span class="keyword">if</span> <span class="punct">(</span>decision <span class="punct">===</span> <span class="string">"approve"</span><span class="punct">) {</span></span><span class="code-block-step comm-line-3"><span class="code-line indent2"><span class="keyword">await</span> <span class="function">DBOS.runStep</span><span class="punct">(</span><span class="function">commStepTwo</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else if</span> <span class="punct">(</span>decision <span class="punct">===</span> <span class="string">"deny"</span><span class="punct">) {</span></span><span class="code-line indent2"><span class="function">DBOS.logger.info</span><span class="punct">(</span><span class="string">"Denied."</span><span class="punct">);</span></span><span class="code-line indent"><span class="punct">}</span> <span class="keyword">else</span> <span class="punct">{</span>  <span class="punct">// timeout</span></span><span class="code-line indent2"><span class="keyword">throw new</span> <span class="function">Error</span><span class="punct">(</span><span class="string">"Timed out waiting for approval"</span><span class="punct">);</span></span><span class="code-line indent"><span class="punct">}</span></span><span class="code-line"><span class="punct">});</span></span><span class="code-line"> </span><span class="code-line"> </span><span class="code-line"><span class="punct">// send a message to a workflow:</span></span><span class="code-line"><span class="keyword">await</span> <span class="function">DBOS.send</span><span class="punct">(</span>workflowID<span class="punct">,</span> <span class="string">"approve"</span><span class="punct">,</span> <span class="string">"approval"</span><span class="punct">);</span></span></pre>
           </div>
 
           <!-- controls -->
@@ -1586,15 +1707,52 @@
               </div>
             </div>
 
-            <div id="comm-outcome" style="display:none;margin-top:4px;font-size:13px;font-weight:600;padding:8px 4px;"></div>
+            <!-- All outcomes share one spot, so it's always as tall as the longest and the card never resizes. -->
+            <div id="comm-outcome" class="comm-outcome">
+              <span data-state="completed" style="color:var(--status-success)">✓ Approved — step 2 executed successfully.</span>
+              <span data-state="denied" style="color:var(--status-error)">✗ Denied — workflow ended without executing step 2.</span>
+              <span data-state="timeout" style="color:var(--status-error)">⏱ No decision within 15 seconds — the workflow threw "<span id="comm-timeout-error">Timed out waiting for approval</span>" and ended in ERROR.</span>
+            </div>
           </div>
         </div>
+
+        <!-- rewind -->
+        <p class="lede rewind-lede">
+          Once a workflow finishes, you can <strong>rewind</strong> it to a past step.
+          DBOS re-runs the workflow, starting at the chosen point, and overwriting past history.
+          This is one way to recover from errors or outages.
+        </p>
+        <div id="comm-rewind" class="card rewind locked">
+          <div class="rewind-head">
+            <h2>Rewind this workflow</h2>
+            <span id="rewind-status" class="status-badge unknown"><span class="status-dot"></span><span id="rewind-status-text">No workflow yet</span></span>
+          </div>
+          <div class="rewind-body">
+            <div class="rewind-controls">
+              <select id="rewind-step" class="rewind-select" autocomplete="off" aria-label="Step to rewind to" disabled>
+                <option value="0">Step 0: commStepOne()</option>
+              </select>
+              <button onclick="rewindComm()" id="btn-rewind" class="btn btn-flashy" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                Rewind
+              </button>
+            </div>
+          </div>
+          <div id="rewind-note" class="rewind-note"></div>
+        </div>
+
 
         <p class="footer">
           <span class="line">
             Check out the
             <a href="https://docs.dbos.dev/typescript/tutorials/workflow-communication" target="_blank">workflow communication guide</a>
-            to learn more about messages, events, streams, and their usage patterns.
+            to learn more about messages, events, streams, and their usage patterns. <br>
+            See the
+            <a href="https://docs.dbos.dev/typescript/tutorials/workflow-management" target="_blank">workflow management guide</a>
+            to learn more about operations like rewind and fork.
           </span>
         </p>
       </div>
@@ -2351,23 +2509,11 @@
         if (state === "waiting") document.querySelector(".comm-line-2")?.classList.add("step-highlight");
         if (state === "step2") document.querySelector(".comm-line-3")?.classList.add("step-highlight");
 
-        // outcome badge
-        const outcome = document.getElementById("comm-outcome");
-        if (state === "completed") {
-          outcome.style.display = "block";
-          outcome.style.color = "var(--status-success)";
-          outcome.textContent = "✓ Approved — step 2 executed successfully.";
-        } else if (state === "denied") {
-          outcome.style.display = "block";
-          outcome.style.color = "var(--status-error)";
-          outcome.textContent = "✗ Denied — workflow ended without executing step 2.";
-        } else if (state === "timeout") {
-          outcome.style.display = "block";
-          outcome.style.color = "var(--status-error)";
-          outcome.textContent = `⏱ No decision within 15 seconds — the workflow threw "${error || "an error"}" and ended in ERROR.`;
-        } else {
-          outcome.style.display = "none";
-        }
+        // outcome: show the message for a finished workflow, if any
+        if (state === "timeout") document.getElementById("comm-timeout-error").textContent = error || "an error";
+        document.querySelectorAll("#comm-outcome > span").forEach((el) => {
+          el.classList.toggle("shown", el.dataset.state === state);
+        });
 
         // buttons
         const waiting = state === "waiting";
@@ -2376,7 +2522,8 @@
         document.getElementById("btn-comm-start").disabled = false;
       }
 
-      const COMM_TERMINAL = new Set(["completed", "denied", "timeout"]);
+      // Workflow statuses in which the workflow has finished for good.
+      const TERMINAL_STATUSES = new Set(["SUCCESS", "ERROR", "CANCELLED", "MAX_RECOVERY_ATTEMPTS_EXCEEDED"]);
 
       function startCommPolling() {
         if (commPollInterval) clearInterval(commPollInterval);
@@ -2396,11 +2543,14 @@
           if (!res.ok) return;
           const data = await res.json();
           updateCommDiagram(data.state, data.error);
-          if (COMM_TERMINAL.has(data.state)) stopCommPolling();
+          await updateRewind(data.workflow_status);
+          // Keep polling until the workflow itself has finished, so rewind unlocks.
+          if (TERMINAL_STATUSES.has(data.workflow_status)) stopCommPolling();
         } catch (e) { console.error("pollCommStatus error:", e); }
       }
 
       async function startCommWorkflow() {
+        document.getElementById("rewind-note").textContent = "";
         const res = await fetch("/comm/start", { method: "POST" });
         const data = await res.json();
         currentCommWfId = data.workflow_id;
@@ -2422,6 +2572,68 @@
         document.getElementById("btn-comm-approve").disabled = true;
         document.getElementById("btn-comm-deny").disabled = true;
         await fetch(`/comm/deny/${currentCommWfId}`, { method: "POST" });
+        await pollCommStatus();
+      }
+      // ---- Rewind ----
+      // A finished workflow can be rewound to one of its steps. DBOS then runs it
+      // again from that step, under the same workflow ID.
+      const DEFAULT_REWIND_OPTIONS = document.getElementById("rewind-step").innerHTML;
+      // The workflow whose steps fill the step selector, and whether they're up to
+      // date. They reload each time the workflow finishes, since a rewound run can
+      // take a different path.
+      let rewindStepsFor = null;
+      let rewindStepsLoaded = false;
+
+      // Unlock the rewind controls only while the workflow is in SUCCESS or ERROR.
+      async function updateRewind(workflowStatus) {
+        const rewindable = TERMINAL_STATUSES.has(workflowStatus);
+        const badgeClass = { SUCCESS: "active", ERROR: "error" }[workflowStatus] || "unknown";
+        document.getElementById("rewind-status").className = `status-badge ${badgeClass}`;
+        document.getElementById("rewind-status-text").textContent = workflowStatus || "No workflow yet";
+        document.getElementById("comm-rewind").classList.toggle("locked", !rewindable);
+
+        const select = document.getElementById("rewind-step");
+        const button = document.getElementById("btn-rewind");
+        if (!rewindable) {
+          select.disabled = button.disabled = true;
+          rewindStepsLoaded = false;
+          // A different workflow: drop the previous one's steps.
+          if (rewindStepsFor !== currentCommWfId) {
+            rewindStepsFor = currentCommWfId;
+            select.innerHTML = DEFAULT_REWIND_OPTIONS;
+          }
+          return;
+        }
+        if (!rewindStepsLoaded || rewindStepsFor !== currentCommWfId) {
+          const previous = select.value;
+          const steps = await (await fetch(`/comm/steps/${currentCommWfId}`)).json();
+          select.innerHTML = steps
+            .map((s) => `<option value="${s.step}">Step ${s.step}: ${s.label}</option>`)
+            .join("");
+          // Keep the step picked last time, if this run still has it.
+          if ([...select.options].some((o) => o.value === previous)) select.value = previous;
+          rewindStepsFor = currentCommWfId;
+          rewindStepsLoaded = true;
+        }
+        select.disabled = button.disabled = false;
+      }
+
+      async function rewindComm() {
+        const select = document.getElementById("rewind-step");
+        select.disabled = document.getElementById("btn-rewind").disabled = true;
+        const res = await fetch(`/comm/rewind/${currentCommWfId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ start_step: Number(select.value) }),
+        });
+        const note = document.getElementById("rewind-note");
+        note.textContent = "";
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          note.textContent = data.error || "Could not rewind the workflow";
+        }
+        // Follow the rewound workflow as it runs again.
+        startCommPolling();
         await pollCommStatus();
       }
     </script>
