@@ -483,15 +483,65 @@ def communication_workflow():
 
 @app.get("/comm/status/{workflow_id}")
 def get_comm_status(workflow_id: str):
-    # The workflow raises when it times out waiting for approval, so it ends in ERROR.
+    # The workflow's own status (e.g. PENDING, SUCCESS) tells the page when it can be rewound.
     wf = DBOS.get_workflow_status(workflow_id)
-    if wf is not None and wf.status == "ERROR":
-        return {"state": "timeout", "error": str(wf.error or "")}
+    workflow_status = wf.status if wf else None
+    # The workflow raises when it times out waiting for approval, so it ends in ERROR.
+    if workflow_status == "ERROR":
+        return {"state": "timeout", "error": str(wf.error or ""), "workflow_status": workflow_status}
     try:
         status = DBOS.get_event(workflow_id, COMM_STATUS_EVENT, timeout_seconds=0)
     except Exception:
         status = None
-    return {"state": status or "step1"}
+    return {"state": status or "step1", "workflow_status": workflow_status}
+
+
+# ---- Rewind ----
+# Rewinding a finished workflow discards its steps from a chosen step onward and
+# runs it again from there, under the same workflow ID.
+
+# The workflow states this demo rewinds from. (DBOS can rewind a workflow in any
+# terminal state; this one finishes in SUCCESS, or ERROR if it fails.)
+REWINDABLE_STATES = {"SUCCESS", "ERROR"}
+
+
+# The steps the page offers as rewind points, by the name DBOS records for each.
+# DBOS also records the workflow's other operations (like DBOS.setEvent) as steps.
+REWIND_POINTS = {
+    "comm_step_one": "comm_step_one()",
+    "DBOS.recv": 'decision = DBOS.recv("approval")',
+    "comm_step_two": "comm_step_two()",
+}
+
+
+# The points a workflow can be rewound to, with the step ID rewind_workflow takes for each.
+@app.get("/comm/steps/{workflow_id}")
+def get_comm_steps(workflow_id: str):
+    steps = DBOS.list_workflow_steps(workflow_id, load_output=False)
+    return [
+        {"step": s["function_id"], "label": REWIND_POINTS[s["function_name"]]}
+        for s in steps
+        if s["function_name"] in REWIND_POINTS
+    ]
+
+
+@app.post("/comm/rewind/{workflow_id}")
+def rewind_comm(workflow_id: str, body: dict):
+    start_step = body.get("start_step")
+    if not isinstance(start_step, int) or start_step < 1:
+        return JSONResponse(status_code=400, content={"error": "start_step must be a step ID of at least 1"})
+    wf = DBOS.get_workflow_status(workflow_id)
+    if wf is None:
+        return JSONResponse(status_code=404, content={"error": "Workflow not found"})
+    if wf.status not in REWINDABLE_STATES:
+        return JSONResponse(status_code=409, content={"error": f"The workflow is {wf.status}; only a finished workflow can be rewound"})
+    DBOS.rewind_workflow(workflow_id, start_step=start_step)
+    # Record the rewind as part of workflow attributes
+    DBOS.update_workflow_attributes(workflow_id, {
+        "rewind_timestamp": datetime.now(timezone.utc).isoformat(),
+        "rewind_step": start_step,
+    })
+    return {"ok": True}
 
 
 @app.post("/comm/start")
