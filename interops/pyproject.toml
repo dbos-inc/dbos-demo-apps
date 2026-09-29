@@ -10,7 +10,7 @@ dependencies = [
     # interop-python app (published SDK, mirrors apps/interop-python/requirements.txt).
     # Tracks the latest release: older ones can't dequeue workflows that the
     # tip-of-main TypeScript and Go SDKs enqueue.
-    "dbos>=3.1.0",
+    "dbos>=3.2.0",
     "fastapi[standard]",
     "uvicorn[standard]",
 ]
