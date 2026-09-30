@@ -114,7 +114,7 @@ def crash_application():
 # This endpoint serves the HTML frontend.
 @app.get("/")
 def readme():
-    with open(os.path.join("html", "app.html")) as file:
+    with open(os.path.join("html", "app.html"), encoding="utf-8") as file:
         html = file.read()
     return HTMLResponse(html)
 
