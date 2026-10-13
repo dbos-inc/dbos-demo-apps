@@ -81,7 +81,10 @@ def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
 @tool
 def tool_get_purchase_by_id(order_id: int) -> str:
     """Look up a purchase by its order id."""
-    return asdict(get_purchase_by_id(order_id))
+    purchase = get_purchase_by_id(order_id)
+    if purchase is None:
+        return f"No purchase found with order_id {order_id}."
+    return asdict(purchase)
 
 # look up all orders: without this the agent may try to run two tools and that didn't work
 @ds.transaction()

@@ -55,6 +55,8 @@ try:
         history = client.get("/history").json()
         assert history["message_count"] == 4, history
         assert "Laptop Pro X1" in str(history), history
+        missing = main.tool_get_purchase_by_id.invoke({"order_id": 99})
+        assert "No purchase found" in missing, missing
         refund = main.process_refund.invoke({"order_id": 2})
         assert "approved" in refund, refund
         assert main.get_purchase_by_id(2).order_status == "REFUNDED"
