@@ -123,12 +123,19 @@ celerybeat.pid
 
 # Environments
 .env
+/env
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# SQLite databases and their runtime files
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
 
 # Spyder project settings
 .spyderproject

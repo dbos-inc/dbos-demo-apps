@@ -59,13 +59,21 @@ First install dependencies:
 uv sync
 ```
 
-Then set `DBOS_DATABASE_URL` to a path to your Postgres database; for example:
+Use a SQLite file for DBOS workflows, purchases, and chat history:
+
+```shell
+export DBOS_DATABASE_URL="sqlite:///app_db.sqlite"
+```
+
+SQLite URLs contain a file path, not a username or password. Relative paths are
+resolved from the directory where you run the app. Alternatively, use Postgres:
 
 ```shell
 export DBOS_DATABASE_URL="postgresql+psycopg://postgres:dbos@localhost:5432/reliable_refunds"
 ```
 
-Then set up your database and start your app:
+Then set up your database and start your app. The migration command resets demo
+purchases and clears chat history each time it runs:
 
 ```shell
 uv run dbos migrate
@@ -73,3 +81,12 @@ uv run python3 -m reliable_refunds.main
 ```
 
 Visit [`http://localhost:8000`](http://localhost:8000) to see your customer service chatbot!
+
+To use a different port:
+
+```shell
+PORT=8001 uv run python3 -m reliable_refunds.main
+```
+
+Then visit `http://localhost:8001`. Local approval links use the same port unless
+you set `DBOS_APP_HOSTNAME` to a custom public URL.

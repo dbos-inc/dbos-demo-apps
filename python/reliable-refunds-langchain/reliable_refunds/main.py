@@ -1,29 +1,29 @@
 import os
 import time
+from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
 from string import Template
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Any
 
 import uvicorn
 from dbos import DBOS, DBOSConfig, SQLAlchemyDatasource
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-from langchain_core.messages import AIMessage, HumanMessage
+from fastapi.responses import HTMLResponse, Response
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
-from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
-from psycopg_pool import ConnectionPool
+import orjson
 from pydantic import BaseModel
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from sqlalchemy import make_url, text
 from typing_extensions import TypedDict
 
+from .checkpoints import clear_checkpoints, open_checkpointer
 from .schema import OrderStatus, Purchase, purchases
 
 # Get the directory containing the script
@@ -34,7 +34,15 @@ database_url = os.environ.get("DBOS_DATABASE_URL")
 if database_url is None:
     raise Exception("DBOS_DATABASE_URL not set")
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    with open_checkpointer(database_url) as checkpointer:
+        app.state.agent = create_agent(checkpointer)
+        yield
+
+
+app = FastAPI(lifespan=lifespan)
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
     "system_database_url": database_url,
@@ -55,7 +63,8 @@ assert from_email, "Error: SENDGRID_FROM_EMAIL is not set"
 admin_email = os.environ.get("ADMIN_EMAIL", None)
 assert admin_email, "Error: ADMIN_EMAIL is not set"
 
-callback_domain = os.environ.get("DBOS_APP_HOSTNAME", "http://localhost:8000")
+port = int(os.environ.get("PORT", "8000"))
+callback_domain = os.environ.get("DBOS_APP_HOSTNAME", f"http://localhost:{port}")
 
 
 # This tool lets the agent look up the details of an order given its ID.
@@ -72,8 +81,25 @@ def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
 @tool
 def tool_get_purchase_by_id(order_id: int) -> str:
     """Look up a purchase by its order id."""
-    return asdict(get_purchase_by_id(order_id))
+    purchase = get_purchase_by_id(order_id)
+    if purchase is None:
+        return f"No purchase found with order_id {order_id}."
+    return asdict(purchase)
 
+# look up all orders: without this the agent may try to run two tools and that didn't work
+@ds.transaction()
+def get_all_purchases() -> list[dict]:
+    DBOS.logger.info("Looking up all purchases")
+    query = purchases.select().order_by(purchases.c.order_id)
+    result = ds.sql_session().execute(query)
+    rows = result.fetchall()
+    return [asdict(Purchase.from_row(row)) for row in rows]
+
+# Define a wrapper function to make the output JSON serializable.
+@tool
+def tool_get_all_purchases() -> list[dict]:
+    """List all purchases in the database."""
+    return get_all_purchases()
 
 # This tool processes a refund for an order. If the order exceeds a cost threshold,
 # it escalates to manual review.
@@ -87,7 +113,7 @@ def process_refund(order_id: int):
         return "We're unable to process your refund. Please check your input and try again."
     DBOS.logger.info(f"Processing refund for purchase {purchase}")
     if purchase.price > 1000:
-        update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
+        update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND)
         DBOS.start_workflow(approval_workflow, purchase)
         return f"Because order_id {purchase.order_id} exceeds our cost threshold, your refund request must undergo manual review. Please check your order status later."
     else:
@@ -142,7 +168,7 @@ def update_purchase_status(order_id: int, status: OrderStatus):
     query = (
         purchases.update()
         .where(purchases.c.order_id == order_id)
-        .values(order_status=status)
+        .values(order_status=status.value)
     )
     ds.sql_session().execute(query)
 
@@ -153,17 +179,19 @@ class State(TypedDict):
 
 
 # Set up LangGraph to answer refund requests. The agent uses two tools: one to look up order status, the other to process refunds.
-# We'll configure LangChain to store checkpoints in Postgres so it persists across app restarts.
-def create_agent():
+# Store checkpoints in the configured database so history persists across restarts.
+def create_agent(checkpointer):
     llm = ChatOpenAI(model="gpt-5.4-mini")
-    tools = [tool_get_purchase_by_id, process_refund]
+    tools = [tool_get_purchase_by_id, process_refund, tool_get_all_purchases]
     llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
     prompt = ChatPromptTemplate.from_messages(
         [
             (
                 "system",
-                "You are a helpful refund agent. You always speak in fluent, natural, conversational language. You can look up order status and process refunds.",
+                ("You are a helpful refund agent. You always speak in fluent, "
+                 "natural, conversational language. You can look up purchases, "
+                 "list purchases, check order status, and process refunds."),
             ),
             MessagesPlaceholder(variable_name="messages"),
         ]
@@ -190,15 +218,6 @@ def create_agent():
     graph_builder.add_edge("tools", "chatbot")
     graph_builder.add_edge(START, "chatbot")
 
-    # Create a checkpointer LangChain can use to store message history in Postgres.
-    connection_string = (
-        make_url(database_url)
-        .set(drivername="postgres")
-        .render_as_string(hide_password=False)
-    )
-    pool = ConnectionPool(connection_string)
-    checkpointer = PostgresSaver(pool)
-
     graph = graph_builder.compile(checkpointer=checkpointer)
 
     return graph
@@ -210,14 +229,13 @@ class ChatSchema(BaseModel):
 
 # Currently supports only one chat thread
 chat_config = {"configurable": {"thread_id": "1"}}
-compiled_agent = create_agent()
 
 
 # The main entry for the chat workflow
 @app.post("/chat")
 def chat_workflow(chat: ChatSchema):
     # Invoke the agent DAG with the user's message
-    events = compiled_agent.stream(
+    events = app.state.agent.stream(
         {"messages": [HumanMessage(chat.message)]},
         config=chat_config,
         stream_mode="values",
@@ -234,19 +252,62 @@ def chat_workflow(chat: ChatSchema):
     return response_messages
 
 
-@app.get("/history")
-def history_endpoint():
-    # Retrieve the messages from the chat history and parse them for the frontend
-    state = compiled_agent.get_state(chat_config)
-    messages = state.values.get("messages", []) if state else []
-    message_list = []
-    for message in messages:
-        if isinstance(message, HumanMessage) and message.content:
-            message_list.append({"isUser": True, "content": message.content})
-        elif isinstance(message, AIMessage) and message.content:
-            message_list.append({"isUser": False, "content": message.content})
-    return message_list
+class PrettyJSONResponse(Response):
+    """ this is to enable pretty printing in the history endpoint """
+    media_type = "application/json"
 
+    def render(self, content: Any) -> bytes:
+        return orjson.dumps(content, option=orjson.OPT_INDENT_2)
+
+
+@app.get("/history", response_class=PrettyJSONResponse)
+def history_endpoint():
+    snapshot = app.state.agent.get_state(chat_config)
+    messages = snapshot.values.get("messages", [])
+
+    history = []
+
+    for msg in messages:
+        if isinstance(msg, HumanMessage):
+            history.append({
+                "type": "human",
+                "content": msg.content,
+                "id": getattr(msg, "id", None),
+            })
+
+        elif isinstance(msg, AIMessage):
+            # Show tool calls if present
+            if getattr(msg, "tool_calls", None):
+                history.append({
+                    "type": "assistant_tool_calls",
+                    "content": msg.content,  # often empty
+                    "tool_calls": msg.tool_calls,
+                    "id": getattr(msg, "id", None),
+                })
+            # Show ordinary assistant text if present
+            elif msg.content:
+                history.append({
+                    "type": "assistant",
+                    "content": msg.content,
+                    "id": getattr(msg, "id", None),
+                })
+
+        elif isinstance(msg, ToolMessage):
+            history.append({
+                "type": "tool_result",
+                "tool_name": getattr(msg, "name", None),
+                "tool_call_id": getattr(msg, "tool_call_id", None),
+                "content": msg.content,
+                "id": getattr(msg, "id", None),
+            })
+
+    return {
+        "thread_id": chat_config["configurable"]["thread_id"],
+        "checkpoint_id": snapshot.config["configurable"].get("checkpoint_id"),
+        "next": list(snapshot.next),
+        "message_count": len(messages),
+        "history": history,
+    }
 
 @app.get("/approval/{workflow_id}/{status}")
 def approval_endpoint(workflow_id: str, status: str):
@@ -265,9 +326,7 @@ def reset():
     session.execute(
         purchases.update().values(order_status=OrderStatus.PURCHASED.value)
     )
-    session.execute(text("TRUNCATE TABLE checkpoints"))
-    session.execute(text("TRUNCATE TABLE checkpoint_blobs"))
-    session.execute(text("TRUNCATE TABLE checkpoint_writes"))
+    clear_checkpoints(session)
 
 
 @app.get("/")
@@ -284,4 +343,4 @@ def crash():
 
 if __name__ == "__main__":
     DBOS.launch()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)

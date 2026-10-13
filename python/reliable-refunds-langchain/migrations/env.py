@@ -15,11 +15,14 @@ if config.config_file_name is not None:
 
 
 # Programmatically set the sqlalchemy.url field to the DBOS application database URL
-conn_string = os.environ.get(
-    "DBOS_DATABASE_URL",
-    "postgresql+psycopg://postgres:dbos@localhost:5432/reliable_refunds_langchain?connect_timeout=5",
-)
-config.set_main_option("sqlalchemy.url", conn_string)
+conn_string = os.environ.get("DBOS_DATABASE_URL")
+if not conn_string:
+    raise RuntimeError(
+        "DBOS_DATABASE_URL not set; for SQLite, use sqlite:///app_db.sqlite"
+    )
+# Escape percent signs for Alembic's ConfigParser interpolation so URL-encoded
+# characters survive unchanged when the database URL is read back.
+config.set_main_option("sqlalchemy.url", conn_string.replace("%", "%%"))
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -71,7 +74,14 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            # SQLite checkpoint setup uses an autocommit block. Give each
+            # migration its own transaction boundary; completed migrations
+            # remain committed if a later migration fails, including on Postgres.
+            transaction_per_migration=True,
+        )
 
         with context.begin_transaction():
             context.run_migrations()

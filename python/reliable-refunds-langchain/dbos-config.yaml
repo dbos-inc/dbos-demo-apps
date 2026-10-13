@@ -5,6 +5,7 @@
 
 name: reliable-refunds-langchain
 language: python
+system_database_url: ${DBOS_DATABASE_URL}
 runtimeConfig:
   start:
     - "python3 -m reliable_refunds.main"
