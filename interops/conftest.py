@@ -167,15 +167,22 @@ def _build_dbosctl() -> None:
     GOBIN rather than the caller's: the version this suite migrates and renames
     with should not depend on what happens to be on $PATH.
 
-    GOPROXY=direct because the module proxy caches what `@main` resolves to for
-    a while, and a stale dbosctl refuses to touch a schema the SDKs just migrated
-    past it. Going to the repository directly always gets the current main.
+    GONOPROXY for dbos-ctl because the module proxy caches what `@main`
+    resolves to for a while, and a stale dbosctl refuses to touch a schema the
+    SDKs just migrated past it. Going to the repository directly always gets
+    the current main. Its dependencies still come from the module proxy: with
+    GOPROXY=direct they were fetched from their origin hosts, and gopkg.in
+    (yaml.v3) returning 502s was failing the whole suite at setup.
     """
     BIN_DIR.mkdir(exist_ok=True)
     _run(
         ["go", "install", f"{DBOSCTL_PKG}@{DBOSCTL_VERSION}"],
         ROOT,
-        env={"GOBIN": str(BIN_DIR), "GOPROXY": "direct"},
+        env={
+            "GOBIN": str(BIN_DIR),
+            "GOPROXY": "https://proxy.golang.org,direct",
+            "GONOPROXY": "github.com/dbos-inc/dbos-ctl",
+        },
     )
 
 
