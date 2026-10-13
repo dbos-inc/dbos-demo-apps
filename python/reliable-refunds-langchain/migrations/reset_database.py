@@ -4,9 +4,10 @@ import os
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import create_engine, delete, make_url, text
+from sqlalchemy import create_engine, delete, make_url
 
 from reliable_refunds import schema
+from reliable_refunds.checkpoints import clear_checkpoints
 
 base_date = datetime.now()
 
@@ -29,7 +30,7 @@ sample_purchases = [
     {
         "order_id": 3,
         "item": "Samsung QLED 4K TV ",
-        "order_date": (base_date - timedelta(days=2)).strftime("%Y-%m-%-d"),
+        "order_date": (base_date - timedelta(days=2)).strftime("%Y-%m-%d"),
         "price": Decimal("1199.99"),
         "order_status": schema.OrderStatus.PURCHASED.value,
     },
@@ -53,7 +54,7 @@ connection_string = make_url(os.environ.get("DBOS_DATABASE_URL"))
 engine = create_engine(connection_string)
 
 with engine.connect() as connection:
-    # Delete chat history
+    # Delete existing purchases
     connection.execute(delete(schema.purchases))
 
     # Create the insert statement
@@ -61,9 +62,7 @@ with engine.connect() as connection:
     connection.execute(insert_stmt)
 
     # Clean up LangChain checkpoint tables
-    connection.execute(text("TRUNCATE TABLE checkpoints"))
-    connection.execute(text("TRUNCATE TABLE checkpoint_blobs"))
-    connection.execute(text("TRUNCATE TABLE checkpoint_writes"))
+    clear_checkpoints(connection)
 
     # Commit the transaction
     connection.commit()

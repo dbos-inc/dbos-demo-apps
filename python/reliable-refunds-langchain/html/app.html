@@ -97,7 +97,9 @@
             try {
                 const response = await fetch(`/history`);
                 const history = await response.json();
-                history.forEach(message => addMessage(message.content, message.isUser));
+                history.history
+                    .filter(message => message.type === 'human' || message.type === 'assistant')
+                    .forEach(message => addMessage(message.content, message.type === 'human'));
             } catch (error) {
                 console.error('Error fetching chat history:', error);
             }

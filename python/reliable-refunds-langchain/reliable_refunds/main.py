@@ -1,5 +1,6 @@
 import os
 import time
+from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
 from string import Template
@@ -13,18 +14,16 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
-from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 import orjson
-from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from sqlalchemy import make_url, text
 from typing_extensions import TypedDict
 
+from .checkpoints import clear_checkpoints, open_checkpointer
 from .schema import OrderStatus, Purchase, purchases
 
 # Get the directory containing the script
@@ -35,7 +34,15 @@ database_url = os.environ.get("DBOS_DATABASE_URL")
 if database_url is None:
     raise Exception("DBOS_DATABASE_URL not set")
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    with open_checkpointer(database_url) as checkpointer:
+        app.state.agent = create_agent(checkpointer)
+        yield
+
+
+app = FastAPI(lifespan=lifespan)
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
     "system_database_url": database_url,
@@ -56,7 +63,8 @@ assert from_email, "Error: SENDGRID_FROM_EMAIL is not set"
 admin_email = os.environ.get("ADMIN_EMAIL", None)
 assert admin_email, "Error: ADMIN_EMAIL is not set"
 
-callback_domain = os.environ.get("DBOS_APP_HOSTNAME", "http://localhost:8000")
+port = int(os.environ.get("PORT", "8000"))
+callback_domain = os.environ.get("DBOS_APP_HOSTNAME", f"http://localhost:{port}")
 
 
 # This tool lets the agent look up the details of an order given its ID.
@@ -102,7 +110,7 @@ def process_refund(order_id: int):
         return "We're unable to process your refund. Please check your input and try again."
     DBOS.logger.info(f"Processing refund for purchase {purchase}")
     if purchase.price > 1000:
-        update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND.value)
+        update_purchase_status(purchase.order_id, OrderStatus.PENDING_REFUND)
         DBOS.start_workflow(approval_workflow, purchase)
         return f"Because order_id {purchase.order_id} exceeds our cost threshold, your refund request must undergo manual review. Please check your order status later."
     else:
@@ -157,7 +165,7 @@ def update_purchase_status(order_id: int, status: OrderStatus):
     query = (
         purchases.update()
         .where(purchases.c.order_id == order_id)
-        .values(order_status=status)
+        .values(order_status=status.value)
     )
     ds.sql_session().execute(query)
 
@@ -168,8 +176,8 @@ class State(TypedDict):
 
 
 # Set up LangGraph to answer refund requests. The agent uses two tools: one to look up order status, the other to process refunds.
-# We'll configure LangChain to store checkpoints in Postgres so it persists across app restarts.
-def create_agent():
+# Store checkpoints in the configured database so history persists across restarts.
+def create_agent(checkpointer):
     llm = ChatOpenAI(model="gpt-5.4-mini")
     tools = [tool_get_purchase_by_id, process_refund, tool_get_all_purchases]
     llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
@@ -207,15 +215,6 @@ def create_agent():
     graph_builder.add_edge("tools", "chatbot")
     graph_builder.add_edge(START, "chatbot")
 
-    # Create a checkpointer LangChain can use to store message history in Postgres.
-    connection_string = (
-        make_url(database_url)
-        .set(drivername="postgres")
-        .render_as_string(hide_password=False)
-    )
-    pool = ConnectionPool(connection_string)
-    checkpointer = PostgresSaver(pool)
-
     graph = graph_builder.compile(checkpointer=checkpointer)
 
     return graph
@@ -227,14 +226,13 @@ class ChatSchema(BaseModel):
 
 # Currently supports only one chat thread
 chat_config = {"configurable": {"thread_id": "1"}}
-compiled_agent = create_agent()
 
 
 # The main entry for the chat workflow
 @app.post("/chat")
 def chat_workflow(chat: ChatSchema):
     # Invoke the agent DAG with the user's message
-    events = compiled_agent.stream(
+    events = app.state.agent.stream(
         {"messages": [HumanMessage(chat.message)]},
         config=chat_config,
         stream_mode="values",
@@ -261,7 +259,7 @@ class PrettyJSONResponse(Response):
 
 @app.get("/history", response_class=PrettyJSONResponse)
 def history_endpoint():
-    snapshot = compiled_agent.get_state(chat_config)
+    snapshot = app.state.agent.get_state(chat_config)
     messages = snapshot.values.get("messages", [])
 
     history = []
@@ -325,9 +323,7 @@ def reset():
     session.execute(
         purchases.update().values(order_status=OrderStatus.PURCHASED.value)
     )
-    session.execute(text("TRUNCATE TABLE checkpoints"))
-    session.execute(text("TRUNCATE TABLE checkpoint_blobs"))
-    session.execute(text("TRUNCATE TABLE checkpoint_writes"))
+    clear_checkpoints(session)
 
 
 @app.get("/")
@@ -344,4 +340,4 @@ def crash():
 
 if __name__ == "__main__":
     DBOS.launch()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)

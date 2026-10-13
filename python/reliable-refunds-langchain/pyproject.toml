@@ -10,6 +10,7 @@ dependencies = [
     "dbos==3.2.0",
     "alembic>=1.18.4",
     "fastapi[standard]>=0.136.1",
+    "langgraph-checkpoint-sqlite>=3.1.0",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
