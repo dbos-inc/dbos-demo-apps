@@ -18,10 +18,19 @@ func NewMockContext(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockContext {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockContext{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -64,7 +73,7 @@ type MockContext_ApplySchedules_Call struct {
 // ApplySchedules is a helper method to define mock.On call
 //   - client dbos.Client
 //   - schedules []dbos.ScheduleSpec
-func (_e *MockContext_Expecter) ApplySchedules(client interface{}, schedules interface{}) *MockContext_ApplySchedules_Call {
+func (_e *MockContext_Expecter) ApplySchedules(client any, schedules any) *MockContext_ApplySchedules_Call {
 	return &MockContext_ApplySchedules_Call{Call: _e.mock.On("ApplySchedules", client, schedules)}
 }
 
@@ -134,7 +143,7 @@ type MockContext_BackfillSchedule_Call struct {
 //   - scheduleName string
 //   - start time.Time
 //   - end time.Time
-func (_e *MockContext_Expecter) BackfillSchedule(client interface{}, scheduleName interface{}, start interface{}, end interface{}) *MockContext_BackfillSchedule_Call {
+func (_e *MockContext_Expecter) BackfillSchedule(client any, scheduleName any, start any, end any) *MockContext_BackfillSchedule_Call {
 	return &MockContext_BackfillSchedule_Call{Call: _e.mock.On("BackfillSchedule", client, scheduleName, start, end)}
 }
 
@@ -208,9 +217,9 @@ type MockContext_CancelWorkflow_Call struct {
 //   - client dbos.Client
 //   - workflowID string
 //   - opts ...dbos.CancelWorkflowOption
-func (_e *MockContext_Expecter) CancelWorkflow(client interface{}, workflowID interface{}, opts ...interface{}) *MockContext_CancelWorkflow_Call {
+func (_e *MockContext_Expecter) CancelWorkflow(client any, workflowID any, opts ...any) *MockContext_CancelWorkflow_Call {
 	return &MockContext_CancelWorkflow_Call{Call: _e.mock.On("CancelWorkflow",
-		append([]interface{}{client, workflowID}, opts...)...)}
+		append([]any{client, workflowID}, opts...)...)}
 }
 
 func (_c *MockContext_CancelWorkflow_Call) Run(run func(client dbos.Client, workflowID string, opts ...dbos.CancelWorkflowOption)) *MockContext_CancelWorkflow_Call {
@@ -280,9 +289,9 @@ type MockContext_CancelWorkflows_Call struct {
 //   - client dbos.Client
 //   - workflowIDs []string
 //   - opts ...dbos.CancelWorkflowOption
-func (_e *MockContext_Expecter) CancelWorkflows(client interface{}, workflowIDs interface{}, opts ...interface{}) *MockContext_CancelWorkflows_Call {
+func (_e *MockContext_Expecter) CancelWorkflows(client any, workflowIDs any, opts ...any) *MockContext_CancelWorkflows_Call {
 	return &MockContext_CancelWorkflows_Call{Call: _e.mock.On("CancelWorkflows",
-		append([]interface{}{client, workflowIDs}, opts...)...)}
+		append([]any{client, workflowIDs}, opts...)...)}
 }
 
 func (_c *MockContext_CancelWorkflows_Call) Run(run func(client dbos.Client, workflowIDs []string, opts ...dbos.CancelWorkflowOption)) *MockContext_CancelWorkflows_Call {
@@ -345,7 +354,7 @@ type MockContext_CloseStream_Call struct {
 // CloseStream is a helper method to define mock.On call
 //   - context dbos.Context
 //   - key string
-func (_e *MockContext_Expecter) CloseStream(context interface{}, key interface{}) *MockContext_CloseStream_Call {
+func (_e *MockContext_Expecter) CloseStream(context any, key any) *MockContext_CloseStream_Call {
 	return &MockContext_CloseStream_Call{Call: _e.mock.On("CloseStream", context, key)}
 }
 
@@ -402,7 +411,7 @@ type MockContext_CreateSchedule_Call struct {
 // CreateSchedule is a helper method to define mock.On call
 //   - client dbos.Client
 //   - spec dbos.ScheduleSpec
-func (_e *MockContext_Expecter) CreateSchedule(client interface{}, spec interface{}) *MockContext_CreateSchedule_Call {
+func (_e *MockContext_Expecter) CreateSchedule(client any, spec any) *MockContext_CreateSchedule_Call {
 	return &MockContext_CreateSchedule_Call{Call: _e.mock.On("CreateSchedule", client, spec)}
 }
 
@@ -512,7 +521,7 @@ type MockContext_DeleteQueue_Call struct {
 // DeleteQueue is a helper method to define mock.On call
 //   - client dbos.Client
 //   - name string
-func (_e *MockContext_Expecter) DeleteQueue(client interface{}, name interface{}) *MockContext_DeleteQueue_Call {
+func (_e *MockContext_Expecter) DeleteQueue(client any, name any) *MockContext_DeleteQueue_Call {
 	return &MockContext_DeleteQueue_Call{Call: _e.mock.On("DeleteQueue", client, name)}
 }
 
@@ -569,7 +578,7 @@ type MockContext_DeleteSchedule_Call struct {
 // DeleteSchedule is a helper method to define mock.On call
 //   - client dbos.Client
 //   - scheduleName string
-func (_e *MockContext_Expecter) DeleteSchedule(client interface{}, scheduleName interface{}) *MockContext_DeleteSchedule_Call {
+func (_e *MockContext_Expecter) DeleteSchedule(client any, scheduleName any) *MockContext_DeleteSchedule_Call {
 	return &MockContext_DeleteSchedule_Call{Call: _e.mock.On("DeleteSchedule", client, scheduleName)}
 }
 
@@ -633,9 +642,9 @@ type MockContext_DeleteWorkflows_Call struct {
 //   - client dbos.Client
 //   - workflowIDs []string
 //   - opts ...dbos.DeleteWorkflowOption
-func (_e *MockContext_Expecter) DeleteWorkflows(client interface{}, workflowIDs interface{}, opts ...interface{}) *MockContext_DeleteWorkflows_Call {
+func (_e *MockContext_Expecter) DeleteWorkflows(client any, workflowIDs any, opts ...any) *MockContext_DeleteWorkflows_Call {
 	return &MockContext_DeleteWorkflows_Call{Call: _e.mock.On("DeleteWorkflows",
-		append([]interface{}{client, workflowIDs}, opts...)...)}
+		append([]any{client, workflowIDs}, opts...)...)}
 }
 
 func (_c *MockContext_DeleteWorkflows_Call) Run(run func(client dbos.Client, workflowIDs []string, opts ...dbos.DeleteWorkflowOption)) *MockContext_DeleteWorkflows_Call {
@@ -698,7 +707,7 @@ type MockContext_DeprecatePatch_Call struct {
 // DeprecatePatch is a helper method to define mock.On call
 //   - context dbos.Context
 //   - patchName string
-func (_e *MockContext_Expecter) DeprecatePatch(context interface{}, patchName interface{}) *MockContext_DeprecatePatch_Call {
+func (_e *MockContext_Expecter) DeprecatePatch(context any, patchName any) *MockContext_DeprecatePatch_Call {
 	return &MockContext_DeprecatePatch_Call{Call: _e.mock.On("DeprecatePatch", context, patchName)}
 }
 
@@ -821,9 +830,9 @@ type MockContext_Enqueue_Call struct {
 //   - workflowName string
 //   - input any
 //   - opts ...dbos.EnqueueOption
-func (_e *MockContext_Expecter) Enqueue(client interface{}, queueName interface{}, workflowName interface{}, input interface{}, opts ...interface{}) *MockContext_Enqueue_Call {
+func (_e *MockContext_Expecter) Enqueue(client any, queueName any, workflowName any, input any, opts ...any) *MockContext_Enqueue_Call {
 	return &MockContext_Enqueue_Call{Call: _e.mock.On("Enqueue",
-		append([]interface{}{client, queueName, workflowName, input}, opts...)...)}
+		append([]any{client, queueName, workflowName, input}, opts...)...)}
 }
 
 func (_c *MockContext_Enqueue_Call) Run(run func(client dbos.Client, queueName string, workflowName string, input any, opts ...dbos.EnqueueOption)) *MockContext_Enqueue_Call {
@@ -951,7 +960,7 @@ type MockContext_ForkWorkflow_Call struct {
 // ForkWorkflow is a helper method to define mock.On call
 //   - client dbos.Client
 //   - input dbos.ForkWorkflowInput
-func (_e *MockContext_Expecter) ForkWorkflow(client interface{}, input interface{}) *MockContext_ForkWorkflow_Call {
+func (_e *MockContext_Expecter) ForkWorkflow(client any, input any) *MockContext_ForkWorkflow_Call {
 	return &MockContext_ForkWorkflow_Call{Call: _e.mock.On("ForkWorkflow", client, input)}
 }
 
@@ -1019,7 +1028,7 @@ type MockContext_ForkWorkflows_Call struct {
 // ForkWorkflows is a helper method to define mock.On call
 //   - client dbos.Client
 //   - input dbos.ForkWorkflowsInput
-func (_e *MockContext_Expecter) ForkWorkflows(client interface{}, input interface{}) *MockContext_ForkWorkflows_Call {
+func (_e *MockContext_Expecter) ForkWorkflows(client any, input any) *MockContext_ForkWorkflows_Call {
 	return &MockContext_ForkWorkflows_Call{Call: _e.mock.On("ForkWorkflows", client, input)}
 }
 
@@ -1078,7 +1087,7 @@ type MockContext_From_Call struct {
 // From is a helper method to define mock.On call
 //   - context1 dbos.Context
 //   - ctx context.Context
-func (_e *MockContext_Expecter) From(context1 interface{}, ctx interface{}) *MockContext_From_Call {
+func (_e *MockContext_Expecter) From(context1 any, ctx any) *MockContext_From_Call {
 	return &MockContext_From_Call{Call: _e.mock.On("From", context1, ctx)}
 }
 
@@ -1198,6 +1207,59 @@ func (_c *MockContext_GetApplicationVersion_Call) RunAndReturn(run func() string
 	return _c
 }
 
+// GetAuthenticatedUser provides a mock function for the type MockContext
+func (_mock *MockContext) GetAuthenticatedUser() (string, error) {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAuthenticatedUser")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func() (string, error)); ok {
+		return returnFunc()
+	}
+	if returnFunc, ok := ret.Get(0).(func() string); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func() error); ok {
+		r1 = returnFunc()
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockContext_GetAuthenticatedUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAuthenticatedUser'
+type MockContext_GetAuthenticatedUser_Call struct {
+	*mock.Call
+}
+
+// GetAuthenticatedUser is a helper method to define mock.On call
+func (_e *MockContext_Expecter) GetAuthenticatedUser() *MockContext_GetAuthenticatedUser_Call {
+	return &MockContext_GetAuthenticatedUser_Call{Call: _e.mock.On("GetAuthenticatedUser")}
+}
+
+func (_c *MockContext_GetAuthenticatedUser_Call) Run(run func()) *MockContext_GetAuthenticatedUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockContext_GetAuthenticatedUser_Call) Return(s string, err error) *MockContext_GetAuthenticatedUser_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *MockContext_GetAuthenticatedUser_Call) RunAndReturn(run func() (string, error)) *MockContext_GetAuthenticatedUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetEvent provides a mock function for the type MockContext
 func (_mock *MockContext) GetEvent(client dbos.Client, targetWorkflowID string, key string, timeout time.Duration) (any, error) {
 	ret := _mock.Called(client, targetWorkflowID, key, timeout)
@@ -1236,7 +1298,7 @@ type MockContext_GetEvent_Call struct {
 //   - targetWorkflowID string
 //   - key string
 //   - timeout time.Duration
-func (_e *MockContext_Expecter) GetEvent(client interface{}, targetWorkflowID interface{}, key interface{}, timeout interface{}) *MockContext_GetEvent_Call {
+func (_e *MockContext_Expecter) GetEvent(client any, targetWorkflowID any, key any, timeout any) *MockContext_GetEvent_Call {
 	return &MockContext_GetEvent_Call{Call: _e.mock.On("GetEvent", client, targetWorkflowID, key, timeout)}
 }
 
@@ -1268,8 +1330,8 @@ func (_c *MockContext_GetEvent_Call) Run(run func(client dbos.Client, targetWork
 	return _c
 }
 
-func (_c *MockContext_GetEvent_Call) Return(v any, err error) *MockContext_GetEvent_Call {
-	_c.Call.Return(v, err)
+func (_c *MockContext_GetEvent_Call) Return(anyMoqParam any, err error) *MockContext_GetEvent_Call {
+	_c.Call.Return(anyMoqParam, err)
 	return _c
 }
 
@@ -1355,7 +1417,7 @@ type MockContext_GetLatestApplicationVersion_Call struct {
 
 // GetLatestApplicationVersion is a helper method to define mock.On call
 //   - client dbos.Client
-func (_e *MockContext_Expecter) GetLatestApplicationVersion(client interface{}) *MockContext_GetLatestApplicationVersion_Call {
+func (_e *MockContext_Expecter) GetLatestApplicationVersion(client any) *MockContext_GetLatestApplicationVersion_Call {
 	return &MockContext_GetLatestApplicationVersion_Call{Call: _e.mock.On("GetLatestApplicationVersion", client)}
 }
 
@@ -1372,8 +1434,8 @@ func (_c *MockContext_GetLatestApplicationVersion_Call) Run(run func(client dbos
 	return _c
 }
 
-func (_c *MockContext_GetLatestApplicationVersion_Call) Return(v dbos.VersionInfo, err error) *MockContext_GetLatestApplicationVersion_Call {
-	_c.Call.Return(v, err)
+func (_c *MockContext_GetLatestApplicationVersion_Call) Return(versionInfo dbos.VersionInfo, err error) *MockContext_GetLatestApplicationVersion_Call {
+	_c.Call.Return(versionInfo, err)
 	return _c
 }
 
@@ -1416,7 +1478,7 @@ type MockContext_GetSchedule_Call struct {
 // GetSchedule is a helper method to define mock.On call
 //   - client dbos.Client
 //   - scheduleName string
-func (_e *MockContext_Expecter) GetSchedule(client interface{}, scheduleName interface{}) *MockContext_GetSchedule_Call {
+func (_e *MockContext_Expecter) GetSchedule(client any, scheduleName any) *MockContext_GetSchedule_Call {
 	return &MockContext_GetSchedule_Call{Call: _e.mock.On("GetSchedule", client, scheduleName)}
 }
 
@@ -1438,8 +1500,8 @@ func (_c *MockContext_GetSchedule_Call) Run(run func(client dbos.Client, schedul
 	return _c
 }
 
-func (_c *MockContext_GetSchedule_Call) Return(v dbos.WorkflowSchedule, err error) *MockContext_GetSchedule_Call {
-	_c.Call.Return(v, err)
+func (_c *MockContext_GetSchedule_Call) Return(workflowSchedule dbos.WorkflowSchedule, err error) *MockContext_GetSchedule_Call {
+	_c.Call.Return(workflowSchedule, err)
 	return _c
 }
 
@@ -1484,7 +1546,7 @@ type MockContext_GetStepAggregates_Call struct {
 // GetStepAggregates is a helper method to define mock.On call
 //   - client dbos.Client
 //   - input dbos.GetStepAggregatesInput
-func (_e *MockContext_Expecter) GetStepAggregates(client interface{}, input interface{}) *MockContext_GetStepAggregates_Call {
+func (_e *MockContext_Expecter) GetStepAggregates(client any, input any) *MockContext_GetStepAggregates_Call {
 	return &MockContext_GetStepAggregates_Call{Call: _e.mock.On("GetStepAggregates", client, input)}
 }
 
@@ -1506,8 +1568,8 @@ func (_c *MockContext_GetStepAggregates_Call) Run(run func(client dbos.Client, i
 	return _c
 }
 
-func (_c *MockContext_GetStepAggregates_Call) Return(vs []dbos.StepAggregateRow, err error) *MockContext_GetStepAggregates_Call {
-	_c.Call.Return(vs, err)
+func (_c *MockContext_GetStepAggregates_Call) Return(stepAggregateRows []dbos.StepAggregateRow, err error) *MockContext_GetStepAggregates_Call {
+	_c.Call.Return(stepAggregateRows, err)
 	return _c
 }
 
@@ -1605,7 +1667,7 @@ type MockContext_GetWorkflowAggregates_Call struct {
 // GetWorkflowAggregates is a helper method to define mock.On call
 //   - client dbos.Client
 //   - input dbos.GetWorkflowAggregatesInput
-func (_e *MockContext_Expecter) GetWorkflowAggregates(client interface{}, input interface{}) *MockContext_GetWorkflowAggregates_Call {
+func (_e *MockContext_Expecter) GetWorkflowAggregates(client any, input any) *MockContext_GetWorkflowAggregates_Call {
 	return &MockContext_GetWorkflowAggregates_Call{Call: _e.mock.On("GetWorkflowAggregates", client, input)}
 }
 
@@ -1627,8 +1689,8 @@ func (_c *MockContext_GetWorkflowAggregates_Call) Run(run func(client dbos.Clien
 	return _c
 }
 
-func (_c *MockContext_GetWorkflowAggregates_Call) Return(vs []dbos.WorkflowAggregateRow, err error) *MockContext_GetWorkflowAggregates_Call {
-	_c.Call.Return(vs, err)
+func (_c *MockContext_GetWorkflowAggregates_Call) Return(workflowAggregateRows []dbos.WorkflowAggregateRow, err error) *MockContext_GetWorkflowAggregates_Call {
+	_c.Call.Return(workflowAggregateRows, err)
 	return _c
 }
 
@@ -1733,9 +1795,9 @@ type MockContext_GetWorkflowSteps_Call struct {
 //   - client dbos.Client
 //   - workflowID string
 //   - opts ...dbos.GetWorkflowStepsOption
-func (_e *MockContext_Expecter) GetWorkflowSteps(client interface{}, workflowID interface{}, opts ...interface{}) *MockContext_GetWorkflowSteps_Call {
+func (_e *MockContext_Expecter) GetWorkflowSteps(client any, workflowID any, opts ...any) *MockContext_GetWorkflowSteps_Call {
 	return &MockContext_GetWorkflowSteps_Call{Call: _e.mock.On("GetWorkflowSteps",
-		append([]interface{}{client, workflowID}, opts...)...)}
+		append([]any{client, workflowID}, opts...)...)}
 }
 
 func (_c *MockContext_GetWorkflowSteps_Call) Run(run func(client dbos.Client, workflowID string, opts ...dbos.GetWorkflowStepsOption)) *MockContext_GetWorkflowSteps_Call {
@@ -1763,8 +1825,8 @@ func (_c *MockContext_GetWorkflowSteps_Call) Run(run func(client dbos.Client, wo
 	return _c
 }
 
-func (_c *MockContext_GetWorkflowSteps_Call) Return(vs []dbos.StepInfo, err error) *MockContext_GetWorkflowSteps_Call {
-	_c.Call.Return(vs, err)
+func (_c *MockContext_GetWorkflowSteps_Call) Return(stepInfos []dbos.StepInfo, err error) *MockContext_GetWorkflowSteps_Call {
+	_c.Call.Return(stepInfos, err)
 	return _c
 }
 
@@ -1816,9 +1878,9 @@ type MockContext_Go_Call struct {
 //   - context1 dbos.Context
 //   - fn dbos.StepFunc
 //   - opts ...dbos.StepOption
-func (_e *MockContext_Expecter) Go(context1 interface{}, fn interface{}, opts ...interface{}) *MockContext_Go_Call {
+func (_e *MockContext_Expecter) Go(context1 any, fn any, opts ...any) *MockContext_Go_Call {
 	return &MockContext_Go_Call{Call: _e.mock.On("Go",
-		append([]interface{}{context1, fn}, opts...)...)}
+		append([]any{context1, fn}, opts...)...)}
 }
 
 func (_c *MockContext_Go_Call) Run(run func(context1 dbos.Context, fn dbos.StepFunc, opts ...dbos.StepOption)) *MockContext_Go_Call {
@@ -1935,7 +1997,7 @@ type MockContext_ListApplicationVersions_Call struct {
 
 // ListApplicationVersions is a helper method to define mock.On call
 //   - client dbos.Client
-func (_e *MockContext_Expecter) ListApplicationVersions(client interface{}) *MockContext_ListApplicationVersions_Call {
+func (_e *MockContext_Expecter) ListApplicationVersions(client any) *MockContext_ListApplicationVersions_Call {
 	return &MockContext_ListApplicationVersions_Call{Call: _e.mock.On("ListApplicationVersions", client)}
 }
 
@@ -1952,8 +2014,8 @@ func (_c *MockContext_ListApplicationVersions_Call) Run(run func(client dbos.Cli
 	return _c
 }
 
-func (_c *MockContext_ListApplicationVersions_Call) Return(vs []dbos.VersionInfo, err error) *MockContext_ListApplicationVersions_Call {
-	_c.Call.Return(vs, err)
+func (_c *MockContext_ListApplicationVersions_Call) Return(versionInfos []dbos.VersionInfo, err error) *MockContext_ListApplicationVersions_Call {
+	_c.Call.Return(versionInfos, err)
 	return _c
 }
 
@@ -1963,8 +2025,14 @@ func (_c *MockContext_ListApplicationVersions_Call) RunAndReturn(run func(client
 }
 
 // ListQueues provides a mock function for the type MockContext
-func (_mock *MockContext) ListQueues(client dbos.Client) ([]dbos.Queue, error) {
-	ret := _mock.Called(client)
+func (_mock *MockContext) ListQueues(client dbos.Client, opts ...dbos.ListQueuesOption) ([]dbos.Queue, error) {
+	var tmpRet mock.Arguments
+	if len(opts) > 0 {
+		tmpRet = _mock.Called(client, opts)
+	} else {
+		tmpRet = _mock.Called(client)
+	}
+	ret := tmpRet
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListQueues")
@@ -1972,18 +2040,18 @@ func (_mock *MockContext) ListQueues(client dbos.Client) ([]dbos.Queue, error) {
 
 	var r0 []dbos.Queue
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(dbos.Client) ([]dbos.Queue, error)); ok {
-		return returnFunc(client)
+	if returnFunc, ok := ret.Get(0).(func(dbos.Client, ...dbos.ListQueuesOption) ([]dbos.Queue, error)); ok {
+		return returnFunc(client, opts...)
 	}
-	if returnFunc, ok := ret.Get(0).(func(dbos.Client) []dbos.Queue); ok {
-		r0 = returnFunc(client)
+	if returnFunc, ok := ret.Get(0).(func(dbos.Client, ...dbos.ListQueuesOption) []dbos.Queue); ok {
+		r0 = returnFunc(client, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]dbos.Queue)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(dbos.Client) error); ok {
-		r1 = returnFunc(client)
+	if returnFunc, ok := ret.Get(1).(func(dbos.Client, ...dbos.ListQueuesOption) error); ok {
+		r1 = returnFunc(client, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1997,18 +2065,27 @@ type MockContext_ListQueues_Call struct {
 
 // ListQueues is a helper method to define mock.On call
 //   - client dbos.Client
-func (_e *MockContext_Expecter) ListQueues(client interface{}) *MockContext_ListQueues_Call {
-	return &MockContext_ListQueues_Call{Call: _e.mock.On("ListQueues", client)}
+//   - opts ...dbos.ListQueuesOption
+func (_e *MockContext_Expecter) ListQueues(client any, opts ...any) *MockContext_ListQueues_Call {
+	return &MockContext_ListQueues_Call{Call: _e.mock.On("ListQueues",
+		append([]any{client}, opts...)...)}
 }
 
-func (_c *MockContext_ListQueues_Call) Run(run func(client dbos.Client)) *MockContext_ListQueues_Call {
+func (_c *MockContext_ListQueues_Call) Run(run func(client dbos.Client, opts ...dbos.ListQueuesOption)) *MockContext_ListQueues_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 dbos.Client
 		if args[0] != nil {
 			arg0 = args[0].(dbos.Client)
 		}
+		var arg1 []dbos.ListQueuesOption
+		var variadicArgs []dbos.ListQueuesOption
+		if len(args) > 1 {
+			variadicArgs = args[1].([]dbos.ListQueuesOption)
+		}
+		arg1 = variadicArgs
 		run(
 			arg0,
+			arg1...,
 		)
 	})
 	return _c
@@ -2019,7 +2096,7 @@ func (_c *MockContext_ListQueues_Call) Return(queues []dbos.Queue, err error) *M
 	return _c
 }
 
-func (_c *MockContext_ListQueues_Call) RunAndReturn(run func(client dbos.Client) ([]dbos.Queue, error)) *MockContext_ListQueues_Call {
+func (_c *MockContext_ListQueues_Call) RunAndReturn(run func(client dbos.Client, opts ...dbos.ListQueuesOption) ([]dbos.Queue, error)) *MockContext_ListQueues_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2050,7 +2127,7 @@ type MockContext_ListRegisteredWorkflows_Call struct {
 
 // ListRegisteredWorkflows is a helper method to define mock.On call
 //   - context1 dbos.Context
-func (_e *MockContext_Expecter) ListRegisteredWorkflows(context1 interface{}) *MockContext_ListRegisteredWorkflows_Call {
+func (_e *MockContext_Expecter) ListRegisteredWorkflows(context1 any) *MockContext_ListRegisteredWorkflows_Call {
 	return &MockContext_ListRegisteredWorkflows_Call{Call: _e.mock.On("ListRegisteredWorkflows", context1)}
 }
 
@@ -2119,9 +2196,9 @@ type MockContext_ListSchedules_Call struct {
 // ListSchedules is a helper method to define mock.On call
 //   - client dbos.Client
 //   - opts ...dbos.ListSchedulesOption
-func (_e *MockContext_Expecter) ListSchedules(client interface{}, opts ...interface{}) *MockContext_ListSchedules_Call {
+func (_e *MockContext_Expecter) ListSchedules(client any, opts ...any) *MockContext_ListSchedules_Call {
 	return &MockContext_ListSchedules_Call{Call: _e.mock.On("ListSchedules",
-		append([]interface{}{client}, opts...)...)}
+		append([]any{client}, opts...)...)}
 }
 
 func (_c *MockContext_ListSchedules_Call) Run(run func(client dbos.Client, opts ...dbos.ListSchedulesOption)) *MockContext_ListSchedules_Call {
@@ -2144,8 +2221,8 @@ func (_c *MockContext_ListSchedules_Call) Run(run func(client dbos.Client, opts 
 	return _c
 }
 
-func (_c *MockContext_ListSchedules_Call) Return(vs []dbos.WorkflowSchedule, err error) *MockContext_ListSchedules_Call {
-	_c.Call.Return(vs, err)
+func (_c *MockContext_ListSchedules_Call) Return(workflowSchedules []dbos.WorkflowSchedule, err error) *MockContext_ListSchedules_Call {
+	_c.Call.Return(workflowSchedules, err)
 	return _c
 }
 
@@ -2196,9 +2273,9 @@ type MockContext_ListWorkflows_Call struct {
 // ListWorkflows is a helper method to define mock.On call
 //   - client dbos.Client
 //   - opts ...dbos.ListWorkflowsOption
-func (_e *MockContext_Expecter) ListWorkflows(client interface{}, opts ...interface{}) *MockContext_ListWorkflows_Call {
+func (_e *MockContext_Expecter) ListWorkflows(client any, opts ...any) *MockContext_ListWorkflows_Call {
 	return &MockContext_ListWorkflows_Call{Call: _e.mock.On("ListWorkflows",
-		append([]interface{}{client}, opts...)...)}
+		append([]any{client}, opts...)...)}
 }
 
 func (_c *MockContext_ListWorkflows_Call) Run(run func(client dbos.Client, opts ...dbos.ListWorkflowsOption)) *MockContext_ListWorkflows_Call {
@@ -2221,8 +2298,8 @@ func (_c *MockContext_ListWorkflows_Call) Run(run func(client dbos.Client, opts 
 	return _c
 }
 
-func (_c *MockContext_ListWorkflows_Call) Return(vs []dbos.WorkflowStatus, err error) *MockContext_ListWorkflows_Call {
-	_c.Call.Return(vs, err)
+func (_c *MockContext_ListWorkflows_Call) Return(workflowStatuss []dbos.WorkflowStatus, err error) *MockContext_ListWorkflows_Call {
+	_c.Call.Return(workflowStatuss, err)
 	return _c
 }
 
@@ -2250,9 +2327,9 @@ type MockContext_ListenQueues_Call struct {
 // ListenQueues is a helper method to define mock.On call
 //   - context1 dbos.Context
 //   - names ...string
-func (_e *MockContext_Expecter) ListenQueues(context1 interface{}, names ...interface{}) *MockContext_ListenQueues_Call {
+func (_e *MockContext_Expecter) ListenQueues(context1 any, names ...any) *MockContext_ListenQueues_Call {
 	return &MockContext_ListenQueues_Call{Call: _e.mock.On("ListenQueues",
-		append([]interface{}{context1}, names...)...)}
+		append([]any{context1}, names...)...)}
 }
 
 func (_c *MockContext_ListenQueues_Call) Run(run func(context1 dbos.Context, names ...string)) *MockContext_ListenQueues_Call {
@@ -2311,7 +2388,7 @@ type MockContext_ListenedQueues_Call struct {
 
 // ListenedQueues is a helper method to define mock.On call
 //   - context1 dbos.Context
-func (_e *MockContext_Expecter) ListenedQueues(context1 interface{}) *MockContext_ListenedQueues_Call {
+func (_e *MockContext_Expecter) ListenedQueues(context1 any) *MockContext_ListenedQueues_Call {
 	return &MockContext_ListenedQueues_Call{Call: _e.mock.On("ListenedQueues", context1)}
 }
 
@@ -2372,7 +2449,7 @@ type MockContext_Patch_Call struct {
 // Patch is a helper method to define mock.On call
 //   - context1 dbos.Context
 //   - patchName string
-func (_e *MockContext_Expecter) Patch(context1 interface{}, patchName interface{}) *MockContext_Patch_Call {
+func (_e *MockContext_Expecter) Patch(context1 any, patchName any) *MockContext_Patch_Call {
 	return &MockContext_Patch_Call{Call: _e.mock.On("Patch", context1, patchName)}
 }
 
@@ -2429,7 +2506,7 @@ type MockContext_PauseSchedule_Call struct {
 // PauseSchedule is a helper method to define mock.On call
 //   - client dbos.Client
 //   - scheduleName string
-func (_e *MockContext_Expecter) PauseSchedule(client interface{}, scheduleName interface{}) *MockContext_PauseSchedule_Call {
+func (_e *MockContext_Expecter) PauseSchedule(client any, scheduleName any) *MockContext_PauseSchedule_Call {
 	return &MockContext_PauseSchedule_Call{Call: _e.mock.On("PauseSchedule", client, scheduleName)}
 }
 
@@ -2511,9 +2588,9 @@ type MockContext_ReadStream_Call struct {
 //   - workflowID string
 //   - key string
 //   - opts ...dbos.ReadStreamOption
-func (_e *MockContext_Expecter) ReadStream(client interface{}, workflowID interface{}, key interface{}, opts ...interface{}) *MockContext_ReadStream_Call {
+func (_e *MockContext_Expecter) ReadStream(client any, workflowID any, key any, opts ...any) *MockContext_ReadStream_Call {
 	return &MockContext_ReadStream_Call{Call: _e.mock.On("ReadStream",
-		append([]interface{}{client, workflowID, key}, opts...)...)}
+		append([]any{client, workflowID, key}, opts...)...)}
 }
 
 func (_c *MockContext_ReadStream_Call) Run(run func(client dbos.Client, workflowID string, key string, opts ...dbos.ReadStreamOption)) *MockContext_ReadStream_Call {
@@ -2546,8 +2623,8 @@ func (_c *MockContext_ReadStream_Call) Run(run func(client dbos.Client, workflow
 	return _c
 }
 
-func (_c *MockContext_ReadStream_Call) Return(vs []any, b bool, err error) *MockContext_ReadStream_Call {
-	_c.Call.Return(vs, b, err)
+func (_c *MockContext_ReadStream_Call) Return(anyMoqParams []any, b bool, err error) *MockContext_ReadStream_Call {
+	_c.Call.Return(anyMoqParams, b, err)
 	return _c
 }
 
@@ -2593,7 +2670,7 @@ type MockContext_ReadStreamAsync_Call struct {
 //   - client dbos.Client
 //   - workflowID string
 //   - key string
-func (_e *MockContext_Expecter) ReadStreamAsync(client interface{}, workflowID interface{}, key interface{}) *MockContext_ReadStreamAsync_Call {
+func (_e *MockContext_Expecter) ReadStreamAsync(client any, workflowID any, key any) *MockContext_ReadStreamAsync_Call {
 	return &MockContext_ReadStreamAsync_Call{Call: _e.mock.On("ReadStreamAsync", client, workflowID, key)}
 }
 
@@ -2667,7 +2744,7 @@ type MockContext_Recv_Call struct {
 //   - context1 dbos.Context
 //   - topic string
 //   - timeout time.Duration
-func (_e *MockContext_Expecter) Recv(context1 interface{}, topic interface{}, timeout interface{}) *MockContext_Recv_Call {
+func (_e *MockContext_Expecter) Recv(context1 any, topic any, timeout any) *MockContext_Recv_Call {
 	return &MockContext_Recv_Call{Call: _e.mock.On("Recv", context1, topic, timeout)}
 }
 
@@ -2694,8 +2771,8 @@ func (_c *MockContext_Recv_Call) Run(run func(context1 dbos.Context, topic strin
 	return _c
 }
 
-func (_c *MockContext_Recv_Call) Return(v any, err error) *MockContext_Recv_Call {
-	_c.Call.Return(v, err)
+func (_c *MockContext_Recv_Call) Return(anyMoqParam any, err error) *MockContext_Recv_Call {
+	_c.Call.Return(anyMoqParam, err)
 	return _c
 }
 
@@ -2747,9 +2824,9 @@ type MockContext_RegisterQueue_Call struct {
 //   - client dbos.Client
 //   - name string
 //   - options ...dbos.QueueOption
-func (_e *MockContext_Expecter) RegisterQueue(client interface{}, name interface{}, options ...interface{}) *MockContext_RegisterQueue_Call {
+func (_e *MockContext_Expecter) RegisterQueue(client any, name any, options ...any) *MockContext_RegisterQueue_Call {
 	return &MockContext_RegisterQueue_Call{Call: _e.mock.On("RegisterQueue",
-		append([]interface{}{client, name}, options...)...)}
+		append([]any{client, name}, options...)...)}
 }
 
 func (_c *MockContext_RegisterQueue_Call) Run(run func(client dbos.Client, name string, options ...dbos.QueueOption)) *MockContext_RegisterQueue_Call {
@@ -2787,6 +2864,72 @@ func (_c *MockContext_RegisterQueue_Call) RunAndReturn(run func(client dbos.Clie
 	return _c
 }
 
+// RenameApplication provides a mock function for the type MockContext
+func (_mock *MockContext) RenameApplication(client dbos.Client, input dbos.RenameApplicationInput) (dbos.ApplicationRowCounts, error) {
+	ret := _mock.Called(client, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RenameApplication")
+	}
+
+	var r0 dbos.ApplicationRowCounts
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.Client, dbos.RenameApplicationInput) (dbos.ApplicationRowCounts, error)); ok {
+		return returnFunc(client, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.Client, dbos.RenameApplicationInput) dbos.ApplicationRowCounts); ok {
+		r0 = returnFunc(client, input)
+	} else {
+		r0 = ret.Get(0).(dbos.ApplicationRowCounts)
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.Client, dbos.RenameApplicationInput) error); ok {
+		r1 = returnFunc(client, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockContext_RenameApplication_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RenameApplication'
+type MockContext_RenameApplication_Call struct {
+	*mock.Call
+}
+
+// RenameApplication is a helper method to define mock.On call
+//   - client dbos.Client
+//   - input dbos.RenameApplicationInput
+func (_e *MockContext_Expecter) RenameApplication(client any, input any) *MockContext_RenameApplication_Call {
+	return &MockContext_RenameApplication_Call{Call: _e.mock.On("RenameApplication", client, input)}
+}
+
+func (_c *MockContext_RenameApplication_Call) Run(run func(client dbos.Client, input dbos.RenameApplicationInput)) *MockContext_RenameApplication_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.Client
+		if args[0] != nil {
+			arg0 = args[0].(dbos.Client)
+		}
+		var arg1 dbos.RenameApplicationInput
+		if args[1] != nil {
+			arg1 = args[1].(dbos.RenameApplicationInput)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockContext_RenameApplication_Call) Return(applicationRowCounts dbos.ApplicationRowCounts, err error) *MockContext_RenameApplication_Call {
+	_c.Call.Return(applicationRowCounts, err)
+	return _c
+}
+
+func (_c *MockContext_RenameApplication_Call) RunAndReturn(run func(client dbos.Client, input dbos.RenameApplicationInput) (dbos.ApplicationRowCounts, error)) *MockContext_RenameApplication_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ResumeSchedule provides a mock function for the type MockContext
 func (_mock *MockContext) ResumeSchedule(client dbos.Client, scheduleName string) error {
 	ret := _mock.Called(client, scheduleName)
@@ -2812,7 +2955,7 @@ type MockContext_ResumeSchedule_Call struct {
 // ResumeSchedule is a helper method to define mock.On call
 //   - client dbos.Client
 //   - scheduleName string
-func (_e *MockContext_Expecter) ResumeSchedule(client interface{}, scheduleName interface{}) *MockContext_ResumeSchedule_Call {
+func (_e *MockContext_Expecter) ResumeSchedule(client any, scheduleName any) *MockContext_ResumeSchedule_Call {
 	return &MockContext_ResumeSchedule_Call{Call: _e.mock.On("ResumeSchedule", client, scheduleName)}
 }
 
@@ -2887,9 +3030,9 @@ type MockContext_ResumeWorkflow_Call struct {
 //   - client dbos.Client
 //   - workflowID string
 //   - opts ...dbos.ResumeWorkflowOption
-func (_e *MockContext_Expecter) ResumeWorkflow(client interface{}, workflowID interface{}, opts ...interface{}) *MockContext_ResumeWorkflow_Call {
+func (_e *MockContext_Expecter) ResumeWorkflow(client any, workflowID any, opts ...any) *MockContext_ResumeWorkflow_Call {
 	return &MockContext_ResumeWorkflow_Call{Call: _e.mock.On("ResumeWorkflow",
-		append([]interface{}{client, workflowID}, opts...)...)}
+		append([]any{client, workflowID}, opts...)...)}
 }
 
 func (_c *MockContext_ResumeWorkflow_Call) Run(run func(client dbos.Client, workflowID string, opts ...dbos.ResumeWorkflowOption)) *MockContext_ResumeWorkflow_Call {
@@ -2970,9 +3113,9 @@ type MockContext_ResumeWorkflows_Call struct {
 //   - client dbos.Client
 //   - workflowIDs []string
 //   - opts ...dbos.ResumeWorkflowOption
-func (_e *MockContext_Expecter) ResumeWorkflows(client interface{}, workflowIDs interface{}, opts ...interface{}) *MockContext_ResumeWorkflows_Call {
+func (_e *MockContext_Expecter) ResumeWorkflows(client any, workflowIDs any, opts ...any) *MockContext_ResumeWorkflows_Call {
 	return &MockContext_ResumeWorkflows_Call{Call: _e.mock.On("ResumeWorkflows",
-		append([]interface{}{client, workflowIDs}, opts...)...)}
+		append([]any{client, workflowIDs}, opts...)...)}
 }
 
 func (_c *MockContext_ResumeWorkflows_Call) Run(run func(client dbos.Client, workflowIDs []string, opts ...dbos.ResumeWorkflowOption)) *MockContext_ResumeWorkflows_Call {
@@ -3046,7 +3189,7 @@ type MockContext_RetrieveQueue_Call struct {
 // RetrieveQueue is a helper method to define mock.On call
 //   - client dbos.Client
 //   - name string
-func (_e *MockContext_Expecter) RetrieveQueue(client interface{}, name interface{}) *MockContext_RetrieveQueue_Call {
+func (_e *MockContext_Expecter) RetrieveQueue(client any, name any) *MockContext_RetrieveQueue_Call {
 	return &MockContext_RetrieveQueue_Call{Call: _e.mock.On("RetrieveQueue", client, name)}
 }
 
@@ -3114,7 +3257,7 @@ type MockContext_RetrieveWorkflow_Call struct {
 // RetrieveWorkflow is a helper method to define mock.On call
 //   - client dbos.Client
 //   - workflowID string
-func (_e *MockContext_Expecter) RetrieveWorkflow(client interface{}, workflowID interface{}) *MockContext_RetrieveWorkflow_Call {
+func (_e *MockContext_Expecter) RetrieveWorkflow(client any, workflowID any) *MockContext_RetrieveWorkflow_Call {
 	return &MockContext_RetrieveWorkflow_Call{Call: _e.mock.On("RetrieveWorkflow", client, workflowID)}
 }
 
@@ -3142,6 +3285,89 @@ func (_c *MockContext_RetrieveWorkflow_Call) Return(workflowHandle dbos.Workflow
 }
 
 func (_c *MockContext_RetrieveWorkflow_Call) RunAndReturn(run func(client dbos.Client, workflowID string) (dbos.WorkflowHandle[any], error)) *MockContext_RetrieveWorkflow_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RewindWorkflow provides a mock function for the type MockContext
+func (_mock *MockContext) RewindWorkflow(client dbos.Client, workflowID string, opts ...dbos.RewindWorkflowOption) (dbos.WorkflowHandle[any], error) {
+	var tmpRet mock.Arguments
+	if len(opts) > 0 {
+		tmpRet = _mock.Called(client, workflowID, opts)
+	} else {
+		tmpRet = _mock.Called(client, workflowID)
+	}
+	ret := tmpRet
+
+	if len(ret) == 0 {
+		panic("no return value specified for RewindWorkflow")
+	}
+
+	var r0 dbos.WorkflowHandle[any]
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.Client, string, ...dbos.RewindWorkflowOption) (dbos.WorkflowHandle[any], error)); ok {
+		return returnFunc(client, workflowID, opts...)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.Client, string, ...dbos.RewindWorkflowOption) dbos.WorkflowHandle[any]); ok {
+		r0 = returnFunc(client, workflowID, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(dbos.WorkflowHandle[any])
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.Client, string, ...dbos.RewindWorkflowOption) error); ok {
+		r1 = returnFunc(client, workflowID, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockContext_RewindWorkflow_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RewindWorkflow'
+type MockContext_RewindWorkflow_Call struct {
+	*mock.Call
+}
+
+// RewindWorkflow is a helper method to define mock.On call
+//   - client dbos.Client
+//   - workflowID string
+//   - opts ...dbos.RewindWorkflowOption
+func (_e *MockContext_Expecter) RewindWorkflow(client any, workflowID any, opts ...any) *MockContext_RewindWorkflow_Call {
+	return &MockContext_RewindWorkflow_Call{Call: _e.mock.On("RewindWorkflow",
+		append([]any{client, workflowID}, opts...)...)}
+}
+
+func (_c *MockContext_RewindWorkflow_Call) Run(run func(client dbos.Client, workflowID string, opts ...dbos.RewindWorkflowOption)) *MockContext_RewindWorkflow_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.Client
+		if args[0] != nil {
+			arg0 = args[0].(dbos.Client)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []dbos.RewindWorkflowOption
+		var variadicArgs []dbos.RewindWorkflowOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]dbos.RewindWorkflowOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
+	})
+	return _c
+}
+
+func (_c *MockContext_RewindWorkflow_Call) Return(workflowHandle dbos.WorkflowHandle[any], err error) *MockContext_RewindWorkflow_Call {
+	_c.Call.Return(workflowHandle, err)
+	return _c
+}
+
+func (_c *MockContext_RewindWorkflow_Call) RunAndReturn(run func(client dbos.Client, workflowID string, opts ...dbos.RewindWorkflowOption) (dbos.WorkflowHandle[any], error)) *MockContext_RewindWorkflow_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3189,9 +3415,9 @@ type MockContext_RunAsStep_Call struct {
 //   - context1 dbos.Context
 //   - fn dbos.StepFunc
 //   - opts ...dbos.StepOption
-func (_e *MockContext_Expecter) RunAsStep(context1 interface{}, fn interface{}, opts ...interface{}) *MockContext_RunAsStep_Call {
+func (_e *MockContext_Expecter) RunAsStep(context1 any, fn any, opts ...any) *MockContext_RunAsStep_Call {
 	return &MockContext_RunAsStep_Call{Call: _e.mock.On("RunAsStep",
-		append([]interface{}{context1, fn}, opts...)...)}
+		append([]any{context1, fn}, opts...)...)}
 }
 
 func (_c *MockContext_RunAsStep_Call) Run(run func(context1 dbos.Context, fn dbos.StepFunc, opts ...dbos.StepOption)) *MockContext_RunAsStep_Call {
@@ -3219,8 +3445,8 @@ func (_c *MockContext_RunAsStep_Call) Run(run func(context1 dbos.Context, fn dbo
 	return _c
 }
 
-func (_c *MockContext_RunAsStep_Call) Return(v any, err error) *MockContext_RunAsStep_Call {
-	_c.Call.Return(v, err)
+func (_c *MockContext_RunAsStep_Call) Return(anyMoqParam any, err error) *MockContext_RunAsStep_Call {
+	_c.Call.Return(anyMoqParam, err)
 	return _c
 }
 
@@ -3273,9 +3499,9 @@ type MockContext_RunAsTransaction_Call struct {
 //   - ds *dbos.DataSource
 //   - fn dbos.TxnFunc
 //   - opts ...dbos.StepOption
-func (_e *MockContext_Expecter) RunAsTransaction(context1 interface{}, ds interface{}, fn interface{}, opts ...interface{}) *MockContext_RunAsTransaction_Call {
+func (_e *MockContext_Expecter) RunAsTransaction(context1 any, ds any, fn any, opts ...any) *MockContext_RunAsTransaction_Call {
 	return &MockContext_RunAsTransaction_Call{Call: _e.mock.On("RunAsTransaction",
-		append([]interface{}{context1, ds, fn}, opts...)...)}
+		append([]any{context1, ds, fn}, opts...)...)}
 }
 
 func (_c *MockContext_RunAsTransaction_Call) Run(run func(context1 dbos.Context, ds *dbos.DataSource, fn dbos.TxnFunc, opts ...dbos.StepOption)) *MockContext_RunAsTransaction_Call {
@@ -3308,8 +3534,8 @@ func (_c *MockContext_RunAsTransaction_Call) Run(run func(context1 dbos.Context,
 	return _c
 }
 
-func (_c *MockContext_RunAsTransaction_Call) Return(v any, err error) *MockContext_RunAsTransaction_Call {
-	_c.Call.Return(v, err)
+func (_c *MockContext_RunAsTransaction_Call) Return(anyMoqParam any, err error) *MockContext_RunAsTransaction_Call {
+	_c.Call.Return(anyMoqParam, err)
 	return _c
 }
 
@@ -3362,9 +3588,9 @@ type MockContext_RunWorkflow_Call struct {
 //   - fn dbos.WorkflowFunc
 //   - input any
 //   - opts ...dbos.WorkflowOption
-func (_e *MockContext_Expecter) RunWorkflow(context1 interface{}, fn interface{}, input interface{}, opts ...interface{}) *MockContext_RunWorkflow_Call {
+func (_e *MockContext_Expecter) RunWorkflow(context1 any, fn any, input any, opts ...any) *MockContext_RunWorkflow_Call {
 	return &MockContext_RunWorkflow_Call{Call: _e.mock.On("RunWorkflow",
-		append([]interface{}{context1, fn, input}, opts...)...)}
+		append([]any{context1, fn, input}, opts...)...)}
 }
 
 func (_c *MockContext_RunWorkflow_Call) Run(run func(context1 dbos.Context, fn dbos.WorkflowFunc, input any, opts ...dbos.WorkflowOption)) *MockContext_RunWorkflow_Call {
@@ -3443,7 +3669,7 @@ type MockContext_Select_Call struct {
 // Select is a helper method to define mock.On call
 //   - context1 dbos.Context
 //   - channels []<-chan dbos.StepOutcome[any]
-func (_e *MockContext_Expecter) Select(context1 interface{}, channels interface{}) *MockContext_Select_Call {
+func (_e *MockContext_Expecter) Select(context1 any, channels any) *MockContext_Select_Call {
 	return &MockContext_Select_Call{Call: _e.mock.On("Select", context1, channels)}
 }
 
@@ -3465,8 +3691,8 @@ func (_c *MockContext_Select_Call) Run(run func(context1 dbos.Context, channels 
 	return _c
 }
 
-func (_c *MockContext_Select_Call) Return(v any, err error) *MockContext_Select_Call {
-	_c.Call.Return(v, err)
+func (_c *MockContext_Select_Call) Return(anyMoqParam any, err error) *MockContext_Select_Call {
+	_c.Call.Return(anyMoqParam, err)
 	return _c
 }
 
@@ -3509,9 +3735,9 @@ type MockContext_Send_Call struct {
 //   - message any
 //   - topic string
 //   - opts ...dbos.SendOption
-func (_e *MockContext_Expecter) Send(client interface{}, destinationID interface{}, message interface{}, topic interface{}, opts ...interface{}) *MockContext_Send_Call {
+func (_e *MockContext_Expecter) Send(client any, destinationID any, message any, topic any, opts ...any) *MockContext_Send_Call {
 	return &MockContext_Send_Call{Call: _e.mock.On("Send",
-		append([]interface{}{client, destinationID, message, topic}, opts...)...)}
+		append([]any{client, destinationID, message, topic}, opts...)...)}
 }
 
 func (_c *MockContext_Send_Call) Run(run func(client dbos.Client, destinationID string, message any, topic string, opts ...dbos.SendOption)) *MockContext_Send_Call {
@@ -3559,6 +3785,78 @@ func (_c *MockContext_Send_Call) RunAndReturn(run func(client dbos.Client, desti
 	return _c
 }
 
+// SendBulk provides a mock function for the type MockContext
+func (_mock *MockContext) SendBulk(client dbos.Client, messages []dbos.SendMessage, opts ...dbos.SendOption) error {
+	var tmpRet mock.Arguments
+	if len(opts) > 0 {
+		tmpRet = _mock.Called(client, messages, opts)
+	} else {
+		tmpRet = _mock.Called(client, messages)
+	}
+	ret := tmpRet
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendBulk")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(dbos.Client, []dbos.SendMessage, ...dbos.SendOption) error); ok {
+		r0 = returnFunc(client, messages, opts...)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockContext_SendBulk_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendBulk'
+type MockContext_SendBulk_Call struct {
+	*mock.Call
+}
+
+// SendBulk is a helper method to define mock.On call
+//   - client dbos.Client
+//   - messages []dbos.SendMessage
+//   - opts ...dbos.SendOption
+func (_e *MockContext_Expecter) SendBulk(client any, messages any, opts ...any) *MockContext_SendBulk_Call {
+	return &MockContext_SendBulk_Call{Call: _e.mock.On("SendBulk",
+		append([]any{client, messages}, opts...)...)}
+}
+
+func (_c *MockContext_SendBulk_Call) Run(run func(client dbos.Client, messages []dbos.SendMessage, opts ...dbos.SendOption)) *MockContext_SendBulk_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.Client
+		if args[0] != nil {
+			arg0 = args[0].(dbos.Client)
+		}
+		var arg1 []dbos.SendMessage
+		if args[1] != nil {
+			arg1 = args[1].([]dbos.SendMessage)
+		}
+		var arg2 []dbos.SendOption
+		var variadicArgs []dbos.SendOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]dbos.SendOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
+	})
+	return _c
+}
+
+func (_c *MockContext_SendBulk_Call) Return(err error) *MockContext_SendBulk_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockContext_SendBulk_Call) RunAndReturn(run func(client dbos.Client, messages []dbos.SendMessage, opts ...dbos.SendOption) error) *MockContext_SendBulk_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetAlertHandler provides a mock function for the type MockContext
 func (_mock *MockContext) SetAlertHandler(handler dbos.AlertHandler) {
 	_mock.Called(handler)
@@ -3572,7 +3870,7 @@ type MockContext_SetAlertHandler_Call struct {
 
 // SetAlertHandler is a helper method to define mock.On call
 //   - handler dbos.AlertHandler
-func (_e *MockContext_Expecter) SetAlertHandler(handler interface{}) *MockContext_SetAlertHandler_Call {
+func (_e *MockContext_Expecter) SetAlertHandler(handler any) *MockContext_SetAlertHandler_Call {
 	return &MockContext_SetAlertHandler_Call{Call: _e.mock.On("SetAlertHandler", handler)}
 }
 
@@ -3632,9 +3930,9 @@ type MockContext_SetEvent_Call struct {
 //   - key string
 //   - message any
 //   - opts ...dbos.SetEventOption
-func (_e *MockContext_Expecter) SetEvent(context1 interface{}, key interface{}, message interface{}, opts ...interface{}) *MockContext_SetEvent_Call {
+func (_e *MockContext_Expecter) SetEvent(context1 any, key any, message any, opts ...any) *MockContext_SetEvent_Call {
 	return &MockContext_SetEvent_Call{Call: _e.mock.On("SetEvent",
-		append([]interface{}{context1, key, message}, opts...)...)}
+		append([]any{context1, key, message}, opts...)...)}
 }
 
 func (_c *MockContext_SetEvent_Call) Run(run func(context1 dbos.Context, key string, message any, opts ...dbos.SetEventOption)) *MockContext_SetEvent_Call {
@@ -3702,7 +4000,7 @@ type MockContext_SetLatestApplicationVersion_Call struct {
 // SetLatestApplicationVersion is a helper method to define mock.On call
 //   - client dbos.Client
 //   - versionName string
-func (_e *MockContext_Expecter) SetLatestApplicationVersion(client interface{}, versionName interface{}) *MockContext_SetLatestApplicationVersion_Call {
+func (_e *MockContext_Expecter) SetLatestApplicationVersion(client any, versionName any) *MockContext_SetLatestApplicationVersion_Call {
 	return &MockContext_SetLatestApplicationVersion_Call{Call: _e.mock.On("SetLatestApplicationVersion", client, versionName)}
 }
 
@@ -3760,7 +4058,7 @@ type MockContext_SetWorkflowAttributes_Call struct {
 //   - client dbos.Client
 //   - workflowID string
 //   - attributes map[string]any
-func (_e *MockContext_Expecter) SetWorkflowAttributes(client interface{}, workflowID interface{}, attributes interface{}) *MockContext_SetWorkflowAttributes_Call {
+func (_e *MockContext_Expecter) SetWorkflowAttributes(client any, workflowID any, attributes any) *MockContext_SetWorkflowAttributes_Call {
 	return &MockContext_SetWorkflowAttributes_Call{Call: _e.mock.On("SetWorkflowAttributes", client, workflowID, attributes)}
 }
 
@@ -3829,9 +4127,9 @@ type MockContext_SetWorkflowDelay_Call struct {
 //   - client dbos.Client
 //   - workflowID string
 //   - opts ...dbos.SetWorkflowDelayOption
-func (_e *MockContext_Expecter) SetWorkflowDelay(client interface{}, workflowID interface{}, opts ...interface{}) *MockContext_SetWorkflowDelay_Call {
+func (_e *MockContext_Expecter) SetWorkflowDelay(client any, workflowID any, opts ...any) *MockContext_SetWorkflowDelay_Call {
 	return &MockContext_SetWorkflowDelay_Call{Call: _e.mock.On("SetWorkflowDelay",
-		append([]interface{}{client, workflowID}, opts...)...)}
+		append([]any{client, workflowID}, opts...)...)}
 }
 
 func (_c *MockContext_SetWorkflowDelay_Call) Run(run func(client dbos.Client, workflowID string, opts ...dbos.SetWorkflowDelayOption)) *MockContext_SetWorkflowDelay_Call {
@@ -3894,7 +4192,7 @@ type MockContext_Shutdown_Call struct {
 // Shutdown is a helper method to define mock.On call
 //   - client dbos.Client
 //   - timeout time.Duration
-func (_e *MockContext_Expecter) Shutdown(client interface{}, timeout interface{}) *MockContext_Shutdown_Call {
+func (_e *MockContext_Expecter) Shutdown(client any, timeout any) *MockContext_Shutdown_Call {
 	return &MockContext_Shutdown_Call{Call: _e.mock.On("Shutdown", client, timeout)}
 }
 
@@ -3960,7 +4258,7 @@ type MockContext_Sleep_Call struct {
 // Sleep is a helper method to define mock.On call
 //   - context1 dbos.Context
 //   - duration time.Duration
-func (_e *MockContext_Expecter) Sleep(context1 interface{}, duration interface{}) *MockContext_Sleep_Call {
+func (_e *MockContext_Expecter) Sleep(context1 any, duration any) *MockContext_Sleep_Call {
 	return &MockContext_Sleep_Call{Call: _e.mock.On("Sleep", context1, duration)}
 }
 
@@ -4028,7 +4326,7 @@ type MockContext_TriggerSchedule_Call struct {
 // TriggerSchedule is a helper method to define mock.On call
 //   - client dbos.Client
 //   - scheduleName string
-func (_e *MockContext_Expecter) TriggerSchedule(client interface{}, scheduleName interface{}) *MockContext_TriggerSchedule_Call {
+func (_e *MockContext_Expecter) TriggerSchedule(client any, scheduleName any) *MockContext_TriggerSchedule_Call {
 	return &MockContext_TriggerSchedule_Call{Call: _e.mock.On("TriggerSchedule", client, scheduleName)}
 }
 
@@ -4086,7 +4384,7 @@ type MockContext_Value_Call struct {
 
 // Value is a helper method to define mock.On call
 //   - key any
-func (_e *MockContext_Expecter) Value(key interface{}) *MockContext_Value_Call {
+func (_e *MockContext_Expecter) Value(key any) *MockContext_Value_Call {
 	return &MockContext_Value_Call{Call: _e.mock.On("Value", key)}
 }
 
@@ -4103,8 +4401,8 @@ func (_c *MockContext_Value_Call) Run(run func(key any)) *MockContext_Value_Call
 	return _c
 }
 
-func (_c *MockContext_Value_Call) Return(v any) *MockContext_Value_Call {
-	_c.Call.Return(v)
+func (_c *MockContext_Value_Call) Return(anyMoqParam any) *MockContext_Value_Call {
+	_c.Call.Return(anyMoqParam)
 	return _c
 }
 
@@ -4227,6 +4525,82 @@ func (_c *MockContext_WithCancelCause_Call) RunAndReturn(run func() (dbos.Contex
 	return _c
 }
 
+// WithDeadlineCause provides a mock function for the type MockContext
+func (_mock *MockContext) WithDeadlineCause(context1 dbos.Context, deadline time.Time, cause error) (dbos.Context, context.CancelFunc) {
+	ret := _mock.Called(context1, deadline, cause)
+
+	if len(ret) == 0 {
+		panic("no return value specified for WithDeadlineCause")
+	}
+
+	var r0 dbos.Context
+	var r1 context.CancelFunc
+	if returnFunc, ok := ret.Get(0).(func(dbos.Context, time.Time, error) (dbos.Context, context.CancelFunc)); ok {
+		return returnFunc(context1, deadline, cause)
+	}
+	if returnFunc, ok := ret.Get(0).(func(dbos.Context, time.Time, error) dbos.Context); ok {
+		r0 = returnFunc(context1, deadline, cause)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(dbos.Context)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(dbos.Context, time.Time, error) context.CancelFunc); ok {
+		r1 = returnFunc(context1, deadline, cause)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(context.CancelFunc)
+		}
+	}
+	return r0, r1
+}
+
+// MockContext_WithDeadlineCause_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WithDeadlineCause'
+type MockContext_WithDeadlineCause_Call struct {
+	*mock.Call
+}
+
+// WithDeadlineCause is a helper method to define mock.On call
+//   - context1 dbos.Context
+//   - deadline time.Time
+//   - cause error
+func (_e *MockContext_Expecter) WithDeadlineCause(context1 any, deadline any, cause any) *MockContext_WithDeadlineCause_Call {
+	return &MockContext_WithDeadlineCause_Call{Call: _e.mock.On("WithDeadlineCause", context1, deadline, cause)}
+}
+
+func (_c *MockContext_WithDeadlineCause_Call) Run(run func(context1 dbos.Context, deadline time.Time, cause error)) *MockContext_WithDeadlineCause_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 dbos.Context
+		if args[0] != nil {
+			arg0 = args[0].(dbos.Context)
+		}
+		var arg1 time.Time
+		if args[1] != nil {
+			arg1 = args[1].(time.Time)
+		}
+		var arg2 error
+		if args[2] != nil {
+			arg2 = args[2].(error)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockContext_WithDeadlineCause_Call) Return(context11 dbos.Context, cancelFunc context.CancelFunc) *MockContext_WithDeadlineCause_Call {
+	_c.Call.Return(context11, cancelFunc)
+	return _c
+}
+
+func (_c *MockContext_WithDeadlineCause_Call) RunAndReturn(run func(context1 dbos.Context, deadline time.Time, cause error) (dbos.Context, context.CancelFunc)) *MockContext_WithDeadlineCause_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // WithTimeout provides a mock function for the type MockContext
 func (_mock *MockContext) WithTimeout(context1 dbos.Context, timeout time.Duration) (dbos.Context, context.CancelFunc) {
 	ret := _mock.Called(context1, timeout)
@@ -4265,7 +4639,7 @@ type MockContext_WithTimeout_Call struct {
 // WithTimeout is a helper method to define mock.On call
 //   - context1 dbos.Context
 //   - timeout time.Duration
-func (_e *MockContext_Expecter) WithTimeout(context1 interface{}, timeout interface{}) *MockContext_WithTimeout_Call {
+func (_e *MockContext_Expecter) WithTimeout(context1 any, timeout any) *MockContext_WithTimeout_Call {
 	return &MockContext_WithTimeout_Call{Call: _e.mock.On("WithTimeout", context1, timeout)}
 }
 
@@ -4324,7 +4698,7 @@ type MockContext_WithValue_Call struct {
 // WithValue is a helper method to define mock.On call
 //   - key any
 //   - val any
-func (_e *MockContext_Expecter) WithValue(key interface{}, val interface{}) *MockContext_WithValue_Call {
+func (_e *MockContext_Expecter) WithValue(key any, val any) *MockContext_WithValue_Call {
 	return &MockContext_WithValue_Call{Call: _e.mock.On("WithValue", key, val)}
 }
 
@@ -4382,7 +4756,7 @@ type MockContext_WithoutCancel_Call struct {
 
 // WithoutCancel is a helper method to define mock.On call
 //   - context1 dbos.Context
-func (_e *MockContext_Expecter) WithoutCancel(context1 interface{}) *MockContext_WithoutCancel_Call {
+func (_e *MockContext_Expecter) WithoutCancel(context1 any) *MockContext_WithoutCancel_Call {
 	return &MockContext_WithoutCancel_Call{Call: _e.mock.On("WithoutCancel", context1)}
 }
 
@@ -4442,9 +4816,9 @@ type MockContext_WriteStream_Call struct {
 //   - key string
 //   - value any
 //   - opts ...dbos.WriteStreamOption
-func (_e *MockContext_Expecter) WriteStream(context1 interface{}, key interface{}, value interface{}, opts ...interface{}) *MockContext_WriteStream_Call {
+func (_e *MockContext_Expecter) WriteStream(context1 any, key any, value any, opts ...any) *MockContext_WriteStream_Call {
 	return &MockContext_WriteStream_Call{Call: _e.mock.On("WriteStream",
-		append([]interface{}{context1, key, value}, opts...)...)}
+		append([]any{context1, key, value}, opts...)...)}
 }
 
 func (_c *MockContext_WriteStream_Call) Run(run func(context1 dbos.Context, key string, value any, opts ...dbos.WriteStreamOption)) *MockContext_WriteStream_Call {

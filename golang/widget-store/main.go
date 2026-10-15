@@ -9,6 +9,7 @@ import (
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "go.dbos.dev/dbos-enterprise-go" // registers the Conductor client
 )
 
 var (
@@ -30,7 +31,6 @@ func main() {
 	dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
 		AppName:            "gogogo",
 		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-		AdminServer:        true,
 		Logger:             logger,
 		ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_API_KEY"),
 		ApplicationVersion: "0.1.0",
@@ -47,7 +47,7 @@ func main() {
 		logger.Error("DBOS service start failed", "error", err)
 		os.Exit(1)
 	}
-	defer dbos.Shutdown(dbosContext, 10 * time.Second)
+	defer dbos.Shutdown(dbosContext, 10*time.Second)
 
 	db, err = pgxpool.New(context.Background(), dbURL)
 	if err != nil {

@@ -1088,17 +1088,10 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
 
 You can set a priority for an enqueued workflow using `WithPriority` when calling `RunWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set `WithPriorityEnabled` on your queue.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 :::
-
-To use priorities in a queue, you must enable it when creating the queue:
-
-```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue", dbos.WithPriorityEnabled())
-```
 
 **Example syntax:**
 
@@ -1152,8 +1145,6 @@ type Config struct {
     SystemDBPool       *pgxpool.Pool // SystemDBPool is a connection pool DBOS can use to access your system database. Optional but takes precedence over DatabaseURL if both are provided.
     DatabaseSchema     string        // Database schema name (defaults to "dbos")
     Logger             *slog.Logger  // Custom logger instance (defaults to a new slog logger)
-    AdminServer        bool          // Enable Transact admin HTTP server (disabled by default)
-    AdminServerPort    int           // Port for the admin HTTP server (default: 3001)
     ConductorURL       string        // DBOS conductor service URL (optional)
     ConductorAPIKey    string        // DBOS conductor API key (optional)
     ApplicationVersion string        // Application version (optional)
@@ -1174,6 +1165,14 @@ if err != nil {
 
 The newly created DBOSContext must be launched with `Launch()` before use and should be shut down with Shutdown() at program termination.
 
+Connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud) additionally requires importing `go.dbos.dev/dbos-enterprise-go`:
+
+```go
+import _ "go.dbos.dev/dbos-enterprise-go"
+```
+
+Without the import, `NewDBOSContext` refuses a Conductor configuration.
+
 ### launch
 
 ```go
@@ -1184,7 +1183,6 @@ Launch the following resources managed by a `DBOSContext`:
 - A system database connection pool
 - A workflow scheduler
 - A workflow queue runner
-- (Optionally) an admin server
 - (Optionally) a Conductor connection
 
 In addition, `Launch()` may perform workflow recovery.
@@ -1640,7 +1638,6 @@ queue := dbos.NewWorkflowQueue(ctx, "email-queue",
         Limit:  100,
         Period: 60 * time.Second, // 100 workflows per minute
     }),
-    dbos.WithPriorityEnabled(),
 )
 
 // Enqueue workflows to this queue:
@@ -1678,8 +1675,6 @@ This controls batch sizes for queue processing.
 ```go
 func WithPriorityEnabled() queueOption
 ```
-
-Enable setting priority for workflows on this queue.
 
 ####  WithRateLimiter
 

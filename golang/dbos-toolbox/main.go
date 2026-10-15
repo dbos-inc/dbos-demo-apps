@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
+	_ "go.dbos.dev/dbos-enterprise-go" // registers the Conductor client
 )
 
 // Configuration structure
@@ -93,7 +94,6 @@ func main() {
 	dbosCtx, err = dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AppName:            "dbos-toolbox",
-		AdminServer:        true,
 		ApplicationVersion: "0.1.0",
 		ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_KEY"),
 	})
@@ -118,7 +118,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer dbos.Shutdown(dbosCtx, 10 * time.Second)
+	defer dbos.Shutdown(dbosCtx, 10*time.Second)
 
 	// Create schedule
 	err = dbos.CreateSchedule(dbosCtx, dbos.ScheduleSpec{

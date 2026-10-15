@@ -25,3 +25,9 @@ export DBOS_SYSTEM_DATABASE_URL="postgres://postgres:dbos@localhost:5432/queue_p
 ```
 
 Visit http://localhost:8000 to see the queues demo!
+
+## Connecting to DBOS Conductor
+
+To monitor and manage this app from [DBOS Conductor](https://docs.dbos.dev/production/conductor), set `DBOS_CONDUCTOR_KEY` to a Conductor API key before starting it.
+The Conductor client lives in `go.dbos.dev/dbos-enterprise-go`, which `main.go` imports with `_ "go.dbos.dev/dbos-enterprise-go"`.
+It must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`.

@@ -2,7 +2,10 @@ module dbos-toolbox
 
 go 1.25.0
 
-require github.com/dbos-inc/dbos-transact-golang v1.0.0-rc.1
+require (
+	github.com/dbos-inc/dbos-transact-golang v1.6.1-0.20261013223100-f3d4b4849a7f
+	go.dbos.dev/dbos-enterprise-go v0.0.0-20261008205133-e89802f1ed27
+)
 
 require (
 	github.com/google/uuid v1.6.0 // indirect
@@ -14,5 +17,5 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 )
