@@ -3,10 +3,11 @@ module widget-store
 go 1.26.0
 
 require (
-	github.com/dbos-inc/dbos-transact-golang v1.0.0-rc.1
+	github.com/dbos-inc/dbos-transact-golang v1.6.1-0.20261013223100-f3d4b4849a7f
 	github.com/gin-gonic/gin v1.12.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/stretchr/testify v1.11.1
+	go.dbos.dev/dbos-enterprise-go v0.0.0-20261008205133-e89802f1ed27
 )
 
 require (
@@ -39,7 +40,6 @@ require (
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.61.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
-	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.1 // indirect

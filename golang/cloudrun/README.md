@@ -20,7 +20,7 @@ The autoscaler uses the Cloud Run Admin v2 API at `run.googleapis.com/v2/project
 - **PATCH** with `?updateMask=scaling,launchStage` to set a new instance count
 
 ## Deploying to Cloud Run
-Use the provided [Dockerfile](./Dockerfile) to build and deploy the app to Cloud Run. Make sure to set the required environment variables (e.g. `DBOS_API_KEY`, `GCP_PROJECT`, `GCP_REGION`) in the Cloud Run service configuration.
+Use the provided [Dockerfile](./Dockerfile) to build and deploy the app to Cloud Run. Make sure to set the required environment variables (e.g. `DBOS_CONDUCTOR_KEY`, `GCP_PROJECT`, `GCP_REGION`) in the Cloud Run service configuration.
 
 ## Local Development
 
@@ -51,3 +51,8 @@ go run main.go
 
 The app serves at `http://localhost:8080`. Note that the autoscaling workflow will fail locally since there's no GCP metadata server or worker pool -- the core workflow and crash-recovery demo still work fine.
 
+## Connecting to DBOS Conductor
+
+To monitor and manage this app from [DBOS Conductor](https://docs.dbos.dev/production/conductor), set `DBOS_CONDUCTOR_KEY` to a Conductor API key before starting it.
+The Conductor client lives in the closed-source `go.dbos.dev/dbos-enterprise-go` module, which `main.go` imports with `_ "go.dbos.dev/dbos-enterprise-go"`.
+It must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`.

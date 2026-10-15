@@ -10,6 +10,8 @@ For this tutorial we'll use a single queue with worker concurrency limits. The a
 
 This sample application uses Transact Golang and is applicable to all DBOS SDKs and KEDA-able Kubernetes clusters.
 
+The application also connects to [DBOS Conductor](https://docs.dbos.dev/production/conductor) when `DBOS_CONDUCTOR_URL` and `DBOS_CONDUCTOR_KEY` are set (see `manifests/dbos-app.yaml`). The Conductor client lives in the closed-source `go.dbos.dev/dbos-enterprise-go` module, which `main.go` imports with `_ "go.dbos.dev/dbos-enterprise-go"`; it must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`.
+
 <details><summary><strong>Configuration for EKS deployment</strong></summary>
 
 Before deploying, you need to configure environment-specific values:

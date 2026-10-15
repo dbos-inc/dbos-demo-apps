@@ -30,3 +30,9 @@ go run main.go
 ```
 
 The app serves at `http://localhost:8080`
+
+## Connecting to DBOS Conductor
+
+To monitor and manage this app from [DBOS Conductor](https://docs.dbos.dev/production/conductor), set `DBOS_CONDUCTOR_KEY` to a Conductor API key before starting it.
+The Conductor client lives in the closed-source `go.dbos.dev/dbos-enterprise-go` module, which `main.go` imports with `_ "go.dbos.dev/dbos-enterprise-go"`.
+It must be at the same minor version as `github.com/dbos-inc/dbos-transact-golang`.

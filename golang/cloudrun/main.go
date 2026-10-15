@@ -13,6 +13,7 @@ import (
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	"github.com/gin-gonic/gin"
+	_ "go.dbos.dev/dbos-enterprise-go" // registers the Conductor client
 )
 
 const STEPS_EVENT = "steps_event"
@@ -278,7 +279,6 @@ func main() {
 	dbosCtx, err = dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL:        dsn,
 		AppName:            "cloudrun-go",
-		AdminServer:        true,
 		ApplicationVersion: os.Getenv("K_REVISION"),
 		ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_KEY"),
 	})
@@ -300,7 +300,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer dbos.Shutdown(dbosCtx, 10 * time.Second)
+	defer dbos.Shutdown(dbosCtx, 10*time.Second)
 
 	// Create schedules
 	err = dbos.CreateSchedule(dbosCtx, dbos.ScheduleSpec{

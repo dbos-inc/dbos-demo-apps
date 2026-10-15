@@ -10,6 +10,7 @@ import (
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	"github.com/gin-gonic/gin"
+	_ "go.dbos.dev/dbos-enterprise-go" // registers the Conductor client
 )
 
 const STEPS_EVENT = "steps_event"

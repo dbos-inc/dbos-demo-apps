@@ -3,8 +3,9 @@ module dbos-go-starter
 go 1.26.0
 
 require (
-	github.com/dbos-inc/dbos-transact-golang v1.4.0
+	github.com/dbos-inc/dbos-transact-golang v1.6.1-0.20261013223100-f3d4b4849a7f
 	github.com/gin-gonic/gin v1.12.0
+	go.dbos.dev/dbos-enterprise-go v0.0.0-20261008205133-e89802f1ed27
 )
 
 require (

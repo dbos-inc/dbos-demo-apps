@@ -18,6 +18,7 @@ import (
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	"github.com/gin-gonic/gin"
+	_ "go.dbos.dev/dbos-enterprise-go" // registers the Conductor client
 )
 
 const STEPS_EVENT = "steps_event"
@@ -205,7 +206,6 @@ func main() {
 	dbosCtx, err = dbos.NewContext(context.Background(), dbos.Config{
 		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AppName:            "dbos-go-starter",
-		AdminServer:        true,
 		ApplicationVersion: "0.1.0",
 		ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_KEY"),
 	})
