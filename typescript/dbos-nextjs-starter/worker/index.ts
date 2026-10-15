@@ -14,7 +14,7 @@ async function main() {
     name: "dbos-nextjs-starter",
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
-  await DBOS.launch();
+  await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
   await DBOS.registerQueue("task_queue");
   console.log("Worker listening for workflows on task_queue...");
 }

@@ -42,6 +42,7 @@ if __name__ == "__main__":
         "name": "dbos-queue-worker",
         "system_database_url": system_database_url,
         "application_version": "0.1.0",
+        "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
     }
     DBOS(config=config)
     DBOS.launch()

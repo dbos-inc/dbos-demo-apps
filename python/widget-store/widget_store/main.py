@@ -268,6 +268,7 @@ if __name__ == "__main__":
         "name": "widget-store",
         "application_version": "0.1.0",
         "system_database_url": database_url,
+        "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
     }
     DBOS(config=config)
     DBOS.launch()

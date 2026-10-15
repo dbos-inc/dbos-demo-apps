@@ -20,6 +20,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@dbos-inc/dbos-enterprise": "^5.3.2-preview",
     "@dbos-inc/dbos-sdk": "^5.3.13-preview",
     "@dbos-inc/knex-datasource": "^5.3.13-preview",
     "@dbos-inc/otel": "^5.3.13-preview",

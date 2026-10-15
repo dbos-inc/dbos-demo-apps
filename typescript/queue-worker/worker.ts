@@ -40,7 +40,7 @@ async function main(): Promise<void> {
     systemDatabaseUrl: systemDatabaseUrl,
     applicationVersion: "0.1.0",
   });
-  await DBOS.launch();
+  await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
   // Define a queue on which the web server
   // can submit workflows for execution.
   await DBOS.registerQueue('workflow-queue');
