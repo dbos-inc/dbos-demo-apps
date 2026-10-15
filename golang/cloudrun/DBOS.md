@@ -1088,7 +1088,6 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
 
 You can set a priority for an enqueued workflow using `WithPriority` when calling `RunWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-Every queue dequeues in priority order; `WithPriorityEnabled` is deprecated and no longer affects scheduling.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -1166,7 +1165,7 @@ if err != nil {
 
 The newly created DBOSContext must be launched with `Launch()` before use and should be shut down with Shutdown() at program termination.
 
-Connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud) additionally requires the closed-source `go.dbos.dev/dbos-enterprise-go` module, at the same minor version as DBOS Transact. Run `go get go.dbos.dev/dbos-enterprise-go` and import it once, anywhere in the program:
+Connecting to DBOS Conductor (setting `ConductorAPIKey`, or running in DBOS Cloud) additionally requires importing `go.dbos.dev/dbos-enterprise-go`:
 
 ```go
 import _ "go.dbos.dev/dbos-enterprise-go"
@@ -1676,8 +1675,6 @@ This controls batch sizes for queue processing.
 ```go
 func WithPriorityEnabled() queueOption
 ```
-
-Deprecated: every queue dequeues in priority order, lower priority numbers first, so this option no longer affects scheduling and can be removed.
 
 ####  WithRateLimiter
 
