@@ -173,21 +173,32 @@ wheels = [
 ]
 
 [[package]]
+name = "croniter"
+version = "6.2.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/37/57/2e2a65aee2a70483cb28e2b7e15a072d00a523207593b44400d4717bb100/croniter-6.2.4.tar.gz", hash = "sha256:fc124f751b1b04805c2a04b061898b436b45ab2320b045e1e052ea895de65189", size = 166267, upload-time = "2026-07-10T09:52:59.955Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cd/ba/d678e5bd329646ca51d3c92addbc77804e86d21f4b6b6a027218e6abb010/croniter-6.2.4-py3-none-any.whl", hash = "sha256:8ef3d544107a5c05a150a2d78f8bf5a8eb9c5c4d93405a736b824109574e3f4d", size = 46677, upload-time = "2026-07-10T09:52:58.425Z" },
+]
+
+[[package]]
 name = "dbos"
-version = "3.2.0"
+version = "3.3.0a9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
+    { name = "croniter" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dateutil" },
     { name = "pyyaml" },
     { name = "sqlalchemy", extra = ["asyncio"] },
-    { name = "websockets", version = "16.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "websockets", version = "17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/02/a4/0c56927d991067ba0532cd6bdf81d59b64bfcae8526e549c8bcb99cad617/dbos-3.2.0.tar.gz", hash = "sha256:91e0e56f0102f63bce81f306b807540f1ed4962a145b86591f87cfa26b2a29bc", size = 577692, upload-time = "2026-09-29T15:43:51.828Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0f/6e/338b9269b1961e98e3efb3416c7273a2bafbe6696e50295490d2011037bb/dbos-3.3.0a9.tar.gz", hash = "sha256:b153c6ea4cd3b0c9959182a695f12d393686882c8adcecdbb121f710643590c9", size = 516815, upload-time = "2026-10-13T16:23:36.286Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/48/0664bf0f495cd49d6bfd078f6788a1ff435b1178d08bffb3f996e63ed7a5/dbos-3.2.0-py3-none-any.whl", hash = "sha256:8b78c38e3d1904acca98484107a8f50f38d7605eb6c7c03550259405d7f1b801", size = 278580, upload-time = "2026-09-29T15:43:49.709Z" },
+    { url = "https://files.pythonhosted.org/packages/96/5d/bce5d5fac996833f36caf18e9f46127fced4a0791292b72868a7a9a8b2fb/dbos-3.3.0a9-py3-none-any.whl", hash = "sha256:447fab66f5491aeeebee3974cc8a8b9a3a095c0b89161e96cf38cc13547e14d9", size = 246801, upload-time = "2026-10-13T16:23:34.057Z" },
 ]
 
 [package.optional-dependencies]
@@ -2080,7 +2091,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.16.5" },
-    { name = "dbos", extras = ["otel"], specifier = "==3.2.0" },
+    { name = "dbos", extras = ["otel"], specifier = "==3.3.0a9" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.117.1" },
 ]
 
