@@ -473,6 +473,18 @@ wheels = [
 ]
 
 [[package]]
+name = "croniter"
+version = "6.2.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/37/57/2e2a65aee2a70483cb28e2b7e15a072d00a523207593b44400d4717bb100/croniter-6.2.4.tar.gz", hash = "sha256:fc124f751b1b04805c2a04b061898b436b45ab2320b045e1e052ea895de65189", size = 166267, upload-time = "2026-07-10T09:52:59.955Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cd/ba/d678e5bd329646ca51d3c92addbc77804e86d21f4b6b6a027218e6abb010/croniter-6.2.4-py3-none-any.whl", hash = "sha256:8ef3d544107a5c05a150a2d78f8bf5a8eb9c5c4d93405a736b824109574e3f4d", size = 46677, upload-time = "2026-07-10T09:52:58.425Z" },
+]
+
+[[package]]
 name = "cryptography"
 version = "50.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -539,19 +551,37 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "3.2.0"
+version = "3.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
+    { name = "croniter" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dateutil" },
     { name = "pyyaml" },
     { name = "sqlalchemy", extra = ["asyncio"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7a/54/1bcf792851d184e82c27f3de1ce1e7e2008482083d3098ea4ffc97c873f8/dbos-3.3.0.tar.gz", hash = "sha256:5b5fe81272e7f0b16b8e98befe1d4475b1ad72ba57e0a421900e3f7df21eb898", size = 516801, upload-time = "2026-10-15T17:20:59.905Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/94/db/407d2748b9aaccd28930815a0f3de6013bc53b7ddb87c3b7949abc8741f7/dbos-3.3.0-py3-none-any.whl", hash = "sha256:398e5c3182d0aa9fa4115c9f06028202365d0c356c172f2ec21c1fd8be6e441b", size = 246771, upload-time = "2026-10-15T17:20:58.114Z" },
+]
+
+[package.optional-dependencies]
+enterprise = [
+    { name = "dbos-enterprise" },
+]
+
+[[package]]
+name = "dbos-enterprise"
+version = "3.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dbos" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/02/a4/0c56927d991067ba0532cd6bdf81d59b64bfcae8526e549c8bcb99cad617/dbos-3.2.0.tar.gz", hash = "sha256:91e0e56f0102f63bce81f306b807540f1ed4962a145b86591f87cfa26b2a29bc", size = 577692, upload-time = "2026-09-29T15:43:51.828Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/49/ca/5c1e8c41eaed4eae23b37b8591df5634fe130010c8eca1d53299433318c0/dbos_enterprise-3.3.0.tar.gz", hash = "sha256:850f67c6d8d061a9d63c989593259de781f5e5bbe2caca5d40292162dc755e55", size = 63601, upload-time = "2026-10-15T17:19:33.971Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/48/0664bf0f495cd49d6bfd078f6788a1ff435b1178d08bffb3f996e63ed7a5/dbos-3.2.0-py3-none-any.whl", hash = "sha256:8b78c38e3d1904acca98484107a8f50f38d7605eb6c7c03550259405d7f1b801", size = 278580, upload-time = "2026-09-29T15:43:49.709Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/43/35979c272ba2957592c419a73a6cc3c162c336f357a8ab4fce52b8d210cf/dbos_enterprise-3.3.0-py3-none-any.whl", hash = "sha256:b91389dbfa5121d6962d6e2d1af34623c9ecd5a8338cf73ab690a5426693d722", size = 30282, upload-time = "2026-10-15T17:19:32.728Z" },
 ]
 
 [[package]]
@@ -2410,7 +2440,7 @@ name = "pydantic-research-agent"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "dbos" },
+    { name = "dbos", extra = ["enterprise"] },
     { name = "fastapi", extra = ["standard"] },
     { name = "logfire" },
     { name = "pydantic-ai" },
@@ -2424,7 +2454,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", specifier = "==3.2.0" },
+    { name = "dbos", extras = ["enterprise"], specifier = "==3.3.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.128.0" },
     { name = "logfire", specifier = ">=4.16.0" },
     { name = "pydantic-ai", specifier = "==1.107.1" },

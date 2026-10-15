@@ -171,7 +171,7 @@ async function main() {
     applicationVersion: "0.1.0",
   });
   DBOS.logRegisteredEndpoints();
-  await DBOS.launch();
+  await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
   await fastify.listen({ port: PORT, host: '0.0.0.0' });
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 }

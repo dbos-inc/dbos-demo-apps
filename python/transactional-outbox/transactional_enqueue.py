@@ -188,6 +188,7 @@ def main() -> None:
     config: DBOSConfig = {
         "name": "transactional-outbox",
         "system_database_url": os.environ.get("DBOS_DATABASE_URL"),
+        "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
     }
     DBOS(config=config)
     DBOS.launch()

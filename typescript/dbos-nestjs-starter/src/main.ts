@@ -9,7 +9,7 @@ async function bootstrap() {
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
     applicationVersion: "0.1.0",
   });
-  await DBOS.launch();
+  await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();

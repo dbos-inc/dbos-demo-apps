@@ -11,6 +11,7 @@ class PollsConfig(AppConfig):
             "name": "django-app",
             "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
             "application_version": "0.1.0",
+            "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
         }
         DBOS(config=dbos_config)
         DBOS.launch()
