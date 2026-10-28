@@ -7,7 +7,7 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^5.3.0",
+    "@dbos-inc/dbos-sdk": "^5.4.0",
     "express": "^4.21.0"
   },
   "devDependencies": {

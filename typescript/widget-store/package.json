@@ -20,10 +20,10 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-enterprise": "^5.3.0",
-    "@dbos-inc/dbos-sdk": "^5.3.0",
-    "@dbos-inc/knex-datasource": "^5.3.0",
-    "@dbos-inc/otel": "^5.3.0",
+    "@dbos-inc/dbos-enterprise": "^5.4.0",
+    "@dbos-inc/dbos-sdk": "^5.4.0",
+    "@dbos-inc/knex-datasource": "^5.4.0",
+    "@dbos-inc/otel": "^5.4.0",
     "fastify": "^5.2.2",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
