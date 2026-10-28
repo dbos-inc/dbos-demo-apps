@@ -88,7 +88,7 @@ func setupTest(t *testing.T) dbos.Context {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		dbos.Shutdown(dbosCtx, 10 * time.Second)
+		dbos.Shutdown(dbosCtx, 10*time.Second)
 	})
 
 	return dbosCtx

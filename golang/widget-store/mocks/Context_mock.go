@@ -4033,16 +4033,22 @@ func (_c *MockContext_SetLatestApplicationVersion_Call) RunAndReturn(run func(cl
 }
 
 // SetWorkflowAttributes provides a mock function for the type MockContext
-func (_mock *MockContext) SetWorkflowAttributes(client dbos.Client, workflowID string, attributes map[string]any) error {
-	ret := _mock.Called(client, workflowID, attributes)
+func (_mock *MockContext) SetWorkflowAttributes(client dbos.Client, workflowID string, attributes map[string]any, opts ...dbos.SetWorkflowAttributesOption) error {
+	var tmpRet mock.Arguments
+	if len(opts) > 0 {
+		tmpRet = _mock.Called(client, workflowID, attributes, opts)
+	} else {
+		tmpRet = _mock.Called(client, workflowID, attributes)
+	}
+	ret := tmpRet
 
 	if len(ret) == 0 {
 		panic("no return value specified for SetWorkflowAttributes")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(dbos.Client, string, map[string]any) error); ok {
-		r0 = returnFunc(client, workflowID, attributes)
+	if returnFunc, ok := ret.Get(0).(func(dbos.Client, string, map[string]any, ...dbos.SetWorkflowAttributesOption) error); ok {
+		r0 = returnFunc(client, workflowID, attributes, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -4058,11 +4064,13 @@ type MockContext_SetWorkflowAttributes_Call struct {
 //   - client dbos.Client
 //   - workflowID string
 //   - attributes map[string]any
-func (_e *MockContext_Expecter) SetWorkflowAttributes(client any, workflowID any, attributes any) *MockContext_SetWorkflowAttributes_Call {
-	return &MockContext_SetWorkflowAttributes_Call{Call: _e.mock.On("SetWorkflowAttributes", client, workflowID, attributes)}
+//   - opts ...dbos.SetWorkflowAttributesOption
+func (_e *MockContext_Expecter) SetWorkflowAttributes(client any, workflowID any, attributes any, opts ...any) *MockContext_SetWorkflowAttributes_Call {
+	return &MockContext_SetWorkflowAttributes_Call{Call: _e.mock.On("SetWorkflowAttributes",
+		append([]any{client, workflowID, attributes}, opts...)...)}
 }
 
-func (_c *MockContext_SetWorkflowAttributes_Call) Run(run func(client dbos.Client, workflowID string, attributes map[string]any)) *MockContext_SetWorkflowAttributes_Call {
+func (_c *MockContext_SetWorkflowAttributes_Call) Run(run func(client dbos.Client, workflowID string, attributes map[string]any, opts ...dbos.SetWorkflowAttributesOption)) *MockContext_SetWorkflowAttributes_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 dbos.Client
 		if args[0] != nil {
@@ -4076,10 +4084,17 @@ func (_c *MockContext_SetWorkflowAttributes_Call) Run(run func(client dbos.Clien
 		if args[2] != nil {
 			arg2 = args[2].(map[string]any)
 		}
+		var arg3 []dbos.SetWorkflowAttributesOption
+		var variadicArgs []dbos.SetWorkflowAttributesOption
+		if len(args) > 3 {
+			variadicArgs = args[3].([]dbos.SetWorkflowAttributesOption)
+		}
+		arg3 = variadicArgs
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3...,
 		)
 	})
 	return _c
@@ -4090,7 +4105,7 @@ func (_c *MockContext_SetWorkflowAttributes_Call) Return(err error) *MockContext
 	return _c
 }
 
-func (_c *MockContext_SetWorkflowAttributes_Call) RunAndReturn(run func(client dbos.Client, workflowID string, attributes map[string]any) error) *MockContext_SetWorkflowAttributes_Call {
+func (_c *MockContext_SetWorkflowAttributes_Call) RunAndReturn(run func(client dbos.Client, workflowID string, attributes map[string]any, opts ...dbos.SetWorkflowAttributesOption) error) *MockContext_SetWorkflowAttributes_Call {
 	_c.Call.Return(run)
 	return _c
 }
