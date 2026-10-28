@@ -3,12 +3,12 @@ name = "document-detective"
 version = "0.1.0"
 
 dependencies = [
-    "dbos[enterprise]==3.3.0",
+    "dbos[enterprise]==3.4.0",
     "fastapi[standard]>=0.120.0",
     "llama-index==0.14.5",
     "llama-index-vector-stores-postgres==0.7.1",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "MIT"}
 
