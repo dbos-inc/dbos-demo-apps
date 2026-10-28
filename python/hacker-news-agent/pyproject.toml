@@ -3,7 +3,7 @@ name = "hacker-news-agent"
 version = "0.1.0"
 description = "DBOS Agentic Hacker News Research Agent"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.25.0",
     "openai>=1.0.0",
