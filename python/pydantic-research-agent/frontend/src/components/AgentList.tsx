@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { listAgents } from '../api';
 import type { AgentStatus } from '../types';
 
@@ -21,7 +21,7 @@ export function AgentList() {
   };
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     const pollAgents = async () => {
       await fetchAgents();
@@ -48,7 +48,7 @@ export function AgentList() {
 
   const formatReportWithLinks = (report: string) => {
     // Split by markdown links [text](url)
-    const parts: (string | JSX.Element)[] = [];
+    const parts: (string | ReactElement)[] = [];
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
     let lastIndex = 0;
     let match;
