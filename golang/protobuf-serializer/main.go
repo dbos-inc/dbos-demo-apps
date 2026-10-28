@@ -42,7 +42,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer dbos.Shutdown(dbosCtx, 10 * time.Second)
+	defer dbos.Shutdown(dbosCtx, 10*time.Second)
 
 	task := &pb.Task{
 		Id:          "task-1",

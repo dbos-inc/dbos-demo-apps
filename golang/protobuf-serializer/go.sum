@@ -2,8 +2,8 @@ github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ3
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dbos-inc/dbos-transact-golang v1.6.1-0.20261013223100-f3d4b4849a7f h1:2WHm30008Pja9MMO96dfbAFB2TisfSDqQMcm3Er7xoI=
-github.com/dbos-inc/dbos-transact-golang v1.6.1-0.20261013223100-f3d4b4849a7f/go.mod h1:WgYyMYDzBMlCqxr9DKGtwab9svAnDWXaZG2xugIA+7U=
+github.com/dbos-inc/dbos-transact-golang v1.8.0 h1:WZs22TGtsebJajxEIc2fXSC5dffE1Sv6U9ylochYg8E=
+github.com/dbos-inc/dbos-transact-golang v1.8.0/go.mod h1:zSo9qN3g9l+Kh/exJTXD7CsvRyWhrtRjfh7X/nJ3qW8=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
