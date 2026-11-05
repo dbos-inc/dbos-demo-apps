@@ -1,0 +1,45 @@
+# The widget store: an online storefront that survives being killed mid-checkout. The Rust port of
+# the demo that already exists in Python, TypeScript, Go and Java, against the same application
+# schema, so the five can be compared side by side. Only the application tables are shared: each
+# port recovers its own checkouts and no other's, because workflow names, app name, app version
+# and serializer all differ.
+[package]
+name = "dbos-rust-widget-store"
+description = "DBOS Rust widget store demo"
+publish = false
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[dependencies]
+# Tracks the SDK's main until 0.6 is on crates.io. Replace with `dbos = "0.6"` when it is.
+dbos = { git = "https://github.com/dbos-inc/dbos-transact-rust", branch = "main" }
+
+axum = "0.8"
+# `signal` for the Ctrl-C that ends the serve loop, so `shutdown` is reached rather than skipped.
+# `time` for the pause the crash button takes before exiting, which is what lets its own HTTP
+# response reach the browser that asked for it.
+tokio = { version = "1", features = [
+    "macros",
+    "net",
+    "rt-multi-thread",
+    "signal",
+    "time",
+] }
+# Derives only, for the JSON the frontend polls.
+serde = { version = "1", features = ["derive"] }
+# The application's own tables. Same driver the SDK uses, and deliberately a *separate* pool: the
+# products and orders tables are the application's, not DBOS's, and nothing here is transactional
+# with the system database — see `src/store.rs` for what that costs.
+sqlx = { version = "0.9", default-features = false, features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "postgres",
+] }
+# The application error type a failed step records. `Error<E>` needs `std::error::Error`, and the
+# derive is the idiom the SDK's own documentation reaches for.
+thiserror = "2"
+tracing-subscriber = "0.3"
+
+# Stands alone: this repository has no Cargo workspace.
+[workspace]

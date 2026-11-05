@@ -1,0 +1,45 @@
+name: CI for Rust Demo Apps
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'rust/**'
+      - '.github/workflows/rust-demo-apps.yml'
+  pull_request:
+    types:
+      - ready_for_review
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - 'rust/**'
+      - '.github/workflows/rust-demo-apps.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - dbos-starter
+          - queue-patterns
+          - widget-store
+
+    defaults:
+      run:
+        working-directory: rust/${{ matrix.app }}
+
+    env:
+      RUSTFLAGS: -D warnings
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets
