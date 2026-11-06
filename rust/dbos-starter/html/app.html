@@ -1,0 +1,1432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome to DBOS!</title>
+    <link
+      rel="icon"
+      href="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/live-demo/favicon.ico"
+      type="image/x-icon"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Color tokens from the DBOS Cloud Console theme (src/theme.ts). */
+      :root {
+        --ink-bg: #16181d;
+        --ink-border: #3a3d44;
+        --fg: #d8d9dc;
+        --muted: #a3a5aa;
+
+        --splice: #c8f62e;
+        --yellow: #ecfaa0;
+        --cyan: #44e3ee;
+        --lily: #9ab5e5;
+        --lily-light: #ced7f8;
+
+        --code-bg: #0e1014;
+        --code-fg: #f8f8f8;
+        --syntax-string: #ecc48d;
+        --syntax-keyword: #c792ea;
+        --syntax-type: #82aaff;
+
+        --status-error: #dc5848;
+        --status-warning: #e5a82f;
+        --status-success: #56a64b;
+
+        --dbos-gradient: linear-gradient(90deg, var(--splice), var(--yellow) 33%, var(--cyan) 66%, var(--lily-light));
+        /* "Flashy" olive-green glow (#678406), faded into the surface. */
+        --flashy-bg: radial-gradient(ellipse 50% 100% at 50% 130%, rgba(103, 132, 6, 0.9), var(--ink-bg));
+        --flashy-bg-hover: radial-gradient(ellipse 50% 100% at 50% 110%, rgba(103, 132, 6, 0.9), var(--ink-bg));
+
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Open Sans", system-ui, -apple-system, sans-serif;
+        color: var(--fg);
+        background-color: var(--ink-bg);
+        min-height: 100vh;
+        position: relative;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Subtle brand glow at the bottom, echoing the console's "flashy" radial. */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse 60% 45% at 50% 118%, rgba(103, 132, 6, 0.16), transparent 72%);
+      }
+
+      .wrap {
+        position: relative;
+        z-index: 1;
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 56px 24px 64px;
+      }
+
+      /* ---- header ---- */
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 30px;
+      }
+      .brand .logo-img {
+        display: block;
+        height: 32px;
+        width: auto;
+        border-radius: 4px;
+        border: 1px solid var(--ink-border);
+      }
+
+      h1 {
+        font-size: clamp(28px, 4.6vw, 44px);
+        line-height: 1.12;
+        font-weight: 600;
+        letter-spacing: -0.6px;
+        margin: 0 0 16px;
+        max-width: 760px;
+      }
+      h1 .grad {
+        background: var(--dbos-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .lede {
+        color: var(--muted);
+        font-size: 15.5px;
+        line-height: 1.7;
+        max-width: 640px;
+        margin: 0 0 10px;
+      }
+      .lede strong {
+        color: var(--fg);
+        font-weight: 600;
+      }
+
+      /* ---- reconnecting toast ---- */
+      #reconnecting {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-200%);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(229, 168, 47, 0.12);
+        border: 1px solid rgba(229, 168, 47, 0.45);
+        color: var(--status-warning);
+        padding: 9px 18px;
+        border-radius: 4px;
+        font-size: 13.5px;
+        font-weight: 600;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      }
+      #reconnecting.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .spinner {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        border: 2px solid rgba(229, 168, 47, 0.3);
+        border-top-color: var(--status-warning);
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* ---- tabs ---- */
+      .tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid var(--ink-border);
+        margin-bottom: 34px;
+      }
+      .tab-btn {
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        padding: 10px 20px;
+      }
+      .tab-btn.active {
+        color: var(--splice);
+        border-bottom-color: var(--splice);
+      }
+
+      /* A tab that is not the active one is not on the page.
+         The page shipped with a single tab, so this class was decorative until there were two. */
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      /* ---- layout grid ---- */
+      .grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 20px;
+      }
+      @media (max-width: 860px) {
+        .grid { grid-template-columns: 1fr; }
+      }
+
+      /* outlined surfaces, flat (matches MuiPaper variant="outlined") */
+      .card {
+        background: var(--ink-bg);
+        border: 1px solid var(--ink-border);
+        border-radius: 4px;
+      }
+
+      /* ---- code editor window ---- */
+      .editor {
+        overflow: hidden;
+      }
+      .editor .chrome {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--ink-border);
+        background: rgba(255, 255, 255, 0.015);
+      }
+      .dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        opacity: 0.85;
+      }
+      .dot.r { background: var(--status-error); }
+      .dot.y { background: var(--status-warning); }
+      .dot.g { background: var(--status-success); }
+      .editor .filename {
+        margin-left: 10px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      pre.code {
+        margin: 0;
+        padding: 18px 20px 20px;
+        background: var(--code-bg);
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.7;
+        overflow-x: auto;
+        color: var(--code-fg);
+      }
+      .code-line {
+        display: block;
+        white-space: pre;
+      }
+      .indent { padding-left: 1.6em; }
+      .keyword { color: var(--syntax-keyword); }
+      .function { color: var(--syntax-type); }
+      .string { color: var(--syntax-string); }
+      .num-lit { color: var(--cyan); }
+      .punct { color: var(--muted); }
+
+      .code-block-step {
+        display: block;
+        border-radius: 3px;
+        padding: 2px 4px;
+        margin: 2px -4px;
+        transition: background 0.35s, box-shadow 0.35s;
+      }
+      .step-highlight {
+        background: rgba(200, 246, 46, 0.12);
+        box-shadow: inset 3px 0 0 var(--splice);
+      }
+
+      /* ---- controls panel ---- */
+      .controls {
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .controls h2 {
+        margin: 0;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      /* ---- buttons (mirror MUI "flashy" / "basic" variants) ---- */
+      .btn {
+        position: relative;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 9px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: var(--fg);
+        background: var(--ink-bg);
+      }
+      .btn:active { transform: translateY(1px); }
+      .btn svg { width: 16px; height: 16px; }
+
+      /* flashy = primary launch action */
+      .btn-flashy {
+        z-index: 0;
+        border: 1px solid transparent;
+        border-image: var(--dbos-gradient);
+        border-image-slice: 1;
+        background: var(--flashy-bg);
+        transition: all 0.4s ease;
+      }
+      .btn-flashy:hover {
+        background-image: var(--flashy-bg-hover);
+      }
+      .btn-flashy:hover::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        background: var(--dbos-gradient);
+        filter: blur(10px);
+      }
+      .btn-flashy:hover::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: inherit;
+        border: inherit;
+      }
+
+      /* basic, danger-tinted = crash action */
+      .btn-danger {
+        border: 1px solid rgba(220, 88, 72, 0.45);
+        border-radius: 2px;
+        color: var(--status-error);
+        transition: border-color 0.4s, background-color 0.4s;
+      }
+      .btn-danger:hover:not(:disabled) {
+        border-color: var(--status-error);
+        background-color: rgba(220, 88, 72, 0.08);
+      }
+
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--ink-border);
+        margin: 2px 0;
+      }
+
+      /* ---- progress timeline ---- */
+      .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .step {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 4px;
+      }
+      .step:not(:last-child) .node::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 33px;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 26px;
+        background: var(--ink-border);
+        transition: background 0.4s;
+      }
+      .step.complete .node::after {
+        background: var(--status-success);
+      }
+      .node {
+        position: relative;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: var(--mono);
+        border: 2px solid var(--ink-border);
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.02);
+        transition: all 0.35s;
+      }
+      .node .num { transition: opacity 0.2s; }
+      .node .check {
+        position: absolute;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.3s;
+        width: 15px;
+        height: 15px;
+      }
+      .step-label {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      .step-title {
+        font-size: 13.5px;
+        font-weight: 600;
+        font-family: var(--mono);
+        color: var(--fg);
+      }
+      .step-state {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+
+      /* pending */
+      .step.pending .node { border-color: var(--ink-border); }
+      /* active */
+      .step.active .node {
+        border-color: var(--cyan);
+        color: var(--cyan);
+        box-shadow: 0 0 0 4px rgba(68, 227, 238, 0.14);
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+      .step.active .step-state { color: var(--cyan); }
+      /* Animated "..." trail on the in-progress / disconnected step. */
+      .step.active .step-state::after,
+      .step.recover .step-state::after {
+        content: "";
+        animation: dots 1.4s steps(1) infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 4px rgba(68, 227, 238, 0.12); }
+        50% { box-shadow: 0 0 0 8px rgba(68, 227, 238, 0.03); }
+      }
+      @keyframes dots {
+        0% { content: ""; }
+        25% { content: "."; }
+        50% { content: ".."; }
+        75% { content: "..."; }
+      }
+      /* complete */
+      .step.complete .node {
+        background: var(--status-success);
+        border-color: transparent;
+        color: var(--ink-bg);
+      }
+      .step.complete .node .num { opacity: 0; }
+      .step.complete .node .check { opacity: 1; transform: scale(1); color: var(--ink-bg); }
+      .step.complete .step-state { color: var(--status-success); }
+      /* recover / disconnected */
+      .step.recover .node {
+        border-color: var(--status-error);
+        color: var(--status-error);
+        box-shadow: 0 0 0 4px rgba(220, 88, 72, 0.15);
+        animation: pulse-red 1.4s ease-in-out infinite;
+      }
+      .step.recover .step-state { color: var(--status-error); }
+      @keyframes pulse-red {
+        0%, 100% { box-shadow: 0 0 0 4px rgba(220, 88, 72, 0.12); }
+        50% { box-shadow: 0 0 0 8px rgba(220, 88, 72, 0.03); }
+      }
+
+      .footer {
+        margin-top: 40px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .footer .line {
+        display: block;
+      }
+      .footer a {
+        color: var(--lily);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .footer a:hover {
+        color: var(--lily-light);
+        text-decoration: underline;
+      }
+      /* ---- workflow counts (Queues tab) ---- */
+      .wf-counts {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .wf-count-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      .wf-count-label {
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.05em;
+      }
+      .wf-count-value {
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 2px;
+      }
+      .wf-count-value.pending {
+        color: var(--cyan);
+        background: rgba(68, 227, 238, 0.1);
+      }
+      .wf-count-value.success {
+        color: var(--status-success);
+        background: rgba(86, 166, 75, 0.1);
+      }
+      .wf-count-value.enqueued {
+        color: var(--lily);
+        background: rgba(154, 181, 229, 0.12);
+      }
+      .wf-count-value.other {
+        color: var(--muted);
+        background: rgba(163, 165, 170, 0.08);
+      }
+      .concurrency-row {
+        display: flex;
+        gap: 8px;
+        align-items: stretch;
+      }
+      .concurrency-input {
+        background: var(--code-bg);
+        border: 1px solid var(--ink-border);
+        border-radius: 2px;
+        color: var(--code-fg);
+        font-family: var(--mono);
+        font-size: 13px;
+        padding: 8px 12px;
+        outline: none;
+        transition: border-color 0.2s;
+        min-width: 0;
+        max-width: 80px;
+      }
+      .concurrency-input:focus {
+        border-color: var(--muted);
+      }
+      /* ---- schedules tab ---- */
+      .cron-row {
+        display: flex;
+        gap: 8px;
+        align-items: stretch;
+      }
+      .cron-input {
+        flex: 1;
+        background: var(--code-bg);
+        border: 1px solid var(--ink-border);
+        border-radius: 2px;
+        color: var(--code-fg);
+        font-family: var(--mono);
+        font-size: 13px;
+        padding: 8px 12px;
+        outline: none;
+        transition: border-color 0.2s;
+        min-width: 0;
+      }
+      .cron-input:focus {
+        border-color: var(--muted);
+      }
+      .cron-row .btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .sched-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .sched-actions .btn {
+        flex: 1;
+        padding: 8px 10px;
+        font-size: 0.72rem;
+      }
+      .sched-error {
+        font-size: 12.5px;
+        color: var(--status-warning);
+        overflow-wrap: anywhere;
+      }
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 2px;
+        border: 1px solid currentColor;
+        align-self: flex-start;
+      }
+      .status-badge.active {
+        color: var(--status-success);
+        background: rgba(86, 166, 75, 0.1);
+      }
+      .status-badge.paused {
+        color: var(--status-warning);
+        background: rgba(229, 168, 47, 0.1);
+      }
+      .status-badge.unknown {
+        color: var(--muted);
+        background: rgba(163, 165, 170, 0.1);
+      }
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      /* ---- events + messages tabs ---- */
+      .wf-count-value.waiting {
+        color: var(--status-warning);
+        background: rgba(229, 168, 47, 0.12);
+      }
+      .wf-count-value.rejected {
+        color: var(--status-error);
+        background: rgba(220, 88, 72, 0.12);
+      }
+      .kv-value {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--fg);
+        max-width: 55%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .btn-mini {
+        font-size: 0.6875rem;
+        padding: 4px 10px;
+        border: 1px solid var(--ink-border);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        color: var(--fg);
+        background: var(--ink-bg);
+      }
+      .btn-mini:hover { border-color: var(--muted); }
+      .btn-mini:active { transform: translateY(1px); }
+      .btn-mini.reject { color: var(--status-error); }
+      .row-actions { display: flex; gap: 6px; }
+      .read-result {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--muted);
+        min-height: 18px;
+      }
+      .read-result .found { color: var(--status-success); }
+      .read-result .missing { color: var(--status-warning); }
+      .key-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+      .key-picker .btn-mini.active {
+        border-color: var(--cyan);
+        color: var(--cyan);
+      }
+
+      .concurrency-row .btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="reconnecting">
+      <div class="spinner"></div>
+      <span>Application offline — reconnecting…</span>
+    </div>
+
+    <div class="wrap">
+      <div class="brand">
+        <img
+          class="logo-img"
+          src="https://dbos-blog-posts.s3.us-west-1.amazonaws.com/logos/white_logotype%2Bblack_bg_h1000px.png"
+          alt="DBOS"
+        />
+      </div>
+
+      <h1>Build reliable software <span class="grad">effortlessly</span></h1>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('workflows', this)">Workflows</button>
+        <button class="tab-btn" onclick="switchTab('schedules', this)">Schedules</button>
+        <button class="tab-btn" onclick="switchTab('queues', this)">Queues</button>
+        <button class="tab-btn" onclick="switchTab('events', this)">Events</button>
+        <button class="tab-btn" onclick="switchTab('messages', this)">Messages</button>
+      </div>
+
+      <!-- ===== WORKFLOWS TAB ===== -->
+      <div id="tab-workflows" class="tab-content active">
+        <p class="lede">
+          DBOS adds <strong>durable execution</strong> to your applications, checkpointing their workflows and steps to Postgres.
+          If your apps ever crash, DBOS recovers them from their last completed steps.
+        </p>
+        <p class="lede">
+          <strong>Try it:</strong> launch a workflow, then crash this app.
+          When you restart, the workflow always resumes from exactly where it left off.
+        </p>
+        <div class="grid">
+          <!-- code editor -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.rs</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">async fn</span> <span class="function">example_workflow</span><span class="punct">(_: ())</span> <span class="punct">-&gt;</span> dbos<span class="punct">::</span>Result<span class="punct">&lt;</span>String<span class="punct">&gt;</span> <span class="punct">{</span></span><span class="code-line indent workflow-step-1">dbos<span class="punct">::</span><span class="function">step</span><span class="punct">(</span><span class="string">"step_one"</span><span class="punct">,</span> <span class="function">step_one</span><span class="punct">).</span><span class="keyword">await</span><span class="punct">?;</span></span><span class="code-line indent workflow-step-2">dbos<span class="punct">::</span><span class="function">step</span><span class="punct">(</span><span class="string">"step_two"</span><span class="punct">,</span> <span class="function">step_two</span><span class="punct">).</span><span class="keyword">await</span><span class="punct">?;</span></span><span class="code-line indent workflow-step-3">dbos<span class="punct">::</span><span class="function">step</span><span class="punct">(</span><span class="string">"step_three"</span><span class="punct">,</span> <span class="function">step_three</span><span class="punct">).</span><span class="keyword">await</span><span class="punct">?;</span></span><span class="code-line"><span class="punct">}</span></span><span class="code-line"> </span><span class="code-block-step step-1"><span class="code-line"><span class="keyword">async fn</span> <span class="function">step_one</span><span class="punct">()</span> <span class="punct">-&gt;</span> dbos<span class="punct">::</span>Result<span class="punct">&lt;()&gt;</span> <span class="punct">{</span></span><span class="code-line indent">tokio<span class="punct">::</span>time<span class="punct">::</span><span class="function">sleep</span><span class="punct">(</span><span class="num-lit">STEP_DURATION</span><span class="punct">).</span><span class="keyword">await</span><span class="punct">;</span></span><span class="code-line indent"><span class="function">println!</span><span class="punct">(</span><span class="string">"Completed step 1!"</span><span class="punct">);</span></span><span class="code-line indent"><span class="function">Ok</span><span class="punct">(())</span></span><span class="code-line"><span class="punct">}</span></span></span><span class="code-line"> </span><span class="code-block-step step-2"><span class="code-line"><span class="keyword">async fn</span> <span class="function">step_two</span><span class="punct">()</span> <span class="punct">-&gt;</span> dbos<span class="punct">::</span>Result<span class="punct">&lt;()&gt;</span> <span class="punct">{</span></span><span class="code-line indent">tokio<span class="punct">::</span>time<span class="punct">::</span><span class="function">sleep</span><span class="punct">(</span><span class="num-lit">STEP_DURATION</span><span class="punct">).</span><span class="keyword">await</span><span class="punct">;</span></span><span class="code-line indent"><span class="function">println!</span><span class="punct">(</span><span class="string">"Completed step 2!"</span><span class="punct">);</span></span><span class="code-line indent"><span class="function">Ok</span><span class="punct">(())</span></span><span class="code-line"><span class="punct">}</span></span></span><span class="code-line"> </span><span class="code-block-step step-3"><span class="code-line"><span class="keyword">async fn</span> <span class="function">step_three</span><span class="punct">()</span> <span class="punct">-&gt;</span> dbos<span class="punct">::</span>Result<span class="punct">&lt;()&gt;</span> <span class="punct">{</span></span><span class="code-line indent">tokio<span class="punct">::</span>time<span class="punct">::</span><span class="function">sleep</span><span class="punct">(</span><span class="num-lit">STEP_DURATION</span><span class="punct">).</span><span class="keyword">await</span><span class="punct">;</span></span><span class="code-line indent"><span class="function">println!</span><span class="punct">(</span><span class="string">"Completed step 3!"</span><span class="punct">);</span></span><span class="code-line indent"><span class="function">Ok</span><span class="punct">(())</span></span><span class="code-line"><span class="punct">}</span></span></span></pre>
+          </div>
+
+          <!-- controls -->
+          <div class="card controls">
+            <h2>Run the demo</h2>
+            <button onclick="startBackgroundJob()" class="btn btn-flashy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"></polygon>
+              </svg>
+              Launch durable workflow
+            </button>
+            <button onclick="crashApp()" id="crash-button" disabled class="btn btn-danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Crash the application
+            </button>
+
+            <div class="divider"></div>
+
+            <div class="timeline" id="status">
+              <div class="step pending" id="step-row-1">
+                <div class="node">
+                  <span class="num">1</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">step_one</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+              <div class="step pending" id="step-row-2">
+                <div class="node">
+                  <span class="num">2</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">step_two</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+              <div class="step pending" id="step-row-3">
+                <div class="node">
+                  <span class="num">3</span>
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="step-label">
+                  <span class="step-title">step_three</span>
+                  <span class="step-state">Waiting</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            Check out the
+            <a href="https://docs.dbos.dev/" target="_blank">DBOS docs</a>
+            to learn how to build with DBOS.
+          </span>
+        </p>
+      </div>
+
+      <!-- ===== SCHEDULES TAB ===== -->
+      <div id="tab-schedules" class="tab-content">
+        <p class="lede">
+          DBOS durable workflows can be started on a cron-style <strong>schedule</strong>.
+          The schedule can be adjusted while the app is running.
+          <strong>A pause takes effect at the next tick, and other changes may take up to 30 seconds to propagate.</strong>
+        </p>
+        <p class="lede">
+          <strong>Try it:</strong> press Apply to start the schedule, and watch the runs add up.
+          A schedule is a row in the database, so it is still running after a restart.
+        </p>
+        <div class="grid">
+          <!-- code editor -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.rs</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">async fn</span> <span class="function">scheduled_workflow</span><span class="punct">(_:</span> ScheduledWorkflowInput<span class="punct">)</span> <span class="punct">-&gt;</span> dbos<span class="punct">::</span>Result<span class="punct">&lt;()<span class="punct">&gt;</span></span> <span class="punct">{</span></span><span class="code-block-step sched-body"><span class="code-line indent"><span class="function">println!</span><span class="punct">(</span><span class="string">"Scheduled workflow starting."</span><span class="punct">);</span></span><span class="code-line indent">dbos<span class="punct">::</span><span class="function">sleep</span><span class="punct">(</span>Duration<span class="punct">::</span><span class="function">from_secs</span><span class="punct">(</span><span class="num-lit">1</span><span class="punct">)).</span><span class="keyword">await</span><span class="punct">?;</span></span><span class="code-line indent"><span class="function">println!</span><span class="punct">(</span><span class="string">"Scheduled workflow ending."</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="function">Ok</span><span class="punct">(())</span></span><span class="code-line"><span class="punct">}</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">let</span> spec <span class="punct">=</span> ScheduleSpec<span class="punct">::</span><span class="function">new</span><span class="punct">(</span></span><span class="code-line indent"><span class="string">"scheduled-workflow"</span><span class="punct">,</span> <span class="punct">&amp;</span>scheduled<span class="punct">,</span> <span class="string">"*/5 * * * * *"</span><span class="punct">,</span> <span class="punct">&amp;(),</span></span><span class="code-line"><span class="punct">)?;</span></span><span class="code-line">dbos<span class="punct">.</span><span class="function">apply_schedules</span><span class="punct">(&amp;[</span>spec<span class="punct">]).</span><span class="keyword">await</span><span class="punct">?;</span></span></pre>
+          </div>
+
+          <!-- schedule controls -->
+          <div class="card controls">
+            <h2>Schedule</h2>
+
+            <div class="cron-row">
+              <input
+                id="cron-input"
+                class="cron-input"
+                type="text"
+                value="*/5 * * * * *"
+                placeholder="cron expression"
+                spellcheck="false"
+              />
+              <button onclick="applySchedule()" class="btn btn-flashy">Apply</button>
+            </div>
+            <div id="sched-error" class="sched-error" hidden></div>
+
+            <div id="sched-status-badge" class="status-badge unknown">
+              <span class="status-dot"></span>
+              <span id="sched-status-text">Not applied</span>
+            </div>
+
+            <div class="sched-actions">
+              <button onclick="scheduleAction('pause')" id="btn-pause" class="btn btn-basic" disabled>Pause</button>
+              <button onclick="scheduleAction('resume')" id="btn-resume" class="btn btn-basic" disabled>Resume</button>
+              <button onclick="scheduleAction('trigger')" id="btn-trigger" class="btn btn-basic" disabled>Trigger</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>Workflows in the last 10 minutes:</h2>
+            <div id="sched-wf-counts" class="wf-counts"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            Check out the
+            <a href="https://docs.dbos.dev/rust/tutorials/scheduled-workflows" target="_blank">scheduling guide</a>
+            to learn how to run workflows on a cron schedule.
+          </span>
+        </p>
+      </div>
+
+      <!-- ===== QUEUES TAB ===== -->
+      <div id="tab-queues" class="tab-content">
+        <p class="lede">
+          DBOS <strong>queues</strong> let you run workflow fan-outs and control concurrency.
+          The <code>worker_concurrency</code> parameter controls how many workflows one process may run simultaneously.
+        </p>
+        <p class="lede">
+          <strong>Try it:</strong> press "Enqueue 5 workflows" repeatedly to put workflows on the queue.
+          Three run at a time and the rest wait &mdash; then change the limit and press Apply, without restarting the app.
+        </p>
+        <div class="grid">
+          <!-- code editor -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.rs</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">async fn</span> <span class="function">enqueued_workflow</span><span class="punct">(_: ())</span> <span class="punct">-&gt;</span> dbos<span class="punct">::</span>Result<span class="punct">&lt;</span>String<span class="punct">&gt;</span> <span class="punct">{</span></span><span class="code-block-step queue-line-1"><span class="code-line indent"><span class="function">println!</span><span class="punct">(</span><span class="string">"Enqueued workflow starting."</span><span class="punct">);</span></span></span><span class="code-block-step queue-line-2"><span class="code-line indent">dbos<span class="punct">::</span><span class="function">sleep</span><span class="punct">(</span><span class="num-lit">STEP_DURATION</span><span class="punct">).</span><span class="keyword">await</span><span class="punct">?;</span></span></span><span class="code-block-step queue-line-3"><span class="code-line indent"><span class="function">println!</span><span class="punct">(</span><span class="string">"Enqueued workflow ending."</span><span class="punct">);</span></span></span><span class="code-line"><span class="punct">}</span></span><span class="code-line"> </span><span class="code-line">dbos<span class="punct">.</span><span class="function">register_queue</span><span class="punct">(</span><span class="string">"demo-queue"</span><span class="punct">,</span> QueueOptions <span class="punct">{</span></span><span class="code-line indent">worker_concurrency<span class="punct">:</span> <span class="function">Some</span><span class="punct">(</span><span class="num-lit">3</span><span class="punct">),</span></span><span class="code-line indent"><span class="punct">..</span><span class="function">Default</span><span class="punct">::</span><span class="function">default</span><span class="punct">()</span></span><span class="code-line"><span class="punct">},</span> QueueConflict<span class="punct">::</span>NeverUpdate<span class="punct">).</span><span class="keyword">await</span><span class="punct">?;</span></span><span class="code-line"> </span><span class="code-line">enqueued<span class="punct">.</span><span class="function">start_with</span><span class="punct">((),</span> StartOptions <span class="punct">{</span></span><span class="code-line indent">queue<span class="punct">:</span> <span class="function">Some</span><span class="punct">(</span>QueueRequest<span class="punct">::</span><span class="function">new</span><span class="punct">(</span><span class="string">"demo-queue"</span><span class="punct">)),</span></span><span class="code-line indent"><span class="punct">..</span><span class="function">Default</span><span class="punct">::</span><span class="function">default</span><span class="punct">()</span></span><span class="code-line"><span class="punct">}).</span><span class="keyword">await</span><span class="punct">?;</span></span></pre>
+          </div>
+
+          <!-- queue controls -->
+          <div class="card controls">
+            <h2>Queue</h2>
+
+            <div class="concurrency-row">
+              <input id="concurrency-input" class="concurrency-input" type="number" min="1" value="3" />
+              <span style="font-size:12.5px;color:var(--muted);align-self:center;white-space:nowrap">worker_concurrency</span>
+              <button onclick="applyQueueConcurrency()" class="btn btn-flashy" style="margin-left:auto">Apply</button>
+            </div>
+
+            <button onclick="enqueueWorkflows()" class="btn btn-flashy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+              Enqueue 5 workflows
+            </button>
+
+            <div class="divider"></div>
+
+            <h2>Workflows enqueued since startup:</h2>
+            <div id="queue-wf-counts" class="wf-counts"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            DBOS queues offer many additional controls for rate limiting, deduplication, debouncing, partitioning, prioritization and more.
+            See the <a href="https://docs.dbos.dev/" target="_blank">DBOS docs</a> for details.
+          </span>
+        </p>
+      </div>
+
+      <!-- ===== EVENTS TAB ===== -->
+      <div id="tab-events" class="tab-content">
+        <p class="lede">
+          A workflow publishes <strong>events</strong> &mdash; named values anyone can read by key, from
+          outside the workflow, in another process, or after it has finished.
+        </p>
+        <p class="lede">
+          <strong>Try it:</strong> start an order, then immediately press Read on <code>shipped</code>.
+          The request blocks until the workflow gets there and publishes it &mdash; no polling, and nothing
+          held open on the workflow's side.
+        </p>
+        <div class="grid">
+          <!-- code editor -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.rs</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">async fn</span> <span class="function">order_workflow</span><span class="punct">(_: ())</span> <span class="punct">-&gt;</span> dbos<span class="punct">::</span>Result<span class="punct">&lt;</span>String<span class="punct">&gt;</span> <span class="punct">{</span></span><span class="code-line indent"><span class="keyword">for</span> key <span class="keyword">in</span> <span class="punct">[</span><span class="string">"accepted"</span><span class="punct">,</span> <span class="string">"charged"</span><span class="punct">,</span> <span class="string">"shipped"</span><span class="punct">]</span> <span class="punct">{</span></span><span class="code-block-step event-line-1"><span class="code-line indent">dbos<span class="punct">::</span><span class="function">sleep</span><span class="punct">(</span><span class="num-lit">ORDER_STEP</span><span class="punct">).</span><span class="keyword">await</span><span class="punct">?;</span></span></span><span class="code-block-step event-line-2"><span class="code-line indent">dbos<span class="punct">::</span><span class="function">set_event</span><span class="punct">(</span>key<span class="punct">,</span> <span class="punct">&amp;</span>value<span class="punct">).</span><span class="keyword">await</span><span class="punct">?;</span></span></span><span class="code-line indent"><span class="punct">}</span></span><span class="code-line"><span class="punct">}</span></span><span class="code-line"> </span><span class="code-line"><span class="punct">// </span>A read that waits, from outside any workflow.</span><span class="code-line"><span class="keyword">let</span> shipped<span class="punct">:</span> Option<span class="punct">&lt;</span>String<span class="punct">&gt;</span> <span class="punct">=</span> dbos</span><span class="code-line indent"><span class="punct">.</span><span class="function">get_event</span><span class="punct">(</span>&amp;id<span class="punct">,</span> <span class="string">"shipped"</span><span class="punct">,</span> <span class="function">Duration</span><span class="punct">::</span><span class="function">from_secs</span><span class="punct">(</span><span class="num-lit">12</span><span class="punct">)).</span><span class="keyword">await</span><span class="punct">?;</span></span></pre>
+          </div>
+
+          <!-- events controls -->
+          <div class="card controls">
+            <h2>Order</h2>
+            <button onclick="startOrder()" class="btn btn-flashy">Start an order</button>
+
+            <div class="divider"></div>
+
+            <h2>Published so far:</h2>
+            <div id="event-keys" class="wf-counts"></div>
+
+            <div class="divider"></div>
+
+            <h2>Read one key, waiting up to 12s:</h2>
+            <div class="key-picker" id="event-key-picker">
+              <button class="btn-mini" onclick="pickKey('accepted', this)">accepted</button>
+              <button class="btn-mini" onclick="pickKey('charged', this)">charged</button>
+              <button class="btn-mini active" onclick="pickKey('shipped', this)">shipped</button>
+            </div>
+            <button onclick="readEvent()" class="btn btn-flashy">Read</button>
+            <div id="event-read-result" class="read-result"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            Events are one of several ways a workflow talks to the outside world. See the
+            <a href="https://docs.dbos.dev/" target="_blank">DBOS docs</a> for streams and messages.
+          </span>
+        </p>
+      </div>
+
+      <!-- ===== MESSAGES TAB ===== -->
+      <div id="tab-messages" class="tab-content">
+        <p class="lede">
+          A workflow can stop and <strong>wait to be told something</strong>. <code>recv</code> parks it
+          durably &mdash; nothing of it stays in memory, and a message sent later, by any process, wakes it.
+        </p>
+        <p class="lede">
+          <strong>Try it:</strong> start a few approval requests and watch them wait. Approve one, or
+          approve them all at once &mdash; <code>send_bulk</code> is a single transaction, so nobody is
+          approved unless everybody is. You can also crash the app on the Workflows tab first: the
+          requests are still waiting when it comes back.
+        </p>
+        <div class="grid">
+          <!-- code editor -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.rs</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">async fn</span> <span class="function">approval_workflow</span><span class="punct">(_: ())</span> <span class="punct">-&gt;</span> dbos<span class="punct">::</span>Result<span class="punct">&lt;</span>String<span class="punct">&gt;</span> <span class="punct">{</span></span><span class="code-block-step message-line-1"><span class="code-line indent"><span class="keyword">let</span> decision<span class="punct">:</span> Option<span class="punct">&lt;</span>String<span class="punct">&gt;</span> <span class="punct">=</span></span></span><span class="code-block-step message-line-2"><span class="code-line indent">dbos<span class="punct">::</span><span class="function">recv</span><span class="punct">(</span><span class="function">Some</span><span class="punct">(</span><span class="string">"approval"</span><span class="punct">),</span> <span class="num-lit">APPROVAL_TIMEOUT</span><span class="punct">).</span><span class="keyword">await</span><span class="punct">?;</span></span></span><span class="code-line indent"><span class="function">Ok</span><span class="punct">(</span>decision<span class="punct">.</span><span class="function">unwrap_or_else</span><span class="punct">(||</span> <span class="string">"expired"</span><span class="punct">.</span><span class="function">to_owned</span><span class="punct">()))</span></span><span class="code-line"><span class="punct">}</span></span><span class="code-line"> </span><span class="code-line"><span class="punct">// </span>One waiting workflow.</span><span class="code-line">dbos<span class="punct">.</span><span class="function">send_with</span><span class="punct">(</span></span><span class="code-line indent">SendMessage <span class="punct">{</span></span><span class="code-line indent">    topic<span class="punct">:</span> <span class="function">Some</span><span class="punct">(</span><span class="string">"approval"</span><span class="punct">),</span></span><span class="code-line indent">    <span class="punct">..</span>SendMessage<span class="punct">::</span><span class="function">new</span><span class="punct">(&amp;id</span><span class="punct">,</span> <span class="punct">&amp;</span>decision<span class="punct">)</span></span><span class="code-line indent"><span class="punct">},</span></span><span class="code-line indent">SendOptions<span class="punct">::</span><span class="function">default</span><span class="punct">(),</span></span><span class="code-line"><span class="punct">).</span><span class="keyword">await</span><span class="punct">?;</span></span><span class="code-line"> </span><span class="code-line"><span class="punct">// </span>Every waiting workflow, in one transaction.</span><span class="code-line">dbos<span class="punct">.</span><span class="function">send_bulk</span><span class="punct">(&amp;messages).</span><span class="keyword">await</span><span class="punct">?;</span></span></pre>
+          </div>
+
+          <!-- messages controls -->
+          <div class="card controls">
+            <h2>Approval requests</h2>
+            <button onclick="startApproval()" class="btn btn-flashy">Request an approval</button>
+
+            <div class="concurrency-row">
+              <button onclick="respondAll('approved')" class="btn btn-flashy" style="flex:1">Approve all</button>
+              <button onclick="respondAll('rejected')" class="btn btn-danger" style="flex:1">Reject all</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>Requests:</h2>
+            <div id="approval-rows" class="wf-counts"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            A message outlives the process that waits for it, so the sender and the receiver never have to
+            be running at the same time. See the <a href="https://docs.dbos.dev/" target="_blank">DBOS docs</a>.
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // ============================================================
+      // TABS
+      // ============================================================
+      function switchTab(name, button) {
+        document.querySelectorAll(".tab-content").forEach((el) => el.classList.remove("active"));
+        document.querySelectorAll(".tab-btn").forEach((el) => el.classList.remove("active"));
+        document.getElementById("tab-" + name).classList.add("active");
+        button.classList.add("active");
+      }
+
+      function activeTab() {
+        const active = document.querySelector(".tab-content.active");
+        return active ? active.id.replace("tab-", "") : "workflows";
+      }
+
+      // ============================================================
+      // SCHEDULES TAB
+      // ============================================================
+      function updateScheduleBadge(status) {
+        const badge = document.getElementById("sched-status-badge");
+        badge.className = "status-badge " + (status ? status.toLowerCase() : "unknown");
+        document.getElementById("sched-status-text").textContent = status || "Not applied";
+        document.getElementById("btn-pause").disabled = status !== "ACTIVE";
+        document.getElementById("btn-resume").disabled = status !== "PAUSED";
+        document.getElementById("btn-trigger").disabled = !status;
+      }
+
+      async function pollScheduleStatus() {
+        try {
+          const res = await fetch("/schedule/status");
+          if (!res.ok) return;
+          const data = await res.json();
+
+          // As on the Queues tab: don't overwrite the input while it is being edited.
+          const input = document.getElementById("cron-input");
+          if (document.activeElement !== input) {
+            input.value = data.cron;
+          }
+
+          updateScheduleBadge(data.schedule_status);
+          const counts = data.workflow_counts || {};
+          renderCounts("sched-wf-counts", counts, 500);
+          document.querySelector(".sched-body").classList.toggle("step-highlight", (counts["PENDING"] || 0) >= 1);
+        } catch (error) {}
+      }
+
+      async function sendScheduleRequest(path, options) {
+        const errorEl = document.getElementById("sched-error");
+        try {
+          const res = await fetch("/schedule/" + path, { method: "POST", ...options });
+          const message = res.ok ? "" : await res.text();
+          errorEl.textContent = message;
+          errorEl.hidden = !message;
+        } catch (error) {}
+        await pollScheduleStatus();
+      }
+
+      function applySchedule() {
+        const cron = document.getElementById("cron-input").value.trim();
+        return sendScheduleRequest("apply", {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cron }),
+        });
+      }
+
+      function scheduleAction(action) {
+        return sendScheduleRequest(action);
+      }
+
+      // ============================================================
+      // QUEUES TAB
+      // ============================================================
+      const STATUS_ORDER = ["ENQUEUED", "PENDING", "SUCCESS", "ERROR", "CANCELLED"];
+
+      function statusClass(status) {
+        if (status === "ENQUEUED") return "enqueued";
+        if (status === "PENDING") return "pending";
+        if (status === "SUCCESS") return "success";
+        return "other";
+      }
+
+      // A status count per row, or a placeholder when there are none. A count at `limit` reads as
+      // that many or more, because the server stops counting there.
+      function renderCounts(elementId, counts, limit) {
+        const names = STATUS_ORDER.filter((s) => counts[s]).concat(
+          Object.keys(counts).filter((s) => !STATUS_ORDER.includes(s))
+        );
+        document.getElementById(elementId).innerHTML = names.length
+          ? names
+              .map(
+                (status) =>
+                  `<div class="wf-count-row"><span class="wf-count-label">${status}</span>` +
+                  `<span class="wf-count-value ${statusClass(status)}">${counts[status] >= limit ? limit + "+" : counts[status]}</span></div>`
+              )
+              .join("")
+          : `<div class="wf-count-row"><span class="wf-count-label">NONE YET</span></div>`;
+      }
+
+      async function pollQueueStatus() {
+        try {
+          const res = await fetch("/queue/status");
+          if (!res.ok) return;
+          const data = await res.json();
+
+          // Only overwrite the input while it is not being edited, so typing a new value is not
+          // clobbered by the poll that lands mid-keystroke.
+          const input = document.getElementById("concurrency-input");
+          if (document.activeElement !== input) {
+            input.value = data.worker_concurrency;
+          }
+
+          const counts = data.workflow_counts || {};
+          renderCounts("queue-wf-counts", counts, Infinity);
+
+          // Light up the workflow body while any of them is running.
+          const running = (counts["PENDING"] || 0) >= 1;
+          document.querySelectorAll(".queue-line-1, .queue-line-2, .queue-line-3").forEach((line) => {
+            line.classList.toggle("active", running);
+          });
+        } catch (error) {}
+      }
+
+      setInterval(() => { if (activeTab() === "schedules") pollScheduleStatus(); }, 800);
+      pollScheduleStatus();
+      setInterval(() => { if (activeTab() === "queues") pollQueueStatus(); }, 800);
+
+      async function enqueueWorkflows() {
+        await fetch("/queue/enqueue", { method: "POST" });
+        await pollQueueStatus();
+      }
+
+      async function applyQueueConcurrency() {
+        const concurrency = parseInt(document.getElementById("concurrency-input").value, 10);
+        await fetch("/queue/concurrency", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ concurrency }),
+        });
+        await pollQueueStatus();
+      }
+
+      // ============================================================
+      // EVENTS TAB
+      // ============================================================
+      let selectedKey = "shipped";
+
+      function pickKey(key, button) {
+        selectedKey = key;
+        document
+          .querySelectorAll("#event-key-picker .btn-mini")
+          .forEach((el) => el.classList.remove("active"));
+        button.classList.add("active");
+      }
+
+      async function startOrder() {
+        await fetch("/events/start", { method: "POST" });
+        document.getElementById("event-read-result").textContent = "";
+        await pollEvents();
+      }
+
+      async function pollEvents() {
+        try {
+          const res = await fetch("/events/status");
+          if (!res.ok) return;
+          const data = await res.json();
+          const el = document.getElementById("event-keys");
+          if (!data.workflow_id) {
+            el.innerHTML =
+              `<div class="wf-count-row"><span class="wf-count-label">NO ORDER YET</span></div>`;
+            return;
+          }
+          el.innerHTML = data.keys
+            .map((k) => {
+              const badge = k.value
+                ? `<span class="kv-value">${escapeHtml(k.value)}</span>`
+                : `<span class="wf-count-value waiting">WAITING</span>`;
+              return (
+                `<div class="wf-count-row"><span class="wf-count-label">${k.key.toUpperCase()}</span>` +
+                badge +
+                `</div>`
+              );
+            })
+            .join("");
+
+          // Light up the publishing loop while the order still has a key to write.
+          //
+          // `step-highlight` rather than `active`, which the Queues tab toggles: only the former
+          // has a rule behind it, so the latter has never shown anything.
+          const publishing = data.keys.some((k) => !k.value);
+          document.querySelectorAll(".event-line-1, .event-line-2").forEach((line) => {
+            line.classList.toggle("step-highlight", publishing);
+          });
+        } catch (error) {}
+      }
+
+      async function readEvent() {
+        const el = document.getElementById("event-read-result");
+        el.innerHTML = `waiting for <strong>${selectedKey}</strong>…`;
+        try {
+          const res = await fetch("/events/read", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: selectedKey }),
+          });
+          if (!res.ok) throw new Error(res.status);
+          const data = await res.json();
+          const seconds = (data.waited_ms / 1000).toFixed(1);
+          el.innerHTML =
+            data.value === null
+              ? `<span class="missing">not published</span> after ${seconds}s`
+              : `<span class="found">${escapeHtml(data.value)}</span> after ${seconds}s`;
+        } catch (error) {
+          el.textContent = "read failed";
+        }
+      }
+
+      // ============================================================
+      // MESSAGES TAB
+      // ============================================================
+      function decisionClass(decision) {
+        if (!decision) return "waiting";
+        if (decision === "approved") return "success";
+        if (decision === "rejected") return "rejected";
+        return "other";
+      }
+
+      async function startApproval() {
+        await fetch("/messages/start", { method: "POST" });
+        await pollApprovals();
+      }
+
+      async function respond(id, decision) {
+        await fetch("/messages/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workflow_id: id, decision }),
+        });
+        await pollApprovals();
+      }
+
+      async function respondAll(decision) {
+        await fetch("/messages/respond-all", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ decision }),
+        });
+        await pollApprovals();
+      }
+
+      async function pollApprovals() {
+        try {
+          const res = await fetch("/messages/status");
+          if (!res.ok) return;
+          const rows = await res.json();
+          const el = document.getElementById("approval-rows");
+          el.innerHTML = rows.length
+            ? rows
+                .map((row) => {
+                  const short = row.workflow_id.slice(0, 8);
+                  const right = row.decision
+                    ? `<span class="wf-count-value ${decisionClass(row.decision)}">` +
+                      `${row.decision.toUpperCase()}</span>`
+                    : `<span class="row-actions">` +
+                      `<button class="btn-mini" onclick="respond('${row.workflow_id}', 'approved')">Approve</button>` +
+                      `<button class="btn-mini reject" onclick="respond('${row.workflow_id}', 'rejected')">Reject</button>` +
+                      `</span>`;
+                  return (
+                    `<div class="wf-count-row"><span class="wf-count-label">${short}</span>` +
+                    right +
+                    `</div>`
+                  );
+                })
+                .join("")
+            : `<div class="wf-count-row"><span class="wf-count-label">NONE YET</span></div>`;
+
+          // Light up the recv while anything is still parked on it — see `pollEvents` on the
+          // class name.
+          const waiting = rows.some((row) => !row.decision);
+          document.querySelectorAll(".message-line-1, .message-line-2").forEach((line) => {
+            line.classList.toggle("step-highlight", waiting);
+          });
+        } catch (error) {}
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      setInterval(() => {
+        if (activeTab() === "events") pollEvents();
+        if (activeTab() === "messages") pollApprovals();
+      }, 800);
+
+      // ============================================================
+      // WORKFLOWS TAB
+      // ============================================================
+      function generateRandomString() {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        return Array.from(crypto.getRandomValues(new Uint8Array(6)))
+          .map((x) => chars[x % chars.length])
+          .join("");
+      }
+
+      let currentId = null;
+      let lastStep = 0;
+
+      const rows = [
+        document.getElementById("step-row-1"),
+        document.getElementById("step-row-2"),
+        document.getElementById("step-row-3"),
+      ];
+
+      // Restore an in-flight run from the URL on page load
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlId = urlParams.get("id");
+      if (urlId && urlId.length > 0) {
+        currentId = urlId;
+        enableCrashButton();
+      }
+
+      checkProgress();
+      setInterval(checkProgress, 1667);
+
+      function showReconnecting() {
+        document.getElementById("reconnecting").classList.add("show");
+      }
+      function hideReconnecting() {
+        document.getElementById("reconnecting").classList.remove("show");
+      }
+      function enableCrashButton() {
+        document.getElementById("crash-button").disabled = false;
+      }
+
+      function setState(row, state, text) {
+        row.className = "step " + state;
+        row.querySelector(".step-state").textContent = text;
+      }
+
+      // step = the 1-indexed step currently executing (lastStep + 1)
+      function updateStatusBox(step, error = false) {
+        rows.forEach((row, index) => {
+          const stepNum = index + 1;
+          if (stepNum < step) {
+            setState(row, "complete", "Completed");
+          } else if (stepNum === step && error) {
+            setState(row, "recover", "Disconnected");
+          } else if (stepNum === step) {
+            setState(row, "active", "Executing");
+          } else {
+            setState(row, "pending", "Waiting");
+          }
+        });
+      }
+
+      async function startBackgroundJob() {
+        const randomString = generateRandomString();
+        const params = new URLSearchParams(window.location.search);
+        params.set("id", randomString);
+        window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+
+        currentId = randomString;
+        await fetch(`/workflow/${encodeURIComponent(currentId)}`, { method: "POST" });
+        await checkProgress();
+        enableCrashButton();
+      }
+
+      async function crashApp() {
+        // Fire the crash request and ignore the inevitable connection error
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 100);
+          await fetch("/crash", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+        } catch (error) {}
+        await checkProgress();
+      }
+
+      function highlightCode(step) {
+        document.querySelectorAll(".step-highlight").forEach((el) => el.classList.remove("step-highlight"));
+        if (step >= 1 && step <= 3) {
+          const stepBlock = document.querySelector(`.step-${step}`);
+          if (stepBlock) stepBlock.classList.add("step-highlight");
+          const workflowLine = document.querySelector(`.workflow-step-${step}`);
+          if (workflowLine) workflowLine.classList.add("step-highlight");
+        }
+      }
+
+      async function checkProgress() {
+        if (!currentId) return;
+
+        try {
+          const response = await fetch(`/last_step/${encodeURIComponent(currentId)}`);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+          const step = Number(await response.text()) + 1;
+          lastStep = step;
+
+          if (step <= 3) {
+            updateStatusBox(step);
+            highlightCode(step);
+          } else {
+            // All steps done
+            rows.forEach((row) => setState(row, "complete", "Completed"));
+            highlightCode(0);
+            currentId = null;
+          }
+          hideReconnecting();
+        } catch (error) {
+          console.error("Error checking progress:", error);
+          showReconnecting();
+          updateStatusBox(lastStep, true);
+        }
+      }
+    </script>
+  </body>
+</html>

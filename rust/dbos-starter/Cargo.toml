@@ -1,0 +1,33 @@
+# The Workflows, Schedules, Queues, Events and Messages tabs of the DBOS starter app: launch a
+# workflow, crash the process, restart, and watch it resume at the step after the last one that
+# finished — then fan five workflows onto a queue that runs three at a time, and change that limit
+# without restarting.
+[package]
+name = "dbos-rust-starter"
+description = "DBOS Rust starter app"
+publish = false
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[dependencies]
+# Tracks the SDK's main until 0.6 is on crates.io. Replace with `dbos = "0.6"` when it is.
+dbos = { git = "https://github.com/dbos-inc/dbos-transact-rust", branch = "main" }
+
+axum = "0.8"
+# `signal` for the Ctrl-C that ends the serve loop, so `shutdown` is reached rather than skipped.
+# `sync` for the mutex guarding the queue demo's handles, which is held across an await.
+tokio = { version = "1", features = [
+    "macros",
+    "net",
+    "rt-multi-thread",
+    "signal",
+    "sync",
+    "time",
+] }
+# Derives only, for the Queues tab's JSON request and response bodies.
+serde = { version = "1", features = ["derive"] }
+tracing-subscriber = "0.3"
+
+# Stands alone: this repository has no Cargo workspace.
+[workspace]
