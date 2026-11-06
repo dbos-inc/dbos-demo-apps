@@ -554,6 +554,78 @@
       .concurrency-input:focus {
         border-color: var(--muted);
       }
+      /* ---- schedules tab ---- */
+      .cron-row {
+        display: flex;
+        gap: 8px;
+        align-items: stretch;
+      }
+      .cron-input {
+        flex: 1;
+        background: var(--code-bg);
+        border: 1px solid var(--ink-border);
+        border-radius: 2px;
+        color: var(--code-fg);
+        font-family: var(--mono);
+        font-size: 13px;
+        padding: 8px 12px;
+        outline: none;
+        transition: border-color 0.2s;
+        min-width: 0;
+      }
+      .cron-input:focus {
+        border-color: var(--muted);
+      }
+      .cron-row .btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .sched-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .sched-actions .btn {
+        flex: 1;
+        padding: 8px 10px;
+        font-size: 0.72rem;
+      }
+      .sched-error {
+        font-size: 12.5px;
+        color: var(--status-warning);
+        overflow-wrap: anywhere;
+      }
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 2px;
+        border: 1px solid currentColor;
+        align-self: flex-start;
+      }
+      .status-badge.active {
+        color: var(--status-success);
+        background: rgba(86, 166, 75, 0.1);
+      }
+      .status-badge.paused {
+        color: var(--status-warning);
+        background: rgba(229, 168, 47, 0.1);
+      }
+      .status-badge.unknown {
+        color: var(--muted);
+        background: rgba(163, 165, 170, 0.1);
+      }
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
       /* ---- events + messages tabs ---- */
       .wf-count-value.waiting {
         color: var(--status-warning);
@@ -627,6 +699,7 @@
       <h1>Build reliable software <span class="grad">effortlessly</span></h1>
       <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('workflows', this)">Workflows</button>
+        <button class="tab-btn" onclick="switchTab('schedules', this)">Schedules</button>
         <button class="tab-btn" onclick="switchTab('queues', this)">Queues</button>
         <button class="tab-btn" onclick="switchTab('events', this)">Events</button>
         <button class="tab-btn" onclick="switchTab('messages', this)">Messages</button>
@@ -712,6 +785,71 @@
             Check out the
             <a href="https://docs.dbos.dev/" target="_blank">DBOS docs</a>
             to learn how to build with DBOS.
+          </span>
+        </p>
+      </div>
+
+      <!-- ===== SCHEDULES TAB ===== -->
+      <div id="tab-schedules" class="tab-content">
+        <p class="lede">
+          DBOS durable workflows can be started on a cron-style <strong>schedule</strong>.
+          The schedule can be adjusted while the app is running.
+          <strong>A pause takes effect at the next tick, and other changes may take up to 30 seconds to propagate.</strong>
+        </p>
+        <p class="lede">
+          <strong>Try it:</strong> press Apply to start the schedule, and watch the runs add up.
+          A schedule is a row in the database, so it is still running after a restart.
+        </p>
+        <div class="grid">
+          <!-- code editor -->
+          <div class="card editor">
+            <div class="chrome">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="filename">main.rs</span>
+            </div>
+            <pre class="code"><span class="code-line"><span class="keyword">async fn</span> <span class="function">scheduled_workflow</span><span class="punct">(_:</span> ScheduledWorkflowInput<span class="punct">)</span> <span class="punct">-&gt;</span> dbos<span class="punct">::</span>Result<span class="punct">&lt;()<span class="punct">&gt;</span></span> <span class="punct">{</span></span><span class="code-block-step sched-body"><span class="code-line indent"><span class="function">println!</span><span class="punct">(</span><span class="string">"Scheduled workflow starting."</span><span class="punct">);</span></span><span class="code-line indent">dbos<span class="punct">::</span><span class="function">sleep</span><span class="punct">(</span>Duration<span class="punct">::</span><span class="function">from_secs</span><span class="punct">(</span><span class="num-lit">1</span><span class="punct">)).</span><span class="keyword">await</span><span class="punct">?;</span></span><span class="code-line indent"><span class="function">println!</span><span class="punct">(</span><span class="string">"Scheduled workflow ending."</span><span class="punct">);</span></span></span><span class="code-line indent"><span class="function">Ok</span><span class="punct">(())</span></span><span class="code-line"><span class="punct">}</span></span><span class="code-line"> </span><span class="code-line"><span class="keyword">let</span> spec <span class="punct">=</span> ScheduleSpec<span class="punct">::</span><span class="function">new</span><span class="punct">(</span></span><span class="code-line indent"><span class="string">"scheduled-workflow"</span><span class="punct">,</span> <span class="punct">&amp;</span>scheduled<span class="punct">,</span> <span class="string">"*/5 * * * * *"</span><span class="punct">,</span> <span class="punct">&amp;(),</span></span><span class="code-line"><span class="punct">)?;</span></span><span class="code-line">dbos<span class="punct">.</span><span class="function">apply_schedules</span><span class="punct">(&amp;[</span>spec<span class="punct">]).</span><span class="keyword">await</span><span class="punct">?;</span></span></pre>
+          </div>
+
+          <!-- schedule controls -->
+          <div class="card controls">
+            <h2>Schedule</h2>
+
+            <div class="cron-row">
+              <input
+                id="cron-input"
+                class="cron-input"
+                type="text"
+                value="*/5 * * * * *"
+                placeholder="cron expression"
+                spellcheck="false"
+              />
+              <button onclick="applySchedule()" class="btn btn-flashy">Apply</button>
+            </div>
+            <div id="sched-error" class="sched-error" hidden></div>
+
+            <div id="sched-status-badge" class="status-badge unknown">
+              <span class="status-dot"></span>
+              <span id="sched-status-text">Not applied</span>
+            </div>
+
+            <div class="sched-actions">
+              <button onclick="scheduleAction('pause')" id="btn-pause" class="btn btn-basic" disabled>Pause</button>
+              <button onclick="scheduleAction('resume')" id="btn-resume" class="btn btn-basic" disabled>Resume</button>
+              <button onclick="scheduleAction('trigger')" id="btn-trigger" class="btn btn-basic" disabled>Trigger</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>Workflows in the last 10 minutes:</h2>
+            <div id="sched-wf-counts" class="wf-counts"></div>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="line">
+            Check out the
+            <a href="https://docs.dbos.dev/rust/tutorials/scheduled-workflows" target="_blank">scheduling guide</a>
+            to learn how to run workflows on a cron schedule.
           </span>
         </p>
       </div>
@@ -886,6 +1024,60 @@
       }
 
       // ============================================================
+      // SCHEDULES TAB
+      // ============================================================
+      function updateScheduleBadge(status) {
+        const badge = document.getElementById("sched-status-badge");
+        badge.className = "status-badge " + (status ? status.toLowerCase() : "unknown");
+        document.getElementById("sched-status-text").textContent = status || "Not applied";
+        document.getElementById("btn-pause").disabled = status !== "ACTIVE";
+        document.getElementById("btn-resume").disabled = status !== "PAUSED";
+        document.getElementById("btn-trigger").disabled = !status;
+      }
+
+      async function pollScheduleStatus() {
+        try {
+          const res = await fetch("/schedule/status");
+          if (!res.ok) return;
+          const data = await res.json();
+
+          // As on the Queues tab: don't overwrite the input while it is being edited.
+          const input = document.getElementById("cron-input");
+          if (document.activeElement !== input) {
+            input.value = data.cron;
+          }
+
+          updateScheduleBadge(data.schedule_status);
+          const counts = data.workflow_counts || {};
+          renderCounts("sched-wf-counts", counts, 500);
+          document.querySelector(".sched-body").classList.toggle("step-highlight", (counts["PENDING"] || 0) >= 1);
+        } catch (error) {}
+      }
+
+      async function sendScheduleRequest(path, options) {
+        const errorEl = document.getElementById("sched-error");
+        try {
+          const res = await fetch("/schedule/" + path, { method: "POST", ...options });
+          const message = res.ok ? "" : await res.text();
+          errorEl.textContent = message;
+          errorEl.hidden = !message;
+        } catch (error) {}
+        await pollScheduleStatus();
+      }
+
+      function applySchedule() {
+        const cron = document.getElementById("cron-input").value.trim();
+        return sendScheduleRequest("apply", {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cron }),
+        });
+      }
+
+      function scheduleAction(action) {
+        return sendScheduleRequest(action);
+      }
+
+      // ============================================================
       // QUEUES TAB
       // ============================================================
       const STATUS_ORDER = ["ENQUEUED", "PENDING", "SUCCESS", "ERROR", "CANCELLED"];
@@ -895,6 +1087,23 @@
         if (status === "PENDING") return "pending";
         if (status === "SUCCESS") return "success";
         return "other";
+      }
+
+      // A status count per row, or a placeholder when there are none. A count at `limit` reads as
+      // that many or more, because the server stops counting there.
+      function renderCounts(elementId, counts, limit) {
+        const names = STATUS_ORDER.filter((s) => counts[s]).concat(
+          Object.keys(counts).filter((s) => !STATUS_ORDER.includes(s))
+        );
+        document.getElementById(elementId).innerHTML = names.length
+          ? names
+              .map(
+                (status) =>
+                  `<div class="wf-count-row"><span class="wf-count-label">${status}</span>` +
+                  `<span class="wf-count-value ${statusClass(status)}">${counts[status] >= limit ? limit + "+" : counts[status]}</span></div>`
+              )
+              .join("")
+          : `<div class="wf-count-row"><span class="wf-count-label">NONE YET</span></div>`;
       }
 
       async function pollQueueStatus() {
@@ -911,19 +1120,7 @@
           }
 
           const counts = data.workflow_counts || {};
-          const names = STATUS_ORDER.filter((s) => counts[s]).concat(
-            Object.keys(counts).filter((s) => !STATUS_ORDER.includes(s))
-          );
-          const el = document.getElementById("queue-wf-counts");
-          el.innerHTML = names.length
-            ? names
-                .map(
-                  (status) =>
-                    `<div class="wf-count-row"><span class="wf-count-label">${status}</span>` +
-                    `<span class="wf-count-value ${statusClass(status)}">${counts[status]}</span></div>`
-                )
-                .join("")
-            : `<div class="wf-count-row"><span class="wf-count-label">NONE YET</span></div>`;
+          renderCounts("queue-wf-counts", counts, Infinity);
 
           // Light up the workflow body while any of them is running.
           const running = (counts["PENDING"] || 0) >= 1;
@@ -933,6 +1130,8 @@
         } catch (error) {}
       }
 
+      setInterval(() => { if (activeTab() === "schedules") pollScheduleStatus(); }, 800);
+      pollScheduleStatus();
       setInterval(() => { if (activeTab() === "queues") pollQueueStatus(); }, 800);
 
       async function enqueueWorkflows() {

@@ -1,6 +1,7 @@
-# The Workflows, Queues, Events and Messages tabs of the DBOS starter app: launch a workflow, crash
-# the process, restart, and watch it resume at the step after the last one that finished — then fan
-# five workflows onto a queue that runs three at a time, and change that limit without restarting.
+# The Workflows, Schedules, Queues, Events and Messages tabs of the DBOS starter app: launch a
+# workflow, crash the process, restart, and watch it resume at the step after the last one that
+# finished — then fan five workflows onto a queue that runs three at a time, and change that limit
+# without restarting.
 [package]
 name = "dbos-rust-starter"
 description = "DBOS Rust starter app"

@@ -1,10 +1,13 @@
 # DBOS Rust Starter
 
-The Workflows, Queues, Events and Messages tabs of the DBOS starter app.
+The Workflows, Schedules, Queues, Events and Messages tabs of the DBOS starter app.
 
 **Workflows** is a three-step workflow that checkpoints each step to Postgres, a progress display,
 and a crash button. Launch a workflow, crash the app, restart it — execution resumes at the step
 after the last one that finished, with no application code involved.
+
+**Schedules** is a workflow that runs on a cron expression, which can be changed, paused and
+resumed while the app runs.
 
 **Queues** is a fan-out under a concurrency limit. Enqueue five workflows against a queue that
 allows three at a time, and watch three run while two wait.
@@ -35,6 +38,14 @@ export DBOS_SYSTEM_DATABASE_URL=postgres://user:password@host:5432/dbname
 Open <http://localhost:8080>, launch a workflow, and crash the app mid-run. Restart it with
 `cargo run` again — `launch()` recovers the workflow, the steps that already
 finished do not run again, and the progress display picks up where it left off.
+
+Then open the **Schedules** tab and press Apply, which creates a schedule that runs a workflow every
+five seconds. The schedule is a row in the database rather than something this process holds, so
+every copy of the app sees the same one, and it is still running after a restart. Change the cron
+expression and press Apply again, or use Pause and Resume. A pause takes effect at the next tick,
+because each schedule re-reads its row before firing. Other changes wait for the scheduler to re-read
+the table, every 30 seconds, or every second for the first minute after launch. Trigger runs the
+workflow once right away, whatever the cron expression says.
 
 Then open the Queues tab and press "Enqueue 5 workflows". Three go `PENDING` and two stay
 `ENQUEUED`, because `demo-queue` is registered with `worker_concurrency: 3`. The part worth

@@ -1,10 +1,15 @@
-//! The DBOS Rust starter: the Workflows, Queues, Events and Messages tabs of the starter app.
+//! The DBOS Rust starter: the Workflows, Schedules, Queues, Events and Messages tabs of the starter
+//! app.
 //!
 //! **Workflows** is three steps, five seconds each, a progress event after each — and a crash
 //! button. Launch a workflow, crash the process, restart it, and watch execution resume at the
 //! step after the last one that finished. Durable execution is the whole demo: the crash-and-resume
 //! needs no application code at all, because `launch()` recovers whatever the previous run
 //! abandoned.
+//!
+//! **Schedules** is a workflow that runs on a cron expression. The schedule is a row rather than
+//! something this process holds, so it can be changed, paused and resumed while the app runs, and
+//! it is still there after a restart.
 //!
 //! **Events** is a key/value a workflow publishes as it goes, and anyone reads by name. The
 //! Workflows tab already leans on one event for its progress bar; what this tab adds is the half
@@ -30,9 +35,10 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use dbos::sysdb::types::{Timestamp, WorkflowFilter};
 use dbos::{
-    Change, Config, DBOS, QueueChange, QueueOptions, QueueRequest, StartOptions, WorkflowHandle,
-    WorkflowRef,
+    Change, Config, DBOS, QueueChange, QueueOptions, QueueRequest, ScheduleSpec,
+    ScheduledWorkflowInput, StartOptions, WorkflowHandle, WorkflowRef,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -42,6 +48,19 @@ use tokio::sync::Mutex;
 /// The key the workflow publishes its progress under, and the UI polls.
 const STEPS_EVENT: &str = "steps_event";
 const STEP_DURATION: Duration = Duration::from_secs(5);
+
+/// The schedule the Schedules tab manages.
+const SCHEDULE_NAME: &str = "scheduled-workflow";
+
+/// The name the scheduled workflow is registered under, which the tab counts its runs by.
+const SCHEDULED_WORKFLOW: &str = "ScheduledWorkflow";
+
+/// Every five seconds. Six fields, so the first is the seconds.
+const DEFAULT_CRON: &str = "*/5 * * * * *";
+
+/// How far back, and how many of, the Schedules tab counts runs.
+const SCHEDULE_COUNT_WINDOW_MS: i64 = 10 * 60 * 1000;
+const SCHEDULE_COUNT_LIMIT: i64 = 500;
 
 /// The queue the fan-out demo enqueues onto.
 const QUEUE_NAME: &str = "demo-queue";
@@ -155,6 +174,13 @@ async fn step_three() -> dbos::Result<()> {
 /// The Workflows tab publishes a step *count*; this publishes what actually happened, under keys a
 /// reader asks for by name. Setting a key again would replace it — these are three distinct keys,
 /// so all three stay readable once written, including after the workflow has finished.
+async fn scheduled_workflow(_: ScheduledWorkflowInput) -> dbos::Result<()> {
+    println!("Scheduled workflow starting.");
+    dbos::sleep(Duration::from_secs(1)).await?;
+    println!("Scheduled workflow ending.");
+    Ok(())
+}
+
 async fn order_workflow(_: ()) -> dbos::Result<String> {
     for key in ORDER_KEYS {
         dbos::sleep(ORDER_STEP).await?;
@@ -201,6 +227,7 @@ async fn enqueued_workflow(_: ()) -> dbos::Result<String> {
 struct App {
     dbos: DBOS,
     example: WorkflowRef<(), String>,
+    scheduled: WorkflowRef<ScheduledWorkflowInput, ()>,
     enqueued: WorkflowRef<(), String>,
     /// Handles for what this process has put on the queue, so the tab can report their statuses.
     ///
@@ -230,6 +257,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     config.app_version = Some(APP_VERSION.to_owned());
     let dbos = DBOS::new(config);
     let example = dbos.register_workflow("ExampleWorkflow", example_workflow)?;
+    let scheduled = dbos.register_workflow(SCHEDULED_WORKFLOW, scheduled_workflow)?;
     let enqueued = dbos.register_workflow("EnqueuedWorkflow", enqueued_workflow)?;
     let order = dbos.register_workflow("OrderWorkflow", order_workflow)?;
     let approval = dbos.register_workflow(APPROVAL_WORKFLOW, approval_workflow)?;
@@ -254,6 +282,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = App {
         dbos: dbos.clone(),
         example,
+        scheduled,
         enqueued,
         queued: Arc::default(),
         order,
@@ -265,6 +294,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/workflow/{task_id}", post(start_workflow))
         .route("/last_step/{task_id}", get(last_step))
         .route("/crash", post(crash))
+        .route("/schedule/status", get(schedule_status))
+        .route("/schedule/apply", post(schedule_apply))
+        .route("/schedule/pause", post(schedule_pause))
+        .route("/schedule/resume", post(schedule_resume))
+        .route("/schedule/trigger", post(schedule_trigger))
         .route("/queue/status", get(queue_status))
         .route("/queue/enqueue", post(queue_enqueue))
         .route("/queue/concurrency", post(queue_concurrency))
@@ -334,6 +368,91 @@ async fn last_step(
         .get_event(&task_id, STEPS_EVENT, Duration::ZERO)
         .await?;
     Ok(step.unwrap_or(0).to_string())
+}
+
+/// What the Schedules tab polls: the schedule as stored, and what its runs are doing.
+#[derive(Serialize)]
+struct ScheduleStatus {
+    cron: String,
+    /// `ACTIVE` or `PAUSED`, or null until the Apply button has created the schedule.
+    schedule_status: Option<&'static str>,
+    /// Runs in the last ten minutes, keyed by status name.
+    workflow_counts: std::collections::BTreeMap<&'static str, usize>,
+}
+
+async fn schedule_status(State(app): State<App>) -> Result<Json<ScheduleStatus>, AppError> {
+    let schedule = app.dbos.get_schedule(SCHEDULE_NAME).await?;
+    let (cron, schedule_status) = match &schedule {
+        Some(schedule) => (schedule.schedule(), Some(schedule.status().as_str())),
+        None => (DEFAULT_CRON, None),
+    };
+
+    let runs = app
+        .dbos
+        .list_workflows(&WorkflowFilter {
+            names: vec![SCHEDULED_WORKFLOW],
+            created_after: Some(Timestamp::from_epoch_ms(
+                Timestamp::now().as_epoch_ms() - SCHEDULE_COUNT_WINDOW_MS,
+            )),
+            limit: Some(SCHEDULE_COUNT_LIMIT),
+            load_input: false,
+            load_output: false,
+            ..Default::default()
+        })
+        .await?;
+    let mut workflow_counts = std::collections::BTreeMap::new();
+    for run in &runs {
+        *workflow_counts.entry(run.status.as_str()).or_default() += 1;
+    }
+
+    Ok(Json(ScheduleStatus {
+        cron: cron.to_owned(),
+        schedule_status,
+        workflow_counts,
+    }))
+}
+
+#[derive(Deserialize)]
+struct ApplyScheduleRequest {
+    cron: Option<String>,
+}
+
+/// **The Apply button: a schedule created or changed while the app runs.**
+///
+/// `apply_schedules` keeps a schedule's status, so re-applying wouldn't resume a paused one. The
+/// resume is what makes Apply always leave it active.
+async fn schedule_apply(
+    State(app): State<App>,
+    Json(request): Json<ApplyScheduleRequest>,
+) -> Result<(), AppError> {
+    let cron = request
+        .cron
+        .as_deref()
+        .map(str::trim)
+        .filter(|cron| !cron.is_empty())
+        .unwrap_or(DEFAULT_CRON);
+    let spec = ScheduleSpec::new(SCHEDULE_NAME, &app.scheduled, cron, &())?;
+    app.dbos.apply_schedules(&[spec]).await?;
+    app.dbos.resume_schedule(SCHEDULE_NAME).await?;
+    Ok(())
+}
+
+async fn schedule_pause(State(app): State<App>) -> Result<(), AppError> {
+    app.dbos.pause_schedule(SCHEDULE_NAME).await?;
+    Ok(())
+}
+
+async fn schedule_resume(State(app): State<App>) -> Result<(), AppError> {
+    app.dbos.resume_schedule(SCHEDULE_NAME).await?;
+    Ok(())
+}
+
+/// One run now, outside the cron expression, and whether or not the schedule is paused.
+async fn schedule_trigger(State(app): State<App>) -> Result<(), AppError> {
+    app.dbos
+        .trigger_schedule::<(), dbos::EngineOnly>(SCHEDULE_NAME)
+        .await?;
+    Ok(())
 }
 
 /// What the Queues tab polls: the limit currently stored, and what this app's enqueued workflows
