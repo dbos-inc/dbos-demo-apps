@@ -1,12 +1,12 @@
 # Durable Honey Badger
 
+![A cobra bites the badger, and rewinding the workflow takes the game back to an earlier checkpoint](honeybadger.gif)
+
 A small pixel-art maze game that shows off non-deterministic DBOS workflows and rewinding.
 You steer a honey badger through a maze with hidden regions, eat honey, dodge cobras, and
 find the den. Every game is a DBOS workflow, and every move is checkpointed. When a cobra
 gets the badger, you rewind the workflow to an earlier checkpoint and try again. You can also
 kill the server process mid-game, start it again, and watch DBOS pick the game back up.
-
-![A cobra bites the badger, and rewinding the workflow takes the game back to an earlier checkpoint](honeybadger.gif)
 
 ## Setup
 
