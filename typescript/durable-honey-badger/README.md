@@ -6,6 +6,8 @@ find the den. Every game is a DBOS workflow, and every move is checkpointed. Whe
 gets the badger, you rewind the workflow to an earlier checkpoint and try again. You can also
 kill the server process mid-game, start it again, and watch DBOS pick the game back up.
 
+![A cobra bites the badger, and rewinding the workflow takes the game back to an earlier checkpoint](honeybadger.gif)
+
 ## Setup
 
 You need Node 22.18+ (it runs the TypeScript directly).
