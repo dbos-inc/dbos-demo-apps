@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Durable Honey Badger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" id="favicon" href="data:,">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <canvas id="logo" width="16" height="16" aria-hidden="true"></canvas>
+      <div>
+        <h1>DURABLE HONEY BADGER</h1>
+        <p>a maze crawl powered by DBOS workflows</p>
+      </div>
+    </div>
+    <div class="server" id="server"><span class="dot"></span><span id="server-text">connecting…</span></div>
+  </header>
+
+  <main class="layout">
+    <section class="game">
+      <div class="hud">
+        <div class="stat honey"><span class="k">HONEY</span><span class="v" id="hud-honey">0</span></div>
+        <div class="stat"><span class="k">TURN</span><span class="v" id="hud-turn">0</span></div>
+        <div class="stat"><span class="k">POTS</span><span class="v" id="hud-pots">0/0</span></div>
+        <div class="stat"><span class="k">REGIONS</span><span class="v" id="hud-zones">1/6</span></div>
+        <div class="stat"><span class="k">REWINDS</span><span class="v" id="hud-rewinds">0</span></div>
+        <div class="stat sniff" id="hud-sniff-wrap"><span class="k">SNIFF</span><span class="v" id="hud-sniff">nothing</span></div>
+      </div>
+
+      <div class="screen" id="screen">
+        <canvas id="view" aria-label="maze"></canvas>
+
+        <div class="crash hidden" id="crash">
+          <div class="static"></div>
+          <div class="crash-box">
+            <div class="crash-title">SERVER DOWN</div>
+            <ol class="term" id="crash-term"></ol>
+          </div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+      </div>
+
+      <!-- Rewind / game-over panel. Lives under the map on narrow screens; game.js moves it
+           to the top of the DBOS column on wide screens so it never covers the maze. -->
+      <div class="sheet hidden" id="sheet" role="dialog" aria-modal="false">
+        <div class="sheet-title" id="sheet-title"></div>
+        <div class="sheet-sub" id="sheet-sub"></div>
+        <div class="rewind-ui" id="rewind-ui">
+          <div class="slider-row">
+            <button class="btn small" id="rw-first" title="first checkpoint">|&lt;</button>
+            <button class="btn small" id="rw-prev" title="one turn back">&lt;</button>
+            <input type="range" id="rw-range" min="0" max="0" value="0" aria-label="checkpoint">
+            <button class="btn small" id="rw-next" title="one turn forward">&gt;</button>
+          </div>
+          <div class="rw-label">back to <b>turn <span id="rw-turn">0</span></b> · erases <b id="rw-drop">0</b> checkpoints</div>
+          <pre class="code" id="rw-code"></pre>
+        </div>
+        <div class="sheet-actions">
+          <button class="btn primary" id="sheet-go"></button>
+          <button class="btn" id="sheet-alt"></button>
+        </div>
+      </div>
+
+      <div class="msg"><span id="msg-text"></span><span class="sniff" id="msg-sniff"></span></div>
+
+      <div class="controls">
+        <button class="btn" id="btn-new">NEW GAME</button>
+        <button class="btn" id="btn-rewind">REWIND</button>
+      </div>
+
+      <div class="dpad" id="dpad">
+        <button class="btn" data-dir="up" style="grid-area: up">▲</button>
+        <button class="btn" data-dir="left" style="grid-area: left">◀</button>
+        <button class="btn" data-dir="wait" style="grid-area: wait">·</button>
+        <button class="btn" data-dir="right" style="grid-area: right">▶</button>
+        <button class="btn" data-dir="down" style="grid-area: down">▼</button>
+      </div>
+      <p class="keys"><b>ARROWS / WASD</b> move · <b>SPACE</b> wait a turn · <b>R</b> rewind · cobras move when you do</p>
+    </section>
+
+    <aside class="dbos">
+      <div class="card games">
+        <h2>GAMES <small>one workflow each · DBOS.listWorkflows()</small></h2>
+        <ol id="games" class="games-list" aria-label="past games"></ol>
+      </div>
+
+      <div class="card log">
+        <h2>CHECKPOINT LOG <small id="log-meta">DBOS.listWorkflowSteps()</small></h2>
+        <ol id="steps"></ol>
+      </div>
+    </aside>
+  </main>
+
+  <script src="sprites.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
