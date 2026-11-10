@@ -1,6 +1,0 @@
-{
-  "watch": ["src/", "migrations/", "public/"],
-  "ext": "ts,json,liquid,js",
-  "ignore": ["src/**/*.test.ts"],
-  "exec": "npm run build && npm run db:setup && npm run start"
-}

@@ -4,22 +4,21 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
-    "dev": "nodemon",
+    "dev": "tsc -p tsconfig.json && (tsc -p tsconfig.json --watch --preserveWatchOutput & node --watch-path=dist --watch-preserve-output dist/main.js)",
     "prelaunch": "npm run build",
     "launch": "npm run start",
     "db:setup": "tsx setup-db.mts"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
-    "nodemon": "^3.1.10",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-enterprise": "^5.3.0",
-    "@dbos-inc/dbos-sdk": "^5.3.0",
-    "@dbos-inc/knex-datasource": "^5.3.0",
-    "@dbos-inc/otel": "^5.3.0",
+    "@dbos-inc/dbos-enterprise": "^5.5.0",
+    "@dbos-inc/dbos-sdk": "^5.5.0",
+    "@dbos-inc/knex-datasource": "^5.5.0",
+    "@dbos-inc/otel": "^5.5.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0"
   }

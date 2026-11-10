@@ -6,24 +6,23 @@
     "test": "PGDATABASE=widget_store_test jest --detectOpenHandles",
     "db:setup": "tsx setup-db.mts",
     "start": "node dist/main.js",
-    "dev": "nodemon"
+    "dev": "tsc && npm run db:setup && (tsc --watch --preserveWatchOutput & node --watch-path=dist --watch-path=public --watch-preserve-output dist/main.js)"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/pg": "^8.11.11",
     "@types/uuid": "^9.0.8",
     "jest": "^29.7.0",
-    "nodemon": "^3.1.4",
     "pg": "^8.14.1",
     "prettier": "^3.5.3",
     "ts-jest": "^29.3.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@dbos-inc/dbos-enterprise": "^5.3.0",
-    "@dbos-inc/dbos-sdk": "^5.3.0",
-    "@dbos-inc/knex-datasource": "^5.3.0",
-    "@dbos-inc/otel": "^5.3.0",
+    "@dbos-inc/dbos-enterprise": "^5.5.0",
+    "@dbos-inc/dbos-sdk": "^5.5.0",
+    "@dbos-inc/knex-datasource": "^5.5.0",
+    "@dbos-inc/otel": "^5.5.0",
     "fastify": "^5.2.2",
     "liquidjs": "^10.10.1",
     "ts-node": "^10.9.2",
