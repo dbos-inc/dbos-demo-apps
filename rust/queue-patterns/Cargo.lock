@@ -303,8 +303,9 @@ dependencies = [
 
 [[package]]
 name = "dbos"
-version = "0.6.0-dev"
-source = "git+https://github.com/dbos-inc/dbos-transact-rust?branch=main#ece3d481322429f2f46bab224a29d4c9f3136cc1"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52002b63cc5090beac80d464aa659e1332b93e20ce6ae4756a9cd3c8e1d57488"
 dependencies = [
  "async-trait",
  "croner",
@@ -324,8 +325,9 @@ dependencies = [
 
 [[package]]
 name = "dbos-macros"
-version = "0.6.0-dev"
-source = "git+https://github.com/dbos-inc/dbos-transact-rust?branch=main#ece3d481322429f2f46bab224a29d4c9f3136cc1"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d9ebd34b565cf3b8beebf87000d74cb084a10e8c66ece414bb619c3c17d13da"
 dependencies = [
  "proc-macro2",
  "quote",

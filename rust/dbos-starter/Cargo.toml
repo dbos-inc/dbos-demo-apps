@@ -11,8 +11,7 @@ edition = "2024"
 license = "MIT"
 
 [dependencies]
-# Tracks the SDK's main until 0.6 is on crates.io. Replace with `dbos = "0.6"` when it is.
-dbos = { git = "https://github.com/dbos-inc/dbos-transact-rust", branch = "main" }
+dbos = "0.6"
 
 axum = "0.8"
 # `signal` for the Ctrl-C that ends the serve loop, so `shutdown` is reached rather than skipped.
