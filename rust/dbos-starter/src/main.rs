@@ -674,6 +674,20 @@ async fn approval_ids(app: &App) -> Result<Vec<String>, AppError> {
     Ok(rows.into_iter().map(|row| row.workflow_id).collect())
 }
 
+/// Every request still running, however many there are: the tab shows only the newest
+/// [`APPROVAL_LIST_LIMIT`], but "approve all" must reach the older ones too.
+async fn waiting_approval_ids(app: &App) -> Result<Vec<String>, AppError> {
+    let rows = app
+        .dbos
+        .list_workflows(&dbos::sysdb::types::WorkflowFilter {
+            names: vec![APPROVAL_WORKFLOW],
+            status: vec![dbos::sysdb::types::WorkflowStatus::Pending],
+            ..Default::default()
+        })
+        .await?;
+    Ok(rows.into_iter().map(|row| row.workflow_id).collect())
+}
+
 /// Every request in the database, newest first, each with its decision if it has one.
 async fn messages_status(State(app): State<App>) -> Result<Json<Vec<Approval>>, AppError> {
     let ids = approval_ids(&app).await?;
@@ -735,7 +749,7 @@ async fn messages_respond_all(
     State(app): State<App>,
     Json(request): Json<RespondAllRequest>,
 ) -> Result<String, AppError> {
-    let ids = approval_ids(&app).await?;
+    let ids = waiting_approval_ids(&app).await?;
     let mut waiting = Vec::new();
     for id in ids {
         let decided: Option<String> = app

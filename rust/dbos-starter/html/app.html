@@ -1041,11 +1041,8 @@
           if (!res.ok) return;
           const data = await res.json();
 
-          // As on the Queues tab: don't overwrite the input while it is being edited.
-          const input = document.getElementById("cron-input");
-          if (document.activeElement !== input) {
-            input.value = data.cron;
-          }
+          // As on the Queues tab: don't overwrite an edit that hasn't been applied yet.
+          showServerValue(document.getElementById("cron-input"), data.cron);
 
           updateScheduleBadge(data.schedule_status);
           const counts = data.workflow_counts || {};
@@ -1054,27 +1051,36 @@
         } catch (error) {}
       }
 
+      // Returns whether the server accepted the request.
       async function sendScheduleRequest(path, options) {
         const errorEl = document.getElementById("sched-error");
+        let ok = false;
         try {
           const res = await fetch("/schedule/" + path, { method: "POST", ...options });
+          ok = res.ok;
           const message = res.ok ? "" : await res.text();
           errorEl.textContent = message;
           errorEl.hidden = !message;
         } catch (error) {}
-        await pollScheduleStatus();
+        return ok;
       }
 
-      function applySchedule() {
-        const cron = document.getElementById("cron-input").value.trim();
-        return sendScheduleRequest("apply", {
+      async function applySchedule() {
+        const input = document.getElementById("cron-input");
+        const cron = input.value.trim();
+        const ok = await sendScheduleRequest("apply", {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ cron }),
         });
+        // Accepted, so the box shows the server's value again. Refused, so the edit stays for
+        // the user to correct beside the error.
+        if (ok) appliedEdit(input);
+        await pollScheduleStatus();
       }
 
-      function scheduleAction(action) {
-        return sendScheduleRequest(action);
+      async function scheduleAction(action) {
+        await sendScheduleRequest(action);
+        await pollScheduleStatus();
       }
 
       // ============================================================
@@ -1112,12 +1118,8 @@
           if (!res.ok) return;
           const data = await res.json();
 
-          // Only overwrite the input while it is not being edited, so typing a new value is not
-          // clobbered by the poll that lands mid-keystroke.
-          const input = document.getElementById("concurrency-input");
-          if (document.activeElement !== input) {
-            input.value = data.worker_concurrency;
-          }
+          // Don't overwrite an edit that hasn't been applied yet.
+          showServerValue(document.getElementById("concurrency-input"), data.worker_concurrency);
 
           const counts = data.workflow_counts || {};
           renderCounts("queue-wf-counts", counts, Infinity);
@@ -1140,12 +1142,16 @@
       }
 
       async function applyQueueConcurrency() {
-        const concurrency = parseInt(document.getElementById("concurrency-input").value, 10);
-        await fetch("/queue/concurrency", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ concurrency }),
-        });
+        const input = document.getElementById("concurrency-input");
+        const concurrency = parseInt(input.value, 10);
+        try {
+          const res = await fetch("/queue/concurrency", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ concurrency }),
+          });
+          if (res.ok) appliedEdit(input);
+        } catch (error) {}
         await pollQueueStatus();
       }
 
@@ -1269,7 +1275,7 @@
                   const short = row.workflow_id.slice(0, 8);
                   const right = row.decision
                     ? `<span class="wf-count-value ${decisionClass(row.decision)}">` +
-                      `${row.decision.toUpperCase()}</span>`
+                      `${escapeHtml(row.decision.toUpperCase())}</span>`
                     : `<span class="row-actions">` +
                       `<button class="btn-mini" onclick="respond('${row.workflow_id}', 'approved')">Approve</button>` +
                       `<button class="btn-mini reject" onclick="respond('${row.workflow_id}', 'rejected')">Reject</button>` +
@@ -1290,6 +1296,22 @@
             line.classList.toggle("step-highlight", waiting);
           });
         } catch (error) {}
+      }
+
+      // Shows a polled server value in an input without discarding an edit nobody has applied.
+      // The input remembers the last server value it showed; while its text still matches that,
+      // it follows the server, and once someone types something else it keeps their edit, focused
+      // or not, until appliedEdit() hands it back to the server.
+      function showServerValue(input, value) {
+        const shown = input.dataset.serverValue;
+        const edited = shown !== undefined && input.value !== shown;
+        if (edited || document.activeElement === input) return;
+        input.value = value;
+        input.dataset.serverValue = input.value;
+      }
+
+      function appliedEdit(input) {
+        delete input.dataset.serverValue;
       }
 
       function escapeHtml(text) {
