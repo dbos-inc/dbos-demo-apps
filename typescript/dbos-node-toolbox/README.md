@@ -51,8 +51,8 @@ The launch script has a pre-step to build the app automatically.
 npm run launch
 ```
 
-Alternatively, you can run the application with [`nodemon`](https://nodemon.io/)
-to enable automatic restart when the application changes.
+Alternatively, you can run the application in watch mode (using `tsc --watch` and Node.js's built-in `--watch`)
+to automatically rebuild and restart when the application changes.
 
 ```shell
 npm run dev

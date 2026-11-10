@@ -23,7 +23,7 @@
     "rootDir": ".",
     "types": [
       "node",
-      "jest"
+      "vitest/globals"
     ],
     "strict": false
   }
