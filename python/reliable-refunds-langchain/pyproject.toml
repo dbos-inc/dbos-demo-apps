@@ -12,7 +12,7 @@ dependencies = [
     "fastapi[standard]>=0.136.1",
     "langgraph-checkpoint-sqlite>=3.1.0",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "MIT"}
 

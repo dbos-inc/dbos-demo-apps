@@ -62,5 +62,10 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "overrides": {
+    "minimatch@>=7.0.0 <11.0.1": "^11.0.1",
+    "glob@>=9.0.0 <14.0.2": "^14.0.2",
+    "multer": "^2.5.0"
   }
 }
