@@ -40,12 +40,6 @@
     "drizzle-orm": "^0.45.2",
     "tsx": "^4.19.1"
   },
-  "overrides": {
-    "prismjs": "^1.30.0",
-    "@esbuild-kit/core-utils": {
-      "esbuild": "^0.25.12"
-    }
-  },
   "devDependencies": {
     "@ai-sdk/provider": "^3.0.5",
     "@biomejs/biome": "1.9.4",
