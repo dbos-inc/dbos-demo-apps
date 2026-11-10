@@ -44,9 +44,7 @@
     "prismjs": "^1.30.0",
     "@esbuild-kit/core-utils": {
       "esbuild": "^0.25.12"
-    },
-    "katex": "^0.18.2",
-    "postcss-selector-parser": "^6.1.5"
+    }
   },
   "devDependencies": {
     "@ai-sdk/provider": "^3.0.5",
