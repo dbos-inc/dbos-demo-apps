@@ -2,6 +2,9 @@ dbos:
   application:
     name: "widget-store"
     version: "0.2.0"
+  # To connect to DBOS Conductor, set the DBOS_CONDUCTOR_KEY environment variable,
+  # which Spring binds to dbos.conductor.key. Don't add dbos.conductor.key here with an
+  # empty default: any key that is set, even an empty one, makes DBOS connect to Conductor.
 
 # Because this configuration does not specify dbos.datasource properties,
 # DBOS will fall back to using the spring.datasource for its system database.
