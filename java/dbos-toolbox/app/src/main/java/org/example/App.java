@@ -191,7 +191,7 @@ public class App {
                         dbos.launch();
                         debouncerRef.set(
                             dbos.<Void>debouncer().withDebounceTimeout(Duration.ofMinutes(1)));
-                        dbos.registerQueue("example-queue", QueueOptions.empty());
+                        dbos.registerQueue("example-queue", new QueueOptions());
                         dbos.applySchedules(
                             new WorkflowSchedule(
                                 "run_every_min",

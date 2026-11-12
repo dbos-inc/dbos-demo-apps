@@ -245,10 +245,10 @@ fun main() {
 
       config.events.serverStarting {
         dbos.launch()
-        dbos.registerQueue(CONCURRENCY_QUEUE, QueueOptions.setWorkerConcurrency(4))
-        dbos.registerQueue(PARTITIONED_QUEUE, QueueOptions.setPartitionConcurrency(2))
-        dbos.registerQueue(RATE_LIMITED_QUEUE, QueueOptions.setRateLimit(2, Duration.ofSeconds(10)))
-        dbos.registerQueue(DEBOUNCER_QUEUE, QueueOptions.empty())
+        dbos.registerQueue(CONCURRENCY_QUEUE, QueueOptions().withWorkerConcurrency(4))
+        dbos.registerQueue(PARTITIONED_QUEUE, QueueOptions().withPartitionConcurrency(2))
+        dbos.registerQueue(RATE_LIMITED_QUEUE, QueueOptions().withRateLimit(2, Duration.ofSeconds(10)))
+        dbos.registerQueue(DEBOUNCER_QUEUE, QueueOptions())
       }
       config.events.serverStopping { dbos.shutdown() }
 

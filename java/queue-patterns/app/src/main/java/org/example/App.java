@@ -300,11 +300,11 @@ public class App {
               config.events.serverStarting(
                   () -> {
                     dbos.launch();
-                    dbos.registerQueue(CONCURRENCY_QUEUE, QueueOptions.setWorkerConcurrency(4));
-                    dbos.registerQueue(PARTITIONED_QUEUE, QueueOptions.setPartitionConcurrency(2));
+                    dbos.registerQueue(CONCURRENCY_QUEUE, new QueueOptions().withWorkerConcurrency(4));
+                    dbos.registerQueue(PARTITIONED_QUEUE, new QueueOptions().withPartitionConcurrency(2));
                     dbos.registerQueue(
-                        RATE_LIMITED_QUEUE, QueueOptions.setRateLimit(2, Duration.ofSeconds(10)));
-                    dbos.registerQueue(DEBOUNCER_QUEUE, QueueOptions.empty());
+                        RATE_LIMITED_QUEUE, new QueueOptions().withRateLimit(2, Duration.ofSeconds(10)));
+                    dbos.registerQueue(DEBOUNCER_QUEUE, new QueueOptions());
                   });
               config.events.serverStopping(dbos::shutdown);
 

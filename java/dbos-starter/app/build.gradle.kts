@@ -6,7 +6,9 @@ plugins {
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("dev.dbos:transact:1.1.0")
+  implementation("dev.dbos:transact:1.3.0")
+  // Needed to connect to DBOS Conductor (DBOS_CONDUCTOR_KEY), at the same version as transact
+  implementation("dev.dbos:transact-enterprise:1.3.0")
 
   implementation("io.javalin:javalin:7.2.2")
   implementation("org.slf4j:slf4j-simple:2.0.18")
