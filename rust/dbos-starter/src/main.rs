@@ -169,11 +169,8 @@ async fn step_three() -> dbos::Result<()> {
     Ok(())
 }
 
-/// Publishes a named key at each stage of an order, for anyone to read by name.
-///
-/// The Workflows tab publishes a step *count*; this publishes what actually happened, under keys a
-/// reader asks for by name. Setting a key again would replace it — these are three distinct keys,
-/// so all three stay readable once written, including after the workflow has finished.
+/// What the schedule runs at each tick: a one-second durable sleep, long enough for the Schedules
+/// tab to show a run as `PENDING` before it succeeds.
 async fn scheduled_workflow(_: ScheduledWorkflowInput) -> dbos::Result<()> {
     println!("Scheduled workflow starting.");
     dbos::sleep(Duration::from_secs(1)).await?;
@@ -181,6 +178,11 @@ async fn scheduled_workflow(_: ScheduledWorkflowInput) -> dbos::Result<()> {
     Ok(())
 }
 
+/// Publishes a named key at each stage of an order, for anyone to read by name.
+///
+/// The Workflows tab publishes a step *count*; this publishes what actually happened, under keys a
+/// reader asks for by name. Setting a key again would replace it — these are three distinct keys,
+/// so all three stay readable once written, including after the workflow has finished.
 async fn order_workflow(_: ()) -> dbos::Result<String> {
     for key in ORDER_KEYS {
         dbos::sleep(ORDER_STEP).await?;
@@ -475,7 +477,7 @@ async fn schedule_trigger(State(app): State<App>) -> Result<(), AppError> {
 struct QueueStatus {
     worker_concurrency: i32,
     /// Counts keyed by status name — `ENQUEUED`, `PENDING`, `SUCCESS`, and so on.
-    workflow_counts: std::collections::BTreeMap<String, usize>,
+    workflow_counts: std::collections::BTreeMap<&'static str, usize>,
 }
 
 /// Reads the limit back from the **row**, not from what this process registered.
@@ -493,9 +495,7 @@ async fn queue_status(State(app): State<App>) -> Result<Json<QueueStatus>, AppEr
     let mut workflow_counts = std::collections::BTreeMap::new();
     for handle in app.queued.lock().await.iter() {
         let status = handle.status().await?;
-        *workflow_counts
-            .entry(format!("{status:?}").to_uppercase())
-            .or_default() += 1;
+        *workflow_counts.entry(status.as_str()).or_default() += 1;
     }
 
     Ok(Json(QueueStatus {
