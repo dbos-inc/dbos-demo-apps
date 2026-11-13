@@ -149,7 +149,7 @@ public class App {
 
     var _dbUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
     if (_dbUrl == null || _dbUrl.isEmpty()) {
-      _dbUrl = "jdbc:postgresql://localhost:5432/dbos_starter_java";
+      _dbUrl = "jdbc:postgresql://localhost:5432/dbos_toolbox_java";
     }
     final var dbUrl = _dbUrl;
     final var dbUser = Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres");
@@ -159,10 +159,11 @@ public class App {
     MigrationManager.createDatabaseIfNotExists(dbUrl, dbUser, dbPassword);
 
     var dbosConfig =
-        DBOSConfig.defaults("dbos-starter-java")
+        DBOSConfig.defaults("dbos-toolbox-java")
             .withDatabaseUrl(dbUrl)
             .withDbUser(dbUser)
             .withDbPassword(dbPassword)
+            .withConductorKey(System.getenv("DBOS_CONDUCTOR_KEY"))
             .withAppVersion("0.2.0");
 
     var dbos = new DBOS(dbosConfig);
@@ -191,7 +192,7 @@ public class App {
                         dbos.launch();
                         debouncerRef.set(
                             dbos.<Void>debouncer().withDebounceTimeout(Duration.ofMinutes(1)));
-                        dbos.registerQueue("example-queue", QueueOptions.empty());
+                        dbos.registerQueue("example-queue", new QueueOptions());
                         dbos.applySchedules(
                             new WorkflowSchedule(
                                 "run_every_min",

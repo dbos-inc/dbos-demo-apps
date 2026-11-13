@@ -16,9 +16,11 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 repositories { mavenCentral() }
 
 dependencies {
-  val dbosVersion = "1.1.0"
+  val dbosVersion = "1.3.0"
   implementation("dev.dbos:transact-spring-boot-starter:$dbosVersion")
   implementation("dev.dbos:transact-spring-txstep-starter:$dbosVersion")
+  // Needed to connect to DBOS Conductor (DBOS_CONDUCTOR_KEY)
+  implementation("dev.dbos:transact-enterprise:$dbosVersion")
   implementation("org.springframework.boot:spring-boot-starter-webmvc")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.flywaydb:flyway-core")

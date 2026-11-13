@@ -84,6 +84,7 @@ object App extends cask.MainRoutes:
       .withDatabaseUrl(dbUrl)
       .withDbUser(dbUser)
       .withDbPassword(dbPassword)
+      .withConductorKey(System.getenv("DBOS_CONDUCTOR_KEY"))
       .withAppVersion("0.1.0")
   )
   private val startWorkflow =

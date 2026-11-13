@@ -29,12 +29,27 @@ jobs:
           - queue-patterns
           - widget-store
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: dbos
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     defaults:
       run:
         working-directory: rust/${{ matrix.app }}
 
     env:
       RUSTFLAGS: -D warnings
+      # Each test creates and uses a database of its own, named after this one.
+      DBOS_SYSTEM_DATABASE_URL: postgres://postgres:dbos@localhost:5432/dbos_rust_ci
 
     steps:
       - uses: actions/checkout@v5
@@ -43,3 +58,4 @@ jobs:
           components: rustfmt, clippy
       - run: cargo fmt --check
       - run: cargo clippy --locked --all-targets
+      - run: cargo test --locked

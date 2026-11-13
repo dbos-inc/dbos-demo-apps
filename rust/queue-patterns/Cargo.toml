@@ -21,5 +21,12 @@ tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal
 tower-http = { version = "0.6", features = ["fs"] }
 tracing-subscriber = "0.3"
 
+[dev-dependencies]
+# Each test drops its database first, so nothing an earlier run left behind is recovered. The same
+# driver and version the SDK uses.
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres"] }
+# `oneshot`, so the tests can call the router without binding a port.
+tower = { version = "0.5", features = ["util"] }
+
 # Stands alone: this repository has no Cargo workspace.
 [workspace]

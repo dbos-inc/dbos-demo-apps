@@ -40,5 +40,11 @@ sqlx = { version = "0.9", default-features = false, features = [
 thiserror = "2"
 tracing-subscriber = "0.3"
 
+[dev-dependencies]
+# The tests read the routes' JSON responses.
+serde_json = "1"
+# `oneshot`, so the tests can call the router without binding a port.
+tower = { version = "0.5", features = ["util"] }
+
 # Stands alone: this repository has no Cargo workspace.
 [workspace]

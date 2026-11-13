@@ -60,11 +60,38 @@ struct App {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt::init();
 
+    let (dbos, router) = build(config()).await?;
+
+    // Loopback, not 0.0.0.0: this app ships a button that exits the process, which is a fine thing
+    // to hand yourself and a poor thing to hand your network.
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await?;
+    println!("Server starting on http://localhost:8080");
+    axum::serve(listener, router)
+        .with_graceful_shutdown(async {
+            let _ = tokio::signal::ctrl_c().await;
+            println!("Shutting down");
+        })
+        .await?;
+
+    dbos.shutdown().await;
+    Ok(())
+}
+
+/// The configuration this app runs with: the environment's, with a local default database.
+fn config() -> Config {
     let mut config = Config::from_env("dbos-rust-widget-store");
     if config.database_url.is_empty() {
         config.database_url = DEFAULT_DATABASE_URL.to_owned();
     }
     config.app_version = Some(APP_VERSION.to_owned());
+    config
+}
+
+/// Registers the workflows, launches DBOS and creates the store's tables, then builds the routes.
+///
+/// Everything `main` does short of listening on a port, so the tests can run the same app
+/// in-process against a database of their own.
+async fn build(config: Config) -> Result<(DBOS, Router), Box<dyn std::error::Error>> {
     let database_url = config.database_url.clone();
     let dbos = DBOS::new(config);
 
@@ -117,20 +144,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .route("/crash_application", post(crash_application))
         .with_state(app);
-
-    // Loopback, not 0.0.0.0: this app ships a button that exits the process, which is a fine thing
-    // to hand yourself and a poor thing to hand your network.
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await?;
-    println!("Server starting on http://localhost:8080");
-    axum::serve(listener, router)
-        .with_graceful_shutdown(async {
-            let _ = tokio::signal::ctrl_c().await;
-            println!("Shutting down");
-        })
-        .await?;
-
-    dbos.shutdown().await;
-    Ok(())
+    Ok((dbos, router))
 }
 
 /// Serves the HTML frontend, embedded in the binary.
@@ -278,3 +292,6 @@ impl IntoResponse for AppError {
         .into_response()
     }
 }
+
+#[cfg(test)]
+mod tests;

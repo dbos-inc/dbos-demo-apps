@@ -83,6 +83,12 @@ other way out and takes the tidy path: it stops serving and calls `shutdown()`, 
 workflow still running `PENDING` for the next launch to recover — the same end as the crash
 button, reached deliberately.
 
+## Tests
+
+`cargo test` runs the app in-process against the same Postgres, driving its HTTP routes without
+binding a port. Each test drops and recreates a database of its own, named after the app's with
+`_test_<name>` appended, so it starts from nothing whatever an earlier run left behind.
+
 ## The application version
 
 The app runs as its crate version, `CARGO_PKG_VERSION`. DBOS requires a version and computes

@@ -341,9 +341,11 @@ dependencies = [
  "axum",
  "dbos",
  "serde",
+ "serde_json",
  "sqlx",
  "thiserror",
  "tokio",
+ "tower",
  "tracing-subscriber",
 ]
 
