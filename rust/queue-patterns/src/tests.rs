@@ -4,19 +4,19 @@
 //! There is nothing to mock: what is under test is when the queues let workflows run, which only a
 //! real queue can show.
 //!
-//! Each test gets a database of its own, named after the database the app would use, so tests
-//! running at once do not share a queue's limits. The database is created if it does not exist
-//! and kept afterwards; tenants are unique per run, and the rate limit test reads only workflows it
-//! created, so a rerun starts clean.
+//! Each test drops and recreates a database of its own, named after the database the app would
+//! use, so tests running at once do not share a queue's limits, and nothing an earlier run left
+//! behind is dequeued or counted.
 
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant};
 
 use axum::Router;
 use axum::body::{Body, to_bytes};
 use axum::http::Request;
 use dbos::DBOS;
-use dbos::sysdb::types::{Timestamp, WorkflowFilter, WorkflowStatus};
+use dbos::sysdb::types::{WorkflowFilter, WorkflowStatus};
 use serde_json::{Value, json};
+use sqlx::{AssertSqlSafe, Connection, PgConnection};
 use tower::ServiceExt;
 
 use super::{RATE_LIMITED_WORKFLOW, build, config};
@@ -24,7 +24,7 @@ use super::{RATE_LIMITED_WORKFLOW, build, config};
 #[tokio::test(flavor = "multi_thread")]
 async fn a_tenant_runs_at_most_two_tasks_at_once() {
     let (dbos, router) = test_app("fair_queue").await;
-    let tenant = unique("tenant");
+    let tenant = "alice";
 
     for _ in 0..3 {
         post(
@@ -37,7 +37,7 @@ async fn a_tenant_runs_at_most_two_tasks_at_once() {
     // Watch the tenant's tasks until all three finish, and keep the most ever running at once.
     let mut most_running = 0;
     eventually("the tenant's three tasks to succeed", async || {
-        let rows = tenant_rows(&router, &tenant).await;
+        let rows = tenant_rows(&router, tenant).await;
         let running = rows
             .iter()
             .filter(|row| row["workflow_status"] == "PENDING")
@@ -65,7 +65,6 @@ async fn a_tenant_runs_at_most_two_tasks_at_once() {
 #[tokio::test(flavor = "multi_thread")]
 async fn the_rate_limited_queue_starts_two_per_ten_seconds() {
     let (dbos, router) = test_app("rate_limit").await;
-    let since = Timestamp::now();
 
     for _ in 0..3 {
         post(&router, "/api/workflows/rate_limited_queue").await;
@@ -75,7 +74,6 @@ async fn the_rate_limited_queue_starts_two_per_ten_seconds() {
         let rows = dbos
             .list_workflows(&WorkflowFilter {
                 names: vec![RATE_LIMITED_WORKFLOW],
-                created_after: Some(since),
                 load_input: false,
                 load_output: false,
                 ..Default::default()
@@ -112,7 +110,7 @@ async fn the_rate_limited_queue_starts_two_per_ten_seconds() {
 #[tokio::test(flavor = "multi_thread")]
 async fn debouncing_runs_once_with_the_last_input() {
     let (dbos, router) = test_app("debouncer").await;
-    let tenant = unique("tenant");
+    let tenant = "alice";
 
     for input in ["first", "second"] {
         post(
@@ -128,18 +126,18 @@ async fn debouncing_runs_once_with_the_last_input() {
         .as_array()
         .unwrap()
         .iter()
-        .filter(|item| item["tenant_id"] == tenant.as_str())
+        .filter(|item| item["tenant_id"] == tenant)
         .collect();
     assert_eq!(delayed.len(), 1);
     assert_eq!(delayed[0]["input"], "second");
 
     // Ten seconds after the last input it runs, once, with that input.
     eventually("the debounced workflow to succeed", async || {
-        let rows = tenant_debounced(&router, &tenant).await;
+        let rows = tenant_debounced(&router, tenant).await;
         (rows.len() == 1 && rows[0]["workflow_status"] == "SUCCESS").then_some(())
     })
     .await;
-    let rows = tenant_debounced(&router, &tenant).await;
+    let rows = tenant_debounced(&router, tenant).await;
     assert_eq!(rows[0]["input"], "second");
 
     dbos.shutdown().await;
@@ -149,37 +147,48 @@ async fn debouncing_runs_once_with_the_last_input() {
 // HELPERS
 // ============================================================
 
-/// The app, launched on a database of its own named after `test`.
+/// The app, launched on a fresh database of its own named after `test`.
 async fn test_app(test: &str) -> (DBOS, Router) {
     let mut config = config();
-    config.database_url = database_for(&config.database_url, test);
+    let database = format!("{}_test_{test}", database_name(&config.database_url));
+    drop_database(&config.database_url, &database).await;
+    config.database_url = with_database(&config.database_url, &database);
     // Several apps run at once, one per test; a small pool each keeps them all under Postgres's
     // default connection limit.
     config.max_connections = 5;
     build(config).await.expect("the app launches")
 }
 
-/// `url` with `_test_<test>` appended to its database name, keeping any query string.
-fn database_for(url: &str, test: &str) -> String {
+/// Drops `database` from the server `url` points at, so `launch` creates it afresh: nothing an
+/// earlier run left behind is recovered, dequeued or counted.
+async fn drop_database(url: &str, database: &str) {
+    let mut admin = PgConnection::connect(&with_database(url, "postgres"))
+        .await
+        .expect("the test server is reachable");
+    sqlx::raw_sql(AssertSqlSafe(format!(
+        r#"DROP DATABASE IF EXISTS "{database}" WITH (FORCE)"#
+    )))
+    .execute(&mut admin)
+    .await
+    .expect("the test database can be dropped");
+}
+
+/// The database `url` names.
+fn database_name(url: &str) -> &str {
+    let base = url.split_once('?').map_or(url, |(base, _)| base);
+    base.rsplit_once('/').expect("the URL names a database").1
+}
+
+/// `url`, naming `database` instead, and keeping any query string.
+fn with_database(url: &str, database: &str) -> String {
     let (base, query) = url
         .split_once('?')
         .map_or((url, None), |(b, q)| (b, Some(q)));
-    let (server, database) = base.rsplit_once('/').expect("the URL names a database");
-    let mut url = format!("{server}/{database}_test_{test}");
-    if let Some(query) = query {
-        url.push('?');
-        url.push_str(query);
+    let (server, _) = base.rsplit_once('/').expect("the URL names a database");
+    match query {
+        Some(query) => format!("{server}/{database}?{query}"),
+        None => format!("{server}/{database}"),
     }
-    url
-}
-
-/// An id no earlier run of the tests has used.
-fn unique(prefix: &str) -> String {
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    format!("{prefix}-{nanos}")
 }
 
 /// The fair-queue managers the observability route lists for one tenant.

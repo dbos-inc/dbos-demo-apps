@@ -36,8 +36,8 @@ Without `DBOS_SYSTEM_DATABASE_URL` it falls back to
 ## Tests
 
 `cargo test` runs the app in-process against the same Postgres, driving its HTTP routes without
-binding a port. Each test creates a database of its own, named after the app's with
-`_test_<name>` appended, and leaves it in place for the next run.
+binding a port. Each test drops and recreates a database of its own, named after the app's with
+`_test_<name>` appended, so it starts from nothing whatever an earlier run left behind.
 
 ## What to try
 

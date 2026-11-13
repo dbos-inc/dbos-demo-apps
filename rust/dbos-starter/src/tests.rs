@@ -4,11 +4,11 @@
 //! There is nothing to mock: workflows call `dbos::step` and friends as free functions, so a test
 //! runs them for real and checks what they recorded.
 //!
-//! Each test gets a database of its own, named after the database the app would use, so tests
-//! running at once neither recover nor dequeue each other's workflows. The database is created if
-//! it does not exist and kept afterwards; workflow ids are unique per run, so a rerun starts clean.
+//! Each test drops and recreates a database of its own, named after the database the app would
+//! use, so tests running at once neither recover nor dequeue each other's workflows, and nothing an
+//! earlier run left behind is recovered or counted.
 
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant};
 
 use axum::Router;
 use axum::body::{Body, to_bytes};
@@ -16,6 +16,7 @@ use axum::http::Request;
 use axum::http::header::CONTENT_TYPE;
 use dbos::DBOS;
 use serde_json::{Value, json};
+use sqlx::{AssertSqlSafe, Connection, PgConnection};
 use tower::ServiceExt;
 
 use super::{build, config};
@@ -23,7 +24,7 @@ use super::{build, config};
 #[tokio::test(flavor = "multi_thread")]
 async fn example_workflow_runs_its_steps_in_order() {
     let (dbos, router) = test_app("example").await;
-    let id = unique("example");
+    let id = "example";
 
     post(&router, &format!("/workflow/{id}"), None).await;
     // The id is an idempotency key: posting it again joins the workflow already running.
@@ -34,7 +35,7 @@ async fn example_workflow_runs_its_steps_in_order() {
     })
     .await;
     let result = dbos
-        .retrieve_workflow::<String, dbos::EngineOnly>(&id)
+        .retrieve_workflow::<String, dbos::EngineOnly>(id)
         .unwrap()
         .result()
         .await
@@ -42,7 +43,7 @@ async fn example_workflow_runs_its_steps_in_order() {
     assert_eq!(result, "Workflow completed");
 
     let steps: Vec<String> = dbos
-        .list_workflow_steps(&id)
+        .list_workflow_steps(id)
         .await
         .unwrap()
         .into_iter()
@@ -63,7 +64,8 @@ async fn reading_an_event_waits_for_it_to_be_published() {
     // Asked for before the order has shipped, the read blocks until the workflow publishes it.
     let read = parse(&post(&router, "/events/read", Some(json!({ "key": "shipped" }))).await);
     assert_eq!(read["value"], "shipped at step 3");
-    assert!(read["waited_ms"].as_u64().unwrap() > 0);
+    // About nine seconds of order, so a read that returned at once would be well under five.
+    assert!(read["waited_ms"].as_u64().unwrap() >= 5_000);
 
     let status = parse(&get(&router, "/events/status").await);
     assert_eq!(status["workflow_id"], id.as_str());
@@ -114,7 +116,6 @@ async fn approve_all_answers_every_waiting_request() {
     let first = post(&router, "/messages/start", None).await;
     let second = post(&router, "/messages/start", None).await;
 
-    // At least these two: requests an earlier, interrupted run left waiting are answered too.
     let sent: usize = post(
         &router,
         "/messages/respond-all",
@@ -123,7 +124,7 @@ async fn approve_all_answers_every_waiting_request() {
     .await
     .parse()
     .unwrap();
-    assert!(sent >= 2, "sent {sent}");
+    assert_eq!(sent, 2);
 
     assert_eq!(approval_result(&dbos, &first).await, "rejected");
     assert_eq!(approval_result(&dbos, &second).await, "rejected");
@@ -134,7 +135,10 @@ async fn approve_all_answers_every_waiting_request() {
 #[tokio::test(flavor = "multi_thread")]
 async fn queue_limit_changes_while_the_app_runs() {
     let (dbos, router) = test_app("queue").await;
+    let status = parse(&get(&router, "/queue/status").await);
+    assert_eq!(status["worker_concurrency"], 3);
 
+    // Raised from three to five without a restart: the row changes, and the workers follow it.
     post(
         &router,
         "/queue/concurrency",
@@ -144,12 +148,18 @@ async fn queue_limit_changes_while_the_app_runs() {
     let status = parse(&get(&router, "/queue/status").await);
     assert_eq!(status["worker_concurrency"], 5);
 
+    // Five five-second workflows, polled four times a second: under the old limit of three no more
+    // than three would ever be seen running at once.
     post(&router, "/queue/enqueue", None).await;
+    let mut most_running = 0;
     eventually("all five queued workflows to succeed", async || {
         let status = parse(&get(&router, "/queue/status").await);
-        (status["workflow_counts"] == json!({ "SUCCESS": 5 })).then_some(())
+        let counts = &status["workflow_counts"];
+        most_running = most_running.max(counts["PENDING"].as_u64().unwrap_or(0));
+        (*counts == json!({ "SUCCESS": 5 })).then_some(())
     })
     .await;
+    assert!(most_running > 3, "at most {most_running} ran at once");
 
     dbos.shutdown().await;
 }
@@ -189,37 +199,48 @@ async fn schedule_can_be_paused_resumed_and_triggered() {
 // HELPERS
 // ============================================================
 
-/// The app, launched on a database of its own named after `test`.
+/// The app, launched on a fresh database of its own named after `test`.
 async fn test_app(test: &str) -> (DBOS, Router) {
     let mut config = config();
-    config.database_url = database_for(&config.database_url, test);
+    let database = format!("{}_test_{test}", database_name(&config.database_url));
+    drop_database(&config.database_url, &database).await;
+    config.database_url = with_database(&config.database_url, &database);
     // Several apps run at once, one per test; a small pool each keeps them all under Postgres's
     // default connection limit.
     config.max_connections = 5;
     build(config).await.expect("the app launches")
 }
 
-/// `url` with `_test_<test>` appended to its database name, keeping any query string.
-fn database_for(url: &str, test: &str) -> String {
+/// Drops `database` from the server `url` points at, so `launch` creates it afresh: nothing an
+/// earlier run left behind is recovered, dequeued or counted.
+async fn drop_database(url: &str, database: &str) {
+    let mut admin = PgConnection::connect(&with_database(url, "postgres"))
+        .await
+        .expect("the test server is reachable");
+    sqlx::raw_sql(AssertSqlSafe(format!(
+        r#"DROP DATABASE IF EXISTS "{database}" WITH (FORCE)"#
+    )))
+    .execute(&mut admin)
+    .await
+    .expect("the test database can be dropped");
+}
+
+/// The database `url` names.
+fn database_name(url: &str) -> &str {
+    let base = url.split_once('?').map_or(url, |(base, _)| base);
+    base.rsplit_once('/').expect("the URL names a database").1
+}
+
+/// `url`, naming `database` instead, and keeping any query string.
+fn with_database(url: &str, database: &str) -> String {
     let (base, query) = url
         .split_once('?')
         .map_or((url, None), |(b, q)| (b, Some(q)));
-    let (server, database) = base.rsplit_once('/').expect("the URL names a database");
-    let mut url = format!("{server}/{database}_test_{test}");
-    if let Some(query) = query {
-        url.push('?');
-        url.push_str(query);
+    let (server, _) = base.rsplit_once('/').expect("the URL names a database");
+    match query {
+        Some(query) => format!("{server}/{database}?{query}"),
+        None => format!("{server}/{database}"),
     }
-    url
-}
-
-/// An id no earlier run of the tests has used.
-fn unique(prefix: &str) -> String {
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    format!("{prefix}-{nanos}")
 }
 
 async fn get(router: &Router, uri: &str) -> String {

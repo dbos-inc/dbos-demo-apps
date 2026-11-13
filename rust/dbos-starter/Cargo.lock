@@ -342,6 +342,7 @@ dependencies = [
  "dbos",
  "serde",
  "serde_json",
+ "sqlx",
  "tokio",
  "tower",
  "tracing-subscriber",

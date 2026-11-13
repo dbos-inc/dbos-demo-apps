@@ -4,18 +4,18 @@
 //! There is nothing to mock: the checkout calls `dbos::step` and friends as free functions, so a
 //! test runs it for real and checks the orders and inventory it left behind.
 //!
-//! Each test gets a database of its own, named after the database the app would use, so tests
-//! running at once neither share a shelf of widgets nor recover each other's checkouts. The
-//! database is created if it does not exist and kept afterwards; each test restocks before it
-//! buys, and idempotency keys are unique per run, so a rerun starts clean.
+//! Each test drops and recreates a database of its own, named after the database the app would
+//! use, so tests running at once neither share a shelf of widgets nor recover each other's
+//! checkouts, and no checkout an earlier run abandoned comes back to move the inventory.
 
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant};
 
 use axum::Router;
 use axum::body::{Body, to_bytes};
 use axum::http::Request;
 use dbos::DBOS;
 use serde_json::Value;
+use sqlx::{AssertSqlSafe, Connection, PgConnection};
 use tower::ServiceExt;
 
 use super::{build, config};
@@ -27,7 +27,7 @@ async fn a_paid_checkout_is_dispatched() {
     post(&router, "/restock").await;
     let stocked = inventory(&router).await;
 
-    let key = unique("paid");
+    let key = "paid";
     // The checkout pays against its own id, which is the idempotency key it was started under.
     let payment_id = post(&router, &format!("/checkout/{key}")).await;
     assert_eq!(payment_id, key);
@@ -54,7 +54,7 @@ async fn a_refused_payment_puts_the_widget_back() {
     post(&router, "/restock").await;
     let stocked = inventory(&router).await;
 
-    let key = unique("refused");
+    let key = "refused";
     let payment_id = post(&router, &format!("/checkout/{key}")).await;
     assert_eq!(inventory(&router).await, stocked - 1);
 
@@ -74,7 +74,7 @@ async fn a_double_clicked_checkout_reserves_one_widget() {
     let stocked = inventory(&router).await;
 
     // The second request joins the checkout the first started, rather than starting another.
-    let key = unique("double-click");
+    let key = "double-click";
     let first = post(&router, &format!("/checkout/{key}")).await;
     let second = post(&router, &format!("/checkout/{key}")).await;
     assert_eq!(first, second);
@@ -90,37 +90,48 @@ async fn a_double_clicked_checkout_reserves_one_widget() {
 // HELPERS
 // ============================================================
 
-/// The app, launched on a database of its own named after `test`.
+/// The app, launched on a fresh database of its own named after `test`.
 async fn test_app(test: &str) -> (DBOS, Router) {
     let mut config = config();
-    config.database_url = database_for(&config.database_url, test);
-    // Several apps run at once, one per test; a small pool each keeps them all under Postgres's
-    // default connection limit.
+    let database = format!("{}_test_{test}", database_name(&config.database_url));
+    drop_database(&config.database_url, &database).await;
+    config.database_url = with_database(&config.database_url, &database);
+    // Several apps run at once, one per test, each with this pool and the store's own (up to ten);
+    // a small DBOS pool each keeps them all well under Postgres's default connection limit.
     config.max_connections = 5;
     build(config).await.expect("the app launches")
 }
 
-/// `url` with `_test_<test>` appended to its database name, keeping any query string.
-fn database_for(url: &str, test: &str) -> String {
+/// Drops `database` from the server `url` points at, so `launch` creates it afresh: nothing an
+/// earlier run left behind is recovered, dequeued or counted.
+async fn drop_database(url: &str, database: &str) {
+    let mut admin = PgConnection::connect(&with_database(url, "postgres"))
+        .await
+        .expect("the test server is reachable");
+    sqlx::raw_sql(AssertSqlSafe(format!(
+        r#"DROP DATABASE IF EXISTS "{database}" WITH (FORCE)"#
+    )))
+    .execute(&mut admin)
+    .await
+    .expect("the test database can be dropped");
+}
+
+/// The database `url` names.
+fn database_name(url: &str) -> &str {
+    let base = url.split_once('?').map_or(url, |(base, _)| base);
+    base.rsplit_once('/').expect("the URL names a database").1
+}
+
+/// `url`, naming `database` instead, and keeping any query string.
+fn with_database(url: &str, database: &str) -> String {
     let (base, query) = url
         .split_once('?')
         .map_or((url, None), |(b, q)| (b, Some(q)));
-    let (server, database) = base.rsplit_once('/').expect("the URL names a database");
-    let mut url = format!("{server}/{database}_test_{test}");
-    if let Some(query) = query {
-        url.push('?');
-        url.push_str(query);
+    let (server, _) = base.rsplit_once('/').expect("the URL names a database");
+    match query {
+        Some(query) => format!("{server}/{database}?{query}"),
+        None => format!("{server}/{database}"),
     }
-    url
-}
-
-/// An id no earlier run of the tests has used.
-fn unique(prefix: &str) -> String {
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    format!("{prefix}-{nanos}")
 }
 
 async fn inventory(router: &Router) -> i64 {
