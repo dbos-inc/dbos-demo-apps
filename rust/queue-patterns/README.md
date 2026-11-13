@@ -20,3 +20,9 @@ export DBOS_SYSTEM_DATABASE_URL="postgres://postgres:dbos@localhost:5432/dbos_qu
 ```
 
 Visit http://localhost:8000 to see the queues demo!
+
+## Tests
+
+`cargo test` runs the app in-process against the same Postgres, driving its HTTP routes without
+binding a port. Each test creates a database of its own, named after the app's with
+`_test_<name>` appended, and leaves it in place for the next run.

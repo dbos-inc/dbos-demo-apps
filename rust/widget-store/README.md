@@ -33,6 +33,12 @@ Without `DBOS_SYSTEM_DATABASE_URL` it falls back to
 `postgres://localhost:5432/dbos_rust_widget_store`, letting the standard libpq variables (`PGUSER`,
 `PGPASSWORD`) fill in the rest.
 
+## Tests
+
+`cargo test` runs the app in-process against the same Postgres, driving its HTTP routes without
+binding a port. Each test creates a database of its own, named after the app's with
+`_test_<name>` appended, and leaves it in place for the next run.
+
 ## What to try
 
 1. **Buy a widget.** Inventory drops, the order goes to PAID, and the progress bar walks it out
