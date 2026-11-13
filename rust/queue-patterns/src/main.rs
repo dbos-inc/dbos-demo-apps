@@ -354,11 +354,35 @@ fn debouncer_item(row: &WorkflowRecord) -> Value {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt::init();
 
+    let (dbos, router) = build(config()).await?;
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await?;
+    println!("Server starting on http://localhost:8000");
+    axum::serve(listener, router)
+        .with_graceful_shutdown(async {
+            tokio::signal::ctrl_c().await.ok();
+        })
+        .await?;
+
+    dbos.shutdown().await;
+    Ok(())
+}
+
+/// The configuration this app runs with: the environment's, with a local default database.
+fn config() -> Config {
     let mut config = Config::from_env("dbos-rust-queue-patterns");
     if config.database_url.is_empty() {
         config.database_url = DEFAULT_DATABASE_URL.to_owned();
     }
     config.app_version = Some(env!("CARGO_PKG_VERSION").to_owned());
+    config
+}
+
+/// Registers the workflows, launches DBOS and registers the queues, then builds the routes.
+///
+/// Everything `main` does short of listening on a port, so the tests can run the same app
+/// in-process against a database of their own.
+async fn build(config: Config) -> Result<(DBOS, Router), Box<dyn std::error::Error>> {
     let dbos = DBOS::new(config);
 
     let task = dbos.register_workflow(FAIR_QUEUE_WORKFLOW, fair_queue_workflow)?;
@@ -433,17 +457,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest_service("/assets", ServeDir::new("frontend/dist/assets"))
         .route_service("/", ServeFile::new("frontend/dist/index.html"))
         .with_state(app);
-
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await?;
-    println!("Server starting on http://localhost:8000");
-    axum::serve(listener, router)
-        .with_graceful_shutdown(async {
-            tokio::signal::ctrl_c().await.ok();
-        })
-        .await?;
-
-    dbos.shutdown().await;
-    Ok(())
+    Ok((dbos, router))
 }
 
 /// A `dbos::Error` carried out of a handler as a 500.
@@ -461,3 +475,6 @@ impl IntoResponse for AppError {
         (StatusCode::INTERNAL_SERVER_ERROR, Json(body)).into_response()
     }
 }
+
+#[cfg(test)]
+mod tests;
