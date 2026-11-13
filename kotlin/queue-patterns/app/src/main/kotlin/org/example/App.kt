@@ -225,7 +225,7 @@ fun main() {
   val dbPassword = System.getenv("PGPASSWORD") ?: "dbos"
 
   val dbosConfig =
-    DBOSConfig.defaults("dbos-queue-patterns")
+    DBOSConfig.defaults("dbos-queue-patterns-kotlin")
       .withDatabaseUrl(dbUrl)
       .withDbUser(dbUser)
       .withDbPassword(dbPassword)

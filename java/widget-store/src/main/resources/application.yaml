@@ -1,6 +1,6 @@
 dbos:
   application:
-    name: "widget-store"
+    name: "widget-store-java"
     version: "0.2.0"
   # To connect to DBOS Conductor, set the DBOS_CONDUCTOR_KEY environment variable,
   # which Spring binds to dbos.conductor.key. Don't add dbos.conductor.key here with an

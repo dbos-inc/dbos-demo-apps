@@ -278,7 +278,7 @@ public class App {
     var dbPassword = Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos");
 
     var dbosConfig =
-        DBOSConfig.defaults("dbos-queue-patterns")
+        DBOSConfig.defaults("dbos-queue-patterns-java")
             .withDatabaseUrl(dbUrl)
             .withDbUser(dbUser)
             .withDbPassword(dbPassword)
