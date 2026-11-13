@@ -149,7 +149,7 @@ public class App {
 
     var _dbUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
     if (_dbUrl == null || _dbUrl.isEmpty()) {
-      _dbUrl = "jdbc:postgresql://localhost:5432/dbos_starter_java";
+      _dbUrl = "jdbc:postgresql://localhost:5432/dbos_toolbox_java";
     }
     final var dbUrl = _dbUrl;
     final var dbUser = Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres");
@@ -159,7 +159,7 @@ public class App {
     MigrationManager.createDatabaseIfNotExists(dbUrl, dbUser, dbPassword);
 
     var dbosConfig =
-        DBOSConfig.defaults("dbos-starter-java")
+        DBOSConfig.defaults("dbos-toolbox-java")
             .withDatabaseUrl(dbUrl)
             .withDbUser(dbUser)
             .withDbPassword(dbPassword)

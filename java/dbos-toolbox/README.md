@@ -4,6 +4,7 @@
 
 - Java 17 or later
 - PostgreSQL running on localhost:5432
+  - uses the `dbos_toolbox_java` database, created if missing
   - can be overridden with `DBOS_SYSTEM_JDBC_URL` env var
 - PostgreSQL user and password in `PGUSER` and `PGPASSWORD` env vars
   - defaults to `postgres` user and `dbos` password
