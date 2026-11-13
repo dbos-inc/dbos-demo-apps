@@ -87,6 +87,7 @@
                     (.withDatabaseUrl db-url)
                     (.withDbUser db-user)
                     (.withDbPassword db-pass)
+                    (.withConductorKey (System/getenv "DBOS_CONDUCTOR_KEY"))
                     (.withAppVersion "0.1.0"))
         dbos           (DBOS. config)
         start-workflow (register-workflow dbos "exampleWorkflow" #(example-workflow dbos) 0)]

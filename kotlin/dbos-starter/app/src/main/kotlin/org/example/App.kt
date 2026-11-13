@@ -253,18 +253,18 @@ fun main(args: Array<String>) {
         // changed at runtime across restarts.
         dbos.registerQueue(
           QUEUE_NAME,
-          QueueOptions.setWorkerConcurrency(DEFAULT_WORKER_CONCURRENCY),
+          QueueOptions().withWorkerConcurrency(DEFAULT_WORKER_CONCURRENCY),
           QueueConflictResolution.NEVER_UPDATE)
         dbos.registerQueue(
           RATE_LIMITED_QUEUE_NAME,
-          QueueOptions.setRateLimit(DEFAULT_RATE_LIMIT, DEFAULT_RATE_PERIOD),
+          QueueOptions().withRateLimit(DEFAULT_RATE_LIMIT, DEFAULT_RATE_PERIOD),
           QueueConflictResolution.NEVER_UPDATE)
         dbos.registerQueue(
           FAIR_QUEUE_NAME,
-          QueueOptions.setPartitionConcurrency(DEFAULT_PARTITION_CONCURRENCY)
-            .andWorkerConcurrency(DEFAULT_FAIR_WORKER_CONCURRENCY),
+          QueueOptions().withPartitionConcurrency(DEFAULT_PARTITION_CONCURRENCY)
+            .withWorkerConcurrency(DEFAULT_FAIR_WORKER_CONCURRENCY),
           QueueConflictResolution.NEVER_UPDATE)
-        dbos.registerQueue(DELAYED_QUEUE_NAME, QueueOptions.empty(), QueueConflictResolution.NEVER_UPDATE)
+        dbos.registerQueue(DELAYED_QUEUE_NAME, QueueOptions(), QueueConflictResolution.NEVER_UPDATE)
       }
       config.events.serverStopping { dbos.shutdown() }
 
@@ -354,7 +354,7 @@ fun main(args: Array<String>) {
         } catch (_: Exception) {}
         dbos.registerQueue(
           QUEUE_NAME,
-          QueueOptions.setWorkerConcurrency(concurrency),
+          QueueOptions().withWorkerConcurrency(concurrency),
           QueueConflictResolution.ALWAYS_UPDATE)
         ctx.json(mapOf("ok" to true))
       }
@@ -395,7 +395,7 @@ fun main(args: Array<String>) {
           return@post
         }
         dbos.updateQueue(
-          RATE_LIMITED_QUEUE_NAME, QueueOptions.setRateLimit(limit, Duration.ofSeconds(periodSec.toLong())))
+          RATE_LIMITED_QUEUE_NAME, QueueOptions().withRateLimit(limit, Duration.ofSeconds(periodSec.toLong())))
         ctx.json(mapOf("ok" to true))
       }
 
@@ -462,8 +462,8 @@ fun main(args: Array<String>) {
         }
         dbos.updateQueue(
           FAIR_QUEUE_NAME,
-          QueueOptions.setPartitionConcurrency(partitionConcurrency)
-            .andWorkerConcurrency(workerConcurrency))
+          QueueOptions().withPartitionConcurrency(partitionConcurrency)
+            .withWorkerConcurrency(workerConcurrency))
         ctx.json(mapOf("ok" to true))
       }
 
