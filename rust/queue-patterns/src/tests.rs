@@ -151,6 +151,13 @@ async fn debouncing_runs_once_with_the_last_input() {
 async fn test_app(test: &str) -> (DBOS, Router) {
     let mut config = config();
     let database = format!("{}_test_{test}", database_name(&config.database_url));
+    // Postgres cuts a longer name to 63 bytes, which could make it the app's own database, or
+    // another test's, and the drop below would take that instead.
+    assert!(
+        database.len() <= 63,
+        "test database {database} is longer than Postgres's 63-byte limit: \
+         point DBOS_SYSTEM_DATABASE_URL at a database with a shorter name"
+    );
     drop_database(&config.database_url, &database).await;
     config.database_url = with_database(&config.database_url, &database);
     // Several apps run at once, one per test; a small pool each keeps them all under Postgres's
