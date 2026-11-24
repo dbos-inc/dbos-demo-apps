@@ -19,8 +19,8 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.mts"
   },
   "dependencies": {
-    "@dbos-inc/dbos-enterprise": "^5.5.0",
-    "@dbos-inc/dbos-sdk": "^5.5.0",
+    "@dbos-inc/dbos-enterprise": "^5.7.0",
+    "@dbos-inc/dbos-sdk": "^5.7.0",
     "@nestjs/common": "^12.0.0",
     "@nestjs/core": "^12.0.0",
     "@nestjs/platform-express": "^12.0.0",
