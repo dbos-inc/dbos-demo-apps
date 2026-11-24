@@ -119,7 +119,7 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "3.5.0"
+version = "3.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -130,9 +130,9 @@ dependencies = [
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3b/f5/62915a118f1f873d6767372da78351721b6b4b7c6abb3b60ba03b70b038a/dbos-3.5.0.tar.gz", hash = "sha256:8005419054f2442d4a4041fc248e3940bae81af5e5b166e258256de562d1819f", size = 598043, upload-time = "2026-11-10T16:19:08.175Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/a6/292c1267509b0aeb1f4ad0116d7e74cabffe13e0ee11164d8ff8d1494d55/dbos-3.7.0.tar.gz", hash = "sha256:275fbb9c20b265c024d4f3f7963785a505f8179c0f39e77aff65e0838527c2dd", size = 642106, upload-time = "2026-11-24T16:06:52.252Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/24/3e/a3d19004f520444aa410bd4302196e50a044c401fbd3d8b49dd89f7b1e8a/dbos-3.5.0-py3-none-any.whl", hash = "sha256:d92cde12b0ffa00b85af682ee5eb40d51d466873095f3efac64b660f743b72f2", size = 283906, upload-time = "2026-11-10T16:19:06.219Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/aa/681b5f50fcf585fc7bae023608e322db3ba5c8457a51debff4b35ace9f2a/dbos-3.7.0-py3-none-any.whl", hash = "sha256:8b49380a5f281176338ca249732e09e0373d60ec064db3a9113d161fe798d341", size = 299297, upload-time = "2026-11-24T16:06:50.826Z" },
 ]
 
 [package.optional-dependencies]
@@ -142,14 +142,14 @@ enterprise = [
 
 [[package]]
 name = "dbos-enterprise"
-version = "3.5.0"
+version = "3.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dbos" },
     { name = "websockets" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/31/6322692a5f9168130dc9e0353d7a7d4d0dd23bc9eae17500d6f3bd4901d3/dbos_enterprise-3.5.0-py3-none-any.whl", hash = "sha256:78ee4e64021e35ebdea4f03463883ca0a23830ec73e955f59abe287e1b0f8401", size = 58154, upload-time = "2026-11-10T16:17:56.547Z" },
+    { url = "https://files.pythonhosted.org/packages/db/04/9613c609dbfb98abd28bf6c6376fce30efa1c6c1a86403b68b9a42bba088/dbos_enterprise-3.7.0-py3-none-any.whl", hash = "sha256:5b2d3c00e65b2528d0e4178c82934c3e460499a02947972bdd4d8b2089d6a03f", size = 91605, upload-time = "2026-11-24T16:05:39.221Z" },
 ]
 
 [[package]]
@@ -1034,7 +1034,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", extras = ["enterprise"], specifier = "==3.5.0" },
+    { name = "dbos", extras = ["enterprise"], specifier = "==3.7.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.123.9" },
 ]
 

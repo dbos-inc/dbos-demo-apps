@@ -1,12 +1,11 @@
 version = 1
 revision = 3
-requires-python = ">=3.11"
+requires-python = ">=3.11.5"
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version == '3.13.*'",
     "python_full_version == '3.12.*'",
-    "python_full_version >= '3.11.5' and python_full_version < '3.12'",
-    "python_full_version < '3.11.5'",
+    "python_full_version < '3.12'",
 ]
 
 [[package]]
@@ -310,8 +309,7 @@ name = "beautifulsoup4"
 version = "4.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "soupsieve", version = "2.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11.5'" },
-    { name = "soupsieve", version = "4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11.5'" },
+    { name = "soupsieve" },
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/43/65/318323f98dbee45d42dff61d8f047181bc6f2268a9068cfad035a46be5af/beautifulsoup4-4.15.0.tar.gz", hash = "sha256:288e3ca7d54b06f2ac191970bc275c1939cb46d450b255bf6718b04aa37ab4f7", size = 632571, upload-time = "2026-06-07T16:44:20.453Z" }
@@ -487,7 +485,7 @@ wheels = [
 
 [[package]]
 name = "dbos"
-version = "3.5.0"
+version = "3.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -498,9 +496,9 @@ dependencies = [
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3b/f5/62915a118f1f873d6767372da78351721b6b4b7c6abb3b60ba03b70b038a/dbos-3.5.0.tar.gz", hash = "sha256:8005419054f2442d4a4041fc248e3940bae81af5e5b166e258256de562d1819f", size = 598043, upload-time = "2026-11-10T16:19:08.175Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/a6/292c1267509b0aeb1f4ad0116d7e74cabffe13e0ee11164d8ff8d1494d55/dbos-3.7.0.tar.gz", hash = "sha256:275fbb9c20b265c024d4f3f7963785a505f8179c0f39e77aff65e0838527c2dd", size = 642106, upload-time = "2026-11-24T16:06:52.252Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/24/3e/a3d19004f520444aa410bd4302196e50a044c401fbd3d8b49dd89f7b1e8a/dbos-3.5.0-py3-none-any.whl", hash = "sha256:d92cde12b0ffa00b85af682ee5eb40d51d466873095f3efac64b660f743b72f2", size = 283906, upload-time = "2026-11-10T16:19:06.219Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/aa/681b5f50fcf585fc7bae023608e322db3ba5c8457a51debff4b35ace9f2a/dbos-3.7.0-py3-none-any.whl", hash = "sha256:8b49380a5f281176338ca249732e09e0373d60ec064db3a9113d161fe798d341", size = 299297, upload-time = "2026-11-24T16:06:50.826Z" },
 ]
 
 [package.optional-dependencies]
@@ -510,14 +508,14 @@ enterprise = [
 
 [[package]]
 name = "dbos-enterprise"
-version = "3.5.0"
+version = "3.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dbos" },
     { name = "websockets" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/31/6322692a5f9168130dc9e0353d7a7d4d0dd23bc9eae17500d6f3bd4901d3/dbos_enterprise-3.5.0-py3-none-any.whl", hash = "sha256:78ee4e64021e35ebdea4f03463883ca0a23830ec73e955f59abe287e1b0f8401", size = 58154, upload-time = "2026-11-10T16:17:56.547Z" },
+    { url = "https://files.pythonhosted.org/packages/db/04/9613c609dbfb98abd28bf6c6376fce30efa1c6c1a86403b68b9a42bba088/dbos_enterprise-3.7.0-py3-none-any.whl", hash = "sha256:5b2d3c00e65b2528d0e4178c82934c3e460499a02947972bdd4d8b2089d6a03f", size = 91605, upload-time = "2026-11-24T16:05:39.221Z" },
 ]
 
 [[package]]
@@ -597,7 +595,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dbos", extras = ["enterprise"], specifier = "==3.5.0" },
+    { name = "dbos", extras = ["enterprise"], specifier = "==3.7.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.120.0" },
     { name = "llama-index", specifier = "==0.14.25" },
     { name = "llama-index-readers-file", specifier = ">=0.7.0" },
@@ -1687,8 +1685,7 @@ name = "numpy"
 version = "2.4.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.11.5' and python_full_version < '3.12'",
-    "python_full_version < '3.11.5'",
+    "python_full_version < '3.12'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d0/ad/fed0499ce6a338d2a03ebae59cd15093910c8875328855781952abf6c2fe/numpy-2.4.6.tar.gz", hash = "sha256:f3a3570c4a2a16746ac2c31a7c7c7b0c186b95ce902e33db6f28094ed7387dda", size = 20735807, upload-time = "2026-05-18T23:37:14.07Z" }
 wheels = [
@@ -2846,26 +2843,8 @@ wheels = [
 
 [[package]]
 name = "soupsieve"
-version = "2.10"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version < '3.11.5'",
-]
-sdist = { url = "https://files.pythonhosted.org/packages/71/c3/1b817965ac12dc002d7c9cd7dfffdd7d4fbf9b45763ef2ffe7b86ee94670/soupsieve-2.10.tar.gz", hash = "sha256:49e9380d7d2905463583bafe285e818c7366a9ed7b3aee221c1ac79c905d8bc0", size = 124337, upload-time = "2026-09-24T02:36:35.048Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/66/87/5ed59e1d0290564e2027ed066c52b059892c4637741337fc0967183c8d4d/soupsieve-2.10-py3-none-any.whl", hash = "sha256:8596eb8967d744174820280fa62b4542a2e955bfaccca73ed8a13c6eb8e9b502", size = 38019, upload-time = "2026-09-24T02:36:33.709Z" },
-]
-
-[[package]]
-name = "soupsieve"
 version = "4.1"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.14'",
-    "python_full_version == '3.13.*'",
-    "python_full_version == '3.12.*'",
-    "python_full_version >= '3.11.5' and python_full_version < '3.12'",
-]
 sdist = { url = "https://files.pythonhosted.org/packages/95/48/21a393ff731b8f928fa4f8176f9a7ceba2252ee60a5149f25b45c292aa5c/soupsieve-4.1.tar.gz", hash = "sha256:ca9abf7126667010d8f6e9b39bfc1bc3b23c8aed9bcb0f54a754dde969bb8aab", size = 161955, upload-time = "2026-11-10T01:59:50.399Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/88/73/6a2087c72975cfc07394623bca8d17654342ea4055ae368deafe5a81a542/soupsieve-4.1-py3-none-any.whl", hash = "sha256:e4d667b3974ce6e038e7390486b8093369854a1d345ffdd4c121dfc4a782e809", size = 52302, upload-time = "2026-11-10T01:59:48.571Z" },
